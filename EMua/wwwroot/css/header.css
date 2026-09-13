@@ -1,0 +1,286 @@
+﻿/* =========================
+   TOP BAR
+========================= */
+
+.emua-topbar {
+    height: 36px;
+    background: #11102e;
+    color: white;
+}
+
+.topbar-content {
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* =========================
+   MAIN HEADER
+========================= */
+
+.emua-main-header {
+    background: #464582;
+    padding: 18px 0;
+}
+
+.main-header-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+
+/* =========================
+   LOGO
+========================= */
+
+.emua-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 170px;
+    color: white;
+    text-decoration: none;
+}
+
+    .emua-logo:hover {
+        color: white;
+    }
+
+.emua-logo-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: white;
+    color: #464582;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+}
+
+.emua-logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+    .emua-logo-text strong {
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 23px;
+    }
+
+    .emua-logo-text span {
+        margin-top: 3px;
+        font-size: 13px;
+    }
+
+
+/* =========================
+   SEARCH
+========================= */
+
+.emua-search {
+    flex: 1;
+    height: 52px;
+    background: white;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 12px;
+}
+
+    .emua-search i {
+        color: #697386;
+        font-size: 18px;
+    }
+
+    .emua-search input {
+        flex: 1;
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 16px;
+        color: #333;
+    }
+
+
+/* =========================
+   HEADER ACTIONS
+========================= */
+
+.emua-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+}
+
+.header-action-btn {
+    min-width: 58px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: white;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .header-action-btn:hover {
+        color: white;
+        opacity: .85;
+    }
+
+    .header-action-btn i {
+        font-size: 24px;
+    }
+
+
+    /* bỏ mũi tên bootstrap ở dropdown nếu muốn */
+
+    .header-action-btn.dropdown-toggle::after {
+        display: none;
+    }
+
+
+/* =========================
+   CART COUNT
+========================= */
+
+.header-icon-wrapper {
+    position: relative;
+}
+
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: #ff1637;
+    color: white;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+}
+
+
+/* =========================
+   CATEGORY NAV
+========================= */
+
+.emua-category-nav {
+    background: #626293;
+}
+
+.category-list {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+    .category-list a {
+        height: 60px;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: white;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+        .category-list a:hover {
+            color: white;
+            background: rgba(255, 255, 255, .08);
+        }
+
+
+/* =========================
+   MOBILE
+========================= */
+
+.mobile-menu-button {
+    display: none;
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 28px;
+}
+
+.mobile-category-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px;
+    background: #626293;
+}
+
+    .mobile-category-menu a {
+        padding: 10px 0;
+        color: white;
+        text-decoration: none;
+    }
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+
+    .main-header-wrapper {
+        flex-wrap: wrap;
+    }
+
+    .emua-search {
+        order: 3;
+        flex-basis: 100%;
+    }
+
+    .emua-header-actions {
+        margin-left: auto;
+    }
+
+    .category-list {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 650px) {
+
+    .emua-topbar {
+        display: none;
+    }
+
+    .emua-header-actions {
+        display: none;
+    }
+
+    .mobile-menu-button {
+        display: block;
+    }
+
+    .emua-category-nav {
+        display: none;
+    }
+}

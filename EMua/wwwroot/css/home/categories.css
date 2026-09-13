@@ -1,0 +1,185 @@
+﻿/* =========================
+   HOME CATEGORIES
+========================= */
+
+.home-categories {
+    padding: 28px 0 35px;
+    background: #F2F8F9;
+}
+
+
+/* =========================
+   SALE BANNER
+========================= */
+
+.sale-banner {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #ffffff;
+}
+
+    .sale-banner img {
+        width: 100%;
+        height: 260px;
+        display: block;
+        object-fit: cover;
+    }
+
+
+/* =========================
+   SECTION HEADER
+========================= */
+
+.deal-header {
+    margin-top: 32px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .deal-header h2 {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 800;
+        color: #181833;
+    }
+
+    .deal-header a {
+        color: #464582;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+        .deal-header a:hover {
+            color: #2f2e68;
+        }
+
+
+/* =========================
+   QUICK LINK LIST
+========================= */
+
+.deal-categories {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 18px;
+}
+
+
+/* =========================
+   ITEM
+========================= */
+
+.deal-category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #1d1d32;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    transition: .2s ease;
+}
+
+    .deal-category-item:hover {
+        color: #464582;
+        transform: translateY(-4px);
+    }
+
+
+/* =========================
+   CIRCLE
+========================= */
+
+.deal-category-circle {
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e1e2ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    color: #464582;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .04);
+    transition: .2s ease;
+}
+
+.deal-category-item:hover .deal-category-circle {
+    border-color: #464582;
+    box-shadow: 0 8px 20px rgba(70, 69, 130, .14);
+}
+
+
+/* DEAL HOT */
+
+.deal-category-circle.deal-hot {
+    background: #464582;
+    color: #ffffff;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1200px) {
+
+    .deal-categories {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+
+    .home-categories {
+        padding-top: 15px;
+    }
+
+    .sale-banner {
+        border-radius: 12px;
+    }
+
+        .sale-banner img {
+            height: 160px;
+        }
+
+    .deal-header h2 {
+        font-size: 21px;
+    }
+
+    .deal-categories {
+        display: flex;
+        overflow-x: auto;
+        gap: 16px;
+        padding-bottom: 10px;
+        scrollbar-width: none;
+    }
+
+        .deal-categories::-webkit-scrollbar {
+            display: none;
+        }
+
+    .deal-category-item {
+        min-width: 100px;
+    }
+
+    .deal-category-circle {
+        width: 90px;
+        height: 90px;
+        font-size: 32px;
+    }
+}

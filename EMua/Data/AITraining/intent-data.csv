@@ -1,0 +1,19 @@
+﻿Text,Label
+"tư vấn laptop dưới 20 triệu",RecommendProduct
+"máy nào phù hợp học lập trình",RecommendProduct
+"tôi cần điện thoại chụp ảnh đẹp",RecommendProduct
+"so sánh iphone 15 và galaxy s24",CompareProduct
+"iphone 15 với s24 máy nào tốt hơn",CompareProduct
+"airpods 4 giá bao nhiêu",AskPrice
+"iphone 15 hiện giá bao nhiêu",AskPrice
+"máy này ram bao nhiêu",AskSpecification
+"rtx của laptop này là gì",AskSpecification
+"airpods dùng android được không",AskCompatibility
+"chuột bluetooth có dùng với ipad được không",AskCompatibility
+"laptop này bảo hành bao lâu",AskWarranty
+"iphone có bảo hành chính hãng không",AskWarranty
+"iphone đang có giảm giá không",AskPromotion
+"có khuyến mãi laptop không",AskPromotion
+"ram là gì",GeneralTechnology
+"ssd khác hdd như thế nào",GeneralTechnology
+"gpu dùng để làm gì",GeneralTechnology

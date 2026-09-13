@@ -1,0 +1,210 @@
+﻿/* =========================
+   HERO BANNER
+========================= */
+
+.hero-banner {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background-image: url('/images/home/macbook-banner.jpg');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+
+/* overlay để chữ dễ đọc */
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( 90deg, rgba(7, 12, 40, .82) 0%, rgba(22, 16, 70, .55) 35%, rgba(15, 15, 35, .10) 70%, rgba(0, 0, 0, .05) 100% );
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 68px;
+    color: white;
+}
+
+
+/* badge */
+
+.hero-badge {
+    width: fit-content;
+    background: #ff0c2f;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+
+/* title */
+
+.hero-content h1 {
+    margin: 0;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+
+/* description */
+
+.hero-content p {
+    margin-top: 14px;
+    margin-bottom: 26px;
+    font-size: 17px;
+    color: #f1f1f1;
+}
+
+
+/* CTA */
+
+.hero-btn {
+    width: fit-content;
+    min-width: 125px;
+    padding: 12px 22px;
+    border-radius: 12px;
+    background: #464582;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s;
+}
+
+    .hero-btn:hover {
+        color: white;
+        background: #55549a;
+        transform: translateY(-2px);
+    }
+
+
+/* =========================
+   ARROWS
+========================= */
+
+.hero-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .18);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+    .hero-arrow:hover {
+        background: rgba(255, 255, 255, .30);
+    }
+
+.hero-arrow-left {
+    left: 15px;
+}
+
+.hero-arrow-right {
+    right: 15px;
+}
+
+
+/* =========================
+   DOTS
+========================= */
+
+.hero-dots {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 6px;
+}
+
+.hero-dot {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .45);
+}
+
+    .hero-dot.active {
+        width: 22px;
+        border-radius: 999px;
+        background: white;
+    }
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+
+    .hero-banner {
+        height: 350px;
+    }
+
+    .hero-content {
+        padding-left: 55px;
+    }
+
+        .hero-content h1 {
+            font-size: 36px;
+        }
+}
+
+
+@media (max-width: 576px) {
+
+    .hero-banner {
+        height: 300px;
+    }
+
+    .hero-content {
+        padding: 0 45px;
+    }
+
+        .hero-content h1 {
+            font-size: 28px;
+        }
+
+        .hero-content p {
+            font-size: 14px;
+        }
+
+    .hero-badge {
+        font-size: 10px;
+    }
+
+    .hero-btn {
+        padding: 10px 18px;
+    }
+}

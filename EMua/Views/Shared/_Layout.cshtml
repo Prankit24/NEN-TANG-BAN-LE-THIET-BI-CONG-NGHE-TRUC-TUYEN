@@ -1,49 +1,86 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - EMua</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/EMua.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">EMua</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - EMua - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    <title>@ViewData["Title"] - EMUA</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- CSS chung -->
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/header.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/footer.css"
+          asp-append-version="true" />
+
+    <!-- AI -->
+    <link rel="stylesheet"
+          href="~/css/ai-chat.css"
+          asp-append-version="true" />
+
+    <!-- HOME -->
+    <link rel="stylesheet"
+          href="~/css/home/categories.css"
+          asp-append-version="true" />
+</head>
+
+
+<body>
+
+    <!-- HEADER -->
+    <partial name="_Header" />
+
+
+    <!-- PAGE CONTENT -->
+    <main class="main-content">
+
+        @RenderBody()
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <partial name="_Footer" />
+
+
+    <!-- AI CHAT: CHỈ GỌI 1 LẦN -->
+    <partial name="_AIChat" />
+
+
+    <!-- LIBRARY -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+
+    <!-- SITE JS -->
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
+
+    <!-- AI JS: CHỈ LOAD 1 LẦN -->
+    <script src="~/js/ai-chat.js"
+            asp-append-version="true"></script>
+
+
+    <!-- JS RIÊNG CỦA TỪNG VIEW -->
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
+
 </html>
