@@ -1,0 +1,333 @@
+﻿<header class="emua-site-header">
+
+    <!-- ================= TOP BAR ================= -->
+
+    <div class="emua-topbar">
+
+        <div class="container-fluid emua-container">
+
+            <div class="topbar-content">
+
+                <span>
+                    🚀 Miễn phí vận chuyển đơn từ 500K
+                </span>
+
+                <span class="topbar-divider">|</span>
+
+                <span>
+                    Giao 2 giờ tại Đà Nẵng
+                </span>
+
+                <span class="topbar-divider">|</span>
+
+                <span>
+                    Hotline:
+                    <strong>1800 2005</strong>
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= MAIN HEADER ================= -->
+
+    <div class="emua-main-header">
+
+        <div class="container-fluid emua-container">
+
+            <div class="main-header-wrapper">
+
+                <!-- LOGO -->
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="emua-logo">
+
+                    <div class="emua-logo-icon">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+
+                    <div class="emua-logo-text">
+
+                        <strong>
+                            EMUA
+                        </strong>
+
+                        <span>
+                            Mua sắm điện tử
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <!-- SEARCH -->
+
+                <form asp-controller="Product"
+                      asp-action="Search"
+                      method="get"
+                      class="emua-search">
+
+                    <i class="bi bi-search"></i>
+
+                    <input type="text"
+                           name="keyword"
+                           autocomplete="off"
+                           placeholder="Tìm kiếm laptop, điện thoại, gaming gear..." />
+
+                </form>
+
+
+                <!-- ACTIONS -->
+
+                <div class="emua-header-actions">
+
+                    <!-- ACCOUNT -->
+
+                    <div class="dropdown">
+
+                        <button class="header-action-btn dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown">
+
+                            <i class="bi bi-person"></i>
+
+                            <span>
+                                Tài khoản
+                            </span>
+
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+
+                            <li>
+
+                                <a class="dropdown-item"
+                                   asp-controller="Account"
+                                   asp-action="Login">
+
+                                    Đăng nhập
+
+                                </a>
+
+                            </li>
+
+                            <li>
+
+                                <a class="dropdown-item"
+                                   asp-controller="Account"
+                                   asp-action="Register">
+
+                                    Đăng ký
+
+                                </a>
+
+                            </li>
+
+                            <li>
+
+                                <hr class="dropdown-divider" />
+
+                            </li>
+
+                            <li>
+
+                                <a class="dropdown-item"
+                                   asp-controller="Account"
+                                   asp-action="Profile">
+
+                                    Thông tin tài khoản
+
+                                </a>
+
+                            </li>
+
+                            <li>
+
+                                <a class="dropdown-item"
+                                   asp-controller="Order"
+                                   asp-action="Index">
+
+                                    Đơn hàng của tôi
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+
+                    <!-- FAVORITE -->
+
+                    <a asp-controller="Favorite"
+                       asp-action="Index"
+                       class="header-action-btn">
+
+                        <i class="bi bi-shop"></i>
+
+                        <span>
+                            Cửa hàng
+                        </span>
+
+                    </a>
+
+
+                    <!-- CART -->
+
+                    <a asp-controller="Cart"
+                       asp-action="Index"
+                       class="header-action-btn cart-action">
+
+                        <div class="header-icon-wrapper">
+
+                            <i class="bi bi-cart3"></i>
+
+                            <span class="cart-count">
+                                0
+                            </span>
+
+                        </div>
+
+                        <span>
+                            Giỏ hàng
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <!-- MOBILE -->
+
+                <button class="mobile-menu-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mobileCategories">
+
+                    <i class="bi bi-list"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= CATEGORY NAV ================= -->
+
+    <nav class="emua-category-nav">
+
+        <div class="container-fluid emua-container">
+
+            <div class="category-list">
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="Laptop">
+
+                    <i class="bi bi-laptop"></i>
+                    Laptop
+
+                </a>
+
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="DienThoai">
+
+                    <i class="bi bi-phone"></i>
+                    Điện thoại
+
+                </a>
+
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="Gaming">
+
+                    <i class="bi bi-controller"></i>
+                    Gaming
+
+                </a>
+
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="PhuKien">
+
+                    <i class="bi bi-box"></i>
+                    Phụ kiện
+
+                </a>
+
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="AmThanh">
+
+                    <i class="bi bi-headphones"></i>
+                    Âm thanh
+
+                </a>
+
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-category="ThietBiThongMinh">
+
+                    <i class="bi bi-smartwatch"></i>
+                    Thiết bị thông minh
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- MOBILE CATEGORY -->
+
+    <div class="collapse"
+         id="mobileCategories">
+
+        <div class="mobile-category-menu">
+
+            <a href="#">
+                Laptop
+            </a>
+
+            <a href="#">
+                Điện thoại
+            </a>
+
+            <a href="#">
+                Gaming
+            </a>
+
+            <a href="#">
+                Phụ kiện
+            </a>
+
+            <a href="#">
+                Âm thanh
+            </a>
+
+            <a href="#">
+                Thiết bị thông minh
+            </a>
+
+        </div>
+
+    </div>
+
+</header>

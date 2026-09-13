@@ -1,0 +1,164 @@
+﻿<div class="emua-ai-wrapper modern-ai"
+     id="draggableAiWrapper">
+
+    <!-- =========================
+         FLOATING AI MASCOT
+    ========================== -->
+    <button type="button"
+            class="emua-ai-button"
+            id="aiToggleButton"
+            aria-label="Mở trợ lý EMUA">
+
+        <img src="~/images/AI/CarrtoonAI.png"
+             alt="EMUA AI"
+             class="ai-avatar"
+             draggable="false" />
+
+        <span class="glow-layer"></span>
+
+        <span class="ai-badge">
+            <span class="text">EMUA Xin chào</span>
+        </span>
+
+    </button>
+
+
+     <!-- =========================
+         CHAT PANEL
+    ========================== -->
+    <div class="ai-chat-panel"
+         id="aiChatBox">
+
+
+        <!-- HEADER -->
+        <div class="ai-chat-header">
+
+            <div class="ai-header-user">
+
+                <div class="ai-header-avatar">
+
+                    <img src="~/images/AI/CarrtoonAI.png"
+                         alt="EMUA AI"
+                         draggable="false" />
+
+                    <span class="ai-status-dot"></span>
+
+                </div>
+
+
+                <div class="ai-header-text">
+
+                    <strong>Trợ lý EMUA</strong>
+
+                    <span>
+                        Trực tuyến · Tư vấn công nghệ
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button type="button"
+                    id="aiCloseButton"
+                    class="ai-chat-close"
+                    aria-label="Đóng">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             MESSAGE AREA
+        ========================== -->
+        <div class="ai-chat-messages"
+             id="aiMessages">
+
+
+            <!-- BOT WELCOME -->
+            <div class="ai-message ai-message-bot">
+
+                <div class="ai-msg-avatar">
+
+                    <img src="~/images/AI/CarrtoonAI.png"
+                         alt="EMUA AI"
+                         draggable="false" />
+
+                </div>
+
+
+                <div class="ai-bubble ai-bubble-bot">
+                    <strong>Chào bạn 👋</strong>
+                    <span>Mình là EMUA AI, trợ lý tư vấn thiết bị công nghệ.</span>
+                    <span>Bạn đang tìm sản phẩm nào hôm nay?</span>
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+            <div class="ai-quick-actions">
+
+                <button type="button"
+                        class="ai-quick-btn"
+                        data-message="Tư vấn laptop cho tôi">
+
+                    💻 Laptop
+
+                </button>
+
+
+                <button type="button"
+                        class="ai-quick-btn"
+                        data-message="Tư vấn điện thoại cho tôi">
+
+                    📱 Điện thoại
+
+                </button>
+
+
+                <button type="button"
+                        class="ai-quick-btn"
+                        data-message="Tôi muốn so sánh sản phẩm">
+
+                    ⚖️ So sánh
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             INPUT
+        ========================== -->
+        <div class="ai-chat-footer">
+
+            <div class="ai-compose">
+
+                <input type="text"
+                       id="aiMessageInput"
+                       placeholder="Hỏi EMUA về sản phẩm..."
+                       autocomplete="off" />
+
+
+                <button type="button"
+                        id="aiSendButton"
+                        class="ai-send-button"
+                        aria-label="Gửi">
+
+                    <i class="bi bi-send-fill"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
