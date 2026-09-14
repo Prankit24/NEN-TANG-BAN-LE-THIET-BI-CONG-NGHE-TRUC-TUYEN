@@ -1,0 +1,212 @@
+@model EMua.ViewModels.AccountProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ của tôi";
+}
+
+<link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+
+<section class="account-page">
+    <div class="container account-container">
+        <aside class="account-sidebar">
+            <div class="account-user-card">
+                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl"
+                         class="account-avatar account-avatar-image"
+                         alt="Ảnh đại diện của @Model.FullName" />
+                }
+                else
+                {
+                    <div class="account-avatar">@Model.Initial</div>
+                }
+
+                <div>
+                    <strong>@Model.FullName</strong>
+                    <small>@Model.Email</small>
+                </div>
+
+                <span class="role-badge">
+                    <i class="bi bi-shield-check"></i>
+                    @Model.RoleName
+                </span>
+            </div>
+
+            <nav class="account-menu">
+                <a class="active" asp-controller="Account" asp-action="Profile">
+                    <i class="bi bi-person"></i>
+                    Hồ sơ của tôi
+                </a>
+
+                <a asp-controller="Account" asp-action="Edit">
+                    <i class="bi bi-pencil-square"></i>
+                    Chỉnh sửa hồ sơ
+                </a>
+
+                @if (Model.IsCustomer)
+                {
+                    <a asp-controller="Order" asp-action="Index">
+                        <i class="bi bi-box-seam"></i>
+                        Đơn hàng
+                    </a>
+
+                    <a asp-controller="Favorite" asp-action="Index">
+                        <i class="bi bi-heart"></i>
+                        Yêu thích
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Product" asp-action="Index">
+                        <i class="bi bi-box-seam"></i>
+                        Quản lý sản phẩm
+                    </a>
+
+                    <a asp-controller="Order" asp-action="Index">
+                        <i class="bi bi-receipt"></i>
+                        Quản lý đơn hàng
+                    </a>
+                }
+
+                <form asp-controller="Auth" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="account-logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Đăng xuất
+                    </button>
+                </form>
+            </nav>
+        </aside>
+
+        <div class="profile-card">
+            <div class="profile-card-heading">
+                <div>
+                    <h1>Hồ sơ của tôi</h1>
+                    <p>Quản lý thông tin cá nhân của tài khoản EMUA.</p>
+                </div>
+
+                <a asp-action="Edit" class="profile-edit-button">
+                    <i class="bi bi-pencil"></i>
+                    Chỉnh sửa
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="modal fade"
+                     id="profileSuccessModal"
+                     tabindex="-1"
+                     aria-hidden="true">
+
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content profile-success-modal">
+                            <div class="modal-body text-center">
+                                <div class="profile-success-icon">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+
+                                <h5>Cập nhật thành công!</h5>
+
+                                <p>@TempData["SuccessMessage"]</p>
+
+                                <button type="button"
+                                        class="profile-success-button"
+                                        data-bs-dismiss="modal">
+                                    Đã hiểu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="profile-overview">
+                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                {
+                    <img src="@Model.AvatarUrl"
+                         class="profile-main-avatar"
+                         alt="Ảnh đại diện của @Model.FullName" />
+                }
+                else
+                {
+                    <div class="profile-main-avatar profile-main-avatar-letter">
+                        @Model.Initial
+                    </div>
+                }
+
+                <div>
+                    <h2>@Model.FullName</h2>
+                    <p>@Model.Email</p>
+                    <span>
+                        <i class="bi bi-patch-check-fill"></i>
+                        @Model.RoleName
+                    </span>
+                </div>
+            </div>
+
+            <div class="profile-details">
+                <div class="profile-detail">
+                    <span>Họ và tên</span>
+                    <strong>@Model.FullName</strong>
+                </div>
+
+                <div class="profile-detail">
+                    <span>Email</span>
+                    <strong>@Model.Email</strong>
+                </div>
+
+                <div class="profile-detail">
+                    <span>Số điện thoại</span>
+                    <strong>@(Model.PhoneNumber ?? "Chưa cập nhật")</strong>
+                </div>
+
+                <div class="profile-detail">
+                    <span>Vai trò</span>
+                    <strong>@Model.RoleName</strong>
+                </div>
+
+                <div class="profile-detail">
+                    <span>Địa chỉ</span>
+                    <strong>@(Model.Address ?? "Chưa cập nhật")</strong>
+                </div>
+
+                <div class="profile-detail">
+                    <span>Thành viên từ</span>
+                    <strong>
+                        @(Model.MemberSince?.ToString("MM/yyyy") ?? "Chưa cập nhật")
+                    </strong>
+                </div>
+            </div>
+
+            <div class="profile-stats">
+                <div>
+                    <strong>@Model.OrderCount</strong>
+                    <span>@(Model.IsCustomer ? "Đơn hàng" : "Đơn liên quan")</span>
+                </div>
+
+                <div>
+                    <strong>@Model.FavoriteCount</strong>
+                    <span>Yêu thích</span>
+                </div>
+
+                <div>
+                    <strong>@Model.RoleName</strong>
+                    <span>Quyền tài khoản</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @section Scripts {
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const modalElement =
+                        document.getElementById("profileSuccessModal");
+
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                });
+            </script>
+        }
+    }
+</section>

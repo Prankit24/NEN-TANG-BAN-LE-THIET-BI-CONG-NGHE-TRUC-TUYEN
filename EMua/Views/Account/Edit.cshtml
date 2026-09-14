@@ -1,0 +1,265 @@
+@model EMua.ViewModels.EditAccountProfileViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa hồ sơ";
+}
+
+<link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+
+<section class="account-page profile-editor-page">
+    <div class="container profile-editor-container">
+        <form id="profileEditForm"
+              asp-controller="Account"
+              asp-action="Edit"
+              method="post"
+              enctype="multipart/form-data"
+              class="profile-editor-card">
+
+            @Html.AntiForgeryToken()
+
+            <header class="profile-editor-header">
+                <a asp-action="Profile" class="editor-back-link">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Hồ sơ của tôi</span>
+                </a>
+
+                <div class="editor-heading">
+                    <span>THÔNG TIN TÀI KHOẢN</span>
+                    <h1>Chỉnh sửa hồ sơ</h1>
+                </div>
+
+                <button type="submit" class="editor-save-button">
+                    <i class="bi bi-check2"></i>
+                    Lưu thay đổi
+                </button>
+            </header>
+
+            <div asp-validation-summary="All"
+                 class="editor-validation"></div>
+
+            <div class="profile-editor-content">
+                <aside class="editor-avatar-side">
+                    <div class="editor-avatar-heading">
+                        <span class="editor-step">01</span>
+                        <div>
+                            <h2>Ảnh đại diện</h2>
+                            <p>Chọn một ảnh phù hợp với bạn.</p>
+                        </div>
+                    </div>
+
+                    <div class="editor-avatar-preview-wrap">
+                        @if (!string.IsNullOrWhiteSpace(Model.CurrentAvatarUrl))
+                        {
+                            <img id="avatarPreview"
+                                 src="@Model.CurrentAvatarUrl"
+                                 class="editor-avatar-preview"
+                                 alt="Ảnh đại diện" />
+                        }
+                        else
+                        {
+                            <div id="avatarPreview"
+                                 class="editor-avatar-placeholder">
+                                <i class="bi bi-person"></i>
+                            </div>
+                        }
+
+                        <label for="AvatarFile" class="editor-upload-circle"
+                               title="Tải ảnh từ máy">
+                            <i class="bi bi-camera-fill"></i>
+                        </label>
+
+                        <input asp-for="AvatarFile"
+                               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                               class="editor-file-input" />
+                    </div>
+
+                    <label for="AvatarFile" class="editor-upload-link">
+                        <i class="bi bi-upload"></i>
+                        Tải ảnh khác từ máy
+                    </label>
+
+                    <small class="editor-upload-note">
+                        JPG, PNG hoặc WEBP · Tối đa 2 MB
+                    </small>
+
+                    <span asp-validation-for="AvatarFile"
+                          class="editor-field-error"></span>
+
+                    <div class="editor-avatar-divider"></div>
+
+                    <p class="editor-avatar-label">Hoặc chọn ảnh có sẵn</p>
+
+                    <div class="editor-avatar-gallery">
+                        <label class="editor-avatar-choice">
+                            <input type="radio"
+                                   name="SelectedAvatar"
+                                   value="/images/avatar/conbo.jpg"
+                                   @(Model.SelectedAvatar == "/images/avatar/conbo.jpg" ? "checked" : "") />
+                            <img src="~/images/avatar/conbo.jpg"
+                                 alt="Avatar bò" />
+                        </label>
+
+                        <label class="editor-avatar-choice">
+                            <input type="radio"
+                                   name="SelectedAvatar"
+                                   value="/images/avatar/conchoo.jpg"
+                                   @(Model.SelectedAvatar == "/images/avatar/conchoo.jpg" ? "checked" : "") />
+                            <img src="~/images/avatar/conchoo.jpg"
+                                 alt="Avatar chó" />
+                        </label>
+
+                        <label class="editor-avatar-choice">
+                            <input type="radio"
+                                   name="SelectedAvatar"
+                                   value="/images/avatar/conkhi.jpg"
+                                   @(Model.SelectedAvatar == "/images/avatar/conkhi.jpg" ? "checked" : "") />
+                            <img src="~/images/avatar/conkhi.jpg"
+                                 alt="Avatar khỉ" />
+                        </label>
+
+                        <label class="editor-avatar-choice">
+                            <input type="radio"
+                                   name="SelectedAvatar"
+                                   value="/images/avatar/convit.jpg"
+                                   @(Model.SelectedAvatar == "/images/avatar/convit.jpg" ? "checked" : "") />
+                            <img src="~/images/avatar/convit.jpg"
+                                 alt="Avatar vịt" />
+                        </label>
+
+                        <label class="editor-avatar-choice">
+                            <input type="radio"
+                                   name="SelectedAvatar"
+                                   value="/images/avatar/conhuu.jpg"
+                                   @(Model.SelectedAvatar == "/images/avatar/conhuu.jpg" ? "checked" : "") />
+                            <img src="~/images/avatar/conhuu.jpg"
+                                 alt="Avatar hươu" />
+                        </label>
+                    </div>
+
+                    <span asp-validation-for="SelectedAvatar"
+                          class="editor-field-error"></span>
+                </aside>
+
+                <main class="editor-info-side">
+                    <div class="editor-info-heading">
+                        <span class="editor-step">02</span>
+                        <div>
+                            <h2>Thông tin cá nhân</h2>
+                            <p>Thông tin chính xác giúp giao hàng nhanh hơn.</p>
+                        </div>
+                    </div>
+
+                    <div class="editor-fields-grid">
+                        <div class="editor-input-group editor-input-wide">
+                            <label asp-for="FullName">
+                                <i class="bi bi-person"></i>
+                                Họ và tên
+                            </label>
+
+                            <input asp-for="FullName"
+                                   autocomplete="name"
+                                   placeholder="Nhập họ và tên đầy đủ" />
+
+                            <span asp-validation-for="FullName"
+                                  class="editor-field-error"></span>
+                        </div>
+
+                        <div class="editor-input-group">
+                            <label>
+                                <i class="bi bi-envelope"></i>
+                                Email
+                                <small>Không thể đổi</small>
+                            </label>
+
+                            <input value="@Model.Email"
+                                   readonly />
+                        </div>
+
+                        <div class="editor-input-group">
+                            <label asp-for="PhoneNumber">
+                                <i class="bi bi-telephone"></i>
+                                Số điện thoại
+                            </label>
+
+                            <input asp-for="PhoneNumber"
+                                   autocomplete="tel"
+                                   placeholder="Ví dụ: 0901234567" />
+
+                            <span asp-validation-for="PhoneNumber"
+                                  class="editor-field-error"></span>
+                        </div>
+
+                        <div class="editor-input-group editor-input-wide">
+                            <label asp-for="Address">
+                                <i class="bi bi-geo-alt"></i>
+                                Địa chỉ nhận hàng mặc định
+                            </label>
+
+                            <textarea asp-for="Address"
+                                      rows="4"
+                                      placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+
+                            <span asp-validation-for="Address"
+                                  class="editor-field-error"></span>
+                        </div>
+                    </div>
+
+                    <p class="editor-security-note">
+                        <i class="bi bi-shield-check"></i>
+                        Mọi thông tin của bạn được bảo mật tại EMUA.
+                    </p>
+                </main>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const avatarFile = document.getElementById("AvatarFile");
+
+        const avatarRadios = document.querySelectorAll(
+            'input[name="SelectedAvatar"]'
+        );
+
+        function setAvatarPreview(imageSource) {
+            const oldPreview = document.getElementById("avatarPreview");
+
+            const image = document.createElement("img");
+            image.id = "avatarPreview";
+            image.className = "editor-avatar-preview";
+            image.alt = "Ảnh đại diện";
+            image.src = imageSource;
+
+            oldPreview.replaceWith(image);
+        }
+
+        avatarFile?.addEventListener("change", function (event) {
+            const file = event.target.files?.[0];
+
+            if (!file) return;
+
+            avatarRadios.forEach(function (radio) {
+                radio.checked = false;
+            });
+
+            const reader = new FileReader();
+
+            reader.onload = function (result) {
+                setAvatarPreview(result.target.result);
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        avatarRadios.forEach(function (radio) {
+            radio.addEventListener("change", function () {
+                if (!radio.checked) return;
+
+                avatarFile.value = "";
+                setAvatarPreview(radio.value);
+            });
+        });
+    </script>
+}
