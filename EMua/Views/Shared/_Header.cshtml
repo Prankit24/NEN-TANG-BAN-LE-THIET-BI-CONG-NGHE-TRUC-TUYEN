@@ -97,70 +97,65 @@
                             <i class="bi bi-person"></i>
 
                             <span>
-                                Tài khoản
+                                @(User.Identity?.IsAuthenticated == true
+                                                                ? User.Identity.Name
+                                                                : "Tài khoản")
                             </span>
 
                         </button>
 
                         <ul class="dropdown-menu dropdown-menu-end">
 
-                            <li>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li>
+                                    <span class="dropdown-item-text text-muted">
+                                        Xin chào, @User.Identity.Name
+                                    </span>
+                                </li>
 
-                                <a class="dropdown-item"
-                                   asp-controller="Account"
-                                   asp-action="Login">
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
 
-                                    Đăng nhập
+                                <li>
+                                    <form asp-controller="Auth"
+                                          asp-action="Logout"
+                                          method="post">
 
-                                </a>
+                                        @Html.AntiForgeryToken()
 
-                            </li>
+                                        <button type="submit"
+                                                class="dropdown-item">
+                                            Đăng xuất
+                                        </button>
 
-                            <li>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Auth"
+                                       asp-action="Login">
+                                        Đăng nhập
+                                    </a>
+                                </li>
 
-                                <a class="dropdown-item"
-                                   asp-controller="Account"
-                                   asp-action="Register">
-
-                                    Đăng ký
-
-                                </a>
-
-                            </li>
-
-                            <li>
-
-                                <hr class="dropdown-divider" />
-
-                            </li>
-
-                            <li>
-
-                                <a class="dropdown-item"
-                                   asp-controller="Account"
-                                   asp-action="Profile">
-
-                                    Thông tin tài khoản
-
-                                </a>
-
-                            </li>
-
-                            <li>
-
-                                <a class="dropdown-item"
-                                   asp-controller="Order"
-                                   asp-action="Index">
-
-                                    Đơn hàng của tôi
-
-                                </a>
-
-                            </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Auth"
+                                       asp-action="Register">
+                                        Đăng ký
+                                    </a>
+                                </li>
+                            }
 
                         </ul>
 
                     </div>
+
 
 
                     <!-- FAVORITE -->
