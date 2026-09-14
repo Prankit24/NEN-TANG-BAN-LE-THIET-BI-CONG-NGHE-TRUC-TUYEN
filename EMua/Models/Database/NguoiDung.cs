@@ -58,4 +58,5 @@ public partial class NguoiDung
 
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<YeuThich> YeuThiches { get; set; } = new List<YeuThich>();
+    public string? AnhDaiDien { get; set; }
 }
