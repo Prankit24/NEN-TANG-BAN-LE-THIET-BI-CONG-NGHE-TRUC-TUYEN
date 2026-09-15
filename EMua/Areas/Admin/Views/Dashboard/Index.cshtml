@@ -1,0 +1,175 @@
+﻿@{
+    ViewData["Title"] = "Tổng quan";
+
+    var monthlyRevenue = (List<decimal>)ViewBag.MonthlyRevenue;
+    var maxMonthlyRevenue = monthlyRevenue.Any()
+        ? Math.Max(monthlyRevenue.Max(), 1)
+        : 1;
+
+    var categorySales = (System.Collections.IEnumerable)ViewBag.CategorySales;
+    var recentOrders = (System.Collections.IEnumerable)ViewBag.RecentOrders;
+
+    var monthNames = new[]
+    {
+        "T1", "T2", "T3", "T4", "T5", "T6",
+        "T7", "T8", "T9", "T10", "T11", "T12"
+    };
+}
+
+<div class="dashboard-stat-grid">
+    <article class="dashboard-stat-card">
+        <div class="stat-card-icon revenue">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <span>Doanh thu tháng</span>
+        <strong>@(((decimal)ViewBag.RevenueThisMonth).ToString("N0")) đ</strong>
+        <small class="up">
+            +@ViewBag.RevenueGrowth% so với tháng trước
+        </small>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="stat-card-icon orders">
+            <i class="bi bi-bag-check"></i>
+        </div>
+        <span>Đơn hàng</span>
+        <strong>@ViewBag.OrderCountThisMonth</strong>
+        <small class="up">
+            +@ViewBag.OrderGrowth% so với tháng trước
+        </small>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="stat-card-icon customers">
+            <i class="bi bi-people"></i>
+        </div>
+        <span>Khách hàng mới</span>
+        <strong>@ViewBag.NewCustomersThisMonth</strong>
+        <small class="up">
+            +@ViewBag.CustomerGrowth% so với tháng trước
+        </small>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="stat-card-icon returns">
+            <i class="bi bi-arrow-repeat"></i>
+        </div>
+        <span>Tỉ lệ hoàn trả</span>
+        <strong class="no-data">@ViewBag.ReturnRate</strong>
+        <small>Thêm bảng đổi trả để thống kê.</small>
+    </article>
+</div>
+
+<div class="dashboard-chart-grid">
+    <section class="admin-card">
+        <h2>Doanh thu theo tháng năm @DateTime.Now.Year</h2>
+
+        <div class="actual-revenue-chart">
+            @for (var i = 0; i < monthlyRevenue.Count; i++)
+            {
+                var height = monthlyRevenue[i] <= 0
+                ? 3
+                : Math.Max(
+                8,
+                (int)(monthlyRevenue[i] / maxMonthlyRevenue * 100));
+
+                <div class="revenue-column">
+                    <div class="revenue-value">
+                        @monthlyRevenue[i].ToString("N0")
+                    </div>
+
+                    <div class="revenue-column-area">
+                        <span style="height: @height%"></span>
+                    </div>
+
+                    <small>@monthNames[i]</small>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="admin-card">
+        <h2>Bán hàng theo danh mục</h2>
+
+        @if ((bool)ViewBag.HasCategorySales)
+        {
+            <div class="actual-category-chart">
+                @foreach (dynamic category in categorySales)
+                {
+                    decimal total = category.Total;
+                    decimal maxTotal = ViewBag.MaxCategorySales;
+                    var width = Math.Max(
+                    4,
+                    (int)(total / maxTotal * 100));
+
+                    <div class="actual-category-row">
+                        <span title="@category.Name">@category.Name</span>
+
+                        <div>
+                            <i style="width: @width%"></i>
+                        </div>
+
+                        <strong>@total.ToString("N0") đ</strong>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="dashboard-empty">
+                Chưa có chi tiết đơn hàng để thống kê danh mục.
+            </p>
+        }
+    </section>
+</div>
+
+<section class="admin-card recent-orders-card">
+    <div class="card-title-row">
+        <h2>Đơn hàng gần đây</h2>
+        <span>Dữ liệu trực tiếp từ hệ thống</span>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Giá trị</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đặt</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (dynamic order in recentOrders)
+                {
+                    string status = order.Status;
+
+                    string statusClass = status switch
+                    {
+                        "Đã giao" => "done",
+                        "Đang giao" => "shipping",
+                        "Chờ xử lý" => "pending",
+                        "Chờ xác nhận" => "pending",
+                        "Đã hủy" => "cancelled",
+                        "Đã huỷ" => "cancelled",
+                        _ => "shipping"
+                    };
+
+                    <tr>
+                        <td><strong>@order.OrderCode</strong></td>
+                        <td>@order.CustomerName</td>
+                        <td class="table-price">@order.TotalText</td>
+                        <td>
+                            <span class="status @statusClass">
+                                @status
+                            </span>
+                        </td>
+                        <td>@order.OrderDateText</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
