@@ -1,0 +1,275 @@
+﻿@{
+    var displayName = User.Identity?.Name ?? "Admin";
+    var avatarLetter = string.IsNullOrWhiteSpace(displayName)
+        ? "A"
+        : displayName[..1].ToUpper();
+
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - EMUA Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="admin-shell">
+
+        <div class="admin-sidebar-backdrop"
+             id="adminSidebarBackdrop"></div>
+
+        <aside class="admin-sidebar"
+               id="adminSidebar">
+
+            <a asp-area="Admin"
+               asp-controller="Dashboard"
+               asp-action="Index"
+               class="admin-logo"
+               title="EMUA Admin">
+                <span class="admin-logo-text">
+                    <strong>EMUA</strong>
+                    <small>Admin Panel</small>
+                </span>
+
+                <span class="admin-logo-mini">EM</span>
+            </a>
+
+            <nav class="admin-nav">
+                <span class="admin-nav-label">Tổng quan</span>
+
+                <a class="@(currentController == "Dashboard" ? "active" : "")"
+                   data-tooltip="Tổng quan"
+                   asp-area="Admin"
+                   asp-controller="Dashboard"
+                   asp-action="Index">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Tổng quan</span>
+                </a>
+
+                <span class="admin-nav-label">Quản lý cửa hàng</span>
+
+                <a href="#"
+                   data-tooltip="Sản phẩm">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a href="#"
+                   data-tooltip="Danh mục">
+                    <i class="bi bi-folder2"></i>
+                    <span>Danh mục</span>
+                </a>
+
+                <a href="#"
+                   data-tooltip="Đơn hàng">
+                    <i class="bi bi-receipt"></i>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a href="#"
+                   data-tooltip="Khách hàng">
+                    <i class="bi bi-people"></i>
+                    <span>Khách hàng</span>
+                </a>
+
+                <span class="admin-nav-label">Hệ thống</span>
+
+                <a href="#"
+                   data-tooltip="Báo cáo">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Báo cáo</span>
+                </a>
+
+                <a href="#"
+                   data-tooltip="Cài đặt">
+                    <i class="bi bi-gear"></i>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+
+            <div class="admin-sidebar-bottom">
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   class="admin-bottom-link"
+                   data-tooltip="Xem website">
+                    <i class="bi bi-eye"></i>
+                    <span>Xem website</span>
+                </a>
+
+                <form asp-area=""
+                      asp-controller="Auth"
+                      asp-action="Logout"
+                      method="post">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="admin-bottom-link logout"
+                            data-tooltip="Đăng xuất">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <button type="button"
+                            class="admin-menu-toggle"
+                            id="adminMenuToggle"
+                            aria-label="Thu gọn menu"
+                            aria-controls="adminSidebar"
+                            aria-expanded="true">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <div>
+                        <h1>@ViewData["Title"]</h1>
+                        <p>EMUA Admin — @DateTime.Now.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+
+                <div class="admin-header-actions">
+                    <button type="button"
+                            class="admin-header-link"
+                            title="Thông báo">
+                        <i class="bi bi-bell"></i>
+                        <span>Thông báo</span>
+                        <b></b>
+                    </button>
+
+                    <a href="mailto:phuonganhdt73@gmail.com?subject=Yêu cầu hỗ trợ EMUA"
+                       class="admin-header-link"
+                       title="Trợ giúp">
+                        <i class="bi bi-question-circle"></i>
+                        <span>Trợ giúp</span>
+                    </a>
+
+                    <a href="#"
+                       class="admin-header-link"
+                       title="Cài đặt">
+                        <i class="bi bi-gear"></i>
+                        <span>Cài đặt</span>
+                    </a>
+
+                    <div class="admin-user" title="@displayName">
+                        <div class="admin-avatar">@avatarLetter</div>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <section class="admin-content">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const sidebar = document.getElementById("adminSidebar");
+        const backdrop = document.getElementById("adminSidebarBackdrop");
+        const menuToggle = document.getElementById("adminMenuToggle");
+
+        const desktopBreakpoint = 850;
+        const sidebarStorageKey = "emua_admin_sidebar_collapsed";
+
+        function isMobile() {
+            return window.innerWidth <= desktopBreakpoint;
+        }
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove("is-open");
+            backdrop.classList.remove("is-visible");
+        }
+
+        function updateDesktopSidebar() {
+            if (isMobile()) {
+                document.body.classList.remove("admin-sidebar-collapsed");
+                closeMobileSidebar();
+                return;
+            }
+
+            const isCollapsed =
+                localStorage.getItem(sidebarStorageKey) === "true";
+
+            document.body.classList.toggle(
+                "admin-sidebar-collapsed",
+                isCollapsed
+            );
+
+            menuToggle.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        }
+
+        menuToggle?.addEventListener("click", function () {
+            if (isMobile()) {
+                const isOpen = sidebar.classList.toggle("is-open");
+                backdrop.classList.toggle("is-visible", isOpen);
+
+                menuToggle.setAttribute(
+                    "aria-expanded",
+                    isOpen.toString()
+                );
+
+                return;
+            }
+
+            const isCollapsed = document.body.classList.toggle(
+                "admin-sidebar-collapsed"
+            );
+
+            localStorage.setItem(
+                sidebarStorageKey,
+                isCollapsed.toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        });
+
+        backdrop?.addEventListener("click", closeMobileSidebar);
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && isMobile()) {
+                closeMobileSidebar();
+            }
+        });
+
+        window.addEventListener("resize", updateDesktopSidebar);
+
+        updateDesktopSidebar();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

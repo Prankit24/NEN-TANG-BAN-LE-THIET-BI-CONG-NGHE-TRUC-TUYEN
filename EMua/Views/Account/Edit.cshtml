@@ -23,7 +23,7 @@
                 </a>
 
                 <div class="editor-heading">
-                    <span>THÔNG TIN TÀI KHOẢN</span>
+                    <p>Thông tin tài khoản</p>
                     <h1>Chỉnh sửa hồ sơ</h1>
                 </div>
 
@@ -38,15 +38,16 @@
 
             <div class="profile-editor-content">
                 <aside class="editor-avatar-side">
-                    <div class="editor-avatar-heading">
-                        <span class="editor-step">01</span>
+                    <div class="editor-section-heading">
+                        <i class="bi bi-image"></i>
                         <div>
                             <h2>Ảnh đại diện</h2>
-                            <p>Chọn một ảnh phù hợp với bạn.</p>
+                            <p>Đây là ảnh mọi người sẽ thấy trên hồ sơ của bạn.</p>
                         </div>
                     </div>
 
                     <div class="editor-avatar-preview-wrap">
+                        <div class="editor-avatar-ring"></div>
                         @if (!string.IsNullOrWhiteSpace(Model.CurrentAvatarUrl))
                         {
                             <img id="avatarPreview"
@@ -84,9 +85,9 @@
                     <span asp-validation-for="AvatarFile"
                           class="editor-field-error"></span>
 
-                    <div class="editor-avatar-divider"></div>
-
-                    <p class="editor-avatar-label">Hoặc chọn ảnh có sẵn</p>
+                    <div class="editor-avatar-divider">
+                        <span>hoặc chọn ảnh có sẵn</span>
+                    </div>
 
                     <div class="editor-avatar-gallery">
                         <label class="editor-avatar-choice">
@@ -96,6 +97,7 @@
                                    @(Model.SelectedAvatar == "/images/avatar/conbo.jpg" ? "checked" : "") />
                             <img src="~/images/avatar/conbo.jpg"
                                  alt="Avatar bò" />
+                            <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
                         <label class="editor-avatar-choice">
@@ -105,6 +107,7 @@
                                    @(Model.SelectedAvatar == "/images/avatar/conchoo.jpg" ? "checked" : "") />
                             <img src="~/images/avatar/conchoo.jpg"
                                  alt="Avatar chó" />
+                            <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
                         <label class="editor-avatar-choice">
@@ -114,6 +117,7 @@
                                    @(Model.SelectedAvatar == "/images/avatar/conkhi.jpg" ? "checked" : "") />
                             <img src="~/images/avatar/conkhi.jpg"
                                  alt="Avatar khỉ" />
+                            <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
                         <label class="editor-avatar-choice">
@@ -123,6 +127,7 @@
                                    @(Model.SelectedAvatar == "/images/avatar/convit.jpg" ? "checked" : "") />
                             <img src="~/images/avatar/convit.jpg"
                                  alt="Avatar vịt" />
+                            <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
                         <label class="editor-avatar-choice">
@@ -132,6 +137,7 @@
                                    @(Model.SelectedAvatar == "/images/avatar/conhuu.jpg" ? "checked" : "") />
                             <img src="~/images/avatar/conhuu.jpg"
                                  alt="Avatar hươu" />
+                            <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
                     </div>
 
@@ -140,24 +146,24 @@
                 </aside>
 
                 <main class="editor-info-side">
-                    <div class="editor-info-heading">
-                        <span class="editor-step">02</span>
+                    <div class="editor-section-heading">
+                        <i class="bi bi-person-vcard"></i>
                         <div>
                             <h2>Thông tin cá nhân</h2>
-                            <p>Thông tin chính xác giúp giao hàng nhanh hơn.</p>
+                            <p>Thông tin chính xác giúp đơn hàng đến tay bạn nhanh hơn.</p>
                         </div>
                     </div>
 
                     <div class="editor-fields-grid">
                         <div class="editor-input-group editor-input-wide">
-                            <label asp-for="FullName">
-                                <i class="bi bi-person"></i>
-                                Họ và tên
-                            </label>
+                            <label asp-for="FullName">Họ và tên</label>
 
-                            <input asp-for="FullName"
-                                   autocomplete="name"
-                                   placeholder="Nhập họ và tên đầy đủ" />
+                            <div class="editor-field-shell">
+                                <i class="bi bi-person"></i>
+                                <input asp-for="FullName"
+                                       autocomplete="name"
+                                       placeholder="Nhập họ và tên đầy đủ" />
+                            </div>
 
                             <span asp-validation-for="FullName"
                                   class="editor-field-error"></span>
@@ -165,38 +171,40 @@
 
                         <div class="editor-input-group">
                             <label>
-                                <i class="bi bi-envelope"></i>
                                 Email
                                 <small>Không thể đổi</small>
                             </label>
 
-                            <input value="@Model.Email"
-                                   readonly />
+                            <div class="editor-field-shell editor-field-locked">
+                                <i class="bi bi-envelope"></i>
+                                <input value="@Model.Email" readonly />
+                                <i class="bi bi-lock-fill editor-field-lock-icon"></i>
+                            </div>
                         </div>
 
                         <div class="editor-input-group">
-                            <label asp-for="PhoneNumber">
-                                <i class="bi bi-telephone"></i>
-                                Số điện thoại
-                            </label>
+                            <label asp-for="PhoneNumber">Số điện thoại</label>
 
-                            <input asp-for="PhoneNumber"
-                                   autocomplete="tel"
-                                   placeholder="Ví dụ: 0901234567" />
+                            <div class="editor-field-shell">
+                                <i class="bi bi-telephone"></i>
+                                <input asp-for="PhoneNumber"
+                                       autocomplete="tel"
+                                       placeholder="0901234567" />
+                            </div>
 
                             <span asp-validation-for="PhoneNumber"
                                   class="editor-field-error"></span>
                         </div>
 
                         <div class="editor-input-group editor-input-wide">
-                            <label asp-for="Address">
-                                <i class="bi bi-geo-alt"></i>
-                                Địa chỉ nhận hàng mặc định
-                            </label>
+                            <label asp-for="Address">Địa chỉ nhận hàng mặc định</label>
 
-                            <textarea asp-for="Address"
-                                      rows="4"
-                                      placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+                            <div class="editor-field-shell editor-field-shell-textarea">
+                                <i class="bi bi-geo-alt"></i>
+                                <textarea asp-for="Address"
+                                          rows="3"
+                                          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+                            </div>
 
                             <span asp-validation-for="Address"
                                   class="editor-field-error"></span>
