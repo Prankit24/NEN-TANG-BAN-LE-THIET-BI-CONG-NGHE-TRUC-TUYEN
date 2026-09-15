@@ -10,9 +10,7 @@
     --admin-border: #dcdcf1;
     --admin-text: #18172d;
     --admin-muted: #77748f;
-    --admin-success: #14a85d;
     --admin-danger: #ef4257;
-    --admin-warning: #aa7300;
     --admin-speed: 280ms;
     --admin-ease: cubic-bezier(.2, .8, .2, 1);
 }
@@ -33,13 +31,11 @@ body {
     font-family: "Inter", Arial, sans-serif;
 }
 
-/* =========================
-   MAIN STRUCTURE
-========================= */
-
 .admin-shell {
     min-height: 100vh;
 }
+
+/* Sidebar */
 
 .admin-sidebar {
     position: fixed;
@@ -61,9 +57,7 @@ body {
     transition: width var(--admin-speed) var(--admin-ease), margin-left var(--admin-speed) var(--admin-ease);
 }
 
-/* =========================
-   LOGO
-========================= */
+/* Logo */
 
 .admin-logo {
     display: flex;
@@ -80,18 +74,6 @@ body {
     .admin-logo:hover {
         color: #fff;
     }
-
-.admin-logo-icon {
-    display: grid;
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
-    place-items: center;
-    border-radius: 50%;
-    background: #fff;
-    color: var(--admin-purple);
-    font-size: 18px;
-}
 
 .admin-logo-text {
     display: block;
@@ -125,9 +107,7 @@ body {
     display: none;
 }
 
-/* =========================
-   NAVIGATION
-========================= */
+/* Navigation */
 
 .admin-nav {
     display: grid;
@@ -198,9 +178,7 @@ body {
         color: #fff;
     }
 
-/* =========================
-   SIDEBAR FOOTER
-========================= */
+/* Footer sidebar */
 
 .admin-sidebar-bottom {
     display: grid;
@@ -266,9 +244,7 @@ body {
             color: #ffb7be;
         }
 
-/* =========================
-   HEADER
-========================= */
+/* Header */
 
 .admin-header {
     display: flex;
@@ -346,7 +322,6 @@ body {
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: color 170ms ease;
 }
 
     .admin-header-link:hover {
@@ -398,328 +373,7 @@ body {
     padding: 24px;
 }
 
-/* =========================
-   DASHBOARD STATISTICS
-========================= */
-
-.dashboard-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(190px, 1fr));
-    gap: 16px;
-    overflow-x: auto;
-    padding: 1px 1px 4px;
-}
-
-.dashboard-stat-card,
-.admin-card {
-    border: 1px solid var(--admin-border);
-    border-radius: 15px;
-    background: var(--admin-card);
-}
-
-.dashboard-stat-card {
-    position: relative;
-    min-height: 137px;
-    min-width: 190px;
-    padding: 24px 17px 17px;
-}
-
-    .dashboard-stat-card > span {
-        display: block;
-        color: #393651;
-        font-size: 12px;
-        font-weight: 500;
-    }
-
-    .dashboard-stat-card strong {
-        display: block;
-        margin-top: 23px;
-        color: var(--admin-text);
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: -.4px;
-    }
-
-    .dashboard-stat-card small {
-        display: block;
-        margin-top: 10px;
-        color: var(--admin-muted);
-        font-size: 10.5px;
-        font-weight: 700;
-    }
-
-        .dashboard-stat-card small.up {
-            color: var(--admin-success);
-        }
-
-        .dashboard-stat-card small.down {
-            color: var(--admin-danger);
-        }
-
-    .dashboard-stat-card .no-data {
-        font-size: 15px;
-    }
-
-.stat-card-icon {
-    position: absolute;
-    top: 17px;
-    right: 17px;
-    display: grid;
-    width: 37px;
-    height: 37px;
-    place-items: center;
-    border-radius: 50%;
-    font-size: 16px;
-}
-
-    .stat-card-icon.revenue {
-        background: #f0effd;
-        color: var(--admin-purple);
-    }
-
-    .stat-card-icon.orders {
-        background: #e8fff0;
-        color: #17af61;
-    }
-
-    .stat-card-icon.customers {
-        background: #f3ecff;
-        color: #8a5cf6;
-    }
-
-    .stat-card-icon.returns {
-        background: #fff1ef;
-        color: #ed5945;
-    }
-
-/* =========================
-   DASHBOARD CHARTS
-========================= */
-
-.dashboard-chart-grid {
-    display: grid;
-    grid-template-columns: minmax(570px, 2fr) minmax(310px, 1fr);
-    gap: 16px;
-    margin-top: 22px;
-    overflow-x: auto;
-}
-
-.admin-card {
-    min-width: 0;
-    padding: 22px 20px;
-}
-
-    .admin-card h2 {
-        margin: 0;
-        color: var(--admin-text);
-        font-size: 17px;
-        font-weight: 800;
-    }
-
-.actual-revenue-chart {
-    display: flex;
-    height: 277px;
-    align-items: flex-end;
-    gap: 10px;
-    margin-top: 25px;
-    padding: 0 8px 0 34px;
-    border-bottom: 1px solid #d9d8eb;
-}
-
-.revenue-column {
-    display: flex;
-    height: 100%;
-    flex: 1;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 7px;
-    text-align: center;
-}
-
-.revenue-column-area {
-    display: flex;
-    height: 205px;
-    align-items: flex-end;
-    overflow: hidden;
-    border-radius: 6px 6px 0 0;
-    background: #f0effa;
-}
-
-    .revenue-column-area span {
-        width: 100%;
-        min-height: 4px;
-        border-radius: 6px 6px 0 0;
-        background: linear-gradient(180deg, #6864b2, #48458b);
-        transition: height 500ms var(--admin-ease);
-    }
-
-.revenue-column small,
-.revenue-value {
-    overflow: hidden;
-    color: #706d86;
-    font-size: 10px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.revenue-value {
-    min-height: 12px;
-}
-
-.actual-category-chart {
-    display: grid;
-    gap: 17px;
-    margin-top: 28px;
-}
-
-.actual-category-row {
-    display: grid;
-    grid-template-columns: 77px 1fr 78px;
-    align-items: center;
-    gap: 9px;
-}
-
-    .actual-category-row > span {
-        overflow: hidden;
-        color: #5e5a74;
-        font-size: 11px;
-        text-align: right;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .actual-category-row > div {
-        height: 20px;
-        overflow: hidden;
-        border-radius: 4px;
-        background: #efeff9;
-    }
-
-    .actual-category-row i {
-        display: block;
-        height: 100%;
-        border-radius: 4px;
-        background: linear-gradient(90deg, #48458b, #6b67b4);
-        transition: width 500ms var(--admin-ease);
-    }
-
-    .actual-category-row strong {
-        overflow: hidden;
-        color: #514d6a;
-        font-size: 10px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-.dashboard-empty {
-    margin: 40px 0;
-    color: #85829d;
-    font-size: 13px;
-    text-align: center;
-}
-
-/* =========================
-   RECENT ORDERS TABLE
-========================= */
-
-.recent-orders-card {
-    margin-top: 22px;
-    padding: 0;
-    overflow: hidden;
-}
-
-.card-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 20px;
-    border-bottom: 1px solid var(--admin-border);
-}
-
-    .card-title-row h2 {
-        margin: 0;
-    }
-
-    .card-title-row > span {
-        color: #7d7a94;
-        font-size: 11px;
-    }
-
-.admin-table-wrap {
-    overflow-x: auto;
-}
-
-.admin-table {
-    width: 100%;
-    min-width: 720px;
-    border-collapse: collapse;
-}
-
-    .admin-table th {
-        padding: 12px 20px;
-        background: #ededfa;
-        color: #55526f;
-        font-size: 10.5px;
-        font-weight: 800;
-        text-align: left;
-    }
-
-    .admin-table td {
-        padding: 14px 20px;
-        border-top: 1px solid #ecebf6;
-        color: #302d44;
-        font-size: 12px;
-    }
-
-    .admin-table tbody tr {
-        transition: background 150ms ease;
-    }
-
-        .admin-table tbody tr:hover {
-            background: #fafaff;
-        }
-
-    .admin-table td strong {
-        color: var(--admin-purple);
-    }
-
-.table-price {
-    color: #e90028 !important;
-    font-weight: 800;
-}
-
-.status {
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 99px;
-    font-size: 10.5px;
-    font-weight: 700;
-}
-
-    .status.done {
-        background: #dcf9e7;
-        color: #188d51;
-    }
-
-    .status.shipping {
-        background: #e3e3fa;
-        color: #4c498b;
-    }
-
-    .status.pending {
-        background: #fff2d6;
-        color: var(--admin-warning);
-    }
-
-    .status.cancelled {
-        background: #ffe8eb;
-        color: #d3394d;
-    }
-
-/* =========================
-   COLLAPSED DESKTOP MENU
-========================= */
+/* Sidebar thu gọn */
 
 @media (min-width: 851px) {
     body.admin-sidebar-collapsed .admin-sidebar {
@@ -741,11 +395,6 @@ body {
         max-width: 0;
         opacity: 0;
         transform: translateX(-8px);
-    }
-
-    body.admin-sidebar-collapsed .admin-nav {
-        padding-right: 12px;
-        padding-left: 12px;
     }
 
     body.admin-sidebar-collapsed .admin-nav-label {
@@ -802,9 +451,7 @@ body {
     }
 }
 
-/* =========================
-   MOBILE SIDEBAR
-========================= */
+/* Mobile */
 
 .admin-sidebar-backdrop {
     position: fixed;
@@ -821,12 +468,6 @@ body {
         visibility: visible;
         opacity: 1;
     }
-
-@media (max-width: 1100px) {
-    .dashboard-stat-grid {
-        grid-template-columns: repeat(2, minmax(200px, 1fr));
-    }
-}
 
 @media (max-width: 850px) {
     .admin-sidebar {
@@ -872,13 +513,5 @@ body {
 
     .admin-header-left p {
         font-size: 10px;
-    }
-
-    .dashboard-stat-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-chart-grid {
-        grid-template-columns: minmax(540px, 1fr) minmax(300px, 1fr);
     }
 }
