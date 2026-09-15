@@ -1,0 +1,616 @@
+﻿@model EMua.ViewModels.CategoryManagementViewModel
+
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/admin/admin-category.css"
+          asp-append-version="true" />
+}
+
+<section class="category-page">
+    <div class="category-page-heading">
+        <div>
+            <span>HỆ THỐNG DANH MỤC</span>
+            <h2>Quản lý danh mục</h2>
+            <p>Thiết lập nhóm sản phẩm hiển thị trên cửa hàng EMUA.</p>
+        </div>
+
+        <button type="button"
+                class="category-primary-button"
+                data-create-category>
+            <i class="bi bi-plus-lg"></i>
+            Thêm danh mục
+        </button>
+    </div>
+
+    <div class="category-workspace">
+        <aside class="category-list-card">
+            <div class="category-list-heading">
+                <div>
+                    <span>DANH SÁCH</span>
+                    <h3>Danh mục sản phẩm</h3>
+                </div>
+
+                <span class="category-count" id="categoryCount">
+                    @Model.Categories.Count mục
+                </span>
+            </div>
+
+            <div class="category-search">
+                <i class="bi bi-search"></i>
+                <input type="text"
+                       id="categorySearch"
+                       placeholder="Tìm danh mục..." />
+            </div>
+
+            <div class="category-list" id="categoryList">
+                @foreach (var category in Model.Categories)
+                {
+                    <button type="button"
+                            class="category-item @(category.MaDanhMuc == Model.SelectedCategoryId ? "active" : "")"
+                            data-id="@category.MaDanhMuc"
+                            data-name="@category.TenDanhMuc.ToLowerInvariant()">
+
+                        <span class="category-item-icon">
+                            <i class="bi bi-box-seam"></i>
+                        </span>
+
+                        <span class="category-item-name">
+                            <strong>@category.TenDanhMuc</strong>
+                            <small>@category.ProductCount sản phẩm</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                }
+            </div>
+
+            <button type="button"
+                    class="category-outline-button"
+                    data-create-category>
+                <i class="bi bi-plus-circle"></i>
+                Thêm danh mục mới
+            </button>
+        </aside>
+
+        <main class="category-detail-card" id="categoryEditorPanel">
+            <div class="category-detail-heading">
+                <div>
+                    <span class="category-detail-badge" id="editorBadge">
+                        <i class="bi bi-pencil-square"></i>
+                        ĐANG CHỈNH SỬA
+                    </span>
+
+                    <h3 id="editorTitle">
+                        @(Model.Editor.MaDanhMuc == 0
+                                                ? "Tạo danh mục mới"
+                                                : $"Danh mục: {Model.Editor.TenDanhMuc}")
+                    </h3>
+
+                    <p id="editorSubTitle">
+                        Cập nhật thông tin hiển thị của danh mục sản phẩm.
+                    </p>
+                </div>
+
+                <span class="category-active-state"
+                      id="categoryActiveState">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Đang hoạt động
+                </span>
+            </div>
+
+            <form id="categoryForm" class="category-form">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       id="categoryId"
+                       name="MaDanhMuc"
+                       value="@Model.Editor.MaDanhMuc" />
+
+                <div class="category-form-grid">
+                    <div class="category-form-group">
+                        <label for="categoryName">
+                            Tên danh mục <b>*</b>
+                        </label>
+
+                        <input id="categoryName"
+                               name="TenDanhMuc"
+                               value="@Model.Editor.TenDanhMuc"
+                               placeholder="Nhập tên danh mục" />
+                    </div>
+
+                    <div class="category-form-group">
+                        <label for="categoryStatus">
+                            Trạng thái hiển thị <b>*</b>
+                        </label>
+
+                        <select id="categoryStatus" name="IsActive">
+                            @if (Model.Editor.IsActive)
+                            {
+                                <option value="true" selected>Đang hoạt động</option>
+                                <option value="false">Ngừng hiển thị</option>
+                            }
+                            else
+                            {
+                                <option value="true">Đang hoạt động</option>
+                                <option value="false" selected>Ngừng hiển thị</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="category-summary-box"
+                     id="categorySummary">
+                    <span class="category-summary-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </span>
+
+                    <div>
+                        <strong id="productCountText">
+                            @Model.Editor.ProductCount sản phẩm đang thuộc danh mục này
+                        </strong>
+
+                        <small>
+                            Không thể xóa danh mục khi vẫn còn sản phẩm liên quan.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="category-form-group">
+                    <label for="categoryDescription">
+                        Mô tả danh mục
+                    </label>
+
+                    <textarea id="categoryDescription"
+                              name="MoTa"
+                              rows="6"
+                              placeholder="Nhập mô tả danh mục...">@Model.Editor.MoTa</textarea>
+
+                    <small class="category-input-note">
+                        Mô tả giúp khách hàng hiểu rõ hơn về nhóm sản phẩm này.
+                    </small>
+                </div>
+
+                <div class="category-form-footer">
+                    <span>
+                        <i class="bi bi-info-circle"></i>
+                        Những trường có dấu <b>*</b> là bắt buộc.
+                    </span>
+
+                    <div>
+                        <button type="button"
+                                class="category-delete-button"
+                                id="deleteCategoryButton"
+                                style="@(Model.Editor.MaDanhMuc == 0 ? "display:none" : "")">
+                            <i class="bi bi-trash3"></i>
+                            Xóa danh mục
+                        </button>
+
+                        <button type="submit"
+                                class="category-save-button"
+                                id="saveCategoryButton">
+                            <i class="bi bi-check2"></i>
+                            Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const categoryList = document.getElementById("categoryList");
+        const categoryCount = document.getElementById("categoryCount");
+        const categorySearch = document.getElementById("categorySearch");
+        const categoryForm = document.getElementById("categoryForm");
+        const editorPanel = document.getElementById("categoryEditorPanel");
+
+        const categoryId = document.getElementById("categoryId");
+        const categoryName = document.getElementById("categoryName");
+        const categoryStatus = document.getElementById("categoryStatus");
+        const categoryDescription = document.getElementById("categoryDescription");
+
+        const editorBadge = document.getElementById("editorBadge");
+        const editorTitle = document.getElementById("editorTitle");
+        const editorSubTitle = document.getElementById("editorSubTitle");
+        const categoryActiveState = document.getElementById("categoryActiveState");
+
+        const categorySummary = document.getElementById("categorySummary");
+        const productCountText = document.getElementById("productCountText");
+
+        const deleteCategoryButton = document.getElementById("deleteCategoryButton");
+        const saveCategoryButton = document.getElementById("saveCategoryButton");
+
+        const getCategoryUrl =
+            '@Url.Action("GetCategory", "Category", new { area = "Admin" })';
+
+        const saveUrl =
+            '@Url.Action("SaveAjax", "Category", new { area = "Admin" })';
+
+        const deleteUrl =
+            '@Url.Action("DeleteAjax", "Category", new { area = "Admin" })';
+
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = value ?? "";
+            return div.innerHTML;
+        }
+
+        function iconByCategoryName(name) {
+            const lowerName = (name || "").toLowerCase();
+
+            if (lowerName.includes("điện thoại")) return "bi-phone";
+            if (lowerName.includes("laptop")) return "bi-laptop";
+            if (lowerName.includes("gaming")) return "bi-controller";
+            if (lowerName.includes("âm thanh")) return "bi-headphones";
+            if (lowerName.includes("đồng hồ")) return "bi-smartwatch";
+
+            return "bi-box-seam";
+        }
+
+        function showDialog(title, message, type = "success") {
+            const isSuccess = type === "success";
+
+            const dialog = document.createElement("div");
+
+            dialog.className = "admin-dialog-backdrop is-visible";
+
+            dialog.innerHTML = `
+                <div class="admin-dialog">
+                    <div class="admin-dialog-icon ${isSuccess ? "" : "error"}">
+                        <i class="bi ${isSuccess ? "bi-check-lg" : "bi-exclamation-lg"}"></i>
+                    </div>
+
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>${escapeHtml(message)}</p>
+
+                    <button type="button"
+                            class="admin-dialog-confirm">
+                        Đã hiểu
+                    </button>
+                </div>`;
+
+            document.body.appendChild(dialog);
+
+            dialog.querySelector(".admin-dialog-confirm")
+                .addEventListener("click", function () {
+                    dialog.remove();
+                });
+        }
+
+        function showDeleteConfirm() {
+            const dialog = document.createElement("div");
+
+            dialog.className = "admin-dialog-backdrop is-visible";
+
+            dialog.innerHTML = `
+                <div class="admin-dialog">
+                    <div class="admin-dialog-icon warning">
+                        <i class="bi bi-trash3"></i>
+                    </div>
+
+                    <h3>Xóa danh mục?</h3>
+
+                    <p>
+                        Hệ thống sẽ kiểm tra sản phẩm liên quan
+                        trước khi cho phép xóa.
+                    </p>
+
+                    <div class="admin-dialog-actions">
+                        <button type="button"
+                                class="admin-dialog-cancel">
+                            Quay lại
+                        </button>
+
+                        <button type="button"
+                                class="admin-dialog-delete">
+                            Xóa danh mục
+                        </button>
+                    </div>
+                </div>`;
+
+            document.body.appendChild(dialog);
+
+            dialog.querySelector(".admin-dialog-cancel")
+                .addEventListener("click", function () {
+                    dialog.remove();
+                });
+
+            dialog.querySelector(".admin-dialog-delete")
+                .addEventListener("click", async function () {
+                    dialog.remove();
+                    await deleteCategory();
+                });
+        }
+
+        function setLoading(isLoading) {
+            categoryForm.classList.toggle("is-loading", isLoading);
+
+            saveCategoryButton.disabled = isLoading;
+            deleteCategoryButton.disabled = isLoading;
+        }
+
+        function setEditor(category) {
+            const isNew = !category || category.maDanhMuc === 0;
+
+            categoryId.value = isNew ? "0" : category.maDanhMuc;
+            categoryName.value = isNew ? "" : category.tenDanhMuc;
+            categoryStatus.value = !category || category.isActive
+                ? "true"
+                : "false";
+            categoryDescription.value = isNew
+                ? ""
+                : (category.moTa ?? "");
+
+            editorBadge.innerHTML = isNew
+                ? '<i class="bi bi-plus-circle"></i> THÊM MỚI'
+                : '<i class="bi bi-pencil-square"></i> ĐANG CHỈNH SỬA';
+
+            editorTitle.textContent = isNew
+                ? "Tạo danh mục mới"
+                : `Danh mục: ${category.tenDanhMuc}`;
+
+            editorSubTitle.textContent = isNew
+                ? "Nhập thông tin để tạo nhóm sản phẩm mới."
+                : "Cập nhật thông tin hiển thị của danh mục sản phẩm.";
+
+            categorySummary.style.display = isNew ? "none" : "flex";
+
+            deleteCategoryButton.style.display = isNew
+                ? "none"
+                : "inline-flex";
+
+            saveCategoryButton.innerHTML = isNew
+                ? '<i class="bi bi-plus-lg"></i> Tạo danh mục'
+                : '<i class="bi bi-check2"></i> Lưu thay đổi';
+
+            if (!isNew) {
+                productCountText.textContent =
+                    `${category.productCount} sản phẩm đang thuộc danh mục này`;
+
+                categoryActiveState.style.display = "inline-flex";
+
+                if (category.isActive) {
+                    categoryActiveState.classList.remove("inactive");
+                    categoryActiveState.innerHTML =
+                        '<i class="bi bi-check-circle-fill"></i> Đang hoạt động';
+                }
+                else {
+                    categoryActiveState.classList.add("inactive");
+                    categoryActiveState.innerHTML =
+                        '<i class="bi bi-pause-circle-fill"></i> Ngừng hiển thị';
+                }
+            }
+            else {
+                categoryActiveState.style.display = "none";
+            }
+        }
+
+        function renderCategoryList(categories, selectedId) {
+            categoryCount.textContent = `${categories.length} mục`;
+
+            categoryList.innerHTML = categories.map(function (category) {
+                const isActive = category.maDanhMuc === selectedId;
+
+                return `
+                    <button type="button"
+                            class="category-item ${isActive ? "active" : ""}"
+                            data-id="${category.maDanhMuc}"
+                            data-name="${escapeHtml(category.tenDanhMuc.toLowerCase())}">
+
+                        <span class="category-item-icon">
+                            <i class="bi ${iconByCategoryName(category.tenDanhMuc)}"></i>
+                        </span>
+
+                        <span class="category-item-name">
+                            <strong>${escapeHtml(category.tenDanhMuc)}</strong>
+                            <small>${category.productCount} sản phẩm</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+                    </button>`;
+            }).join("");
+        }
+
+        async function selectCategory(id, button) {
+            if (button.classList.contains("active")) return;
+
+            setLoading(true);
+
+            try {
+                const response = await fetch(`${getCategoryUrl}?id=${id}`);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showDialog(
+                        "Không thể tải danh mục",
+                        result.message ?? "Có lỗi xảy ra.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                document.querySelectorAll(".category-item")
+                    .forEach(function (item) {
+                        item.classList.remove("active");
+                    });
+
+                button.classList.add("active");
+                setEditor(result.category);
+            }
+            catch {
+                showDialog(
+                    "Lỗi kết nối",
+                    "Không thể tải dữ liệu. Vui lòng thử lại.",
+                    "error"
+                );
+            }
+            finally {
+                setLoading(false);
+            }
+        }
+
+        categoryList.addEventListener("click", function (event) {
+            const button = event.target.closest(".category-item");
+
+            if (!button) return;
+
+            selectCategory(button.dataset.id, button);
+        });
+
+        document.querySelectorAll("[data-create-category]")
+            .forEach(function (button) {
+                button.addEventListener("click", function () {
+                    document.querySelectorAll(".category-item")
+                        .forEach(function (item) {
+                            item.classList.remove("active");
+                        });
+
+                    setEditor({
+                        maDanhMuc: 0,
+                        tenDanhMuc: "",
+                        moTa: "",
+                        isActive: true,
+                        productCount: 0
+                    });
+
+                    categoryName.focus();
+                });
+            });
+
+        categorySearch.addEventListener("input", function () {
+            const keyword = this.value.trim().toLowerCase();
+
+            document.querySelectorAll(".category-item")
+                .forEach(function (item) {
+                    const name = item.dataset.name || "";
+
+                    item.style.display = name.includes(keyword)
+                        ? ""
+                        : "none";
+                });
+        });
+
+        categoryForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            setLoading(true);
+
+            try {
+                const formData = new FormData(categoryForm);
+
+                const response = await fetch(saveUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showDialog(
+                        "Không thể lưu",
+                        result.message ?? "Dữ liệu chưa hợp lệ.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                renderCategoryList(
+                    result.categories,
+                    result.category.maDanhMuc
+                );
+
+                setEditor(result.category);
+
+                showDialog(
+                    "Thành công",
+                    result.message,
+                    "success"
+                );
+            }
+            catch {
+                showDialog(
+                    "Lỗi kết nối",
+                    "Không thể lưu dữ liệu. Vui lòng thử lại.",
+                    "error"
+                );
+            }
+            finally {
+                setLoading(false);
+            }
+        });
+
+        deleteCategoryButton.addEventListener("click", function () {
+            if (categoryId.value === "0") return;
+
+            showDeleteConfirm();
+        });
+
+        async function deleteCategory() {
+            setLoading(true);
+
+            try {
+                const formData = new FormData();
+
+                formData.append("id", categoryId.value);
+
+                formData.append(
+                    "__RequestVerificationToken",
+                    document.querySelector(
+                        'input[name="__RequestVerificationToken"]'
+                    ).value
+                );
+
+                const response = await fetch(deleteUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showDialog(
+                        "Không thể xóa",
+                        result.message ?? "Có lỗi xảy ra.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                renderCategoryList(result.categories, 0);
+
+                setEditor({
+                    maDanhMuc: 0,
+                    tenDanhMuc: "",
+                    moTa: "",
+                    isActive: true,
+                    productCount: 0
+                });
+
+                showDialog(
+                    "Đã xóa",
+                    result.message,
+                    "success"
+                );
+            }
+            catch {
+                showDialog(
+                    "Lỗi kết nối",
+                    "Không thể xóa danh mục. Vui lòng thử lại.",
+                    "error"
+                );
+            }
+            finally {
+                setLoading(false);
+            }
+        }
+    </script>
+}
