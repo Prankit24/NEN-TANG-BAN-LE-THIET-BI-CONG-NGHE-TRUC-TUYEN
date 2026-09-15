@@ -269,5 +269,80 @@
                 setAvatarPreview(radio.value);
             });
         });
+
+        function showProfileDialog(title, message, isError = false) {
+            const dialog = document.createElement("div");
+
+            dialog.className = "profile-ajax-dialog-backdrop";
+            dialog.innerHTML = `
+                <div class="profile-ajax-dialog" role="dialog" aria-modal="true">
+                    <div class="profile-ajax-dialog-icon ${isError ? "error" : ""}">
+                        <i class="bi ${isError ? "bi-exclamation-lg" : "bi-check-lg"}"></i>
+                    </div>
+                    <h3></h3>
+                    <p></p>
+                    <button type="button">Đã hiểu</button>
+                </div>`;
+
+            dialog.querySelector("h3").textContent = title;
+            dialog.querySelector("p").textContent = message;
+            dialog.querySelector("button").addEventListener("click", function () {
+                dialog.remove();
+            });
+
+            document.body.appendChild(dialog);
+            requestAnimationFrame(function () {
+                dialog.classList.add("is-visible");
+            });
+        }
+
+        document.getElementById("profileEditForm")
+            ?.addEventListener("submit", async function (event) {
+                event.preventDefault();
+
+                const form = event.currentTarget;
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalHtml = submitButton.innerHTML;
+
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu';
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: new FormData(form)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        showProfileDialog(
+                            "Không thể lưu thay đổi",
+                            result.message ?? "Vui lòng kiểm tra lại thông tin.",
+                            true
+                        );
+                        return;
+                    }
+
+                    showProfileDialog(
+                        "Đã lưu thay đổi",
+                        result.message ?? "Hồ sơ của bạn đã được cập nhật."
+                    );
+                }
+                catch {
+                    showProfileDialog(
+                        "Lỗi kết nối",
+                        "Không thể lưu dữ liệu. Vui lòng thử lại.",
+                        true
+                    );
+                }
+                finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalHtml;
+                }
+            });
     </script>
 }

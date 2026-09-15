@@ -138,7 +138,22 @@ public class AccountController : Controller
         }
 
         if (!ModelState.IsValid)
+        {
+            if (IsAjaxRequest())
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ModelState.Values
+                        .SelectMany(x => x.Errors)
+                        .Select(x => x.ErrorMessage)
+                        .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+                        ?? "Dữ liệu hồ sơ chưa hợp lệ."
+                });
+            }
+
             return View(model);
+        }
 
         // Nếu tải ảnh từ máy, ưu tiên ảnh tải lên.
         if (model.AvatarFile is { Length: > 0 })
@@ -179,6 +194,22 @@ public class AccountController : Controller
             : model.Address.Trim();
 
         await _db.SaveChangesAsync();
+
+        if (IsAjaxRequest())
+        {
+            return Json(new
+            {
+                success = true,
+                message = "Cập nhật hồ sơ thành công.",
+                profile = new
+                {
+                    fullName = user.TenNguoiDung,
+                    phoneNumber = user.SoDienThoai,
+                    address = user.DiaChi,
+                    avatarUrl = user.AnhDaiDien
+                }
+            });
+        }
 
         TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công.";
 
@@ -239,5 +270,10 @@ public class AccountController : Controller
             result = "0" + result[3..];
 
         return result;
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
     }
 }
