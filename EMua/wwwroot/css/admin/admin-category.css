@@ -576,3 +576,26 @@
     background: #d54459;
     color: #fff;
 }
+
+/* Phong cách form vuông, gọn và dễ quét dữ liệu. Avatar/trạng thái vẫn bo
+   tròn để giữ ý nghĩa nhận diện và trạng thái. */
+.category-list-card,
+.category-detail-card,
+.category-primary-button,
+.category-save-button,
+.category-outline-button,
+.category-delete-button,
+.category-search,
+.category-item,
+.category-item-icon,
+.category-form-group input,
+.category-form-group select,
+.category-form-group textarea,
+.category-summary-box,
+.category-summary-icon,
+.admin-dialog,
+.admin-dialog-confirm,
+.admin-dialog-delete,
+.admin-dialog-cancel {
+    border-radius: 2px;
+}

@@ -27,5 +27,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.ML" Version="5.0.0" />
   </ItemGroup>
-
+<ItemGroup>
+  <Content Include="Data\AITraining\domain-data.csv">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  </Content>
+</ItemGroup>
 </Project>
