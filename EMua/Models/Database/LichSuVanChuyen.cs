@@ -26,7 +26,7 @@ public partial class LichSuVanChuyen
     [StringLength(255)]
     public string? HinhAnhNguoiNhan { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime ThoiGian { get; set; }
 
     [ForeignKey("MaDonHang")]

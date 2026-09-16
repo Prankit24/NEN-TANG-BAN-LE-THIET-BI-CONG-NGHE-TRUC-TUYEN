@@ -88,6 +88,16 @@
                     <span>Danh mục</span>
                 </a>
 
+                <a class="@(currentController == "Brand" ? "active" : "")"
+                   data-tooltip="Thương hiệu"
+                   asp-area="Admin"
+                   asp-controller="Brand"
+                   asp-action="Index">
+
+                    <i class="bi bi-award"></i>
+                    <span>Thương hiệu</span>
+                </a>
+
                 <a href="#"
                    data-tooltip="Đơn hàng">
                     <i class="bi bi-receipt"></i>

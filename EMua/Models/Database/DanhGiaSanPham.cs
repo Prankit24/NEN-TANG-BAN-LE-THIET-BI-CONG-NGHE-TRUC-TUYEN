@@ -23,7 +23,7 @@ public partial class DanhGiaSanPham
 
     public int? MaDonHang { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayDanhGia { get; set; }
 
     public bool? TrangThai { get; set; }

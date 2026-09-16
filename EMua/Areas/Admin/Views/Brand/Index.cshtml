@@ -1,0 +1,606 @@
+﻿@model EMua.Areas.Admin.Models.ViewModels.BrandManagementViewModel
+
+@{
+    ViewData["Title"] = "Quản lý thương hiệu";
+    var editor = Model.Editor;
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/admin/admin-brand.css"
+          asp-append-version="true" />
+}
+
+<div class="brand-page">
+    <div class="brand-page-heading">
+        <div>
+            <span>THƯƠNG HIỆU</span>
+            <h2>Quản lý thương hiệu</h2>
+            <p>Thêm, cập nhật logo và quản lý trạng thái thương hiệu.</p>
+        </div>
+
+        <div class="brand-page-actions">
+            <button type="submit"
+                    form="brandForm"
+                    class="brand-save-button brand-save-top"
+                    id="saveBrandBtn">
+                <i class="bi bi-save"></i>
+                Lưu thương hiệu
+            </button>
+        </div>
+    </div>
+
+    <div class="brand-workspace">
+        <aside class="brand-list-card">
+            <div class="brand-list-heading">
+                <div>
+                    <span>DANH SÁCH</span>
+                    <h3>Thương hiệu</h3>
+                </div>
+
+                <b>@Model.Brands.Count</b>
+            </div>
+
+            <div class="brand-search">
+                <i class="bi bi-search"></i>
+                <input type="text"
+                       id="brandSearchInput"
+                       placeholder="Tìm thương hiệu..."
+                       oninput="filterBrandList()" />
+            </div>
+
+            <div class="brand-list" id="brandList">
+                @if (!Model.Brands.Any())
+                {
+                    <p class="text-muted brand-empty">
+                        Chưa có thương hiệu nào.
+                    </p>
+                }
+                else
+                {
+                    @foreach (var brand in Model.Brands)
+                    {
+                        var initial = string.IsNullOrEmpty(brand.TenThuongHieu)
+                        ? "?"
+                        : brand.TenThuongHieu.Substring(0, 1).ToUpper();
+
+                        <button type="button"
+                                class="brand-item"
+                                data-id="@brand.MaThuongHieu"
+                                data-count="@brand.ProductCount"
+                                data-search="@brand.TenThuongHieu.ToLower()"
+                                onclick="selectBrand(this)">
+
+                            <span class="brand-logo">
+                                @if (!string.IsNullOrWhiteSpace(brand.Logo))
+                                {
+                                    <img src="@brand.Logo"
+                                         alt="@brand.TenThuongHieu" />
+                                }
+                                else
+                                {
+                                    @initial
+                                }
+                            </span>
+
+                            <span>
+                                <strong>@brand.TenThuongHieu</strong>
+                                <small>@brand.ProductCount sản phẩm</small>
+                            </span>
+
+                            <em class="@(brand.TrangThai ? "on" : "off")">
+                                @(brand.TrangThai ? "Hoạt động" : "Tắt")
+                            </em>
+                        </button>
+                    }
+
+                    <p class="text-muted brand-empty"
+                       id="brandEmptyState"
+                       hidden>
+                        Không tìm thấy thương hiệu phù hợp.
+                    </p>
+                }
+            </div>
+
+            <button type="button"
+                    class="brand-outline-button"
+                    onclick="resetBrandForm()">
+                <i class="bi bi-plus-lg"></i>
+                Thêm thương hiệu mới
+            </button>
+        </aside>
+
+        <main class="brand-detail-card" id="brandEditorCard">
+            <div class="brand-detail-heading">
+                <div>
+                    <span id="editorMode">
+                        @(editor.MaThuongHieu == 0 ? "THÊM MỚI" : "CHỈNH SỬA")
+                    </span>
+
+                    <h3 id="formTitle">
+                        @(editor.MaThuongHieu == 0
+                                                ? "Thêm thương hiệu"
+                                                : "Chỉnh sửa thương hiệu")
+                    </h3>
+
+                    <p id="formSubtitle">
+                        Nhập tên, mô tả và logo cho thương hiệu.
+                    </p>
+                </div>
+
+                <span class="brand-state @(editor.TrangThai ? "" : "off")"
+                      id="brandStateBadge"
+                      @(editor.MaThuongHieu == 0 ? "hidden" : "")>
+                    @(editor.TrangThai ? "Đang hoạt động" : "Ngừng hoạt động")
+                </span>
+            </div>
+
+            <div class="brand-summary"
+                 id="brandSummary"
+                 @(editor.MaThuongHieu == 0 ? "hidden" : "")>
+                <i class="bi bi-box-seam"></i>
+
+                <div>
+                    <strong id="brandSummaryTitle">
+                        @editor.ProductCount sản phẩm
+                    </strong>
+                    <small id="brandSummarySubtitle">
+                        thuộc thương hiệu này
+                    </small>
+                </div>
+            </div>
+
+            <form id="brandForm"
+                  method="post"
+                  enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       id="MaThuongHieu"
+                       name="MaThuongHieu"
+                       value="@editor.MaThuongHieu" />
+
+                <div class="brand-form-grid">
+                    <label>
+                        Tên thương hiệu <b>*</b>
+
+                        <input type="text"
+                               id="TenThuongHieu"
+                               name="TenThuongHieu"
+                               value="@editor.TenThuongHieu"
+                               maxlength="100"
+                               required
+                               placeholder="Ví dụ: Apple, Samsung..." />
+                    </label>
+
+                    <label>
+                        Trạng thái
+
+                        <select id="TrangThai" name="TrangThai">
+                            @if (editor.TrangThai)
+                            {
+                                <option value="true" selected>
+                                    Đang hoạt động
+                                </option>
+                                <option value="false">
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="true">
+                                    Đang hoạt động
+                                </option>
+                                <option value="false" selected>
+                                    Ngừng hoạt động
+                                </option>
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                <div class="brand-logo-upload">
+                    <div class="brand-logo-preview" id="logoPreviewWrap">
+                        <img id="logoPreview"
+                             src="@editor.Logo"
+                             class="@(string.IsNullOrWhiteSpace(editor.Logo) ? "d-none" : "")"
+                             alt="Logo xem trước" />
+
+                        <i id="logoPreviewIcon"
+                           class="bi bi-image @(string.IsNullOrWhiteSpace(editor.Logo) ? "" : "d-none")"></i>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <strong>Logo thương hiệu</strong>
+                        <small>JPG, JPEG, PNG hoặc WEBP. Tối đa 2 MB.</small>
+
+                        <label class="brand-file-button">
+                            Chọn tệp
+                            <input type="file"
+                                   id="LogoFile"
+                                   name="LogoFile"
+                                   accept=".jpg,.jpeg,.png,.webp" />
+                        </label>
+                    </div>
+                </div>
+
+                <div class="brand-description">
+                    <label>
+                        Mô tả
+
+                        <textarea id="MoTa"
+                                  name="MoTa"
+                                  maxlength="500"
+                                  placeholder="Mô tả ngắn về thương hiệu">@editor.MoTa</textarea>
+                    </label>
+                </div>
+
+                <div class="brand-form-footer">
+                    <div>
+                        <b>*</b>&nbsp;là trường bắt buộc
+                    </div>
+
+                    <div>
+                        <button type="button"
+                                class="brand-delete-button"
+                                id="deleteBrandBtn"
+                                @(editor.MaThuongHieu == 0 ? "hidden" : "")
+                                onclick="confirmDeleteBrand()">
+                            <i class="bi bi-trash"></i>
+                            Xóa
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+
+<div class="brand-dialog-backdrop" id="dialogBackdrop" hidden>
+    <div class="brand-dialog">
+        <i id="dialogIcon" class="bi"></i>
+        <h3 id="dialogTitle"></h3>
+        <p id="dialogMessage"></p>
+
+        <div>
+            <button type="button"
+                    class="brand-dialog-cancel"
+                    id="dialogCancelBtn"
+                    hidden>
+                Hủy
+            </button>
+
+            <button type="button"
+                    class="brand-dialog-confirm"
+                    id="dialogConfirmBtn">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const saveUrl = '@Url.Action("SaveAjax", "Brand", new { area = "Admin" })';
+        const getUrl = '@Url.Action("GetBrand", "Brand", new { area = "Admin" })';
+        const deleteUrl = '@Url.Action("DeleteAjax", "Brand", new { area = "Admin" })';
+
+        const form = document.getElementById("brandForm");
+        const logoInput = document.getElementById("LogoFile");
+        const logoPreview = document.getElementById("logoPreview");
+        const logoPreviewIcon = document.getElementById("logoPreviewIcon");
+        const saveBtn = document.getElementById("saveBrandBtn");
+        const deleteBtn = document.getElementById("deleteBrandBtn");
+
+        let currentDeleteId = null;
+        let currentDeleteName = "";
+
+        function showDialog({
+            icon = "info",
+            title,
+            message,
+            confirmText = "Đóng",
+            showCancel = false,
+            onConfirm = null
+        }) {
+            const backdrop = document.getElementById("dialogBackdrop");
+            const iconEl = document.getElementById("dialogIcon");
+            const cancelBtn = document.getElementById("dialogCancelBtn");
+            const confirmBtn = document.getElementById("dialogConfirmBtn");
+
+            const iconMap = {
+                success: "bi-check-circle-fill success",
+                error: "bi-x-circle-fill error",
+                warning: "bi-exclamation-triangle-fill",
+                info: "bi-info-circle-fill"
+            };
+
+            iconEl.className = "bi " + (iconMap[icon] || iconMap.info);
+            document.getElementById("dialogTitle").textContent = title || "";
+            document.getElementById("dialogMessage").textContent = message || "";
+
+            confirmBtn.textContent = confirmText;
+            cancelBtn.hidden = !showCancel;
+
+            confirmBtn.onclick = () => {
+                closeDialog();
+
+                if (onConfirm) {
+                    onConfirm();
+                }
+            };
+
+            cancelBtn.onclick = closeDialog;
+            backdrop.hidden = false;
+        }
+
+        function closeDialog() {
+            document.getElementById("dialogBackdrop").hidden = true;
+        }
+
+        function filterBrandList() {
+            const query = document.getElementById("brandSearchInput")
+                .value
+                .trim()
+                .toLowerCase();
+
+            const items = document.querySelectorAll("#brandList .brand-item");
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const match = item.dataset.search.includes(query);
+                item.hidden = !match;
+
+                if (match) {
+                    visibleCount++;
+                }
+            });
+
+            const emptyState = document.getElementById("brandEmptyState");
+
+            if (emptyState) {
+                emptyState.hidden = visibleCount !== 0 || items.length === 0;
+            }
+        }
+
+        function showLogoPreview(url) {
+            if (!url) {
+                logoPreview.src = "";
+                logoPreview.classList.add("d-none");
+                logoPreviewIcon.classList.remove("d-none");
+                return;
+            }
+
+            logoPreview.src = url;
+            logoPreview.classList.remove("d-none");
+            logoPreviewIcon.classList.add("d-none");
+        }
+
+        logoInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showDialog({
+                    icon: "error",
+                    title: "Logo quá lớn",
+                    message: "Logo không được vượt quá 2 MB."
+                });
+
+                this.value = "";
+                return;
+            }
+
+            showLogoPreview(URL.createObjectURL(file));
+        });
+
+        function selectBrand(button) {
+            document.querySelectorAll("#brandList .brand-item")
+                .forEach(item => item.classList.remove("active"));
+
+            button.classList.add("active");
+
+            loadBrandDetail(button.dataset.id, button.dataset.count);
+        }
+
+        async function loadBrandDetail(id, count) {
+            try {
+                const response = await fetch(`${getUrl}?id=${id}`);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showDialog({
+                        icon: "error",
+                        title: "Không thể tải",
+                        message: result.message || "Không thể lấy thông tin thương hiệu."
+                    });
+
+                    return;
+                }
+
+                const brand = result.brand;
+
+                currentDeleteId = brand.maThuongHieu;
+                currentDeleteName = brand.tenThuongHieu || "";
+
+                document.getElementById("editorMode").textContent = "CHỈNH SỬA";
+                document.getElementById("formTitle").textContent = "Chỉnh sửa thương hiệu";
+                document.getElementById("MaThuongHieu").value = brand.maThuongHieu;
+                document.getElementById("TenThuongHieu").value = brand.tenThuongHieu || "";
+                document.getElementById("MoTa").value = brand.moTa || "";
+                document.getElementById("TrangThai").value =
+                    brand.trangThai === true ? "true" : "false";
+
+                logoInput.value = "";
+                showLogoPreview(brand.logo || "");
+
+                const stateBadge = document.getElementById("brandStateBadge");
+
+                stateBadge.hidden = false;
+                stateBadge.textContent = brand.trangThai
+                    ? "Đang hoạt động"
+                    : "Ngừng hoạt động";
+
+                stateBadge.classList.toggle("off", !brand.trangThai);
+
+                document.getElementById("brandSummary").hidden = false;
+                document.getElementById("brandSummaryTitle").textContent =
+                    `${count} sản phẩm`;
+
+                document.getElementById("brandSummarySubtitle").textContent =
+                    "thuộc thương hiệu này";
+
+                deleteBtn.hidden = false;
+            }
+            catch {
+                showDialog({
+                    icon: "error",
+                    title: "Lỗi kết nối",
+                    message: "Không thể tải thông tin thương hiệu."
+                });
+            }
+        }
+
+        function resetBrandForm() {
+            form.reset();
+
+            document.querySelectorAll("#brandList .brand-item")
+                .forEach(item => item.classList.remove("active"));
+
+            document.getElementById("editorMode").textContent = "THÊM MỚI";
+            document.getElementById("formTitle").textContent = "Thêm thương hiệu";
+            document.getElementById("MaThuongHieu").value = "0";
+            document.getElementById("TrangThai").value = "true";
+
+            logoInput.value = "";
+
+            document.getElementById("brandStateBadge").hidden = true;
+            document.getElementById("brandSummary").hidden = true;
+            deleteBtn.hidden = true;
+
+            currentDeleteId = null;
+            currentDeleteName = "";
+
+            showLogoPreview("");
+
+            document.getElementById("TenThuongHieu").focus();
+        }
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML =
+                '<span class="spinner-border spinner-border-sm"></span> Đang lưu';
+
+            try {
+                const response = await fetch(saveUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showDialog({
+                        icon: "success",
+                        title: "Đã lưu",
+                        message: result.message || "Lưu thương hiệu thành công."
+                    });
+
+                    setTimeout(() => location.reload(), 900);
+                    return;
+                }
+
+                showDialog({
+                    icon: "error",
+                    title: "Không thể lưu",
+                    message: result.message || "Không thể lưu thương hiệu."
+                });
+            }
+            catch {
+                showDialog({
+                    icon: "error",
+                    title: "Lỗi kết nối",
+                    message: "Không thể kết nối đến máy chủ. Vui lòng thử lại."
+                });
+            }
+            finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML =
+                    '<i class="bi bi-save"></i> Lưu thương hiệu';
+            }
+        });
+
+        function confirmDeleteBrand() {
+            if (!currentDeleteId) {
+                return;
+            }
+
+            showDialog({
+                icon: "warning",
+                title: "Xóa thương hiệu?",
+                message: `Bạn có chắc muốn xóa thương hiệu "${currentDeleteName}" không? Hành động này không thể hoàn tác.`,
+                confirmText: "Xóa",
+                showCancel: true,
+                onConfirm: performDelete
+            });
+        }
+
+        async function performDelete() {
+            const token = document.querySelector(
+                'input[name="__RequestVerificationToken"]'
+            ).value;
+
+            const formData = new FormData();
+
+            formData.append("id", currentDeleteId);
+            formData.append("__RequestVerificationToken", token);
+
+            deleteBtn.disabled = true;
+
+            try {
+                const response = await fetch(deleteUrl, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showDialog({
+                        icon: "success",
+                        title: "Đã xóa",
+                        message: result.message || "Xóa thương hiệu thành công."
+                    });
+
+                    setTimeout(() => location.reload(), 900);
+                    return;
+                }
+
+                showDialog({
+                    icon: "error",
+                    title: "Không thể xóa",
+                    message: result.message || "Không thể xóa thương hiệu."
+                });
+            }
+            catch {
+                showDialog({
+                    icon: "error",
+                    title: "Lỗi kết nối",
+                    message: "Không thể kết nối đến máy chủ."
+                });
+            }
+            finally {
+                deleteBtn.disabled = false;
+            }
+        }
+
+        filterBrandList();
+    </script>
+}

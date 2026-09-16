@@ -11,8 +11,8 @@
     --admin-text: #18172d;
     --admin-muted: #77748f;
     --admin-danger: #ef4257;
-    --admin-speed: 280ms;
-    --admin-ease: cubic-bezier(.2, .8, .2, 1);
+    --admin-speed: 320ms;
+    --admin-ease: cubic-bezier(.22, 1, .36, 1);
 }
 
 * {
@@ -247,6 +247,8 @@ body {
 /* Header */
 
 .admin-header {
+    position: relative;
+    z-index: 101;
     display: flex;
     min-height: 72px;
     align-items: center;
@@ -254,6 +256,7 @@ body {
     padding: 12px 25px;
     border-bottom: 1px solid var(--admin-border);
     background: #fff;
+    transition: padding var(--admin-speed) var(--admin-ease);
 }
 
 .admin-header-left {
@@ -371,6 +374,7 @@ body {
 
 .admin-content {
     padding: 24px;
+    transition: width var(--admin-speed) var(--admin-ease), margin-left var(--admin-speed) var(--admin-ease);
 }
 
 /* Sidebar thu gọn */
@@ -380,7 +384,18 @@ body {
         width: var(--admin-sidebar-small);
     }
 
+    /* Header chạy kín màn hình khi thu menu */
     body.admin-sidebar-collapsed .admin-main {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    body.admin-sidebar-collapsed .admin-header {
+        padding-left: 25px;
+    }
+
+    /* Nội dung vẫn chừa chỗ cho thanh icon bên trái */
+    body.admin-sidebar-collapsed .admin-content {
         width: calc(100% - var(--admin-sidebar-small));
         margin-left: var(--admin-sidebar-small);
     }
@@ -485,6 +500,8 @@ body {
     }
 
     .admin-content {
+        width: 100%;
+        margin-left: 0;
         padding: 20px 16px 32px;
     }
 

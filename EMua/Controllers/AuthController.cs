@@ -282,10 +282,22 @@ public class AuthController : Controller
             return View("Login", new LoginViewModel());
         }
 
+        var providerId = externalResult.Principal
+    .FindFirstValue(ClaimTypes.NameIdentifier);
+
         var email = externalResult.Principal
             .FindFirstValue(ClaimTypes.Email)?
             .Trim()
             .ToLowerInvariant();
+
+        // Facebook đôi khi không trả email.
+        // Tạo định danh nội bộ duy nhất để tài khoản vẫn đăng nhập được.
+        if (string.IsNullOrWhiteSpace(email) &&
+            providerName == "Facebook" &&
+            !string.IsNullOrWhiteSpace(providerId))
+        {
+            email = $"facebook_{providerId}@social.emua.local";
+        }
 
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -293,8 +305,7 @@ public class AuthController : Controller
 
             ModelState.AddModelError(
                 "",
-                $"Tài khoản {providerName} chưa cung cấp email. " +
-                "Hãy dùng đăng ký bằng email hoặc chọn tài khoản có email.");
+                $"Không thể lấy thông tin tài khoản {providerName}.");
 
             return View("Login", new LoginViewModel());
         }

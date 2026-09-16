@@ -15,7 +15,7 @@ public partial class BaoCao
     [StringLength(50)]
     public string? LoaiBaoCao { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayBaoCao { get; set; }
 
     public string? DuLieu { get; set; }

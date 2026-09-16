@@ -32,7 +32,7 @@ public partial class NguoiDung
 
     public bool TrangThai { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayTao { get; set; }
 
     [StringLength(100)]

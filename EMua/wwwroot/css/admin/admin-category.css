@@ -1,4 +1,4 @@
-﻿.category-page {
+.category-page {
     max-width: 1280px;
     margin: 0 auto;
 }
@@ -550,6 +550,44 @@
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+}
+
+/* Giữ màn Category gọn trong một trang desktop */
+@media (min-width: 901px) {
+    .category-page {
+        height: calc(100dvh - 120px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .category-workspace {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .category-list-card,
+    .category-detail-card {
+        min-height: 0;
+    }
+
+    .category-list-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .category-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 4px;
+    }
+
+    .category-detail-card {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
 }
 
 .admin-dialog-confirm {

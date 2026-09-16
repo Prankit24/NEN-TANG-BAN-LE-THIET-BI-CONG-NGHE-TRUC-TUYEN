@@ -14,7 +14,7 @@ public partial class DonHang
 
     public int? MaNguoiDung { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayDat { get; set; }
 
     [Column(TypeName = "decimal(12, 2)")]

@@ -30,10 +30,10 @@ public partial class KhuyenMai
 
     public int? SoLuong { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayBatDau { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayKetThuc { get; set; }
 
     public bool TrangThai { get; set; }

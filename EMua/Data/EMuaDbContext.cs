@@ -17,48 +17,25 @@ public partial class EMuaDbContext : DbContext
     }
 
     public virtual DbSet<BaoCao> BaoCaos { get; set; }
-
     public virtual DbSet<BienTheSanPham> BienTheSanPhams { get; set; }
-
     public virtual DbSet<ChiTietDonHang> ChiTietDonHangs { get; set; }
-
     public virtual DbSet<ChiTietGioHang> ChiTietGioHangs { get; set; }
-
     public virtual DbSet<CuocHoiThoaiAi> CuocHoiThoaiAis { get; set; }
-
     public virtual DbSet<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
-
     public virtual DbSet<DanhMucSanPham> DanhMucSanPhams { get; set; }
-
     public virtual DbSet<DonHang> DonHangs { get; set; }
-
     public virtual DbSet<HoaDon> HoaDons { get; set; }
-
     public virtual DbSet<KhuyenMai> KhuyenMais { get; set; }
-
     public virtual DbSet<LichSuVanChuyen> LichSuVanChuyens { get; set; }
-
     public virtual DbSet<NguoiDung> NguoiDungs { get; set; }
-
     public virtual DbSet<PhanQuyen> PhanQuyens { get; set; }
-
     public virtual DbSet<SanPham> SanPhams { get; set; }
-
     public virtual DbSet<SanPhamHinhAnh> SanPhamHinhAnhs { get; set; }
-
     public virtual DbSet<ThanhToan> ThanhToans { get; set; }
-
     public virtual DbSet<ThuongHieu> ThuongHieus { get; set; }
-
     public virtual DbSet<TinNhanAi> TinNhanAis { get; set; }
-
     public virtual DbSet<TuCam> TuCams { get; set; }
-
     public virtual DbSet<YeuThich> YeuThiches { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=PhuongAnh;Database=QuanLyBanHang;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -95,7 +72,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaChiTietGioHang).HasName("PK__ChiTietG__BBF4749877F09C5C");
 
-            entity.Property(e => e.NgayThem).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayThem).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.SoLuong).HasDefaultValue(1);
 
             entity.HasOne(d => d.MaBienTheNavigation).WithMany(p => p.ChiTietGioHangs)
@@ -111,7 +88,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaCuocHoiThoai).HasName("PK__CuocHoiT__3707D875B03839C0");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.CuocHoiThoaiAis)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -124,16 +101,19 @@ public partial class EMuaDbContext : DbContext
 
             entity.HasIndex(e => new { e.MaNguoiDung, e.MaSanPham }, "UQ_DanhGia_User_Product")
                 .IsUnique()
-                .HasFilter("([MaNguoiDung] IS NOT NULL AND [MaSanPham] IS NOT NULL)");
+                .HasFilter("\"MaNguoiDung\" IS NOT NULL AND \"MaSanPham\" IS NOT NULL");
 
-            entity.Property(e => e.NgayDanhGia).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayDanhGia).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.TrangThai).HasDefaultValue(true);
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.DanhGiaSanPhams).HasConstraintName("FK_DanhGia_DonHang");
+            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.DanhGiaSanPhams)
+                .HasConstraintName("FK_DanhGia_DonHang");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DanhGiaSanPhams).HasConstraintName("FK_DG_NguoiDung");
+            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DanhGiaSanPhams)
+                .HasConstraintName("FK_DG_NguoiDung");
 
-            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.DanhGiaSanPhams).HasConstraintName("FK_DG_SanPham");
+            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.DanhGiaSanPhams)
+                .HasConstraintName("FK_DG_SanPham");
         });
 
         modelBuilder.Entity<DanhMucSanPham>(entity =>
@@ -147,16 +127,18 @@ public partial class EMuaDbContext : DbContext
 
             entity.Property(e => e.TrangThaiDonHang).HasDefaultValue("Chờ xử lý");
 
-            entity.HasOne(d => d.MaKhuyenMaiNavigation).WithMany(p => p.DonHangs).HasConstraintName("FK_DonHang_KhuyenMai");
+            entity.HasOne(d => d.MaKhuyenMaiNavigation).WithMany(p => p.DonHangs)
+                .HasConstraintName("FK_DonHang_KhuyenMai");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DonHangs).HasConstraintName("FK_DonHang_NguoiDung");
+            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DonHangs)
+                .HasConstraintName("FK_DonHang_NguoiDung");
         });
 
         modelBuilder.Entity<HoaDon>(entity =>
         {
             entity.HasKey(e => e.MaHoaDon).HasName("PK__HoaDon__835ED13BE1E4A10D");
 
-            entity.Property(e => e.NgayLapHoaDon).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayLapHoaDon).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.TrangThaiHoaDon).HasDefaultValue("Đã lập");
 
             entity.HasOne(d => d.MaDonHangNavigation).WithOne(p => p.HoaDon)
@@ -175,7 +157,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaLichSu).HasName("PK__LichSuVa__C443222A60038AB5");
 
-            entity.Property(e => e.ThoiGian).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.ThoiGian).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.LichSuVanChuyens)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -188,14 +170,14 @@ public partial class EMuaDbContext : DbContext
 
             entity.HasIndex(e => e.Email, "UQ_NguoiDung_Email")
                 .IsUnique()
-                .HasFilter("([Email] IS NOT NULL)");
+                .HasFilter("\"Email\" IS NOT NULL");
 
             entity.HasIndex(e => e.TenDangNhap, "UQ_NguoiDung_TenDangNhap")
                 .IsUnique()
-                .HasFilter("([TenDangNhap] IS NOT NULL)");
+                .HasFilter("\"TenDangNhap\" IS NOT NULL");
 
             entity.Property(e => e.MaQuyen).HasDefaultValue(3);
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.TrangThai).HasDefaultValue(true);
 
             entity.HasOne(d => d.MaQuyenNavigation).WithMany(p => p.NguoiDungs)
@@ -214,7 +196,8 @@ public partial class EMuaDbContext : DbContext
 
             entity.Property(e => e.TrangThaiSanPham).HasDefaultValue("Còn hàng");
 
-            entity.HasOne(d => d.MaDanhMucNavigation).WithMany(p => p.SanPhams).HasConstraintName("FK_SanPham_DanhMuc");
+            entity.HasOne(d => d.MaDanhMucNavigation).WithMany(p => p.SanPhams)
+                .HasConstraintName("FK_SanPham_DanhMuc");
 
             entity.HasOne(d => d.MaThuongHieuNavigation).WithMany(p => p.SanPhams)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -236,7 +219,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaThanhToan).HasName("PK__ThanhToa__D4B25844E085DA97");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.TrangThai).HasDefaultValue("Chờ thanh toán");
 
             entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.ThanhToans)
@@ -255,7 +238,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaTinNhan).HasName("PK__TinNhanA__E5B3062ACADFFD71");
 
-            entity.Property(e => e.NgayGui).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayGui).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.MaCuocHoiThoaiNavigation).WithMany(p => p.TinNhanAis)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -266,7 +249,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaTuCam).HasName("PK__TuCam__B89513110632111A");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.TrangThai).HasDefaultValue(true);
         });
 
@@ -274,7 +257,7 @@ public partial class EMuaDbContext : DbContext
         {
             entity.HasKey(e => e.MaYeuThich).HasName("PK__YeuThich__B9007E4CB6025510");
 
-            entity.Property(e => e.NgayThem).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.NgayThem).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.YeuThiches)
                 .OnDelete(DeleteBehavior.ClientSetNull)
