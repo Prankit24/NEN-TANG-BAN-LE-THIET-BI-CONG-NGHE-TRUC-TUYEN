@@ -4,12 +4,23 @@ using EMua.Services.AI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddDbContext<EMuaDbContext>(options =>
     options.UseNpgsql(
@@ -69,6 +80,8 @@ builder.Services.AddSingleton<DomainClassifier>();
 builder.Services.AddHttpClient<GeminiService>();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 var domainDataPath = Path.Combine(
     builder.Environment.ContentRootPath,
