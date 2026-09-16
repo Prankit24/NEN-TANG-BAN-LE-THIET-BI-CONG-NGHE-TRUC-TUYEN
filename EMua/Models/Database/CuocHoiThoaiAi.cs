@@ -17,10 +17,10 @@ public partial class CuocHoiThoaiAi
     [StringLength(255)]
     public string? TieuDe { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime NgayTao { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayCapNhat { get; set; }
 
     [ForeignKey("MaNguoiDung")]

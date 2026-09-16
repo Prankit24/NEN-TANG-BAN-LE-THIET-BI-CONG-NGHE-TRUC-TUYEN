@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using EMua.Data;
+﻿using EMua.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +11,6 @@ public class DashboardController : Controller
 {
     private readonly EMuaDbContext _db;
 
-    // Admin cố định trong database của bạn.
-    private const int AdminUserId = 6;
-
     public DashboardController(EMuaDbContext db)
     {
         _db = db;
@@ -22,10 +18,8 @@ public class DashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(userIdText, out var userId) ||
-            userId != AdminUserId)
+        // Chỉ tài khoản có quyền "Quản trị viên" được truy cập.
+        if (!User.IsInRole("Quản trị viên"))
         {
             return RedirectToAction(
                 "Index",
@@ -96,7 +90,7 @@ public class DashboardController : Controller
                     ?.Revenue ?? 0)
             .ToList();
 
-        // Doanh thu theo danh mục, lấy từ chi tiết đơn hàng.
+        // Doanh thu theo danh mục.
         var categorySales = await (
             from detail in _db.ChiTietDonHangs
             join order in validOrders
@@ -107,16 +101,15 @@ public class DashboardController : Controller
                 on variant.MaSanPham equals product.MaSanPham
             join category in _db.DanhMucSanPhams
                 on product.MaDanhMuc equals category.MaDanhMuc
-           
-        group detail by category.TenDanhMuc into categoryGroup
-select new
-{
-    Name = categoryGroup.Key ?? "Chưa phân loại",
-    Total = categoryGroup.Sum(x => x.ThanhTien)
-})
-.OrderByDescending(x => x.Total)
-.Take(6)
-.ToListAsync();
+            group detail by category.TenDanhMuc into categoryGroup
+            select new
+            {
+                Name = categoryGroup.Key ?? "Chưa phân loại",
+                Total = categoryGroup.Sum(x => x.ThanhTien)
+            })
+            .OrderByDescending(x => x.Total)
+            .Take(6)
+            .ToListAsync();
 
         var maxCategorySales = categorySales.Count == 0
             ? 1
@@ -157,7 +150,6 @@ select new
             newCustomersThisMonth,
             newCustomersLastMonth);
 
-        // CSDL hiện chưa có bảng đổi trả nên không giả số liệu.
         ViewBag.ReturnRate = "Chưa có dữ liệu";
 
         ViewBag.MonthlyRevenue = monthlyRevenue;

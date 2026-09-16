@@ -15,7 +15,7 @@ public partial class HoaDon
 
     public int MaDonHang { get; set; }
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayLapHoaDon { get; set; }
 
     [Column(TypeName = "decimal(12, 2)")]

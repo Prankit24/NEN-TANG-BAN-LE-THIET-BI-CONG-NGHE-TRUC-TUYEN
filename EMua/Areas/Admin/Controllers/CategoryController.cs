@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using EMua.Data;
+﻿using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +11,6 @@ namespace EMua.Areas.Admin.Controllers;
 [Authorize]
 public class CategoryController : Controller
 {
-    private const int AdminUserId = 6;
     private readonly EMuaDbContext _db;
 
     public CategoryController(EMuaDbContext db)
@@ -86,8 +84,7 @@ public class CategoryController : Controller
         {
             ModelState.AddModelError(
                 nameof(model.TenDanhMuc),
-                "Tên danh mục này đã tồn tại."
-            );
+                "Tên danh mục này đã tồn tại.");
         }
 
         if (!ModelState.IsValid)
@@ -129,8 +126,7 @@ public class CategoryController : Controller
         else
         {
             var category = await _db.DanhMucSanPhams.FindAsync(
-                model.MaDanhMuc
-            );
+                model.MaDanhMuc);
 
             if (category == null)
             {
@@ -245,11 +241,6 @@ public class CategoryController : Controller
 
     private bool IsFixedAdmin()
     {
-        var userIdText = User.FindFirstValue(
-            ClaimTypes.NameIdentifier
-        );
-
-        return int.TryParse(userIdText, out var userId) &&
-               userId == AdminUserId;
+        return User.IsInRole("Quản trị viên");
     }
 }

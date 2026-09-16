@@ -19,7 +19,7 @@ public partial class TinNhanAi
 
     public string NoiDung { get; set; } = null!;
 
-    [Column(TypeName = "datetime")]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime NgayGui { get; set; }
 
     [ForeignKey("MaCuocHoiThoai")]

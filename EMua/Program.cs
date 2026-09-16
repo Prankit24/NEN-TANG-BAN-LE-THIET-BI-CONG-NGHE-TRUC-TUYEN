@@ -12,8 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<EMuaDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
 
 builder.Services.AddScoped<IPasswordHasher<NguoiDung>,
     PasswordHasher<NguoiDung>>();
@@ -33,12 +34,12 @@ builder.Services
         options.ClientId =
             builder.Configuration["Authentication:Google:ClientId"]
             ?? throw new InvalidOperationException(
-                "Chưa có Google ClientId trong secrets.json.");
+                "Chưa có Google ClientId trong cấu hình.");
 
         options.ClientSecret =
             builder.Configuration["Authentication:Google:ClientSecret"]
             ?? throw new InvalidOperationException(
-                "Chưa có Google ClientSecret trong secrets.json.");
+                "Chưa có Google ClientSecret trong cấu hình.");
 
         options.SignInScheme = "External";
         options.CallbackPath = "/signin-google";
@@ -48,16 +49,20 @@ builder.Services
         options.AppId =
             builder.Configuration["Authentication:Facebook:AppId"]
             ?? throw new InvalidOperationException(
-                "Chưa có Facebook AppId trong secrets.json.");
+                "Chưa có Facebook AppId trong cấu hình.");
 
         options.AppSecret =
             builder.Configuration["Authentication:Facebook:AppSecret"]
             ?? throw new InvalidOperationException(
-                "Chưa có Facebook AppSecret trong secrets.json.");
+                "Chưa có Facebook AppSecret trong cấu hình.");
 
         options.SignInScheme = "External";
         options.CallbackPath = "/signin-facebook";
+
         options.Scope.Add("email");
+        options.Fields.Add("id");
+        options.Fields.Add("name");
+        options.Fields.Add("email");
     });
 
 builder.Services.AddSingleton<DomainClassifier>();
