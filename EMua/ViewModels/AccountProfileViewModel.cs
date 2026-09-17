@@ -27,6 +27,14 @@ public sealed class AccountProfileViewModel
 
     public bool IsCustomer { get; init; }
 
+    public decimal TotalSpending { get; init; }
+
+    public string MembershipTier { get; init; } = "Đồng";
+
+    public string MembershipCssClass { get; init; } = "bronze";
+
+    public decimal? NextTierAmount { get; init; }
+
     public string Initial =>
         string.IsNullOrWhiteSpace(FullName)
             ? "U"
@@ -36,19 +44,25 @@ public sealed class AccountProfileViewModel
 public sealed class EditAccountProfileViewModel
 {
     [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
-    [StringLength(100, MinimumLength = 2,
+    [StringLength(
+        100,
+        MinimumLength = 2,
         ErrorMessage = "Họ và tên phải từ 2 đến 100 ký tự.")]
-    [RegularExpression(@"^[a-zA-ZÀ-ỹĐđ\s'.-]+$",
+    [RegularExpression(
+        @"^[a-zA-ZÀ-ỹĐđ\s'.-]+$",
         ErrorMessage = "Họ tên chỉ được chứa chữ cái và khoảng trắng.")]
     public string FullName { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
 
-    [RegularExpression(@"^$|^(?:\+84|0)(?:3|5|7|8|9)\d{8}$",
+    [RegularExpression(
+        @"^$|^(?:\+84|0)(?:3|5|7|8|9)\d{8}$",
         ErrorMessage = "Số điện thoại Việt Nam không hợp lệ.")]
     public string? PhoneNumber { get; set; }
 
-    [StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự.")]
+    [StringLength(
+        255,
+        ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự.")]
     public string? Address { get; set; }
 
     public string? CurrentAvatarUrl { get; set; }

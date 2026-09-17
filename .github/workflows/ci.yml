@@ -1,0 +1,26 @@
+name: EMUA CI
+
+on:
+  push:
+    branches: [ "main", "PhuongAnh" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Lay source code
+        uses: actions/checkout@v4
+
+      - name: Cai .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --configuration Release --no-restore
