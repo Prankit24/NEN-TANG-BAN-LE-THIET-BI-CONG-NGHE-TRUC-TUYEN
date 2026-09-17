@@ -256,3 +256,38 @@
         padding: 34px 24px
     }
 }
+/* =========================
+   GEETEST CAPTCHA
+   ========================= */
+
+.captcha-message {
+    min-height: 18px;
+    margin: 8px 0;
+    color: #ce344d;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Không để form hoặc container cắt CAPTCHA */
+.auth-form,
+.auth-form-area,
+.auth-page {
+    overflow: visible;
+}
+
+/* Nút đăng nhập/đăng ký */
+.primary-button {
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+    .auth-form-area {
+        overflow: visible;
+    }
+
+    .auth-form {
+        overflow: visible;
+    }
+}
