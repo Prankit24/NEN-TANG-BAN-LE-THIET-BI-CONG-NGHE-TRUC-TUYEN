@@ -1,126 +1,34 @@
 ﻿@model EMua.ViewModels.LoginViewModel
+@inject IConfiguration Configuration
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "Đăng nhập";
+    Layout = "_Layout"; ViewData["Title"] = "Đăng nhập"; var captchaId = Configuration["GeeTest:Login:CaptchaId"];
 }
-
 <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
-
 <section class="auth-section">
     <div class="auth-page">
-
-        <aside class="auth-brand">
-            <div class="brand-logo">EMUA</div>
-
-            <p>
-                Mua sắm thông minh<br />
-                <strong>cùng EMUA</strong>
-            </p>
-
-            <span>
-                Khám phá hơn 10,000+ sản phẩm điện tử chính hãng với giá tốt nhất,
-                giao hàng nhanh và đổi trả linh hoạt.
-            </span>
-
-            <ul class="auth-benefits">
-                <li><i class="bi bi-check-circle"></i> Hơn 500K khách hàng tin dùng</li>
-                <li><i class="bi bi-check-circle"></i> Bảo hành chính hãng 100%</li>
-                <li><i class="bi bi-check-circle"></i> Hoàn tiền trong 30 ngày</li>
-                <li><i class="bi bi-check-circle"></i> Hỗ trợ 24/7</li>
-            </ul>
-        </aside>
-
+        <aside class="auth-brand"><div class="brand-logo">EMUA</div><p>Mua sắm thông minh<br /><strong>cùng EMUA</strong></p><span>Khám phá hơn 10,000+ sản phẩm điện tử chính hãng với giá tốt nhất, giao hàng nhanh và đổi trả linh hoạt.</span><ul class="auth-benefits"><li><i class="bi bi-check-circle"></i> Hơn 500K khách hàng tin dùng</li><li><i class="bi bi-check-circle"></i> Bảo hành chính hãng 100%</li><li><i class="bi bi-check-circle"></i> Hoàn tiền trong 30 ngày</li><li><i class="bi bi-check-circle"></i> Hỗ trợ 24/7</li></ul></aside>
         <div class="auth-form-area">
-            <form asp-action="Login" method="post" class="auth-form">
+            <form id="loginForm" asp-action="Login" method="post" class="auth-form">
                 <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-                <h1>Đăng nhập</h1>
-                <p class="form-subtitle">Chào mừng bạn trở lại EMUA!</p>
-
+                <h1>Đăng nhập</h1><p class="form-subtitle">Chào mừng bạn trở lại EMUA!</p>
                 @if (TempData["SuccessMessage"] != null)
                 {
-                    <div class="success-message">
-                        @TempData["SuccessMessage"]
-                    </div>
+                    <div class="success-message">@TempData["SuccessMessage"]</div>
                 }
-
-                <div class="social-auth">
-
-                    <a asp-controller="Auth"
-                       asp-action="ExternalLogin"
-                       asp-route-provider="Google"
-                       class="social-auth-btn social-google-btn">
-                        <i class="bi bi-google"></i>
-                        Google
-                    </a>
-
-                    <a asp-controller="Auth"
-                       asp-action="ExternalLogin"
-                       asp-route-provider="Facebook"
-                       class="social-auth-btn social-facebook-btn">
-                        <i class="bi bi-facebook"></i>
-                        Facebook
-                    </a>
-
-                </div>
-
-                <div class="auth-divider">
-                    <span></span>
-                    <small>hoặc tiếp tục với email</small>
-                    <span></span>
-                </div>
-
-                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-
-                <div class="auth-field">
-                    <i class="bi bi-envelope"></i>
-                    <input asp-for="Email"
-                           autocomplete="email"
-                           placeholder="Địa chỉ email" />
-                </div>
-                <span asp-validation-for="Email"></span>
-
-                <div class="auth-field">
-                    <i class="bi bi-lock"></i>
-                    <input asp-for="Password"
-                           autocomplete="current-password"
-                           placeholder="Mật khẩu" />
-                </div>
-                <span asp-validation-for="Password"></span>
-
-                <div class="login-options">
-                    <label class="check-row">
-                        <input asp-for="RememberMe" />
-                        <span>Ghi nhớ đăng nhập</span>
-                    </label>
-
-                    <a href="#" class="forgot-password">
-                        Quên mật khẩu?
-                    </a>
-                </div>
-
-                <button type="button"
-                        class="phone-quick-auth"
-                        disabled
-                        title="Cần tích hợp SMS OTP để đăng nhập bằng số điện thoại">
-                    <i class="bi bi-phone"></i>
-                    Đăng nhập nhanh bằng số điện thoại
-                </button>
-
-                <button type="submit" class="primary-button">
-                    Đăng nhập
-                </button>
-
-                <p class="switch-auth">
-                    Chưa có tài khoản?
-                    <a asp-action="Register">Đăng ký ngay</a>
-                </p>
+                <div class="social-auth"><a asp-controller="Auth" asp-action="ExternalLogin" asp-route-provider="Google" class="social-auth-btn social-google-btn"><i class="bi bi-google"></i> Google</a><a asp-controller="Auth" asp-action="ExternalLogin" asp-route-provider="Facebook" class="social-auth-btn social-facebook-btn"><i class="bi bi-facebook"></i> Facebook</a></div>
+                <div class="auth-divider"><span></span><small>hoặc tiếp tục với email</small><span></span></div><div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                <div class="auth-field"><i class="bi bi-envelope"></i><input asp-for="Email" autocomplete="email" placeholder="Địa chỉ email" /></div><span asp-validation-for="Email"></span>
+                <div class="auth-field"><i class="bi bi-lock"></i><input asp-for="Password" autocomplete="current-password" placeholder="Mật khẩu" /></div><span asp-validation-for="Password"></span>
+                <div class="login-options"><label class="check-row"><input asp-for="RememberMe" /><span>Ghi nhớ đăng nhập</span></label><a href="#" class="forgot-password">Quên mật khẩu?</a></div>
+                <input type="hidden" name="lotNumber" id="loginLotNumber" /><input type="hidden" name="captchaOutput" id="loginCaptchaOutput" /><input type="hidden" name="passToken" id="loginPassToken" /><input type="hidden" name="genTime" id="loginGenTime" /><div id="loginCaptchaMessage" class="captcha-message"></div>
+                <button type="submit" class="primary-button">Đăng nhập</button><p class="switch-auth">Chưa có tài khoản? <a asp-action="Register">Đăng ký ngay</a></p>
             </form>
         </div>
-
     </div>
 </section>
-
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <partial name="_ValidationScriptsPartial" /><script src="https://static.geetest.com/v4/gt4.js"></script>
+    <script>
+        (() => { const form=document.getElementById('loginForm'), msg=document.getElementById('loginCaptchaMessage'); let captcha; initGeetest4({ captchaId:'@captchaId', product:'bind', riskType:'slide' }, o => { captcha=o; o.onSuccess(() => { const r=o.getValidate(); document.getElementById('loginLotNumber').value=r.lot_number; document.getElementById('loginCaptchaOutput').value=r.captcha_output; document.getElementById('loginPassToken').value=r.pass_token; document.getElementById('loginGenTime').value=r.gen_time; form.dataset.verified='true'; form.submit(); }); }); form.addEventListener('submit', e => { if(form.dataset.verified==='true') return; e.preventDefault(); if(!form.checkValidity()){form.reportValidity();return;} if(!captcha){msg.textContent='CAPTCHA đang tải, vui lòng thử lại.';return;} captcha.showCaptcha(); }); })();
+    </script>
 }

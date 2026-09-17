@@ -1,4 +1,7 @@
 ﻿using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using EMua.Data;
 using EMua.Models.Database;
@@ -17,13 +20,19 @@ public class AuthController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly IPasswordHasher<NguoiDung> _passwordHasher;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public AuthController(
         EMuaDbContext db,
-        IPasswordHasher<NguoiDung> passwordHasher)
+        IPasswordHasher<NguoiDung> passwordHasher,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory)
     {
         _db = db;
         _passwordHasher = passwordHasher;
+        _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpGet]
@@ -37,7 +46,12 @@ public class AuthController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(
+        RegisterViewModel model,
+        string? lotNumber,
+        string? captchaOutput,
+        string? passToken,
+        string? genTime)
     {
         if (!model.AcceptTerms)
         {
@@ -48,6 +62,12 @@ public class AuthController : Controller
 
         if (!ModelState.IsValid)
             return View(model);
+
+        if (!await VerifyGeeTestAsync("Register", lotNumber, captchaOutput, passToken, genTime))
+        {
+            ModelState.AddModelError("", "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+            return View(model);
+        }
 
         var email = model.Email.Trim().ToLowerInvariant();
         var phone = NormalizePhone(model.PhoneNumber);
@@ -135,12 +155,22 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
         LoginViewModel model,
-        string? returnUrl = null)
+        string? returnUrl = null,
+        string? lotNumber = null,
+        string? captchaOutput = null,
+        string? passToken = null,
+        string? genTime = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
 
         if (!ModelState.IsValid)
             return View(model);
+
+        if (!await VerifyGeeTestAsync("Login", lotNumber, captchaOutput, passToken, genTime))
+        {
+            ModelState.AddModelError("", "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+            return View(model);
+        }
 
         var email = model.Email.Trim().ToLowerInvariant();
 
@@ -431,6 +461,61 @@ public class AuthController : Controller
         }
 
         return null;
+    }
+
+    private async Task<bool> VerifyGeeTestAsync(
+        string action,
+        string? lotNumber,
+        string? captchaOutput,
+        string? passToken,
+        string? genTime)
+    {
+        if (string.IsNullOrWhiteSpace(lotNumber) ||
+            string.IsNullOrWhiteSpace(captchaOutput) ||
+            string.IsNullOrWhiteSpace(passToken) ||
+            string.IsNullOrWhiteSpace(genTime))
+            return false;
+
+        var captchaId = _configuration[$"GeeTest:{action}:CaptchaId"];
+        var captchaKey = _configuration[$"GeeTest:{action}:CaptchaKey"];
+
+        if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaKey))
+            return false;
+
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(captchaKey));
+        var signToken = Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(lotNumber))).ToLowerInvariant();
+
+        var data = new Dictionary<string, string>
+        {
+            ["lot_number"] = lotNumber,
+            ["captcha_output"] = captchaOutput,
+            ["pass_token"] = passToken,
+            ["gen_time"] = genTime,
+            ["captcha_id"] = captchaId,
+            ["sign_token"] = signToken
+        };
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var response = await client.PostAsync(
+                "https://gcaptcha4.geetest.com/validate",
+                new FormUrlEncodedContent(data));
+
+            var result = await response.Content.ReadFromJsonAsync<GeeTestValidationResult>();
+            return response.IsSuccessStatusCode &&
+                   string.Equals(result?.Result, "success", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private sealed class GeeTestValidationResult
+    {
+        [JsonPropertyName("result")]
+        public string? Result { get; set; }
     }
 
     private static string NormalizePhone(string phone)
