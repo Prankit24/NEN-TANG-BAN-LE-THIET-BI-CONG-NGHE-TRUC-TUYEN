@@ -1,11 +1,13 @@
 ﻿@model EMua.ViewModels.RegisterViewModel
 @inject IConfiguration Configuration
+
 @{
     ViewData["Title"] = "Đăng ký";
 
     var captchaId = Configuration["GeeTest:Register:CaptchaId"];
 }
-
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
 <section class="auth-section">
 
@@ -32,17 +34,20 @@
             <ul class="auth-benefits">
 
                 <li>
-                    <i class="fa-solid fa-circle-check"></i>
+                    <i class="fa-solid fa-circle-check"
+                       aria-hidden="true"></i>
                     Sản phẩm chính hãng
                 </li>
 
                 <li>
-                    <i class="fa-solid fa-circle-check"></i>
+                    <i class="fa-solid fa-circle-check"
+                       aria-hidden="true"></i>
                     Giá cả minh bạch
                 </li>
 
                 <li>
-                    <i class="fa-solid fa-circle-check"></i>
+                    <i class="fa-solid fa-circle-check"
+                       aria-hidden="true"></i>
                     Mua sắm an toàn
                 </li>
 
@@ -58,13 +63,13 @@
                   asp-action="Register"
                   method="post"
                   class="auth-form"
-                  id="registerForm">
+                  id="registerForm"
+                  novalidate>
 
                 @Html.AntiForgeryToken()
 
 
                 <!-- CAPTCHA DATA -->
-
                 <input type="hidden"
                        id="lotNumber"
                        name="lotNumber" />
@@ -82,115 +87,323 @@
                        name="genTime" />
 
 
+                <!-- TITLE -->
                 <h1>
                     Tạo tài khoản
                 </h1>
 
                 <p class="form-subtitle">
-                    Đăng ký tài khoản EMUA miễn phí
+                    Đăng ký tài khoản EMUA miễn phí — chỉ mất chưa đến một phút.
                 </p>
 
 
-                <!-- VALIDATION -->
+                <!-- SOCIAL REGISTER -->
+                <div class="social-auth">
 
+                    <!-- GOOGLE -->
+                    <a asp-controller="Auth"
+                       asp-action="ExternalLogin"
+                       asp-route-provider="Google"
+                       class="social-auth-btn social-google">
+
+                        <span class="social-icon google-icon"
+                              aria-hidden="true">
+
+                            <svg viewBox="0 0 24 24"
+                                 xmlns="http://www.w3.org/2000/svg">
+
+                                <path fill="#4285F4"
+                                      d="M21.6 12.227c0-.709-.064-1.391-.182-2.045H12v3.873h5.382a4.6 4.6 0 0 1-1.995 3.018v2.509h3.227c1.889-1.736 2.986-4.3 2.986-7.355z" />
+
+                                <path fill="#34A853"
+                                      d="M12 22c2.7 0 4.964-.895 6.614-2.418l-3.227-2.509c-.895.6-2.041.955-3.387.955-2.605 0-4.809-1.759-5.6-4.123H3.064v2.591A9.996 9.996 0 0 0 12 22z" />
+
+                                <path fill="#FBBC05"
+                                      d="M6.4 13.905A6.02 6.02 0 0 1 6.086 12c0-.66.114-1.3.314-1.905V7.504H3.064A9.997 9.997 0 0 0 2 12c0 1.614.386 3.141 1.064 4.496L6.4 13.905z" />
+
+                                <path fill="#EA4335"
+                                      d="M12 5.973c1.468 0 2.786.505 3.823 1.496l2.864-2.864C16.959 2.995 14.695 2 12 2a9.996 9.996 0 0 0-8.936 5.504L6.4 10.095C7.191 7.732 9.395 5.973 12 5.973z" />
+
+                            </svg>
+
+                        </span>
+
+                        <span>
+                            Google
+                        </span>
+
+                    </a>
+
+
+                    <!-- FACEBOOK -->
+                    <a asp-controller="Auth"
+                       asp-action="ExternalLogin"
+                       asp-route-provider="Facebook"
+                       class="social-auth-btn social-facebook">
+
+                        <span class="social-icon facebook-icon"
+                              aria-hidden="true">
+
+                            <i class="fa-brands fa-facebook-f"></i>
+
+                        </span>
+
+                        <span>
+                            Facebook
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+              
+                <!-- VALIDATION SUMMARY -->
                 <div asp-validation-summary="ModelOnly"
-                     class="validation-summary-errors">
+                     class="validation-summary-errors"
+                     role="alert"
+                     aria-live="polite">
                 </div>
 
 
                 <!-- FULL NAME -->
+                <div class="field-group">
 
-                <div class="auth-field">
+                    <label asp-for="FullName"
+                           class="field-label">
 
-                    <i class="fa-solid fa-user"></i>
+                        Họ và tên
 
-                    <input asp-for="FullName"
-                           type="text"
-                           placeholder="Họ và tên"
-                           autocomplete="name" />
+                    </label>
+
+
+                    <div class="auth-field">
+
+                        <i class="fa-solid fa-user field-icon"
+                           aria-hidden="true">
+                        </i>
+
+
+                        <input asp-for="FullName"
+                               type="text"
+                               placeholder="Nguyễn Văn A"
+                               autocomplete="name"
+                               aria-describedby="FullName-error" />
+
+                    </div>
+
+
+                    <span asp-validation-for="FullName"
+                          id="FullName-error"
+                          class="field-validation-error">
+                    </span>
 
                 </div>
-
-                <span asp-validation-for="FullName"
-                      class="field-validation-error">
-                </span>
 
 
                 <!-- EMAIL -->
+                <div class="field-group">
 
-                <div class="auth-field">
+                    <label asp-for="Email"
+                           class="field-label">
 
-                    <i class="fa-solid fa-envelope"></i>
+                        Email
 
-                    <input asp-for="Email"
-                           type="email"
-                           placeholder="Email"
-                           autocomplete="email" />
+                    </label>
+
+
+                    <div class="auth-field">
+
+                        <i class="fa-solid fa-envelope field-icon"
+                           aria-hidden="true">
+                        </i>
+
+
+                        <input asp-for="Email"
+                               type="email"
+                               placeholder="ban@vidu.com"
+                               autocomplete="email"
+                               aria-describedby="Email-error" />
+
+                    </div>
+
+
+                    <span asp-validation-for="Email"
+                          id="Email-error"
+                          class="field-validation-error">
+                    </span>
 
                 </div>
-
-                <span asp-validation-for="Email"
-                      class="field-validation-error">
-                </span>
 
 
                 <!-- PHONE -->
+                <div class="field-group">
 
-                <div class="auth-field">
+                    <label asp-for="PhoneNumber"
+                           class="field-label">
 
-                    <i class="fa-solid fa-phone"></i>
+                        Số điện thoại
 
-                    <input asp-for="PhoneNumber"
-                           type="tel"
-                           placeholder="Số điện thoại"
-                           autocomplete="tel" />
+                    </label>
+
+
+                    <div class="auth-field">
+
+                        <i class="fa-solid fa-phone field-icon"
+                           aria-hidden="true">
+                        </i>
+
+
+                        <input asp-for="PhoneNumber"
+                               type="tel"
+                               placeholder="09xx xxx xxx"
+                               autocomplete="tel"
+                               inputmode="tel"
+                               aria-describedby="PhoneNumber-error" />
+
+                    </div>
+
+
+                    <span asp-validation-for="PhoneNumber"
+                          id="PhoneNumber-error"
+                          class="field-validation-error">
+                    </span>
 
                 </div>
-
-                <span asp-validation-for="PhoneNumber"
-                      class="field-validation-error">
-                </span>
 
 
                 <!-- PASSWORD -->
+                <div class="field-group">
 
-                <div class="auth-field">
+                    <label asp-for="Password"
+                           class="field-label">
 
-                    <i class="fa-solid fa-lock"></i>
+                        Mật khẩu
 
-                    <input asp-for="Password"
-                           type="password"
-                           placeholder="Mật khẩu"
-                           autocomplete="new-password" />
+                    </label>
+
+
+                    <div class="auth-field">
+
+                        <i class="fa-solid fa-lock field-icon"
+                           aria-hidden="true">
+                        </i>
+
+
+                        <input asp-for="Password"
+                               type="password"
+                               id="registerPassword"
+                               placeholder="Tối thiểu 8 ký tự"
+                               autocomplete="new-password"
+                               aria-describedby="Password-error password-hint" />
+
+
+                        <button type="button"
+                                class="field-toggle"
+                                data-toggle-target="registerPassword"
+                                aria-label="Hiện mật khẩu"
+                                aria-pressed="false">
+
+                            <i class="fa-solid fa-eye"
+                               aria-hidden="true">
+                            </i>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- PASSWORD STRENGTH -->
+                    <div class="password-strength"
+                         id="passwordStrength"
+                         data-level="0"
+                         aria-hidden="true">
+
+                        <div class="strength-track">
+
+                            <span class="strength-segment"></span>
+                            <span class="strength-segment"></span>
+                            <span class="strength-segment"></span>
+                            <span class="strength-segment"></span>
+
+                        </div>
+
+                        <span class="strength-label"
+                              id="strengthLabel">
+                            &nbsp;
+                        </span>
+
+                    </div>
+
+
+                    <p class="field-hint"
+                       id="password-hint">
+
+                        Dùng ít nhất 8 ký tự, gồm chữ hoa, chữ thường,
+                        số và ký tự đặc biệt.
+
+                    </p>
+
+
+                    <span asp-validation-for="Password"
+                          id="Password-error"
+                          class="field-validation-error">
+                    </span>
 
                 </div>
-
-                <span asp-validation-for="Password"
-                      class="field-validation-error">
-                </span>
 
 
                 <!-- CONFIRM PASSWORD -->
+                <div class="field-group">
 
-                <div class="auth-field">
+                    <label asp-for="ConfirmPassword"
+                           class="field-label">
 
-                    <i class="fa-solid fa-shield-halved"></i>
+                        Nhập lại mật khẩu
 
-                    <input asp-for="ConfirmPassword"
-                           type="password"
-                           placeholder="Nhập lại mật khẩu"
-                           autocomplete="new-password" />
+                    </label>
+
+
+                    <div class="auth-field">
+
+                        <i class="fa-solid fa-shield-halved field-icon"
+                           aria-hidden="true">
+                        </i>
+
+
+                        <input asp-for="ConfirmPassword"
+                               type="password"
+                               id="registerConfirmPassword"
+                               placeholder="Nhập lại mật khẩu"
+                               autocomplete="new-password"
+                               aria-describedby="ConfirmPassword-error" />
+
+
+                        <button type="button"
+                                class="field-toggle"
+                                data-toggle-target="registerConfirmPassword"
+                                aria-label="Hiện mật khẩu"
+                                aria-pressed="false">
+
+                            <i class="fa-solid fa-eye"
+                               aria-hidden="true">
+                            </i>
+
+                        </button>
+
+                    </div>
+
+
+                    <span asp-validation-for="ConfirmPassword"
+                          id="ConfirmPassword-error"
+                          class="field-validation-error">
+                    </span>
 
                 </div>
 
-                <span asp-validation-for="ConfirmPassword"
-                      class="field-validation-error">
-                </span>
-
 
                 <!-- TERMS -->
-
-                <label class="check-row">
+                <label class="check-row register-terms">
 
                     <input asp-for="AcceptTerms"
                            type="checkbox" />
@@ -205,31 +418,37 @@
 
                 </label>
 
+
                 <span asp-validation-for="AcceptTerms"
                       class="field-validation-error">
                 </span>
 
 
                 <!-- CAPTCHA MESSAGE -->
-
                 <div id="captchaMessage"
-                     class="captcha-message">
+                     class="captcha-message"
+                     role="status"
+                     aria-live="polite">
                 </div>
 
 
-                <!-- REGISTER -->
-
+                <!-- REGISTER BUTTON -->
                 <button type="submit"
                         class="primary-button"
                         id="registerButton">
 
-                    Đăng ký tài khoản
+                    <span class="button-spinner"
+                          aria-hidden="true">
+                    </span>
+
+                    <span class="button-label">
+                        Đăng ký tài khoản
+                    </span>
 
                 </button>
 
 
                 <!-- LOGIN -->
-
                 <p class="switch-auth">
 
                     Đã có tài khoản?
@@ -256,354 +475,556 @@
 
     <partial name="_ValidationScriptsPartial" />
 
-
-    <!-- GEETEST V4 -->
-
     <script src="https://static.geetest.com/v4/gt4.js"></script>
-
 
     <script>
 
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
-            const form =
-                document.getElementById("registerForm");
+                const form =
+                    document.getElementById("registerForm");
 
-            const button =
-                document.getElementById("registerButton");
+                const button =
+                    document.getElementById("registerButton");
 
-            const message =
-                document.getElementById("captchaMessage");
-
-
-            /*
-             * Lấy CAPTCHA ID từ Render
-             *
-             * GeeTest__Register__CaptchaId
-             *        ↓
-             * GeeTest:Register:CaptchaId
-             */
-
-            const captchaId = @Html.Raw(
-                            System.Text.Json.JsonSerializer.Serialize(captchaId ?? "")
-                    );
+                const message =
+                    document.getElementById("captchaMessage");
 
 
-        let captchaObj = null;
+                const captchaId = @Html.Raw(
+                                    System.Text.Json.JsonSerializer.Serialize(
+                                            captchaId ?? ""
+                                    )
+                            );
 
+
+            let captchaObj = null;
             let captchaReady = false;
-
             let verified = false;
 
 
-            console.log("===== GEETEST REGISTER =====");
+                /*
+                 * SHOW / HIDE PASSWORD
+                 */
+                document
+                    .querySelectorAll(".field-toggle")
+                    .forEach(function (toggle) {
 
-            console.log(
-                "CaptchaId:",
-                captchaId
-            );
+                        toggle.addEventListener(
+                            "click",
+                            function () {
 
+                                const targetId =
+                                    toggle.getAttribute(
+                                        "data-toggle-target"
+                                    );
 
-            /*
-             * KIỂM TRA CAPTCHA ID
-             */
+                                const input =
+                                    document.getElementById(
+                                        targetId
+                                    );
 
-            if (!captchaId) {
-
-                console.error(
-                    "GeeTest Register CaptchaId chưa được cấu hình."
-                );
-
-                message.textContent =
-                    "CAPTCHA chưa được cấu hình trên máy chủ.";
-
-                button.disabled = true;
-
-                return;
-            }
+                                const icon =
+                                    toggle.querySelector("i");
 
 
-            /*
-             * KIỂM TRA SCRIPT
-             */
-
-            if (typeof initGeetest4 !== "function") {
-
-                console.error(
-                    "Không tìm thấy initGeetest4."
-                );
-
-                message.textContent =
-                    "Không thể tải CAPTCHA. Vui lòng tải lại trang.";
-
-                return;
-            }
+                                if (!input || !icon) {
+                                    return;
+                                }
 
 
-            /*
-             * KHỞI TẠO GEETEST
-             */
-
-            initGeetest4(
-
-                {
-                    captchaId: captchaId,
-
-                    product: "bind",
-
-                    riskType: "slide"
-                },
-
-                function (captcha) {
-
-                    captchaObj = captcha;
+                                const isHidden =
+                                    input.type === "password";
 
 
-                    console.log(
-                        "GeeTest Register đã khởi tạo:",
-                        captcha
-                    );
+                                input.type =
+                                    isHidden
+                                        ? "text"
+                                        : "password";
 
 
-                    /*
-                     * CAPTCHA READY
-                     */
+                                toggle.setAttribute(
+                                    "aria-pressed",
+                                    isHidden
+                                        ? "true"
+                                        : "false"
+                                );
 
-                    captcha.onReady(function () {
 
-                        captchaReady = true;
+                                toggle.setAttribute(
+                                    "aria-label",
+                                    isHidden
+                                        ? "Ẩn mật khẩu"
+                                        : "Hiện mật khẩu"
+                                );
 
-                        console.log(
-                            "GeeTest Register READY"
+
+                                icon.classList.toggle(
+                                    "fa-eye",
+                                    !isHidden
+                                );
+
+
+                                icon.classList.toggle(
+                                    "fa-eye-slash",
+                                    isHidden
+                                );
+
+                            }
                         );
 
                     });
 
 
-                    /*
-                     * CAPTCHA SUCCESS
-                     */
+                /*
+                 * PASSWORD STRENGTH
+                 */
+                const passwordInput =
+                    document.getElementById(
+                        "registerPassword"
+                    );
 
-                    captcha.onSuccess(function () {
+                const strengthWrap =
+                    document.getElementById(
+                        "passwordStrength"
+                    );
 
-                        console.log(
-                            "GeeTest Register SUCCESS"
+                const strengthLabel =
+                    document.getElementById(
+                        "strengthLabel"
+                    );
+
+
+                const strengthNames =
+                    [
+                        "",
+                        "Yếu",
+                        "Trung bình",
+                        "Khá",
+                        "Mạnh"
+                    ];
+
+
+                function scorePassword(value) {
+
+                    if (!value) {
+                        return 0;
+                    }
+
+
+                    let score = 0;
+
+
+                    if (value.length >= 8) {
+                        score++;
+                    }
+
+
+                    if (
+                        /[A-Z]/.test(value)
+                        &&
+                        /[a-z]/.test(value)
+                    ) {
+                        score++;
+                    }
+
+
+                    if (/\d/.test(value)) {
+                        score++;
+                    }
+
+
+                    if (
+                        /[^A-Za-z0-9]/.test(value)
+                    ) {
+                        score++;
+                    }
+
+
+                    return Math.min(
+                        score,
+                        4
+                    );
+                }
+
+
+                if (passwordInput) {
+
+                    passwordInput.addEventListener(
+                        "input",
+                        function () {
+
+                            const level =
+                                scorePassword(
+                                    passwordInput.value
+                                );
+
+
+                            strengthWrap.setAttribute(
+                                "data-level",
+                                String(level)
+                            );
+
+
+                            strengthLabel.textContent =
+                                passwordInput.value
+                                    ? (
+                                        strengthNames[level]
+                                        || "Yếu"
+                                    )
+                                    : "\u00A0";
+
+                        }
+                    );
+
+                }
+
+
+                /*
+                 * CAPTCHA CONFIG
+                 */
+                if (!captchaId) {
+
+                    console.error(
+                        "GeeTest Register CaptchaId chưa được cấu hình."
+                    );
+
+
+                    message.textContent =
+                        "CAPTCHA chưa được cấu hình trên máy chủ.";
+
+
+                    button.disabled = true;
+
+
+                    return;
+
+                }
+
+
+                if (
+                    typeof initGeetest4 !== "function"
+                ) {
+
+                    console.error(
+                        "Không tìm thấy initGeetest4."
+                    );
+
+
+                    message.textContent =
+                        "Không thể tải CAPTCHA. Vui lòng tải lại trang.";
+
+
+                    return;
+
+                }
+
+
+                /*
+                 * BUTTON LOADING
+                 */
+                function setLoading(
+                    isLoading
+                ) {
+
+                    button.classList.toggle(
+                        "is-loading",
+                        isLoading
+                    );
+
+
+                    button.disabled =
+                        isLoading;
+
+                }
+
+
+                /*
+                 * INIT GEETEST
+                 */
+                initGeetest4(
+
+                    {
+                        captchaId:
+                            captchaId,
+
+                        product:
+                            "bind",
+
+                        riskType:
+                            "slide"
+                    },
+
+                    function (captcha) {
+
+                        captchaObj =
+                            captcha;
+
+
+                        /*
+                         * READY
+                         */
+                        captcha.onReady(
+                            function () {
+
+                                captchaReady =
+                                    true;
+
+                            }
                         );
 
 
-                        const result =
-                            captcha.getValidate();
+                        /*
+                         * SUCCESS
+                         */
+                        captcha.onSuccess(
+                            function () {
+
+                                const result =
+                                    captcha.getValidate();
 
 
-                        if (!result) {
+                                if (!result) {
 
-                            console.error(
-                                "Không lấy được kết quả CAPTCHA."
-                            );
+                                    message.textContent =
+                                        "Không lấy được kết quả CAPTCHA.";
 
-                            message.textContent =
-                                "Không lấy được kết quả CAPTCHA.";
 
-                            verified = false;
+                                    verified =
+                                        false;
 
+
+                                    setLoading(
+                                        false
+                                    );
+
+
+                                    return;
+
+                                }
+
+
+                                document
+                                    .getElementById(
+                                        "lotNumber"
+                                    )
+                                    .value =
+                                    result.lot_number
+                                    || "";
+
+
+                                document
+                                    .getElementById(
+                                        "captchaOutput"
+                                    )
+                                    .value =
+                                    result.captcha_output
+                                    || "";
+
+
+                                document
+                                    .getElementById(
+                                        "passToken"
+                                    )
+                                    .value =
+                                    result.pass_token
+                                    || "";
+
+
+                                document
+                                    .getElementById(
+                                        "genTime"
+                                    )
+                                    .value =
+                                    result.gen_time
+                                    || "";
+
+
+                                verified =
+                                    true;
+
+
+                                message.textContent =
+                                    "";
+
+
+                                setLoading(
+                                    true
+                                );
+
+
+                                form.submit();
+
+                            }
+                        );
+
+
+                        /*
+                         * ERROR
+                         */
+                        captcha.onError(
+                            function (error) {
+
+                                console.error(
+                                    "GeeTest Register ERROR:",
+                                    error
+                                );
+
+
+                                verified =
+                                    false;
+
+
+                                setLoading(
+                                    false
+                                );
+
+
+                                message.textContent =
+                                    "Không thể xác minh CAPTCHA. Vui lòng thử lại.";
+
+                            }
+                        );
+
+                    }
+
+                );
+
+
+                /*
+                 * SUBMIT
+                 */
+                form.addEventListener(
+                    "submit",
+                    function (event) {
+
+                        if (verified) {
                             return;
                         }
 
 
-                        /*
-                         * ĐƯA DATA CAPTCHA VÀO FORM
-                         */
-
-                        document.getElementById("lotNumber").value =
-                            result.lot_number || "";
-
-                        document.getElementById("captchaOutput").value =
-                            result.captcha_output || "";
-
-                        document.getElementById("passToken").value =
-                            result.pass_token || "";
-
-                        document.getElementById("genTime").value =
-                            result.gen_time || "";
-
-
-                        verified = true;
-
-                        message.textContent = "";
-
-
-                        console.log(
-                            "GeeTest data đã được thêm vào form."
-                        );
+                        event.preventDefault();
 
 
                         /*
-                         * SUBMIT FORM
+                         * CLIENT VALIDATION
                          */
+                        if (
+                            !form.checkValidity()
+                        ) {
 
-                        form.submit();
+                            form.reportValidity();
 
-                    });
+                            return;
 
-
-                    /*
-                     * CAPTCHA ERROR
-                     */
-
-                    captcha.onError(function (error) {
-
-                        console.error(
-                            "GeeTest Register ERROR:",
-                            error
-                        );
+                        }
 
 
-                        verified = false;
+                        /*
+                         * CAPTCHA NOT READY
+                         */
+                        if (!captchaObj) {
+
+                            message.textContent =
+                                "CAPTCHA chưa sẵn sàng. Vui lòng tải lại trang.";
 
 
-                        message.textContent =
-                            "Không thể xác minh CAPTCHA. Vui lòng thử lại.";
+                            return;
 
-                    });
-
-                }
-
-            );
+                        }
 
 
-            /*
-             * SUBMIT FORM
-             */
+                        if (!captchaReady) {
 
-            form.addEventListener("submit", function (event) {
-
-
-                /*
-                 * CAPTCHA ĐÃ XÁC MINH
-                 */
-
-                if (verified) {
-
-                    return;
-
-                }
+                            message.textContent =
+                                "CAPTCHA đang tải, vui lòng thử lại sau giây lát.";
 
 
-                /*
-                 * CHẶN SUBMIT
-                 */
+                            return;
 
-                event.preventDefault();
+                        }
 
 
-                /*
-                 * KIỂM TRA FORM
-                 */
-
-                if (!form.checkValidity()) {
-
-                    form.reportValidity();
-
-                    return;
-
-                }
+                        /*
+                         * RESET OLD CAPTCHA
+                         */
+                        document
+                            .getElementById(
+                                "lotNumber"
+                            )
+                            .value =
+                            "";
 
 
-                /*
-                 * CAPTCHA CHƯA INIT
-                 */
-
-                if (!captchaObj) {
-
-                    console.error(
-                        "captchaObj chưa được khởi tạo."
-                    );
-
-                    message.textContent =
-                        "CAPTCHA chưa sẵn sàng. Vui lòng tải lại trang.";
-
-                    return;
-
-                }
+                        document
+                            .getElementById(
+                                "captchaOutput"
+                            )
+                            .value =
+                            "";
 
 
-                /*
-                 * CAPTCHA CHƯA READY
-                 */
-
-                if (!captchaReady) {
-
-                    console.log(
-                        "CAPTCHA chưa READY."
-                    );
-
-                    message.textContent =
-                        "CAPTCHA đang tải, vui lòng thử lại sau giây lát.";
-
-                    return;
-
-                }
+                        document
+                            .getElementById(
+                                "passToken"
+                            )
+                            .value =
+                            "";
 
 
-                /*
-                 * XÓA CAPTCHA CŨ
-                 */
-
-                document.getElementById("lotNumber").value = "";
-
-                document.getElementById("captchaOutput").value = "";
-
-                document.getElementById("passToken").value = "";
-
-                document.getElementById("genTime").value = "";
+                        document
+                            .getElementById(
+                                "genTime"
+                            )
+                            .value =
+                            "";
 
 
-                /*
-                 * HIỆN CAPTCHA
-                 */
+                        captchaObj.showCaptcha();
 
-                console.log(
-                    "Hiển thị GeeTest Register..."
+                    }
                 );
 
 
-                captchaObj.showCaptcha();
+                /*
+                 * USER CHANGES REGISTER DATA
+                 * -> VERIFY CAPTCHA AGAIN
+                 */
+                form
+                    .querySelectorAll("input")
+                    .forEach(function (input) {
 
-            });
+                        input.addEventListener(
+                            "input",
+                            function () {
 
+                                if (
+                                    input.name === "FullName"
+                                    ||
+                                    input.name === "Email"
+                                    ||
+                                    input.name === "PhoneNumber"
+                                    ||
+                                    input.name === "Password"
+                                    ||
+                                    input.name === "ConfirmPassword"
+                                ) {
 
-            /*
-             * NẾU USER THAY ĐỔI THÔNG TIN
-             * → BẮT CAPTCHA LẠI
-             */
+                                    verified =
+                                        false;
 
-            form.querySelectorAll("input").forEach(function (input) {
+                                }
 
-                input.addEventListener("input", function () {
+                            }
+                        );
 
-                    if (
+                    });
 
-                        input.name === "FullName" ||
-
-                        input.name === "Email" ||
-
-                        input.name === "PhoneNumber" ||
-
-                        input.name === "Password" ||
-
-                        input.name === "ConfirmPassword"
-
-                    ) {
-
-                        verified = false;
-
-                    }
-
-                });
-
-            });
-
-        });
+            }
+        );
 
     </script>
+
 }
