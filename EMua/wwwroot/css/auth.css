@@ -651,3 +651,6 @@
         line-height: 1.4;
     }
 }
+.geetest_box_logo {
+    display: none !important;
+}
