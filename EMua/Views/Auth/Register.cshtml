@@ -1,335 +1,609 @@
 ﻿@model EMua.ViewModels.RegisterViewModel
-@inject IConfiguration Configuration
 
 @{
-    Layout = "_Layout";
     ViewData["Title"] = "Đăng ký";
 
     var captchaId = Configuration["GeeTest:Register:CaptchaId"];
 }
 
-<link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
 
 <section class="auth-section">
+
     <div class="auth-page">
 
-        <aside class="auth-brand">
+        <!-- LEFT -->
+        <div class="auth-brand">
 
             <div class="brand-logo">
                 EMUA
             </div>
 
             <p>
-                Mua sắm thông minh<br />
-                <strong>cùng EMUA</strong>
+                Bắt đầu hành trình<br />
+                công nghệ của bạn.
             </p>
 
             <span>
-                Khám phá hơn 10,000+ sản phẩm điện tử chính hãng
-                với giá tốt nhất, giao hàng nhanh và đổi trả linh hoạt.
+                Tạo tài khoản EMUA để khám phá,
+                mua sắm và quản lý sản phẩm công nghệ
+                một cách dễ dàng.
             </span>
 
             <ul class="auth-benefits">
 
                 <li>
-                    <i class="bi bi-check-circle"></i>
-                    Hơn 500K khách hàng tin dùng
+                    <i class="fa-solid fa-circle-check"></i>
+                    Sản phẩm chính hãng
                 </li>
 
                 <li>
-                    <i class="bi bi-check-circle"></i>
-                    Bảo hành chính hãng 100%
+                    <i class="fa-solid fa-circle-check"></i>
+                    Giá cả minh bạch
                 </li>
 
                 <li>
-                    <i class="bi bi-check-circle"></i>
-                    Hoàn tiền trong 30 ngày
-                </li>
-
-                <li>
-                    <i class="bi bi-check-circle"></i>
-                    Hỗ trợ 24/7
+                    <i class="fa-solid fa-circle-check"></i>
+                    Mua sắm an toàn
                 </li>
 
             </ul>
 
-        </aside>
+        </div>
 
+
+        <!-- RIGHT -->
         <div class="auth-form-area">
 
-            <form id="registerForm"
+            <form asp-controller="Auth"
                   asp-action="Register"
                   method="post"
-                  class="auth-form">
+                  class="auth-form"
+                  id="registerForm">
 
-                <h1>Tạo tài khoản</h1>
+                @Html.AntiForgeryToken()
+
+
+                <!-- CAPTCHA DATA -->
+
+                <input type="hidden"
+                       id="lotNumber"
+                       name="lotNumber" />
+
+                <input type="hidden"
+                       id="captchaOutput"
+                       name="captchaOutput" />
+
+                <input type="hidden"
+                       id="passToken"
+                       name="passToken" />
+
+                <input type="hidden"
+                       id="genTime"
+                       name="genTime" />
+
+
+                <h1>
+                    Tạo tài khoản
+                </h1>
 
                 <p class="form-subtitle">
-                    Tham gia cộng đồng hơn 500K khách hàng.
+                    Đăng ký tài khoản EMUA miễn phí
                 </p>
 
-                <div class="social-auth">
 
-                    <a asp-controller="Auth"
-                       asp-action="ExternalLogin"
-                       asp-route-provider="Google"
-                       class="social-auth-btn social-google-btn">
-
-                        <i class="bi bi-google"></i>
-                        Google
-
-                    </a>
-
-                    <a asp-controller="Auth"
-                       asp-action="ExternalLogin"
-                       asp-route-provider="Facebook"
-                       class="social-auth-btn social-facebook-btn">
-
-                        <i class="bi bi-facebook"></i>
-                        Facebook
-
-                    </a>
-
-                </div>
-
-                <div class="auth-divider">
-                    <span></span>
-                    <small>hoặc tiếp tục với email</small>
-                    <span></span>
-                </div>
+                <!-- VALIDATION -->
 
                 <div asp-validation-summary="ModelOnly"
-                     class="validation-summary">
+                     class="validation-summary-errors">
                 </div>
+
+
+                <!-- FULL NAME -->
 
                 <div class="auth-field">
 
-                    <i class="bi bi-person"></i>
+                    <i class="fa-solid fa-user"></i>
 
                     <input asp-for="FullName"
-                           autocomplete="name"
-                           placeholder="Họ và tên" />
+                           type="text"
+                           placeholder="Họ và tên"
+                           autocomplete="name" />
 
                 </div>
 
-                <span asp-validation-for="FullName"></span>
+                <span asp-validation-for="FullName"
+                      class="field-validation-error">
+                </span>
+
+
+                <!-- EMAIL -->
 
                 <div class="auth-field">
 
-                    <i class="bi bi-telephone"></i>
-
-                    <input asp-for="PhoneNumber"
-                           autocomplete="tel"
-                           placeholder="Số điện thoại" />
-
-                </div>
-
-                <span asp-validation-for="PhoneNumber"></span>
-
-                <div class="auth-field">
-
-                    <i class="bi bi-envelope"></i>
+                    <i class="fa-solid fa-envelope"></i>
 
                     <input asp-for="Email"
-                           autocomplete="email"
-                           placeholder="Địa chỉ email" />
+                           type="email"
+                           placeholder="Email"
+                           autocomplete="email" />
 
                 </div>
 
-                <span asp-validation-for="Email"></span>
+                <span asp-validation-for="Email"
+                      class="field-validation-error">
+                </span>
+
+
+                <!-- PHONE -->
 
                 <div class="auth-field">
 
-                    <i class="bi bi-lock"></i>
+                    <i class="fa-solid fa-phone"></i>
+
+                    <input asp-for="PhoneNumber"
+                           type="tel"
+                           placeholder="Số điện thoại"
+                           autocomplete="tel" />
+
+                </div>
+
+                <span asp-validation-for="PhoneNumber"
+                      class="field-validation-error">
+                </span>
+
+
+                <!-- PASSWORD -->
+
+                <div class="auth-field">
+
+                    <i class="fa-solid fa-lock"></i>
 
                     <input asp-for="Password"
-                           autocomplete="new-password"
-                           placeholder="Mật khẩu" />
+                           type="password"
+                           placeholder="Mật khẩu"
+                           autocomplete="new-password" />
 
                 </div>
 
-                <span asp-validation-for="Password"></span>
+                <span asp-validation-for="Password"
+                      class="field-validation-error">
+                </span>
+
+
+                <!-- CONFIRM PASSWORD -->
 
                 <div class="auth-field">
 
-                    <i class="bi bi-lock"></i>
+                    <i class="fa-solid fa-shield-halved"></i>
 
                     <input asp-for="ConfirmPassword"
-                           autocomplete="new-password"
-                           placeholder="Xác nhận mật khẩu" />
+                           type="password"
+                           placeholder="Nhập lại mật khẩu"
+                           autocomplete="new-password" />
 
                 </div>
 
-                <span asp-validation-for="ConfirmPassword"></span>
+                <span asp-validation-for="ConfirmPassword"
+                      class="field-validation-error">
+                </span>
+
+
+                <!-- TERMS -->
 
                 <label class="check-row">
 
-                    <input asp-for="AcceptTerms" />
+                    <input asp-for="AcceptTerms"
+                           type="checkbox" />
 
                     <span>
                         Tôi đồng ý với
-                        <a href="#">Điều khoản dịch vụ</a>
-                        và
-                        <a href="#">Chính sách bảo mật</a>
+                        <a href="#">
+                            điều khoản sử dụng
+                        </a>
+                        của EMUA.
                     </span>
 
                 </label>
 
-                <span asp-validation-for="AcceptTerms"></span>
+                <span asp-validation-for="AcceptTerms"
+                      class="field-validation-error">
+                </span>
 
-                <!-- GeeTest -->
-                <input type="hidden"
-                       name="lotNumber"
-                       id="registerLotNumber" />
 
-                <input type="hidden"
-                       name="captchaOutput"
-                       id="registerCaptchaOutput" />
+                <!-- CAPTCHA MESSAGE -->
 
-                <input type="hidden"
-                       name="passToken"
-                       id="registerPassToken" />
-
-                <input type="hidden"
-                       name="genTime"
-                       id="registerGenTime" />
-
-                <div id="registerCaptchaMessage"
+                <div id="captchaMessage"
                      class="captcha-message">
                 </div>
 
+
+                <!-- REGISTER -->
+
                 <button type="submit"
-                        class="primary-button">
-                    Tạo tài khoản
+                        class="primary-button"
+                        id="registerButton">
+
+                    Đăng ký tài khoản
+
                 </button>
 
+
+                <!-- LOGIN -->
+
                 <p class="switch-auth">
+
                     Đã có tài khoản?
-                    <a asp-action="Login">
+
+                    <a asp-controller="Auth"
+                       asp-action="Login">
+
                         Đăng nhập
+
                     </a>
+
                 </p>
 
             </form>
 
         </div>
+
     </div>
+
 </section>
+
 
 @section Scripts {
 
     <partial name="_ValidationScriptsPartial" />
 
-    <!-- GeeTest v4 -->
+
+    <!-- GEETEST V4 -->
+
     <script src="https://static.geetest.com/v4/gt4.js"></script>
 
+
     <script>
-        (() => {
+
+        document.addEventListener("DOMContentLoaded", function () {
 
             const form =
                 document.getElementById("registerForm");
 
-            const msg =
-                document.getElementById(
-                    "registerCaptchaMessage"
-                );
+            const button =
+                document.getElementById("registerButton");
 
-            let captcha = null;
+            const message =
+                document.getElementById("captchaMessage");
 
-            const captchaId = "@captchaId";
 
-            // Kiểm tra cấu hình CAPTCHA
+            /*
+             * Lấy CAPTCHA ID từ Render
+             *
+             * GeeTest__Register__CaptchaId
+             *        ↓
+             * GeeTest:Register:CaptchaId
+             */
+
+            const captchaId = @Html.Raw(
+                            System.Text.Json.JsonSerializer.Serialize(captchaId ?? "")
+                    );
+
+
+        let captchaObj = null;
+
+            let captchaReady = false;
+
+            let verified = false;
+
+
+            console.log("===== GEETEST REGISTER =====");
+
+            console.log(
+                "CaptchaId:",
+                captchaId
+            );
+
+
+            /*
+             * KIỂM TRA CAPTCHA ID
+             */
+
             if (!captchaId) {
 
                 console.error(
                     "GeeTest Register CaptchaId chưa được cấu hình."
                 );
 
-                msg.textContent =
+                message.textContent =
                     "CAPTCHA chưa được cấu hình trên máy chủ.";
+
+                button.disabled = true;
 
                 return;
             }
 
+
+            /*
+             * KIỂM TRA SCRIPT
+             */
+
+            if (typeof initGeetest4 !== "function") {
+
+                console.error(
+                    "Không tìm thấy initGeetest4."
+                );
+
+                message.textContent =
+                    "Không thể tải CAPTCHA. Vui lòng tải lại trang.";
+
+                return;
+            }
+
+
+            /*
+             * KHỞI TẠO GEETEST
+             */
+
             initGeetest4(
+
                 {
                     captchaId: captchaId,
+
                     product: "bind",
+
                     riskType: "slide"
                 },
-                (captchaObj) => {
 
-                    captcha = captchaObj;
+                function (captcha) {
 
-                    captchaObj.onSuccess(() => {
+                    captchaObj = captcha;
+
+
+                    console.log(
+                        "GeeTest Register đã khởi tạo:",
+                        captcha
+                    );
+
+
+                    /*
+                     * CAPTCHA READY
+                     */
+
+                    captcha.onReady(function () {
+
+                        captchaReady = true;
+
+                        console.log(
+                            "GeeTest Register READY"
+                        );
+
+                    });
+
+
+                    /*
+                     * CAPTCHA SUCCESS
+                     */
+
+                    captcha.onSuccess(function () {
+
+                        console.log(
+                            "GeeTest Register SUCCESS"
+                        );
+
 
                         const result =
-                            captchaObj.getValidate();
+                            captcha.getValidate();
+
 
                         if (!result) {
 
-                            msg.textContent =
+                            console.error(
+                                "Không lấy được kết quả CAPTCHA."
+                            );
+
+                            message.textContent =
                                 "Không lấy được kết quả CAPTCHA.";
+
+                            verified = false;
 
                             return;
                         }
 
-                        document.getElementById(
-                            "registerLotNumber"
-                        ).value = result.lot_number;
 
-                        document.getElementById(
-                            "registerCaptchaOutput"
-                        ).value = result.captcha_output;
+                        /*
+                         * ĐƯA DATA CAPTCHA VÀO FORM
+                         */
 
-                        document.getElementById(
-                            "registerPassToken"
-                        ).value = result.pass_token;
+                        document.getElementById("lotNumber").value =
+                            result.lot_number || "";
 
-                        document.getElementById(
-                            "registerGenTime"
-                        ).value = result.gen_time;
+                        document.getElementById("captchaOutput").value =
+                            result.captcha_output || "";
 
-                        form.dataset.verified = "true";
+                        document.getElementById("passToken").value =
+                            result.pass_token || "";
 
-                        // Submit sau khi CAPTCHA thành công
+                        document.getElementById("genTime").value =
+                            result.gen_time || "";
+
+
+                        verified = true;
+
+                        message.textContent = "";
+
+
+                        console.log(
+                            "GeeTest data đã được thêm vào form."
+                        );
+
+
+                        /*
+                         * SUBMIT FORM
+                         */
+
                         form.submit();
+
                     });
+
+
+                    /*
+                     * CAPTCHA ERROR
+                     */
+
+                    captcha.onError(function (error) {
+
+                        console.error(
+                            "GeeTest Register ERROR:",
+                            error
+                        );
+
+
+                        verified = false;
+
+
+                        message.textContent =
+                            "Không thể xác minh CAPTCHA. Vui lòng thử lại.";
+
+                    });
+
                 }
+
             );
 
-            form.addEventListener("submit", (event) => {
 
-                // CAPTCHA đã xác minh
-                if (form.dataset.verified === "true") {
+            /*
+             * SUBMIT FORM
+             */
+
+            form.addEventListener("submit", function (event) {
+
+
+                /*
+                 * CAPTCHA ĐÃ XÁC MINH
+                 */
+
+                if (verified) {
+
                     return;
+
                 }
+
+
+                /*
+                 * CHẶN SUBMIT
+                 */
 
                 event.preventDefault();
 
-                // Kiểm tra dữ liệu form
+
+                /*
+                 * KIỂM TRA FORM
+                 */
+
                 if (!form.checkValidity()) {
 
                     form.reportValidity();
 
                     return;
+
                 }
 
-                // CAPTCHA chưa tải
-                if (!captcha) {
 
-                    msg.textContent =
-                        "CAPTCHA đang tải, vui lòng thử lại.";
+                /*
+                 * CAPTCHA CHƯA INIT
+                 */
+
+                if (!captchaObj) {
+
+                    console.error(
+                        "captchaObj chưa được khởi tạo."
+                    );
+
+                    message.textContent =
+                        "CAPTCHA chưa sẵn sàng. Vui lòng tải lại trang.";
 
                     return;
+
                 }
 
-                msg.textContent = "";
 
-                // Hiển thị CAPTCHA
-                captcha.showCaptcha();
+                /*
+                 * CAPTCHA CHƯA READY
+                 */
+
+                if (!captchaReady) {
+
+                    console.log(
+                        "CAPTCHA chưa READY."
+                    );
+
+                    message.textContent =
+                        "CAPTCHA đang tải, vui lòng thử lại sau giây lát.";
+
+                    return;
+
+                }
+
+
+                /*
+                 * XÓA CAPTCHA CŨ
+                 */
+
+                document.getElementById("lotNumber").value = "";
+
+                document.getElementById("captchaOutput").value = "";
+
+                document.getElementById("passToken").value = "";
+
+                document.getElementById("genTime").value = "";
+
+
+                /*
+                 * HIỆN CAPTCHA
+                 */
+
+                console.log(
+                    "Hiển thị GeeTest Register..."
+                );
+
+
+                captchaObj.showCaptcha();
+
             });
 
-        })();
+
+            /*
+             * NẾU USER THAY ĐỔI THÔNG TIN
+             * → BẮT CAPTCHA LẠI
+             */
+
+            form.querySelectorAll("input").forEach(function (input) {
+
+                input.addEventListener("input", function () {
+
+                    if (
+
+                        input.name === "FullName" ||
+
+                        input.name === "Email" ||
+
+                        input.name === "PhoneNumber" ||
+
+                        input.name === "Password" ||
+
+                        input.name === "ConfirmPassword"
+
+                    ) {
+
+                        verified = false;
+
+                    }
+
+                });
+
+            });
+
+        });
+
     </script>
 }
