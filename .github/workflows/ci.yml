@@ -1,4 +1,4 @@
-name: EMUA CI
+name: EMUA CI/CD
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    name: Build and check
     runs-on: ubuntu-latest
 
     steps:
@@ -24,3 +25,13 @@ jobs:
 
       - name: Build project
         run: dotnet build --configuration Release --no-restore
+
+  deploy:
+    name: Deploy to Render
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render deploy
+        run: curl --fail --silent --show-error --request POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
