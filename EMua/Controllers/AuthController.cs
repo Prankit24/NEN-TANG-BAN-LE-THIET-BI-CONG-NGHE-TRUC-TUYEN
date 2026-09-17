@@ -150,7 +150,6 @@ public class AuthController : Controller
 
         return View(new LoginViewModel());
     }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
@@ -166,21 +165,51 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        if (!await VerifyGeeTestAsync("Login", lotNumber, captchaOutput, passToken, genTime))
+        if (!await VerifyGeeTestAsync(
+            "Login",
+            lotNumber,
+            captchaOutput,
+            passToken,
+            genTime))
         {
-            ModelState.AddModelError("", "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+            ModelState.AddModelError(
+                "",
+                "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+
             return View(model);
         }
 
-        var email = model.Email.Trim().ToLowerInvariant();
+        // Có thể là Email hoặc SĐT
+        var identifier = model.Identifier.Trim();
 
-        var user = await _db.NguoiDungs
-            .Include(x => x.MaQuyenNavigation)
-            .FirstOrDefaultAsync(x => x.Email == email);
+        NguoiDung? user;
 
-        if (user == null || string.IsNullOrWhiteSpace(user.MatKhau))
+        // Nếu có @ => xử lý như Email
+        if (identifier.Contains('@'))
         {
-            ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+            var email = identifier.ToLowerInvariant();
+
+            user = await _db.NguoiDungs
+                .Include(x => x.MaQuyenNavigation)
+                .FirstOrDefaultAsync(x => x.Email == email);
+        }
+        else
+        {
+            // Nếu không có @ => xử lý như SĐT
+            var phone = NormalizePhone(identifier);
+
+            user = await _db.NguoiDungs
+                .Include(x => x.MaQuyenNavigation)
+                .FirstOrDefaultAsync(x => x.SoDienThoai == phone);
+        }
+
+        if (user == null ||
+            string.IsNullOrWhiteSpace(user.MatKhau))
+        {
+            ModelState.AddModelError(
+                "",
+                "Email, số điện thoại hoặc mật khẩu không đúng.");
+
             return View(model);
         }
 
@@ -188,34 +217,44 @@ public class AuthController : Controller
 
         try
         {
-            verifyResult = _passwordHasher.VerifyHashedPassword(
-                user,
-                user.MatKhau,
-                model.Password);
+            verifyResult =
+                _passwordHasher.VerifyHashedPassword(
+                    user,
+                    user.MatKhau,
+                    model.Password);
         }
         catch (FormatException)
         {
-            // Hỗ trợ tài khoản cũ đang lưu mật khẩu chưa băm:
-            // sau lần đăng nhập đúng đầu tiên sẽ băm lại.
+            // Tài khoản cũ đang lưu password chưa hash
             if (user.MatKhau == model.Password)
             {
-                user.MatKhau = _passwordHasher.HashPassword(
-                    user,
-                    model.Password);
+                user.MatKhau =
+                    _passwordHasher.HashPassword(
+                        user,
+                        model.Password);
 
                 await _db.SaveChangesAsync();
-                verifyResult = PasswordVerificationResult.Success;
+
+                verifyResult =
+                    PasswordVerificationResult.Success;
             }
             else
             {
-                ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+                ModelState.AddModelError(
+                    "",
+                    "Email, số điện thoại hoặc mật khẩu không đúng.");
+
                 return View(model);
             }
         }
 
-        if (verifyResult == PasswordVerificationResult.Failed)
+        if (verifyResult ==
+            PasswordVerificationResult.Failed)
         {
-            ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+            ModelState.AddModelError(
+                "",
+                "Email, số điện thoại hoặc mật khẩu không đúng.");
+
             return View(model);
         }
 
@@ -228,21 +267,27 @@ public class AuthController : Controller
             return View(model);
         }
 
-        if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
+        if (verifyResult ==
+            PasswordVerificationResult.SuccessRehashNeeded)
         {
-            user.MatKhau = _passwordHasher.HashPassword(
-                user,
-                model.Password);
+            user.MatKhau =
+                _passwordHasher.HashPassword(
+                    user,
+                    model.Password);
 
             await _db.SaveChangesAsync();
         }
 
-        await SignInUserAsync(user, model.RememberMe);
+        await SignInUserAsync(
+            user,
+            model.RememberMe);
 
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction(
+            "Index",
+            "Home");
     }
 
     [HttpPost]
