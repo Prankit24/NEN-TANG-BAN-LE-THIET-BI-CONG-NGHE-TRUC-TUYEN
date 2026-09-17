@@ -1,9 +1,21 @@
 @model EMua.ViewModels.AccountProfileViewModel
+
 @{
     ViewData["Title"] = "Hồ sơ của tôi";
+
+    var nextTierAmount = Model.NextTierAmount ?? Model.TotalSpending;
+
+    var progressPercent = nextTierAmount <= 0
+        ? 100
+        : Math.Min(
+            100,
+            (int)Math.Round(
+                Model.TotalSpending / nextTierAmount * 100));
 }
 
-<link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+<link rel="stylesheet"
+      href="~/css/account.css"
+      asp-append-version="true" />
 
 <section class="account-page">
     <div class="container account-container">
@@ -20,24 +32,80 @@
                     <div class="account-avatar">@Model.Initial</div>
                 }
 
-                <div>
+                <div class="account-user-info">
                     <strong>@Model.FullName</strong>
-                    <small>@Model.Email</small>
+
+                    @if (!Model.IsCustomer)
+                    {
+                        <small>@Model.Email</small>
+
+                        <span class="role-badge">
+                            <i class="bi bi-shield-check"></i>
+                            @Model.RoleName
+                        </span>
+                    }
                 </div>
 
-                <span class="role-badge">
-                    <i class="bi bi-shield-check"></i>
-                    @Model.RoleName
-                </span>
+                @if (Model.IsCustomer)
+                {
+                    <button type="button"
+                            class="membership-summary @Model.MembershipCssClass"
+                            id="membershipToggle"
+                            aria-expanded="false">
+                        <span class="membership-tier">
+                            <i class="bi bi-award-fill"></i>
+                            Hạng @Model.MembershipTier
+                        </span>
+
+                        <strong>
+                            @Model.TotalSpending.ToString("N0") đ /
+                            @nextTierAmount.ToString("N0") đ
+                        </strong>
+
+                        <i class="bi bi-chevron-down membership-chevron"></i>
+                    </button>
+
+                    <div class="membership-progress-panel"
+                         id="membershipProgressPanel">
+                        <div class="membership-progress-title">
+                            <span>Tiến trình thăng hạng</span>
+                            <strong>@progressPercent%</strong>
+                        </div>
+
+                        <div class="membership-progress-track">
+                            <div class="membership-progress-value"
+                                 style="width: @progressPercent%"></div>
+                        </div>
+
+                        @if (Model.NextTierAmount != null)
+                        {
+                            <small>
+                                Còn @((Model.NextTierAmount.Value -
+                                                        Model.TotalSpending)
+                                                        .ToString("N0")) đ
+                        để lên hạng tiếp theo.
+                    </small>
+                                        }
+                        else
+                        {
+                            <small>
+                                Bạn đang ở hạng cao nhất của EMUA.
+                            </small>
+                        }
+                    </div>
+                }
             </div>
 
             <nav class="account-menu">
-                <a class="active" asp-controller="Account" asp-action="Profile">
+                <a class="active"
+                   asp-controller="Account"
+                   asp-action="Profile">
                     <i class="bi bi-person"></i>
                     Hồ sơ của tôi
                 </a>
 
-                <a asp-controller="Account" asp-action="Edit">
+                <a asp-controller="Account"
+                   asp-action="Edit">
                     <i class="bi bi-pencil-square"></i>
                     Chỉnh sửa hồ sơ
                 </a>
@@ -67,7 +135,9 @@
                     </a>
                 }
 
-                <form asp-controller="Auth" asp-action="Logout" method="post">
+                <form asp-controller="Auth"
+                      asp-action="Logout"
+                      method="post">
                     @Html.AntiForgeryToken()
 
                     <button type="submit" class="account-logout">
@@ -97,7 +167,6 @@
                      id="profileSuccessModal"
                      tabindex="-1"
                      aria-hidden="true">
-
                     <div class="modal-dialog modal-dialog-centered modal-sm">
                         <div class="modal-content profile-success-modal">
                             <div class="modal-body text-center">
@@ -106,7 +175,6 @@
                                 </div>
 
                                 <h5>Cập nhật thành công!</h5>
-
                                 <p>@TempData["SuccessMessage"]</p>
 
                                 <button type="button"
@@ -119,29 +187,6 @@
                     </div>
                 </div>
             }
-            <div class="profile-overview">
-                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
-                {
-                    <img src="@Model.AvatarUrl"
-                         class="profile-main-avatar"
-                         alt="Ảnh đại diện của @Model.FullName" />
-                }
-                else
-                {
-                    <div class="profile-main-avatar profile-main-avatar-letter">
-                        @Model.Initial
-                    </div>
-                }
-
-                <div>
-                    <h2>@Model.FullName</h2>
-                    <p>@Model.Email</p>
-                    <span>
-                        <i class="bi bi-patch-check-fill"></i>
-                        @Model.RoleName
-                    </span>
-                </div>
-            </div>
 
             <div class="profile-details">
                 <div class="profile-detail">
@@ -172,7 +217,8 @@
                 <div class="profile-detail">
                     <span>Thành viên từ</span>
                     <strong>
-                        @(Model.MemberSince?.ToString("MM/yyyy") ?? "Chưa cập nhật")
+                        @(Model.MemberSince?.ToString("MM/yyyy")
+                                                ?? "Chưa cập nhật")
                     </strong>
                 </div>
             </div>
@@ -180,33 +226,51 @@
             <div class="profile-stats">
                 <div>
                     <strong>@Model.OrderCount</strong>
-                    <span>@(Model.IsCustomer ? "Đơn hàng" : "Đơn liên quan")</span>
+                    <span>
+                        @(Model.IsCustomer
+                                                ? "Đơn hàng"
+                                                : "Đơn liên quan")
+                    </span>
                 </div>
 
                 <div>
                     <strong>@Model.FavoriteCount</strong>
                     <span>Yêu thích</span>
                 </div>
-
-                <div>
-                    <strong>@Model.RoleName</strong>
-                    <span>Quyền tài khoản</span>
-                </div>
             </div>
         </div>
     </div>
-    @section Scripts {
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    const modalElement =
-                        document.getElementById("profileSuccessModal");
-
-                    const modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                });
-            </script>
-        }
-    }
 </section>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const membershipToggle =
+                document.getElementById("membershipToggle");
+
+            const progressPanel =
+                document.getElementById("membershipProgressPanel");
+
+            membershipToggle?.addEventListener("click", function () {
+                const isOpen = progressPanel.classList.toggle("show");
+
+                membershipToggle.setAttribute(
+                    "aria-expanded",
+                    isOpen
+                );
+
+                membershipToggle
+                    .querySelector(".membership-chevron")
+                    .classList.toggle("rotate", isOpen);
+            });
+
+            const modalElement =
+                document.getElementById("profileSuccessModal");
+
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        });
+    </script>
+}
