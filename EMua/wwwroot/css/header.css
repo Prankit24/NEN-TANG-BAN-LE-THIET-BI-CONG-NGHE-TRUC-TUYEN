@@ -139,6 +139,14 @@
     text-decoration: none;
 }
 
+.staff-dashboard-link {
+    min-width: 70px;
+}
+
+.staff-dashboard-link i {
+    font-size: 21px;
+}
+
     .header-action-btn:hover {
         color: white;
         opacity: 0.85;
@@ -223,6 +231,24 @@
     color: #777994;
     font-size: 13px;
 }
+
+.account-dropdown-staff {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 3px 0;
+    padding: 9px 10px;
+    border-radius: 9px;
+    color: #41408a;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+    .account-dropdown-staff:hover {
+        background: #f1f1fb;
+        color: #1c1b45;
+    }
 
 .account-dropdown-logout {
     display: flex;

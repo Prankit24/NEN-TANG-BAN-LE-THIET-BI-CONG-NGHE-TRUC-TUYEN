@@ -1,0 +1,52 @@
+@{
+    var name = User.Identity?.Name ?? "Nhân viên";
+    var letter = name[..1].ToUpperInvariant();
+    var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EMUA Nhân viên</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/admin/admin-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staff/staff.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<div class="admin-shell">
+    <div class="admin-sidebar-backdrop" id="staffSidebarBackdrop"></div>
+    <aside class="admin-sidebar staff-sidebar" id="staffSidebar">
+        <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index" class="admin-logo">
+            <span class="admin-logo-text"><strong>EMUA</strong><small>Nhân viên</small></span><span class="admin-logo-mini">EM</span>
+        </a>
+        <nav class="admin-nav">
+            <span class="admin-nav-label">Công việc</span>
+            <a class="@(controller == "Dashboard" ? "active" : "")" asp-area="Staff" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+            <span class="admin-nav-label">Quản lý bán hàng</span>
+            <a class="@(controller == "Product" ? "active" : "")" asp-area="Staff" asp-controller="Product" asp-action="Index"><i class="bi bi-box-seam"></i><span>Sản phẩm</span></a>
+            <a class="@(controller == "Order" ? "active" : "")" asp-area="Staff" asp-controller="Order" asp-action="Index"><i class="bi bi-receipt"></i><span>Đơn hàng</span></a>
+            <a class="@(controller == "Promotion" ? "active" : "")" asp-area="Staff" asp-controller="Promotion" asp-action="Index"><i class="bi bi-ticket-perforated"></i><span>Khuyến mãi</span></a>
+            <a class="@(controller == "Invoice" ? "active" : "")" asp-area="Staff" asp-controller="Invoice" asp-action="Index"><i class="bi bi-file-earmark-text"></i><span>Hóa đơn</span></a>
+            <a class="@(controller == "Report" ? "active" : "")" asp-area="Staff" asp-controller="Report" asp-action="Index"><i class="bi bi-bar-chart"></i><span>Báo cáo thống kê</span></a>
+            <span class="admin-nav-label">Tài khoản</span>
+            <a class="@(controller == "Profile" ? "active" : "")" asp-area="Staff" asp-controller="Profile" asp-action="Index"><i class="bi bi-gear"></i><span>Cài đặt</span></a>
+        </nav>
+        <div class="admin-sidebar-bottom">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="admin-bottom-link" title="Trang chủ"><i class="bi bi-house-door"></i><span>Trang chủ</span></a>
+            <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit" class="admin-bottom-link logout"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></button></form>
+        </div>
+    </aside>
+    <main class="admin-main"><header class="admin-header"><div class="admin-header-left"><button type="button" class="admin-menu-toggle" id="staffMenuToggle" aria-label="Mở menu"><i class="bi bi-list"></i></button><div><h1>@ViewData["Title"]</h1><p>EMUA Nhân viên — @DateTime.Now.ToString("dd/MM/yyyy")</p></div></div><div class="admin-user" title="@name"><div class="admin-avatar">@letter</div><span class="staff-user-name">@name</span></div></header>
+        <section class="admin-content">@if (TempData["Success"] is string message) { <div class="alert alert-success staff-alert">@message</div> } @RenderBody()</section>
+    </main>
+</div>
+<script>
+const side=document.getElementById('staffSidebar'), back=document.getElementById('staffSidebarBackdrop');
+document.getElementById('staffMenuToggle')?.addEventListener('click',()=>{side.classList.toggle('is-open');back.classList.toggle('is-visible')});
+back?.addEventListener('click',()=>{side.classList.remove('is-open');back.classList.remove('is-visible')});
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body></html>

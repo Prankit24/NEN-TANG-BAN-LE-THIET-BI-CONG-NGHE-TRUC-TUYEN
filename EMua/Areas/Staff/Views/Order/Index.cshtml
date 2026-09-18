@@ -1,0 +1,58 @@
+@model IEnumerable<DonHang>
+@{
+    ViewData["Title"] = "Đơn hàng"; var statuses = (string[])ViewBag.Statuses; var selected = (string)ViewBag.Status;
+}
+<form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
+                                                   placeholder="Tìm mã đơn, tên khách, số điện thoại..." /><select name="status">
+    <option value="all">Tất cả trạng thái</option>@foreach(var status in statuses){
+    <option value="@status"
+            selected="@(selected == status)">@status</option>
+}
+</select><button><i class="bi bi-search"></i> Tìm kiếm</button></form>
+<section class="staff-card">
+    <div class="table-responsive">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Liên hệ</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>@foreach(var order in Model){
+                <tr>
+                    <td><strong>#DH-@order.MaDonHang.ToString("D5")</strong></td>
+                    <td>@(order.HoTenNhanHang ?? order.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</td>
+                    <td>@(order.SoDienThoaiNhanHang ?? "—")</td>
+                    <td>@(order.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                    <td>@((order.TongTien ?? 0).ToString("N0")) đ</td>
+                    <td><span class="staff-badge">@(order.TrangThaiDonHang ?? "Chờ xử lý")</span></td>
+                    <td class="staff-row-actions"><a asp-action="Details" asp-route-id="@order.MaDonHang"
+                                                         class="staff-action-icon" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
+                        <form asp-action="CreateInvoice" method="post">@Html.AntiForgeryToken()<input type="hidden"
+                                                                                                          name="id" value="@order.MaDonHang" /><button class="staff-action-icon"
+                                                                         title="Xuất hóa đơn"><i class="bi bi-printer"></i></button></form>
+                            <form asp-action="UpdateStatus" method="post" class="staff-status-form">
+                                @Html.AntiForgeryToken()<input type="hidden" name="id" value="@order.MaDonHang" /><select
+                                name="status">@foreach(var status in statuses){
+                                <option
+                                selected="@(order.TrangThaiDonHang == status)" value="@status">@status</option>
+                            }
+                        </select><button title="Cập nhật"><i class="bi bi-check2"></i></button></form>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center">Không có đơn hàng phù hợp.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+</section>

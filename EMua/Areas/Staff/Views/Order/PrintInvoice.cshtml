@@ -1,0 +1,8 @@
+@model HoaDon
+@{ Layout = null; var order = Model.MaDonHangNavigation; }
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"/><title>Hóa đơn #HD-@Model.MaHoaDon.ToString("D5")</title><link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+<style>
+body{font-family:Arial,sans-serif;color:#202124}.invoice{max-width:820px;margin:36px auto;padding:34px;border:1px solid #ddd}.top{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:20px;margin-bottom:22px}.muted{color:#667085}.total{text-align:right;font-size:20px;margin-top:20px}
+@@media print{.no-print{display:none}.invoice{border:0;margin:0;max-width:none}}
+</style></head><body><main class="invoice"><div class="top"><div><h1>EMUA</h1><p class="muted">HÓA ĐƠN BÁN HÀNG</p></div><div class="text-end"><strong>#HD-@Model.MaHoaDon.ToString("D5")</strong><p class="muted">Ngày lập: @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm"))</p></div></div><p><strong>Khách hàng:</strong> @(order.HoTenNhanHang ?? "Khách hàng")<br/><strong>Địa chỉ:</strong> @(order.DiaChiNhanHang ?? "—")<br/><strong>Số điện thoại:</strong> @(order.SoDienThoaiNhanHang ?? "—")</p><table class="table"><thead><tr><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th class="text-end">Thành tiền</th></tr></thead><tbody>@foreach(var item in order.ChiTietDonHangs){<tr><td>@item.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td><td>@item.SoLuong</td><td>@item.DonGia.ToString("N0") đ</td><td class="text-end">@item.ThanhTien.ToString("N0") đ</td></tr>}</tbody></table><p class="total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></p><button class="btn btn-dark no-print" onclick="window.print()">In / Lưu PDF</button></main></body></html>
