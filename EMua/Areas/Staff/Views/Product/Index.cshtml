@@ -1,0 +1,67 @@
+@model IEnumerable<SanPham>
+@{
+    ViewData["Title"] = "Danh sách sản phẩm"; var brands = (IEnumerable<ThuongHieu>)ViewBag.Brands; var statuses =
+    (IEnumerable<string>)ViewBag.Statuses;
+}
+<div class="staff-toolbar">
+    <form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
+                                                       placeholder="Tìm tên sản phẩm..." /><select name="status">
+        <option value="all">Tất cả trạng thái</option>@foreach(var item in statuses){
+        <option value="@item"
+                selected="@(ViewBag.Status == item)">@item</option>
+    }
+</select><select name="brandId">
+<option value="">Tất cả thương hiệu</option>@foreach(var brand in brands){
+<option
+    value="@brand.MaThuongHieu" selected="@(ViewBag.BrandId == brand.MaThuongHieu)">@brand.TenThuongHieu
+</option>
+            }
+</select><button><i class="bi bi-funnel"></i> Lọc</button></form><a class="btn btn-primary"
+                                                                    asp-action="Create"><i class="bi bi-plus-lg"></i> Thêm sản phẩm</a>
+</div>
+<section class="staff-card">
+    <div class="table-responsive">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Thương hiệu</th>
+                    <th>Giá gốc</th>
+                    <th>Số lượng tồn</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>@foreach(var product in Model){
+                <tr>
+                    <td>#SP-@product.MaSanPham.ToString("D5")</td>
+                    <td><strong>@product.TenSanPham</strong><small>@product.BaoHanh</small></td>
+                    <td>@(product.MaDanhMucNavigation?.TenDanhMuc ?? "—")</td>
+                    <td>@product.MaThuongHieuNavigation.TenThuongHieu</td>
+                    <td>@((product.GiaGoc ?? 0).ToString("N0")) đ</td>
+                    <td>@product.BienTheSanPhams.Sum(variant => variant.SoLuong)</td>
+                    <td><span
+                        class="staff-badge @(product.TrangThaiSanPham == "Ẩn" ? "muted" : "")">@(product.TrangThaiSanPham
+                            ?? "—")</span></td>
+                        <td class="staff-row-actions"><a asp-action="Edit" asp-route-id="@product.MaSanPham"
+                                                             class="staff-action-icon" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                            <form asp-action="ToggleVisibility" method="post">@Html.AntiForgeryToken()<input type="hidden"
+                                                                                                                 name="id" value="@product.MaSanPham" /><button class="staff-action-icon"
+                                                                           title="@(product.TrangThaiSanPham == "Ẩn" ? "Hiển thị sản phẩm" : "Ẩn sản phẩm")"><i
+                                class="bi @(product.TrangThaiSanPham == "Ẩn" ? "bi-eye" : "bi-eye-slash")"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center">Không tìm thấy sản phẩm.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

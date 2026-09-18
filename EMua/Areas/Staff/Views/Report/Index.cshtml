@@ -1,0 +1,150 @@
+@model ReportViewModel
+@{
+    ViewData["Title"] = "Thống kê doanh thu";
+    var month = DateTime.Today.ToString("MM/yyyy");
+    var maxDailyRevenue = Math.Max(Model.DailyRevenue.Max(x => x.Revenue), 1);
+    var maxProductQuantity = Math.Max(Model.BestSellingProducts.FirstOrDefault()?.Quantity ?? 0, 1);
+    var maxFavoriteQuantity = Math.Max(Model.FavoriteProducts.FirstOrDefault()?.Quantity ?? 0, 1);
+    var selectedMonth = (int?)ViewBag.SelectedMonth ?? DateTime.Today.Month;
+    var selectedYear = (int?)ViewBag.SelectedYear ?? DateTime.Today.Year;
+}
+<div class="report-heading">
+    <div><span class="report-eyebrow"><i class="bi bi-bar-chart-line"></i> BÁO CÁO NHÂN VIÊN</span>
+        <h1>Hiệu suất kinh doanh</h1>
+        <p>Tổng quan vận hành và doanh thu tháng @month.</p>
+    </div>
+    <div class="report-actions">
+        <form method="get" class="report-period-form">
+            <i class="bi bi-calendar3"></i><select name="month" aria-label="Chọn tháng">@for (var option = 1; option <=
+            12; option++) {
+                <option value="@option" selected="@(option == selectedMonth)">Tháng @option</option>
+            }
+        </select>
+        <select name="year" aria-label="Chọn năm">@for (var option = DateTime.Today.Year - 2; option <=
+            DateTime.Today.Year; option++) {
+                <option value="@option" selected="@(option == selectedYear)">@option
+                </option>
+            }
+        </select><button class="report-control-button" title="Xem báo cáo"><i
+        class="bi bi-arrow-right"></i></button>
+    </form>
+    <a class="report-control-button" asp-action="Export" asp-route-month="@selectedMonth"
+       asp-route-year="@selectedYear" title="Xuất file CSV"><i class="bi bi-download"></i><span>Xuất
+        file</span></a>
+        <button type="button" class="report-control-button" onclick="window.print()" title="In báo cáo"><i
+            class="bi bi-printer"></i><span>In</span></button>
+        </div>
+    </div>
+    <div class="report-kpi-grid">
+        <article class="report-kpi report-kpi-revenue">
+            <div class="report-kpi-icon"><i class="bi bi-cash-stack"></i></div><span>Doanh
+            thu</span><strong>@Model.Revenue.ToString("N0") <small>đ</small></strong><em>Đơn đã hoàn thành</em>
+        </article>
+        <article class="report-kpi report-kpi-success">
+            <div class="report-kpi-icon"><i class="bi bi-check2-circle"></i></div><span>Tỉ lệ thành
+            công</span><strong>@Model.SuccessRate.ToString("0.0")<small>%</small></strong><em>@Model.SuccessfulOrders
+            đơn thành công</em>
+        </article>
+        <article class="report-kpi report-kpi-orders">
+            <div class="report-kpi-icon"><i class="bi bi-receipt"></i></div><span>Tổng số
+            đơn</span><strong>@Model.TotalOrders</strong><em>@Model.PendingOrders đơn đang xử lý</em>
+        </article>
+        <article class="report-kpi report-kpi-return">
+            <div class="report-kpi-icon"><i class="bi bi-arrow-return-left"></i></div><span>Đơn hoàn /
+            hủy</span><strong>@Model.ReturnedOrders</strong><em>Cần được theo dõi</em>
+        </article>
+    </div>
+    <div class="report-chart-grid">
+        <section class="staff-card report-chart-card">
+            <div class="report-card-heading">
+                <div><span class="report-label">DOANH THU</span>
+                    <h2>Doanh thu theo ngày</h2>
+                </div><strong>@Model.Revenue.ToString("N0") đ</strong>
+            </div>
+            <div class="report-bar-chart">@foreach (var day in Model.DailyRevenue) { var height = day.Revenue <= 0 ? 4 :
+                Math.Max(8, (int)(day.Revenue / maxDailyRevenue * 100));
+                <div class="report-bar-column" title="Ngày @day.Day: @day.Revenue.ToString("N0") đ"><span
+                    class="report-bar-value">@(day.Revenue > 0 ?
+                            day.Revenue.ToString("N0") : "")</span><i style="height:@height%"></i><small>@day.Day</small></div>
+                }
+            </div>
+        </section>
+        <section class="staff-card report-status-card">
+            <div class="report-card-heading">
+                <div><span class="report-label">ĐƠN HÀNG</span>
+                    <h2>Phân bổ trạng thái</h2>
+                </div><i class="bi bi-pie-chart"></i>
+            </div>
+            <div class="report-status-list">@foreach (var status in Model.OrderStatuses) { var width = Model.TotalOrders ==
+                0 ? 0 : Math.Max(5, (int)((decimal)status.Count / Model.TotalOrders * 100)); var statusClass =
+                status.Status.Contains("hủy") || status.Status.Contains("huỷ") ? "is-return" : status.Status.Contains("hoàn thành") || status.Status.Contains("giao") ? "is-success" : "is-pending";
+                <div class="report-status-row">
+                    <div><span>@status.Status</span><strong>@status.Count</strong></div>
+                    <div class="report-progress"><i class="@statusClass" style="width:@width%"></i></div>
+                </div>
+            }
+            @if (!Model.OrderStatuses.Any())
+            {
+                <p class="report-empty">Chưa có đơn hàng trong tháng.</p>
+            }
+        </div>
+    </section>
+</div>
+<div class="report-insight-grid">
+    <article class="report-insight"><i class="bi bi-wallet2"></i>
+        <div><span>Giá trị đơn trung bình</span><strong>@Model.AverageOrderValue.ToString("N0") đ</strong></div>
+    </article>
+    <article class="report-insight"><i class="bi bi-heart"></i>
+        <div><span>Lượt yêu thích trong tháng</span><strong>@Model.FavoriteCount</strong></div>
+    </article>
+    <article class="report-insight"><i class="bi bi-box-seam"></i>
+        <div><span>SKU tồn kho thấp</span><strong>@Model.LowStockCount</strong></div>
+    </article>
+</div>
+<div class="report-table-grid">
+    <section class="staff-card report-ranking-card">
+        <div class="report-card-heading">
+            <div><span class="report-label">TOP SẢN PHẨM</span>
+                <h2>Mặt hàng bán chạy</h2>
+            </div><i class="bi bi-trophy"></i>
+        </div>
+        <div class="report-ranking-list">@for (var i = 0; i < Model.BestSellingProducts.Count; i++) { var item =
+            Model.BestSellingProducts[i]; var width = Math.Max(8, (int)((decimal)item.Quantity / maxProductQuantity *
+            100));
+            <div class="report-ranking-row"><b class="report-rank">0@(i + 1)</b>
+                <div class="report-ranking-content">
+                    <div><strong>@item.Name</strong><span>@item.Quantity sản phẩm · @item.Revenue.ToString("N0")
+                        đ</span></div>
+                        <div class="report-ranking-track"><i style="width:@width%"></i></div>
+                    </div>
+                </div>
+            }
+            @if (!Model.BestSellingProducts.Any())
+            {
+                <p class="report-empty">Chưa có dữ liệu bán hàng.</p>
+            }
+        </div>
+    </section>
+    <section class="staff-card report-ranking-card">
+        <div class="report-card-heading">
+            <div><span class="report-label">TOP YÊU THÍCH</span>
+                <h2>Sản phẩm được quan tâm</h2>
+            </div><i class="bi bi-heart-fill"></i>
+        </div>
+        <div class="report-ranking-list">@for (var i = 0; i < Model.FavoriteProducts.Count; i++) { var item =
+            Model.FavoriteProducts[i]; var width = Math.Max(8, (int)((decimal)item.Quantity / maxFavoriteQuantity *
+            100));
+            <div class="report-ranking-row"><b class="report-rank">0@(i + 1)</b>
+                <div class="report-ranking-content">
+                    <div><strong>@item.Name</strong><span>@item.Quantity lượt yêu thích</span></div>
+                    <div class="report-ranking-track favorite"><i style="width:@width%"></i></div>
+                </div>
+            </div>
+        }
+        @if (!Model.FavoriteProducts.Any())
+        {
+            <p class="report-empty">Chưa có lượt yêu thích.</p>
+        }
+    </div>
+</section>
+</div>

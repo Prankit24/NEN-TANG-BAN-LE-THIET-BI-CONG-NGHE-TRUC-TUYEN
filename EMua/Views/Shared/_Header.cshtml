@@ -3,6 +3,7 @@
     var avatarLetter = string.IsNullOrWhiteSpace(displayName)
         ? "U"
         : displayName[..1].ToUpperInvariant();
+    var isStaff = User.IsInRole("NhanVien") || User.IsInRole("Nhân viên");
 }
 
 <header class="emua-site-header">
@@ -23,9 +24,7 @@
         <div class="container-fluid emua-container">
             <div class="main-header-wrapper">
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="emua-logo">
+                <a asp-controller="Home" asp-action="Index" class="emua-logo">
                     <div class="emua-logo-icon">
                         <i class="bi bi-lightning-charge"></i>
                     </div>
@@ -36,24 +35,17 @@
                     </div>
                 </a>
 
-                <form asp-controller="Product"
-                      asp-action="Search"
-                      method="get"
-                      class="emua-search">
+                <form asp-controller="Product" asp-action="Search" method="get" class="emua-search">
                     <i class="bi bi-search"></i>
 
-                    <input type="text"
-                           name="keyword"
-                           autocomplete="off"
+                    <input type="text" name="keyword" autocomplete="off"
                            placeholder="Tìm kiếm laptop, điện thoại, gaming gear..." />
                 </form>
 
                 <div class="emua-header-actions">
 
                     <div class="dropdown">
-                        <button class="header-action-btn dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
+                        <button class="header-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                             <i class="bi bi-person"></i>
 
@@ -69,9 +61,7 @@
                             @if (User.Identity?.IsAuthenticated == true)
                             {
                                 <li>
-                                    <a class="account-dropdown-profile"
-                                       asp-controller="Account"
-                                       asp-action="Profile">
+                                    <a class="account-dropdown-profile" asp-controller="Account" asp-action="Profile">
 
                                         <span class="account-dropdown-avatar">
                                             @avatarLetter
@@ -86,18 +76,26 @@
                                     </a>
                                 </li>
 
+                                @if (isStaff)
+                                {
+                                    <li>
+                                        <a class="account-dropdown-staff" asp-area="Staff" asp-controller="Dashboard"
+                                           asp-action="Index">
+                                            <i class="bi bi-grid-1x2"></i>
+                                            Khu vực nhân viên
+                                        </a>
+                                    </li>
+                                }
+
                                 <li>
                                     <hr class="dropdown-divider" />
                                 </li>
 
                                 <li>
-                                    <form asp-controller="Auth"
-                                          asp-action="Logout"
-                                          method="post">
+                                    <form asp-controller="Auth" asp-action="Logout" method="post">
                                         @Html.AntiForgeryToken()
 
-                                        <button type="submit"
-                                                class="account-dropdown-logout">
+                                        <button type="submit" class="account-dropdown-logout">
                                             <i class="bi bi-box-arrow-right"></i>
                                             Đăng xuất
                                         </button>
@@ -107,18 +105,14 @@
                             else
                             {
                                 <li>
-                                    <a class="dropdown-item"
-                                       asp-controller="Auth"
-                                       asp-action="Login">
+                                    <a class="dropdown-item" asp-controller="Auth" asp-action="Login">
                                         <i class="bi bi-box-arrow-in-right me-2"></i>
                                         Đăng nhập
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item"
-                                       asp-controller="Auth"
-                                       asp-action="Register">
+                                    <a class="dropdown-item" asp-controller="Auth" asp-action="Register">
                                         <i class="bi bi-person-plus me-2"></i>
                                         Đăng ký
                                     </a>
@@ -128,16 +122,12 @@
                         </ul>
                     </div>
 
-                    <a asp-controller="Favorite"
-                       asp-action="Index"
-                       class="header-action-btn">
+                    <a asp-controller="Favorite" asp-action="Index" class="header-action-btn">
                         <i class="bi bi-shop"></i>
                         <span>Cửa hàng</span>
                     </a>
 
-                    <a asp-controller="Cart"
-                       asp-action="Index"
-                       class="header-action-btn cart-action">
+                    <a asp-controller="Cart" asp-action="Index" class="header-action-btn cart-action">
                         <div class="header-icon-wrapper">
                             <i class="bi bi-cart3"></i>
                             <span class="cart-count">0</span>
@@ -148,9 +138,7 @@
 
                 </div>
 
-                <button class="mobile-menu-button"
-                        type="button"
-                        data-bs-toggle="collapse"
+                <button class="mobile-menu-button" type="button" data-bs-toggle="collapse"
                         data-bs-target="#mobileCategories">
                     <i class="bi bi-list"></i>
                 </button>
@@ -163,44 +151,32 @@
         <div class="container-fluid emua-container">
             <div class="category-list">
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="Laptop">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="Laptop">
                     <i class="bi bi-laptop"></i>
                     Laptop
                 </a>
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="DienThoai">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="DienThoai">
                     <i class="bi bi-phone"></i>
                     Điện thoại
                 </a>
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="Gaming">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="Gaming">
                     <i class="bi bi-controller"></i>
                     Gaming
                 </a>
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="PhuKien">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="PhuKien">
                     <i class="bi bi-box"></i>
                     Phụ kiện
                 </a>
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="AmThanh">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="AmThanh">
                     <i class="bi bi-headphones"></i>
                     Âm thanh
                 </a>
 
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="ThietBiThongMinh">
+                <a asp-controller="Product" asp-action="Index" asp-route-category="ThietBiThongMinh">
                     <i class="bi bi-smartwatch"></i>
                     Thiết bị thông minh
                 </a>
@@ -211,6 +187,12 @@
 
     <div class="collapse" id="mobileCategories">
         <div class="mobile-category-menu">
+            @if (isStaff)
+            {
+                <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-grid-1x2"></i> Khu vực nhân viên
+                </a>
+            }
             <a asp-controller="Product" asp-action="Index" asp-route-category="Laptop">Laptop</a>
             <a asp-controller="Product" asp-action="Index" asp-route-category="DienThoai">Điện thoại</a>
             <a asp-controller="Product" asp-action="Index" asp-route-category="Gaming">Gaming</a>

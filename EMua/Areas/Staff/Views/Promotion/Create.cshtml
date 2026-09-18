@@ -1,0 +1,32 @@
+@model PromotionCreateViewModel
+@{
+    ViewData["Title"] = "Tạo khuyến mãi";
+}
+<section class="staff-card staff-form-card">
+    <form method="post" class="row g-3">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="col-md-6"><label asp-for="MaCode">Mã khuyến mãi</label><input asp-for="MaCode"
+                                                                                      class="form-control" /><span asp-validation-for="MaCode"></span></div>
+            <div class="col-md-6"><label asp-for="TenKhuyenMai">Tên chương trình</label><input asp-for="TenKhuyenMai"
+                                                                                                   class="form-control" /><span asp-validation-for="TenKhuyenMai"></span></div>
+                <div class="col-md-4"><label asp-for="LoaiGiamGia">Loại giảm</label><select asp-for="LoaiGiamGia"
+                                                                                            class="form-select">
+                    <option>Phần trăm</option>
+                    <option>Số tiền</option>
+                </select></div>
+                <div class="col-md-4"><label asp-for="GiaTriGiam">Giá trị giảm</label><input asp-for="GiaTriGiam" type="number"
+                                                                                                 min="0" step="0.01" class="form-control" /><span asp-validation-for="GiaTriGiam"></span></div>
+                    <div class="col-md-4"><label asp-for="SoLuong">Số lượng mã</label><input asp-for="SoLuong" type="number" min="0"
+                                                                                                 class="form-control" /></div>
+                        <div class="col-md-6"><label asp-for="GiaTriDonHangToiThieu">Đơn tối thiểu</label><input
+                            asp-for="GiaTriDonHangToiThieu" type="number" min="0" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="NgayBatDau">Ngày bắt đầu</label><input asp-for="NgayBatDau"
+                                                                                                             type="datetime-local" class="form-control" /></div>
+                                <div class="col-md-3"><label asp-for="NgayKetThuc">Ngày kết thúc</label><input asp-for="NgayKetThuc"
+                                                                                                                   type="datetime-local" class="form-control" /></div>
+                                    <div class="col-12"><label asp-for="MoTa">Mô tả</label><textarea asp-for="MoTa" class="form-control"
+                                                                                                         rows="3"></textarea></div>
+                                        <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Tạo khuyến mãi</button><a asp-action="Index"
+                                                                                                                                       class="btn btn-light">Hủy</a></div>
+                                        </form>
+                                    </section>

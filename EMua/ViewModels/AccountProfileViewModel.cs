@@ -27,6 +27,7 @@ public sealed class AccountProfileViewModel
 
     public bool IsCustomer { get; init; }
 
+<<<<<<< Updated upstream
     public decimal TotalSpending { get; init; }
 
     public string MembershipTier { get; init; } = "Đồng";
@@ -34,6 +35,9 @@ public sealed class AccountProfileViewModel
     public string MembershipCssClass { get; init; } = "bronze";
 
     public decimal? NextTierAmount { get; init; }
+=======
+    public bool IsStaff { get; init; }
+>>>>>>> Stashed changes
 
     public string Initial =>
         string.IsNullOrWhiteSpace(FullName)
