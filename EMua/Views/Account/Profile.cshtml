@@ -122,7 +122,7 @@
                         Yêu thích
                     </a>
                 }
-                else if (!Model.IsStaff)
+                else
                 {
                     <a asp-controller="Product" asp-action="Index">
                         <i class="bi bi-box-seam"></i>
@@ -132,13 +132,6 @@
                     <a asp-controller="Order" asp-action="Index">
                         <i class="bi bi-receipt"></i>
                         Quản lý đơn hàng
-                    </a>
-                }
-                else
-                {
-                    <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
-                        <i class="bi bi-grid-1x2"></i>
-                        Khu vực nhân viên
                     </a>
                 }
 
@@ -249,7 +242,6 @@
     </div>
 </section>
 
-<<<<<<< Updated upstream
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -282,12 +274,3 @@
         });
     </script>
 }
-=======
-                    const modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                });
-            </script>
-        }
-    }
-</section>
->>>>>>> Stashed changes

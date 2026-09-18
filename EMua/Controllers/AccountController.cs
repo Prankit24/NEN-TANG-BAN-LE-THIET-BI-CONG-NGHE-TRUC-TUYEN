@@ -238,7 +238,6 @@ public class AccountController : Controller
         };
 
         var isCustomer = databaseRoleName is "KhachHang" or "Khách hàng";
-        var isStaff = databaseRoleName is "NhanVien" or "Nhân viên";
 
         // Chỉ tính tổng chi tiêu từ đơn đã giao hoặc hoàn thành.
         var totalSpending = user.DonHangs
@@ -260,15 +259,11 @@ public class AccountController : Controller
             OrderCount = user.DonHangs.Count,
             FavoriteCount = user.YeuThiches.Count,
             IsCustomer = isCustomer,
-<<<<<<< Updated upstream
 
             TotalSpending = totalSpending,
             MembershipTier = membership.Tier,
             MembershipCssClass = membership.CssClass,
             NextTierAmount = membership.NextTierAmount
-=======
-            IsStaff = isStaff
->>>>>>> Stashed changes
         };
     }
 

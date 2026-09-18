@@ -282,14 +282,6 @@ public class AuthController : Controller
             user,
             model.RememberMe);
 
-        if (IsStaff(user))
-        {
-            return RedirectToAction(
-                "Index",
-                "Dashboard",
-                new { area = "Staff" });
-        }
-
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
@@ -459,14 +451,6 @@ public class AuthController : Controller
         await SignInUserAsync(user, true);
         await HttpContext.SignOutAsync("External");
 
-        if (IsStaff(user))
-        {
-            return RedirectToAction(
-                "Index",
-                "Dashboard",
-                new { area = "Staff" });
-        }
-
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
@@ -588,14 +572,4 @@ public class AuthController : Controller
 
         return result;
     }
-<<<<<<< Updated upstream
-=======
-
-    private static bool IsStaff(NguoiDung user)
-    {
-        var roleName = user.MaQuyenNavigation?.TenQuyen;
-
-        return roleName is "NhanVien" or "Nhân viên";
-    }
->>>>>>> Stashed changes
 }
