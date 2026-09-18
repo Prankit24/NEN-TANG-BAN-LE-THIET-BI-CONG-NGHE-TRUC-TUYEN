@@ -8,9 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Staff\Data\**" />
+    <Content Remove="Areas\Staff\Data\**" />
+    <EmbeddedResource Remove="Areas\Staff\Data\**" />
+    <None Remove="Areas\Staff\Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Areas\Staff\Controllers\" />
-    <Folder Include="Areas\Staff\Data\" />
     <Folder Include="Areas\Staff\Models\" />
     <Folder Include="MLModels\" />
     <Folder Include="wwwroot\images\banner\" />
