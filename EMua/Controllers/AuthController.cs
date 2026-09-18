@@ -3,9 +3,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+
 using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
@@ -35,6 +37,9 @@ public class AuthController : Controller
         _httpClientFactory = httpClientFactory;
     }
 
+    // =====================================================
+    // REGISTER - GET
+    // =====================================================
     [HttpGet]
     public IActionResult Register()
     {
@@ -44,6 +49,9 @@ public class AuthController : Controller
         return View(new RegisterViewModel());
     }
 
+    // =====================================================
+    // REGISTER - POST
+    // =====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(
@@ -63,17 +71,35 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        if (!await VerifyGeeTestAsync("Register", lotNumber, captchaOutput, passToken, genTime))
+        if (!await VerifyGeeTestAsync(
+                "Register",
+                lotNumber,
+                captchaOutput,
+                passToken,
+                genTime))
         {
-            ModelState.AddModelError("", "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+            ModelState.AddModelError(
+                "",
+                "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+
             return View(model);
         }
 
-        var email = model.Email.Trim().ToLowerInvariant();
+        // Luôn chuẩn hóa email về chữ thường
+        var email = model.Email
+            .Trim()
+            .ToLowerInvariant();
+
         var phone = NormalizePhone(model.PhoneNumber);
 
+        // =====================================================
+        // KIỂM TRA EMAIL
+        // Không phân biệt hoa / thường
+        // =====================================================
         var emailExists = await _db.NguoiDungs
-            .AnyAsync(x => x.Email == email);
+            .AnyAsync(x =>
+                x.Email != null &&
+                x.Email.ToLower() == email);
 
         if (emailExists)
         {
@@ -82,8 +108,12 @@ public class AuthController : Controller
                 "Email này đã được sử dụng.");
         }
 
+        // =====================================================
+        // KIỂM TRA SỐ ĐIỆN THOẠI
+        // =====================================================
         var phoneExists = await _db.NguoiDungs
-            .AnyAsync(x => x.SoDienThoai == phone);
+            .AnyAsync(x =>
+                x.SoDienThoai == phone);
 
         if (phoneExists)
         {
@@ -92,6 +122,10 @@ public class AuthController : Controller
                 "Số điện thoại này đã được sử dụng.");
         }
 
+        // =====================================================
+        // KIỂM TRA QUYỀN KHÁCH HÀNG
+        // MaQuyen = 3
+        // =====================================================
         var customerRoleExists = await _db.PhanQuyens
             .AnyAsync(x => x.MaQuyen == 3);
 
@@ -105,24 +139,36 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
+        // =====================================================
+        // TẠO NGƯỜI DÙNG
+        // =====================================================
         var user = new NguoiDung
         {
             TenNguoiDung = model.FullName.Trim(),
+
+            // Lưu email dạng lowercase từ đây trở đi
             Email = email,
+
             SoDienThoai = phone,
-            TenDangNhap = $"kh_{Guid.NewGuid():N}"[..15],
+
+            TenDangNhap =
+                $"kh_{Guid.NewGuid():N}"[..15],
+
             MaQuyen = 3,
             TrangThai = true,
             NgayTao = DateTime.Now
         };
 
-        user.MatKhau = _passwordHasher.HashPassword(
-            user,
-            model.Password);
+        // Hash mật khẩu
+        user.MatKhau =
+            _passwordHasher.HashPassword(
+                user,
+                model.Password);
 
         try
         {
             _db.NguoiDungs.Add(user);
+
             await _db.SaveChangesAsync();
         }
         catch (DbUpdateException)
@@ -140,8 +186,12 @@ public class AuthController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    // =====================================================
+    // LOGIN - GET
+    // =====================================================
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(
+        string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
@@ -150,6 +200,10 @@ public class AuthController : Controller
 
         return View(new LoginViewModel());
     }
+
+    // =====================================================
+    // LOGIN - POST
+    // =====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
@@ -165,12 +219,15 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
+        // =====================================================
+        // GEETEST
+        // =====================================================
         if (!await VerifyGeeTestAsync(
-            "Login",
-            lotNumber,
-            captchaOutput,
-            passToken,
-            genTime))
+                "Login",
+                lotNumber,
+                captchaOutput,
+                passToken,
+                genTime))
         {
             ModelState.AddModelError(
                 "",
@@ -179,30 +236,53 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Có thể là Email hoặc SĐT
+        // =====================================================
+        // EMAIL HOẶC SỐ ĐIỆN THOẠI
+        // =====================================================
         var identifier = model.Identifier.Trim();
 
         NguoiDung? user;
 
-        // Nếu có @ => xử lý như Email
+        // =====================================================
+        // ĐĂNG NHẬP BẰNG EMAIL
+        // =====================================================
         if (identifier.Contains('@'))
         {
-            var email = identifier.ToLowerInvariant();
+            var email =
+                identifier.ToLowerInvariant();
 
+            // QUAN TRỌNG:
+            // PostgreSQL phân biệt hoa / thường khi dùng =
+            //
+            // Ví dụ:
+            // Thaovy@gmail.com
+            // thaovy@gmail.com
+            //
+            // Vì vậy phải đưa cả DB email về lowercase
+            // khi so sánh.
             user = await _db.NguoiDungs
                 .Include(x => x.MaQuyenNavigation)
-                .FirstOrDefaultAsync(x => x.Email == email);
+                .FirstOrDefaultAsync(x =>
+                    x.Email != null &&
+                    x.Email.ToLower() == email);
         }
         else
         {
-            // Nếu không có @ => xử lý như SĐT
-            var phone = NormalizePhone(identifier);
+            // =================================================
+            // ĐĂNG NHẬP BẰNG SỐ ĐIỆN THOẠI
+            // =================================================
+            var phone =
+                NormalizePhone(identifier);
 
             user = await _db.NguoiDungs
                 .Include(x => x.MaQuyenNavigation)
-                .FirstOrDefaultAsync(x => x.SoDienThoai == phone);
+                .FirstOrDefaultAsync(x =>
+                    x.SoDienThoai == phone);
         }
 
+        // =====================================================
+        // KHÔNG TÌM THẤY USER
+        // =====================================================
         if (user == null ||
             string.IsNullOrWhiteSpace(user.MatKhau))
         {
@@ -213,6 +293,9 @@ public class AuthController : Controller
             return View(model);
         }
 
+        // =====================================================
+        // KIỂM TRA MẬT KHẨU
+        // =====================================================
         PasswordVerificationResult verifyResult;
 
         try
@@ -225,7 +308,16 @@ public class AuthController : Controller
         }
         catch (FormatException)
         {
-            // Tài khoản cũ đang lưu password chưa hash
+            // =================================================
+            // HỖ TRỢ TÀI KHOẢN CŨ
+            // DB cũ có thể lưu password dạng:
+            //
+            // 123456
+            //
+            // thay vì hash.
+            //
+            // Nếu password đúng thì tự động chuyển sang hash.
+            // =================================================
             if (user.MatKhau == model.Password)
             {
                 user.MatKhau =
@@ -248,6 +340,9 @@ public class AuthController : Controller
             }
         }
 
+        // =====================================================
+        // SAI PASSWORD
+        // =====================================================
         if (verifyResult ==
             PasswordVerificationResult.Failed)
         {
@@ -258,6 +353,9 @@ public class AuthController : Controller
             return View(model);
         }
 
+        // =====================================================
+        // TÀI KHOẢN BỊ KHÓA
+        // =====================================================
         if (!user.TrangThai)
         {
             ModelState.AddModelError(
@@ -267,6 +365,9 @@ public class AuthController : Controller
             return View(model);
         }
 
+        // =====================================================
+        // HASH CŨ → HASH LẠI
+        // =====================================================
         if (verifyResult ==
             PasswordVerificationResult.SuccessRehashNeeded)
         {
@@ -278,6 +379,9 @@ public class AuthController : Controller
             await _db.SaveChangesAsync();
         }
 
+        // =====================================================
+        // ĐĂNG NHẬP THÀNH CÔNG
+        // =====================================================
         await SignInUserAsync(
             user,
             model.RememberMe);
@@ -290,6 +394,9 @@ public class AuthController : Controller
             "Home");
     }
 
+    // =====================================================
+    // LOGOUT
+    // =====================================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
@@ -297,16 +404,22 @@ public class AuthController : Controller
         await HttpContext.SignOutAsync(
             CookieAuthenticationDefaults.AuthenticationScheme);
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction(
+            "Index",
+            "Home");
     }
 
-    // Dùng chung cho nút Google và Facebook.
+    // =====================================================
+    // EXTERNAL LOGIN
+    // GOOGLE / FACEBOOK
+    // =====================================================
     [HttpGet]
     public IActionResult ExternalLogin(
         string provider,
         string? returnUrl = null)
     {
-        var providerScheme = GetProviderScheme(provider);
+        var providerScheme =
+            GetProviderScheme(provider);
 
         if (providerScheme == null)
             return RedirectToAction(nameof(Login));
@@ -314,242 +427,410 @@ public class AuthController : Controller
         var redirectUrl = Url.Action(
             nameof(ExternalLoginCallback),
             "Auth",
-            new { provider, returnUrl });
+            new
+            {
+                provider,
+                returnUrl
+            });
 
-        var properties = new AuthenticationProperties
-        {
-            RedirectUri = redirectUrl
-        };
+        var properties =
+            new AuthenticationProperties
+            {
+                RedirectUri = redirectUrl
+            };
 
-        return Challenge(properties, providerScheme);
+        return Challenge(
+            properties,
+            providerScheme);
     }
 
+    // =====================================================
+    // EXTERNAL LOGIN CALLBACK
+    // =====================================================
     [HttpGet]
-    public async Task<IActionResult> ExternalLoginCallback(
-        string? provider = null,
-        string? returnUrl = null,
-        string? remoteError = null)
+    public async Task<IActionResult>
+        ExternalLoginCallback(
+            string? provider = null,
+            string? returnUrl = null,
+            string? remoteError = null)
     {
-        var providerName = string.Equals(
-            provider,
-            "Facebook",
-            StringComparison.OrdinalIgnoreCase)
-            ? "Facebook"
-            : "Google";
+        var providerName =
+            string.Equals(
+                provider,
+                "Facebook",
+                StringComparison.OrdinalIgnoreCase)
+                ? "Facebook"
+                : "Google";
 
+        // =====================================================
+        // PROVIDER ERROR
+        // =====================================================
         if (!string.IsNullOrWhiteSpace(remoteError))
         {
             ModelState.AddModelError(
                 "",
                 $"Đăng nhập {providerName} không thành công.");
 
-            return View("Login", new LoginViewModel());
+            return View(
+                "Login",
+                new LoginViewModel());
         }
 
-        var externalResult = await HttpContext.AuthenticateAsync("External");
+        // =====================================================
+        // LẤY EXTERNAL USER
+        // =====================================================
+        var externalResult =
+            await HttpContext.AuthenticateAsync(
+                "External");
 
-        if (!externalResult.Succeeded || externalResult.Principal == null)
+        if (!externalResult.Succeeded ||
+            externalResult.Principal == null)
         {
             ModelState.AddModelError(
                 "",
                 $"Không thể lấy thông tin tài khoản {providerName}.");
 
-            return View("Login", new LoginViewModel());
+            return View(
+                "Login",
+                new LoginViewModel());
         }
 
-        var providerId = externalResult.Principal
-    .FindFirstValue(ClaimTypes.NameIdentifier);
+        // =====================================================
+        // PROVIDER ID
+        // =====================================================
+        var providerId =
+            externalResult.Principal
+                .FindFirstValue(
+                    ClaimTypes.NameIdentifier);
 
-        var email = externalResult.Principal
-            .FindFirstValue(ClaimTypes.Email)?
-            .Trim()
-            .ToLowerInvariant();
+        // =====================================================
+        // EMAIL
+        // =====================================================
+        var email =
+            externalResult.Principal
+                .FindFirstValue(
+                    ClaimTypes.Email)?
+                .Trim()
+                .ToLowerInvariant();
 
-        // Facebook đôi khi không trả email.
-        // Tạo định danh nội bộ duy nhất để tài khoản vẫn đăng nhập được.
+        // =====================================================
+        // FACEBOOK ĐÔI KHI KHÔNG TRẢ EMAIL
+        // =====================================================
         if (string.IsNullOrWhiteSpace(email) &&
             providerName == "Facebook" &&
             !string.IsNullOrWhiteSpace(providerId))
         {
-            email = $"facebook_{providerId}@social.emua.local";
+            email =
+                $"facebook_{providerId}@social.emua.local";
         }
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            await HttpContext.SignOutAsync("External");
+            await HttpContext.SignOutAsync(
+                "External");
 
             ModelState.AddModelError(
                 "",
                 $"Không thể lấy thông tin tài khoản {providerName}.");
 
-            return View("Login", new LoginViewModel());
+            return View(
+                "Login",
+                new LoginViewModel());
         }
 
-        var user = await _db.NguoiDungs
-            .Include(x => x.MaQuyenNavigation)
-            .FirstOrDefaultAsync(x => x.Email == email);
+        // =====================================================
+        // TÌM USER
+        // Không phân biệt hoa / thường
+        // =====================================================
+        var user =
+            await _db.NguoiDungs
+                .Include(x => x.MaQuyenNavigation)
+                .FirstOrDefaultAsync(x =>
+                    x.Email != null &&
+                    x.Email.ToLower() == email);
 
-        // Lần đầu đăng nhập Google/Facebook: tự tạo Khách hàng.
+        // =====================================================
+        // LẦN ĐẦU LOGIN GOOGLE / FACEBOOK
+        // =====================================================
         if (user == null)
         {
-            var customerRole = await _db.PhanQuyens
-                .FirstOrDefaultAsync(x => x.MaQuyen == 3);
+            var customerRole =
+                await _db.PhanQuyens
+                    .FirstOrDefaultAsync(
+                        x => x.MaQuyen == 3);
 
             if (customerRole == null)
             {
-                await HttpContext.SignOutAsync("External");
+                await HttpContext.SignOutAsync(
+                    "External");
 
                 ModelState.AddModelError(
                     "",
                     "Hệ thống chưa có quyền Khách hàng (Mã quyền 3).");
 
-                return View("Login", new LoginViewModel());
+                return View(
+                    "Login",
+                    new LoginViewModel());
             }
 
-            var fullName = externalResult.Principal
-                .FindFirstValue(ClaimTypes.Name);
+            // =================================================
+            // FULL NAME
+            // =================================================
+            var fullName =
+                externalResult.Principal
+                    .FindFirstValue(
+                        ClaimTypes.Name);
 
             if (string.IsNullOrWhiteSpace(fullName))
             {
-                fullName = email.Split('@')[0];
+                fullName =
+                    email.Split('@')[0];
             }
 
-            var usernamePrefix = providerName == "Facebook" ? "fb" : "gg";
+            var usernamePrefix =
+                providerName == "Facebook"
+                    ? "fb"
+                    : "gg";
 
             user = new NguoiDung
             {
                 TenNguoiDung = fullName,
                 Email = email,
                 SoDienThoai = null,
-                TenDangNhap = $"{usernamePrefix}_{Guid.NewGuid():N}"[..15],
+
+                TenDangNhap =
+                    $"{usernamePrefix}_{Guid.NewGuid():N}"[..15],
+
                 MaQuyen = 3,
                 MaQuyenNavigation = customerRole,
+
                 TrangThai = true,
                 NgayTao = DateTime.Now
             };
 
-            // Cột MatKhau vẫn được lưu giá trị băm an toàn.
-            user.MatKhau = _passwordHasher.HashPassword(
-                user,
-                Guid.NewGuid().ToString("N"));
+            // =================================================
+            // SOCIAL ACCOUNT VẪN CÓ HASH PASSWORD
+            // =================================================
+            user.MatKhau =
+                _passwordHasher.HashPassword(
+                    user,
+                    Guid.NewGuid().ToString("N"));
 
             _db.NguoiDungs.Add(user);
+
             await _db.SaveChangesAsync();
         }
 
+        // =====================================================
+        // ACCOUNT LOCKED
+        // =====================================================
         if (!user.TrangThai)
         {
-            await HttpContext.SignOutAsync("External");
+            await HttpContext.SignOutAsync(
+                "External");
 
             ModelState.AddModelError(
                 "",
                 "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
 
-            return View("Login", new LoginViewModel());
+            return View(
+                "Login",
+                new LoginViewModel());
         }
 
-        await SignInUserAsync(user, true);
-        await HttpContext.SignOutAsync("External");
+        // =====================================================
+        // LOGIN
+        // =====================================================
+        await SignInUserAsync(
+            user,
+            true);
+
+        await HttpContext.SignOutAsync(
+            "External");
 
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction(
+            "Index",
+            "Home");
     }
 
+    // =====================================================
+    // SIGN IN USER
+    // =====================================================
     private async Task SignInUserAsync(
         NguoiDung user,
         bool rememberMe)
     {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.MaNguoiDung.ToString()),
-            new(ClaimTypes.Name, user.TenNguoiDung ?? "Khách hàng"),
-            new(ClaimTypes.Email, user.Email ?? string.Empty),
-            new(
-                ClaimTypes.Role,
-                user.MaQuyenNavigation?.TenQuyen ?? "KhachHang")
-        };
+        var claims =
+            new List<Claim>
+            {
+                new(
+                    ClaimTypes.NameIdentifier,
+                    user.MaNguoiDung.ToString()),
 
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme);
+                new(
+                    ClaimTypes.Name,
+                    user.TenNguoiDung ??
+                    "Khách hàng"),
+
+                new(
+                    ClaimTypes.Email,
+                    user.Email ??
+                    string.Empty),
+
+                new(
+                    ClaimTypes.Role,
+                    user.MaQuyenNavigation?.TenQuyen
+                    ?? "KhachHang")
+            };
+
+        var identity =
+            new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults
+                    .AuthenticationScheme);
 
         await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
+            CookieAuthenticationDefaults
+                .AuthenticationScheme,
+
             new ClaimsPrincipal(identity),
+
             new AuthenticationProperties
             {
                 IsPersistent = rememberMe,
-                ExpiresUtc = rememberMe
-                    ? DateTimeOffset.UtcNow.AddDays(7)
-                    : null
+
+                ExpiresUtc =
+                    rememberMe
+                        ? DateTimeOffset.UtcNow
+                            .AddDays(7)
+                        : null
             });
     }
 
-    private static string? GetProviderScheme(string provider)
+    // =====================================================
+    // GET PROVIDER
+    // =====================================================
+    private static string?
+        GetProviderScheme(
+            string provider)
     {
         if (string.Equals(
-            provider,
-            "Google",
-            StringComparison.OrdinalIgnoreCase))
+                provider,
+                "Google",
+                StringComparison.OrdinalIgnoreCase))
         {
-            return GoogleDefaults.AuthenticationScheme;
+            return GoogleDefaults
+                .AuthenticationScheme;
         }
 
         if (string.Equals(
-            provider,
-            "Facebook",
-            StringComparison.OrdinalIgnoreCase))
+                provider,
+                "Facebook",
+                StringComparison.OrdinalIgnoreCase))
         {
-            return FacebookDefaults.AuthenticationScheme;
+            return FacebookDefaults
+                .AuthenticationScheme;
         }
 
         return null;
     }
 
-    private async Task<bool> VerifyGeeTestAsync(
-        string action,
-        string? lotNumber,
-        string? captchaOutput,
-        string? passToken,
-        string? genTime)
+    // =====================================================
+    // GEETEST VERIFY
+    // =====================================================
+    private async Task<bool>
+        VerifyGeeTestAsync(
+            string action,
+            string? lotNumber,
+            string? captchaOutput,
+            string? passToken,
+            string? genTime)
     {
         if (string.IsNullOrWhiteSpace(lotNumber) ||
             string.IsNullOrWhiteSpace(captchaOutput) ||
             string.IsNullOrWhiteSpace(passToken) ||
             string.IsNullOrWhiteSpace(genTime))
-            return false;
-
-        var captchaId = _configuration[$"GeeTest:{action}:CaptchaId"];
-        var captchaKey = _configuration[$"GeeTest:{action}:CaptchaKey"];
-
-        if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaKey))
-            return false;
-
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(captchaKey));
-        var signToken = Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(lotNumber))).ToLowerInvariant();
-
-        var data = new Dictionary<string, string>
         {
-            ["lot_number"] = lotNumber,
-            ["captcha_output"] = captchaOutput,
-            ["pass_token"] = passToken,
-            ["gen_time"] = genTime,
-            ["captcha_id"] = captchaId,
-            ["sign_token"] = signToken
-        };
+            return false;
+        }
+
+        var captchaId =
+            _configuration[
+                $"GeeTest:{action}:CaptchaId"];
+
+        var captchaKey =
+            _configuration[
+                $"GeeTest:{action}:CaptchaKey"];
+
+        if (string.IsNullOrWhiteSpace(captchaId) ||
+            string.IsNullOrWhiteSpace(captchaKey))
+        {
+            return false;
+        }
+
+        // =====================================================
+        // SIGN TOKEN
+        // =====================================================
+        using var hmac =
+            new HMACSHA256(
+                Encoding.UTF8.GetBytes(
+                    captchaKey));
+
+        var signToken =
+            Convert.ToHexString(
+                    hmac.ComputeHash(
+                        Encoding.UTF8.GetBytes(
+                            lotNumber)))
+                .ToLowerInvariant();
+
+        var data =
+            new Dictionary<string, string>
+            {
+                ["lot_number"] =
+                    lotNumber,
+
+                ["captcha_output"] =
+                    captchaOutput,
+
+                ["pass_token"] =
+                    passToken,
+
+                ["gen_time"] =
+                    genTime,
+
+                ["captcha_id"] =
+                    captchaId,
+
+                ["sign_token"] =
+                    signToken
+            };
 
         try
         {
-            var client = _httpClientFactory.CreateClient();
-            var response = await client.PostAsync(
-                "https://gcaptcha4.geetest.com/validate",
-                new FormUrlEncodedContent(data));
+            var client =
+                _httpClientFactory
+                    .CreateClient();
 
-            var result = await response.Content.ReadFromJsonAsync<GeeTestValidationResult>();
-            return response.IsSuccessStatusCode &&
-                   string.Equals(result?.Result, "success", StringComparison.OrdinalIgnoreCase);
+            var response =
+                await client.PostAsync(
+                    "https://gcaptcha4.geetest.com/validate",
+                    new FormUrlEncodedContent(
+                        data));
+
+            var result =
+                await response.Content
+                    .ReadFromJsonAsync<
+                        GeeTestValidationResult>();
+
+            return
+                response.IsSuccessStatusCode &&
+                string.Equals(
+                    result?.Result,
+                    "success",
+                    StringComparison.OrdinalIgnoreCase);
         }
         catch
         {
@@ -557,18 +838,39 @@ public class AuthController : Controller
         }
     }
 
-    private sealed class GeeTestValidationResult
+    // =====================================================
+    // GEETEST RESPONSE
+    // =====================================================
+    private sealed class
+        GeeTestValidationResult
     {
         [JsonPropertyName("result")]
-        public string? Result { get; set; }
+        public string?
+            Result
+        {
+            get;
+            set;
+        }
     }
 
-    private static string NormalizePhone(string phone)
+    // =====================================================
+    // NORMALIZE PHONE
+    // =====================================================
+    private static string
+        NormalizePhone(
+            string phone)
     {
-        var result = Regex.Replace(phone, @"[\s\-.()]", "");
+        var result =
+            Regex.Replace(
+                phone,
+                @"[\s\-.()]",
+                "");
 
         if (result.StartsWith("+84"))
-            result = "0" + result[3..];
+        {
+            result =
+                "0" + result[3..];
+        }
 
         return result;
     }
