@@ -180,19 +180,9 @@ if (!File.Exists(domainModelPath))
         domainModelPath);
 }
 
-<<<<<<< Updated upstream
 // =====================================================
 // ERROR HANDLING
 // =====================================================
-=======
-// Tạo dữ liệu đăng nhập thử nghiệm cho khu vực Nhân viên khi phát triển.
-// Không ghi đè tài khoản nếu quản trị viên đã thay đổi hoặc xóa dữ liệu này.
-if (app.Environment.IsDevelopment())
-{
-    await SeedDevelopmentStaffAccountAsync(app);
-}
-
->>>>>>> Stashed changes
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -241,63 +231,7 @@ app.MapControllerRoute(
     pattern:
         "{controller=Home}/{action=Index}/{id?}");
 
-<<<<<<< Updated upstream
 // =====================================================
 // RUN
 // =====================================================
 app.Run();
-=======
-app.Run();
-
-static async Task SeedDevelopmentStaffAccountAsync(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-
-    var db = scope.ServiceProvider.GetRequiredService<EMuaDbContext>();
-    var passwordHasher = scope.ServiceProvider
-        .GetRequiredService<IPasswordHasher<NguoiDung>>();
-
-    var staffRole = await db.PhanQuyens
-        .FirstOrDefaultAsync(x =>
-            x.TenQuyen == "NhanVien" ||
-            x.TenQuyen == "Nhân viên");
-
-    if (staffRole == null)
-    {
-        staffRole = new PhanQuyen
-        {
-            TenQuyen = "NhanVien",
-            MoTa = "Nhân viên quản lý bán hàng"
-        };
-
-        db.PhanQuyens.Add(staffRole);
-        await db.SaveChangesAsync();
-    }
-
-    const string staffEmail = "nhanvien@emua.local";
-
-    var staffUser = await db.NguoiDungs
-        .FirstOrDefaultAsync(x => x.Email == staffEmail);
-
-    if (staffUser != null)
-        return;
-
-    staffUser = new NguoiDung
-    {
-        TenDangNhap = "nhanvien",
-        TenNguoiDung = "Nhân viên EMUA",
-        Email = staffEmail,
-        SoDienThoai = "0900000000",
-        MaQuyen = staffRole.MaQuyen,
-        TrangThai = true,
-        NgayTao = DateTime.Now
-    };
-
-    staffUser.MatKhau = passwordHasher.HashPassword(
-        staffUser,
-        "NhanVien@123");
-
-    db.NguoiDungs.Add(staffUser);
-    await db.SaveChangesAsync();
-}
->>>>>>> Stashed changes
