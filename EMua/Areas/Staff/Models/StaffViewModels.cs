@@ -100,6 +100,10 @@ public class ProductCreateViewModel
 
     [Display(Name = "Thông số kỹ thuật")]
     public string? ThongSoKyThuat { get; set; }
+    [Display(Name = "Ảnh sản phẩm")]
+    public IFormFile? ImageFile { get; set; }
+
+    public string? CurrentImageUrl { get; set; }
 
     public List<ProductVariantQuantityViewModel> BienThe { get; set; } = [];
 }
@@ -109,6 +113,9 @@ public class ProductVariantQuantityViewModel
     public int MaBienThe { get; set; }
     public string? MauSac { get; set; }
     public string? PhienBan { get; set; }
+    [Range(0.01, double.MaxValue, ErrorMessage = "Giá biến thể phải lớn hơn 0.")]
+    [Display(Name = "Giá bán")]
+    public decimal Gia { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Số lượng không được âm.")]
     [Display(Name = "Số lượng")]

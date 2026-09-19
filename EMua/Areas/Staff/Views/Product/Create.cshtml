@@ -3,30 +3,58 @@
     ViewData["Title"] = "Thêm sản phẩm";
 }
 <section class="staff-card staff-form-card">
-    <form method="post" class="row g-3">
+    <form method="post" enctype="multipart/form-data" class="row g-3">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-6"><label asp-for="TenSanPham"></label><input asp-for="TenSanPham"
                                                                              class="form-control" /><span asp-validation-for="TenSanPham"></span></div>
-            <div class="col-md-6"><label asp-for="MaThuongHieu"></label><select asp-for="MaThuongHieu"
-                                                                                asp-items="ViewBag.Brands" class="form-select">
-                <option value="">-- Chọn thương hiệu --</option>
-            </select><span asp-validation-for="MaThuongHieu"></span></div>
-            <div class="col-md-6"><label asp-for="MaDanhMuc"></label><select asp-for="MaDanhMuc"
-                                                                             asp-items="ViewBag.Categories" class="form-select">
-                <option value="">-- Chưa phân loại --</option>
-            </select></div>
-            <div class="col-md-6"><label asp-for="GiaGoc"></label><input asp-for="GiaGoc" type="number" min="0"
-                                                                             class="form-control" /></div>
-                <div class="col-md-6"><label asp-for="BaoHanh"></label><input asp-for="BaoHanh" class="form-control"
-                                                                                  placeholder="VD: 12 tháng" /></div>
-                    <div class="col-12"><label asp-for="MoTa"></label><textarea asp-for="MoTa" class="form-control"
-                                                                                    rows="3"></textarea></div>
-                        <div class="col-12"><label asp-for="ThongSoKyThuat"></label><textarea asp-for="ThongSoKyThuat"
-                                                                                                  class="form-control" rows="4"></textarea></div>
-                            <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Lưu sản phẩm</button><a asp-action="Index"
-                                                                                                                         class="btn btn-light">Hủy</a></div>
-                            </form>
-                        </section>
-                        @section Scripts {
-                            <partial name="_ValidationScriptsPartial" />
-                        }
+            <div class="col-md-6"><label asp-for="ImageFile"></label><input asp-for="ImageFile" type="file"
+                                                                                accept=".jpg,.jpeg,.png,.webp" class="form-control" /><span asp-validation-for="ImageFile"></span></div>
+                <div class="col-md-6"><label asp-for="MaThuongHieu"></label><select asp-for="MaThuongHieu"
+                                                                                    asp-items="ViewBag.Brands" class="form-select">
+                    <option value="">-- Chọn thương hiệu --</option>
+                </select><span asp-validation-for="MaThuongHieu"></span></div>
+                <div class="col-md-6"><label asp-for="MaDanhMuc"></label><select asp-for="MaDanhMuc"
+                                                                                 asp-items="ViewBag.Categories" class="form-select">
+                    <option value="">-- Chưa phân loại --</option>
+                </select></div>
+                <div class="col-md-6"><label asp-for="GiaGoc"></label><input asp-for="GiaGoc" type="number" min="0" step="0.01"
+                                                                                 class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="BaoHanh"></label><input asp-for="BaoHanh" class="form-control"
+                                                                                      placeholder="VD: 12 tháng" /></div>
+                        <div class="col-12"><label asp-for="MoTa"></label><textarea asp-for="MoTa" class="form-control"
+                                                                                        rows="3"></textarea></div>
+                            <div class="col-12"><label asp-for="ThongSoKyThuat"></label><textarea asp-for="ThongSoKyThuat"
+                                                                                                      class="form-control" rows="4"></textarea></div>
+                                <div class="col-12">
+                                    <h3>Biến thể sản phẩm</h3>
+                                    <div class="table-responsive">
+                                        <table class="staff-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Màu sắc</th>
+                                                    <th>Phiên bản</th>
+                                                    <th>Giá bán</th>
+                                                    <th>Số lượng</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>@for (var i = 0; i < Model.BienThe.Count; i++) {
+                                                <tr>
+                                                    <td><input asp-for="BienThe[i].MauSac" class="form-control" /></td>
+                                                    <td><input asp-for="BienThe[i].PhienBan" class="form-control" /></td>
+                                                    <td><input asp-for="BienThe[i].Gia" type="number" min="0.01" step="0.01"
+                                                                   class="form-control" /><span asp-validation-for="BienThe[i].Gia"></span></td>
+                                                        <td><input asp-for="BienThe[i].SoLuong" type="number" min="0" class="form-control" /><span
+                                                            asp-validation-for="BienThe[i].SoLuong"></span></td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Lưu sản phẩm</button><a asp-action="Index"
+                                                                                                                                 class="btn btn-light">Hủy</a></div>
+                                    </form>
+                                </section>
+                                @section Scripts {
+                                    <partial name="_ValidationScriptsPartial" />
+                                }
