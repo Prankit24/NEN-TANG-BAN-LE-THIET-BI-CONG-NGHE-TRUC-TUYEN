@@ -27,6 +27,8 @@ public sealed class AccountProfileViewModel
 
     public bool IsCustomer { get; init; }
 
+    public bool IsStaff { get; init; }
+
     public string Initial =>
         string.IsNullOrWhiteSpace(FullName)
             ? "U"

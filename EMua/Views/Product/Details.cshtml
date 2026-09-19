@@ -1,0 +1,78 @@
+@model EMua.ViewModels.ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4"><a class="back-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Tất
+    cả sản phẩm</a>@if (TempData["Error"] != null) {
+    <div class="customer-alert error">@TempData["Error"]</div>
+}
+@if
+    (TempData["Success"] != null)
+{
+    <div class="customer-alert success">@TempData["Success"]</div>
+}
+<div class="product-detail">
+    <div class="detail-gallery">
+        <div class="detail-main-image">@if (!string.IsNullOrWhiteSpace(Model.ImageUrl)) {
+            <img src="@Model.ImageUrl" alt="@Model.Name" />
+        } else
+        {
+
+            <i class="bi bi-image"></i>
+        }
+    </div>
+</div>
+<div class="detail-copy"><span class="eyebrow">@Model.Brand · @Model.Category</span>
+    <h1>@Model.Name</h1>
+    <div class="rating">@Model.AverageRating.ToString("0.0") <span>★★★★★</span> <small>(@Model.Reviews.Count
+        đánh giá)</small></div>
+        <div class="detail-price">@Model.Price.ToString("N0") đ</div>
+        <p>@Model.Description</p>
+        <form asp-controller="Cart" asp-action="Add" method="post" class="buy-box">@Html.AntiForgeryToken()<input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><input
+            type="hidden" name="productId" value="@Model.ProductId" /><label>Phiên bản<select name="variantId"
+                                                                                          required>@foreach (var variant in Model.Variants) {
+            <option value="@variant.VariantId" disabled="@(variant.Stock == 0)">@variant.Label -
+                @variant.Price.ToString("N0") đ · còn
+                @variant.Stock</option>
+            }
+        </select></label><label>Số lượng<input name="quantity" type="number" min="1"
+                                               max="@Math.Max(1, Model.Stock)" value="1" /></label><button class="customer-button"
+                                                                type="submit" disabled="@(Model.Stock == 0)"><i class="bi bi-bag-plus"></i> Thêm vào giỏ
+        hàng</button><button class="customer-button customer-button-buy" type="submit" name="buyNow"
+                             value="true" disabled="@(Model.Stock == 0)"><i class="bi bi-lightning-charge"></i> Mua ngay</button>
+    </form>
+    <form asp-controller="Product" asp-action="Favorite" method="post" class="detail-favorite">
+        @Html.AntiForgeryToken()<input type="hidden" name="productId" value="@Model.ProductId" /><button
+        class="customer-button customer-button-light" type="submit"><i class="bi bi-heart"></i> Yêu
+        thích</button></form>
+        <dl class="detail-specs">
+            <dt>Bảo hành</dt>
+            <dd>@(Model.Warranty ?? "Đang cập nhật")</dd>
+            <dt>Thông số kỹ thuật</dt>
+            <dd>@(Model.Specifications ?? "Đang cập nhật")</dd>
+        </dl>
+    </div>
+</div>
+<section class="reviews-section">
+    <div class="section-heading">
+        <div><span class="eyebrow">CUSTOMER VOICE</span>
+            <h2>Đánh giá sản phẩm</h2>
+        </div>
+    </div>@if (Model.Reviews.Count == 0) {
+    <p class="muted">Chưa có đánh giá cho sản phẩm này.</p>
+} else
+{
+    foreach
+(var review in Model.Reviews)
+    {
+
+        <article class="review-item">
+            <div><strong>@review.CustomerName</strong><span class="review-stars">@("★".PadRight(review.Rating,
+                                                    '★'))</span></div>
+                <p>@review.Comment</p><small>@review.CreatedAt?.ToString("dd/MM/yyyy")</small>
+            </article>
+        }
+    }
+</section>
+</div>

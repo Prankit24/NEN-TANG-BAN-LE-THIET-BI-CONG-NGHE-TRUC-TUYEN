@@ -1,0 +1,18 @@
+@model EMua.ViewModels.CheckoutSuccessViewModel
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">    <partial name="_CheckoutSteps" model="4" />
+    <section class="checkout-success"><i class="bi bi-check-circle-fill"></i><span class="eyebrow">HOÀN TẤT</span>
+        <h1>Đặt hàng thành công</h1>
+        <p>Mã đơn hàng: <strong>#DH-@Model.OrderId.ToString("D5")</strong></p><strong
+        class="success-total">@Model.Total.ToString("N0") đ</strong>@if (Model.IsPaid) {
+        <small>Đã thanh
+            toán</small>
+        }
+        <div><a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId"
+                    class="customer-button">Xem chi tiết đơn hàng</a><a asp-controller="Home" asp-action="Index"
+                                                                class="back-link">Tiếp tục mua sắm</a></div>
+        </section>
+    </div>

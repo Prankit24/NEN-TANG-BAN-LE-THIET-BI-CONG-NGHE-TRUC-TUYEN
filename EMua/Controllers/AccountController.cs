@@ -120,8 +120,6 @@ public class AccountController : Controller
         var currentPhone = string.IsNullOrWhiteSpace(user.SoDienThoai)
             ? null
             : NormalizePhone(user.SoDienThoai);
-
-        // Chỉ kiểm tra trùng khi người dùng đổi sang số điện thoại khác.
         if (!string.IsNullOrWhiteSpace(phone) && phone != currentPhone)
         {
             var phoneExists = await _db.NguoiDungs.AnyAsync(x =>
@@ -154,8 +152,6 @@ public class AccountController : Controller
 
             return View(model);
         }
-
-        // Nếu tải ảnh từ máy, ưu tiên ảnh tải lên.
         if (model.AvatarFile is { Length: > 0 })
         {
             var extension = Path.GetExtension(model.AvatarFile.FileName)
@@ -181,7 +177,6 @@ public class AccountController : Controller
 
             user.AnhDaiDien = $"/uploads/avatars/{fileName}";
         }
-        // Nếu chọn avatar có sẵn.
         else if (!string.IsNullOrWhiteSpace(model.SelectedAvatar))
         {
             user.AnhDaiDien = model.SelectedAvatar;
@@ -245,6 +240,7 @@ public class AccountController : Controller
         };
 
         var isCustomer = databaseRoleName is "KhachHang" or "Khách hàng";
+        var isStaff = databaseRoleName is "NhanVien" or "Nhân viên";
 
         return new AccountProfileViewModel
         {
@@ -258,7 +254,8 @@ public class AccountController : Controller
             MemberSince = user.NgayTao,
             OrderCount = user.DonHangs.Count,
             FavoriteCount = user.YeuThiches.Count,
-            IsCustomer = isCustomer
+            IsCustomer = isCustomer,
+            IsStaff = isStaff
         };
     }
 

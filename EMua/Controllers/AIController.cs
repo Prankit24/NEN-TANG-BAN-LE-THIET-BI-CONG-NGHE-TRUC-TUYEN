@@ -1,4 +1,4 @@
-﻿using EMua.Services.AI;
+using EMua.Services.AI;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EMua.Controllers
@@ -31,8 +31,6 @@ namespace EMua.Controllers
 
             var prediction =
                 _domainClassifier.Predict(request.Message);
-
-            // Câu hỏi không liên quan công nghệ.
             if (!prediction.IsTechnology)
             {
                 return Json(new

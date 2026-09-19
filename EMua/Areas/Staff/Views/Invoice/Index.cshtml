@@ -1,0 +1,46 @@
+@model IEnumerable<HoaDon>
+@{
+    ViewData["Title"] = "Hóa đơn";
+}
+<form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
+                                                   placeholder="Tìm mã hóa đơn hoặc mã đơn hàng..." /><button><i class="bi bi-search"></i> Tìm kiếm</button></form>
+    <section class="staff-card">
+        <div class="staff-card-title">
+            <h2>Danh sách hóa đơn</h2>
+            <span>Hóa đơn được lập từ đơn hàng</span>
+        </div>
+        <div class="table-responsive">
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>Mã hóa đơn</th>
+                        <th>Mã đơn hàng</th>
+                        <th>Ngày lập</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>@foreach(var invoice in Model){
+                    <tr>
+                        <td>
+                            <strong>#HD-@invoice.MaHoaDon.ToString("D5")</strong>
+                        </td>
+                        <td>#DH-@invoice.MaDonHang.ToString("D5")</td>
+                        <td>
+                            @(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td>@((invoice.TongTien ?? 0).ToString("N0")) đ</td>
+                            <td>
+                                <span class="staff-badge">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">Chưa có hóa đơn.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>

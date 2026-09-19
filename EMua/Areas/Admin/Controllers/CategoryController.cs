@@ -1,4 +1,4 @@
-﻿using EMua.Data;
+using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;

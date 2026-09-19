@@ -1,0 +1,91 @@
+@model EMua.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">
+    <div class="customer-heading">
+        <div><span class="eyebrow">YOUR BAG</span>
+            <h1>Giỏ hàng</h1>
+            <p>@Model.TotalQuantity sản phẩm đang chờ bạn.</p>
+        </div><a asp-controller="Product" asp-action="Index" class="back-link">Tiếp tục mua sắm <i
+        class="bi bi-arrow-right"></i></a>
+    </div>@if (TempData["Error"] != null) {
+    <div class="customer-alert error">@TempData["Error"]</div>
+}
+@if
+    (TempData["Success"] != null)
+{
+    <div class="customer-alert success">@TempData["Success"]</div>
+}
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-bag"></i>
+        <h2>Giỏ hàng đang trống</h2>
+        <p>Thêm sản phẩm bạn yêu thích để bắt đầu đặt hàng.</p><a asp-controller="Product" asp-action="Index"
+                                                                  class="customer-button">Khám phá sản phẩm</a>
+    </div>
+}
+else
+{
+
+    <div class="cart-layout">
+        <div>@foreach (var item in Model.Items) {
+            <article class="cart-item"
+                     data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                <div class="cart-item-image">@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) {
+                    <img src="@item.ImageUrl" alt="@item.ProductName" />
+                } else
+                {
+
+                    <i class="bi bi-image"></i>
+                }
+            </div>
+            <div class="cart-item-info"><a asp-controller="Product" asp-action="Details"
+                                           asp-route-id="@item.ProductId">
+                <h2>@item.ProductName</h2>
+            </a><span>@item.VariantLabel</span><strong>@item.UnitPrice.ToString("N0") đ</strong></div>
+            <form asp-action="Update" method="post" class="quantity-form">@Html.AntiForgeryToken()<input
+                type="hidden" name="id" value="@item.CartItemId" /><input name="quantity" type="number" min="0"
+                                                                          max="@item.Stock" value="@item.Quantity" onchange="this.form.submit()" /></form><strong
+                class="line-total" data-line-total>@item.LineTotal.ToString("N0") đ</strong>
+                <form asp-action="Remove" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id"
+                                                                                           value="@item.CartItemId" /><button class="icon-button danger" title="Xóa"><i
+                    class="bi bi-trash3"></i></button></form>
+                </article>
+            }
+        </div>
+        <aside class="summary-card">
+            <h2>Tóm tắt đơn hàng</h2>
+            <div><span>Tạm tính</span><strong data-cart-total>@Model.Total.ToString("N0") đ</strong></div>
+            <div><span>Vận chuyển</span><span>Được tính khi đặt hàng</span></div>
+            <hr />
+            <div class="summary-total"><span>Tổng cộng</span><strong data-cart-total>@Model.Total.ToString("N0")
+                đ</strong></div><a asp-controller="Checkout" asp-action="Index" class="customer-button">Tiến hành
+                đặt hàng <i class="bi bi-arrow-right"></i></a>
+            </aside>
+        </div>
+    }
+</div>
+@section Scripts {
+    <script>
+        document.querySelectorAll('.cart-item input[name="quantity"]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                const item = input.closest('.cart-item');
+                const price = Number(item.dataset.unitPrice || 0);
+                const quantity = Math.max(0, Number(input.value || 0));
+                const lineTotal = item.querySelector('[data-line-total]');
+                if (lineTotal) lineTotal.textContent = (price * quantity).toLocaleString('vi-VN') + ' đ';
+                let total = 0;
+                document.querySelectorAll('.cart-item').forEach(function (row) {
+                    const rowPrice = Number(row.dataset.unitPrice || 0);
+                    const rowQuantity = Math.max(0, Number(row.querySelector('input[name="quantity"]').value || 0));
+                    total += rowPrice * rowQuantity;
+                });
+                document.querySelectorAll('[data-cart-total]').forEach(function (element) {
+                    element.textContent = total.toLocaleString('vi-VN') + ' đ';
+                });
+            });
+        });
+    </script>
+}

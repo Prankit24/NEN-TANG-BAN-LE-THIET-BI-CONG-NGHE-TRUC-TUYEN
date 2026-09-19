@@ -1,0 +1,64 @@
+@model EMua.ViewModels.OrderDetailsViewModel
+@{
+    ViewData["Title"] = $"Đơn hàng #{Model.OrderId:D5}";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" /><div class="customer-page container py-4"><a class="back-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Đơn
+hàng của tôi</a>
+<div class="customer-heading compact">
+    <div><span class="eyebrow">ORDER #DH-@Model.OrderId.ToString("D5")</span>
+        <h1>Chi tiết đơn hàng</h1>
+        <p>@Model.OrderedAt?.ToString("dd/MM/yyyy HH:mm") · <strong>@Model.Status</strong></p>
+    </div>
+</div>@if (TempData["Success"] != null) {
+<div class="customer-alert success">@TempData["Success"]</div>
+    }
+@if
+    (TempData["Error"] != null)
+{
+    <div class="customer-alert error">@TempData["Error"]</div>
+}
+<div
+    class="order-detail-layout">
+    <section class="form-panel">
+        <h2>Sản phẩm đã mua</h2>@foreach (var item in Model.Items) {
+        <div class="order-product">
+            <div><strong>@item.ProductName</strong><span>@item.VariantLabel · @item.Quantity sản phẩm</span></div>
+            <div><strong>@item.LineTotal.ToString("N0") đ</strong>@if (Model.Status == "Đã hoàn thành" ||
+                Model.Status == "Đã giao") {
+                    <a asp-controller="Review" asp-action="Create"
+                       asp-route-productId="@item.ProductId" asp-route-orderId="@Model.OrderId">Đánh giá</a>
+                }
+            </div>
+        </div>
+    }
+    <div class="summary-total"><span>Tổng thanh toán</span><strong>@Model.Total.ToString("N0") đ</strong>
+    </div>
+</section>
+<aside>
+    <div class="summary-card">
+<h2>Giao hàng</h2><strong>@Model.RecipientName</strong>
+<p>@Model.RecipientPhone<br />@Model.ShippingAddress</p>
+<h2>Thanh toán</h2>
+<p>@Model.PaymentMethod<br /><span class="order-status">@Model.PaymentStatus</span></p>@if (Model.Status
+                == "Chờ xử lý") {
+            <form asp-action="Cancel" method="post">@Html.AntiForgeryToken()<input type="hidden"
+                                                                                       name="id" value="@Model.OrderId" /><button class="customer-button danger-button">Hủy đơn
+                hàng</button></form>
+            }
+            @if (Model.PaymentMethod != "COD" && Model.PaymentStatus != "Đã thanh toán")
+            {
+                <form asp-action="ConfirmPayment" method="post">@Html.AntiForgeryToken()<input type="hidden"
+                                                                                                   name="id" value="@Model.OrderId" /><button class="customer-button">Xác nhận thanh toán</button>
+                </form>
+            }
+        </div>
+        <div class="timeline">@foreach (var status in Model.StatusHistory) {
+            <div>
+                <b>@status.Status</b><small>@status.Time.ToString("dd/MM/yyyy HH:mm")</small>
+                <p>@status.Description</p>
+            </div>
+        }
+    </div>
+</aside>
+</div>
+</div>

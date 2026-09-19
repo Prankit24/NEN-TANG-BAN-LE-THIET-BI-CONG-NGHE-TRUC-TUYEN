@@ -1,6 +1,4 @@
-﻿/* =========================
-   TOP BAR
-========================= */
+
 
 .emua-topbar {
     height: 36px;
@@ -19,9 +17,7 @@
 }
 
 
-/* =========================
-   MAIN HEADER
-========================= */
+
 
 .emua-main-header {
     padding: 18px 0;
@@ -35,9 +31,7 @@
 }
 
 
-/* =========================
-   LOGO
-========================= */
+
 
 .emua-logo {
     display: flex;
@@ -82,9 +76,7 @@
     }
 
 
-/* =========================
-   SEARCH
-========================= */
+
 
 .emua-search {
     display: flex;
@@ -113,9 +105,7 @@
     }
 
 
-/* =========================
-   HEADER ACTIONS
-========================= */
+
 
 .emua-header-actions {
     display: flex;
@@ -139,6 +129,14 @@
     text-decoration: none;
 }
 
+.staff-dashboard-link {
+    min-width: 70px;
+}
+
+.staff-dashboard-link i {
+    font-size: 21px;
+}
+
     .header-action-btn:hover {
         color: white;
         opacity: 0.85;
@@ -160,9 +158,7 @@
     }
 
 
-/* =========================
-   ACCOUNT DROPDOWN
-========================= */
+
 
 .account-dropdown {
     width: 250px;
@@ -224,6 +220,24 @@
     font-size: 13px;
 }
 
+.account-dropdown-staff {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 3px 0;
+    padding: 9px 10px;
+    border-radius: 9px;
+    color: #41408a;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+    .account-dropdown-staff:hover {
+        background: #f1f1fb;
+        color: #1c1b45;
+    }
+
 .account-dropdown-logout {
     display: flex;
     width: 100%;
@@ -244,9 +258,7 @@
     }
 
 
-/* =========================
-   CART COUNT
-========================= */
+
 
 .header-icon-wrapper {
     position: relative;
@@ -270,9 +282,7 @@
 }
 
 
-/* =========================
-   CATEGORY NAV
-========================= */
+
 
 .emua-category-nav {
     background: #626293;
@@ -303,9 +313,7 @@
         }
 
 
-/* =========================
-   MOBILE
-========================= */
+
 
 .mobile-menu-button {
     display: none;
@@ -330,9 +338,7 @@
     }
 
 
-/* =========================
-   RESPONSIVE
-========================= */
+
 
 @media (max-width: 992px) {
     .main-header-wrapper {

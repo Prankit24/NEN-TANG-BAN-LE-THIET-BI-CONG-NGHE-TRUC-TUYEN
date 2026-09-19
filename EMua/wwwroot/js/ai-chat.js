@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
     const wrapper = document.getElementById("draggableAiWrapper");
     const aiButton = document.getElementById("aiToggleButton");
     const helpButton = document.getElementById("aiHelpButton");
@@ -98,8 +98,6 @@
 
         let left = rect.right + gap;
         let top = rect.top;
-
-        // Không đủ chỗ bên phải thì mở chat về bên trái icon.
         if (left + chatWidth > window.innerWidth - 10) {
             left = rect.left - chatWidth - gap;
         }
@@ -160,8 +158,6 @@
         wrapper.style.top = newTop + "px";
         wrapper.style.right = "auto";
         wrapper.style.bottom = "auto";
-
-        // Đang mở chat thì chatbox luôn bám theo icon.
         positionChatNearMascot();
     }
 
@@ -193,8 +189,6 @@
     }
 
     restoreAiPosition();
-
-    // Kéo trên máy tính.
     aiButton.addEventListener("mousedown", function (event) {
         if (event.button !== 0) {
             return;
@@ -219,13 +213,9 @@
 
     document.addEventListener("mouseup", stopDragging);
     window.addEventListener("blur", stopDragging);
-
-    // Không cho browser kéo ảnh icon.
     aiButton.addEventListener("dragstart", function (event) {
         event.preventDefault();
     });
-
-    // Kéo trên điện thoại.
     aiButton.addEventListener(
         "touchstart",
         function (event) {
@@ -268,8 +258,6 @@
         }
 
         chatBox.classList.add("open");
-
-        // Đợi class open hiển thị xong để lấy đúng kích thước chatbox.
         requestAnimationFrame(function () {
             positionChatNearMascot();
             input.focus();
@@ -277,7 +265,6 @@
     }
 
     aiButton.addEventListener("click", function () {
-        // Kéo xong thì không được tự mở/đóng chat.
         if (hasMoved) {
             hasMoved = false;
             return;
@@ -444,8 +431,6 @@
 
             saveAiPosition();
         }
-
-        // Đổi kích thước màn hình vẫn giữ chat bám icon.
         positionChatNearMascot();
     });
 });

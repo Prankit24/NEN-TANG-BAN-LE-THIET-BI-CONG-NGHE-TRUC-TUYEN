@@ -1,0 +1,54 @@
+@model IEnumerable<KhuyenMai>
+@{
+    ViewData["Title"] = "Khuyến mãi";
+}
+<div class="staff-toolbar">
+    <form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
+                                                       placeholder="Tìm mã hoặc tên khuyến mãi..." /><select name="status">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="active" selected="@(ViewBag.Status == "active")">Đang bật</option>
+        <option value="inactive" selected="@(ViewBag.Status == "inactive")">Đã tắt</option>
+    </select><button><i class="bi bi-search"></i> Tìm kiếm</button></form><a class="btn btn-primary"
+                                                                         asp-action="Create"><i class="bi bi-plus-lg"></i> Tạo khuyến
+    mãi</a>
+</div>
+<section class="staff-card">
+    <div class="table-responsive">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Tên chương trình</th>
+                    <th>Giảm</th>
+                    <th>Thời gian</th>
+                    <th>Số lượng</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>@foreach(var item in Model){
+                <tr>
+                    <td><strong>@item.MaCode</strong></td>
+                    <td>@item.TenKhuyenMai<small>@item.MoTa</small></td>
+                    <td>@item.GiaTriGiam.ToString("N0") @(item.LoaiGiamGia == "Phần trăm" ? "%" : "đ")</td>
+                    <td>@(item.NgayBatDau?.ToString("dd/MM/yyyy") ?? "—") – @(item.NgayKetThuc?.ToString("dd/MM/yyyy")
+                                                                            ?? "—")</td>
+                        <td>@(item.SoLuong?.ToString() ?? "Không giới hạn")</td>
+                        <td><span class="staff-badge @(item.TrangThai ? "" : "muted")">@(item.TrangThai ? "Đang bật" : "Đã tắt")</span></td>
+                        <td class="staff-row-actions">
+                            <form asp-action="Toggle" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id"
+                                                                                                       value="@item.MaKhuyenMai" /><button class="staff-action-icon"
+                                                                    title="@(item.TrangThai ? "Tắt" : "Bật")"><i class="bi bi-power"></i></button></form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">Chưa có khuyến mãi.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>

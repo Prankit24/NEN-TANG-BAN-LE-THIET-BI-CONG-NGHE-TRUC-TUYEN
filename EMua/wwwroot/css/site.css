@@ -1,6 +1,4 @@
-/* =========================
-   GLOBAL
-========================= */
+
 
 html {
     font-size: 16px;
@@ -31,9 +29,7 @@ textarea {
 }
 
 
-/* =========================
-   LAYOUT CHUNG
-========================= */
+
 
 .main-content {
     min-height: 500px;
@@ -48,9 +44,7 @@ textarea {
 }
 
 
-/* =========================
-   UTILITY CHUNG
-========================= */
+
 
 .text-center {
     text-align: center;
@@ -71,9 +65,7 @@ textarea {
 }
 
 
-/* =========================
-   RESPONSIVE CHUNG
-========================= */
+
 
 @media (max-width: 768px) {
 
@@ -90,9 +82,7 @@ textarea {
         font-size: 24px;
     }
 }
-/* =========================
-   RESPONSIVE
-========================= */
+
 
 @media (max-width: 992px) {
 

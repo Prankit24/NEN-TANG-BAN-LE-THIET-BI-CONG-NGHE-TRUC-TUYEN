@@ -1,0 +1,155 @@
+@model StaffDashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan kinh doanh";
+    var maxRevenue = Math.Max(Model.RevenueByMonth.DefaultIfEmpty(0).Max(), 1);
+    var chartPoints = string.Join(" ", Model.RevenueByMonth.Select((value, index) =>
+        $"{index * 100.0 / 11:0.##},{92 - (double)(value / maxRevenue * 72):0.##}"));
+    var monthNames = new[] { "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12" };
+}
+<div class="staff-dashboard-heading">
+    <div><span class="staff-eyebrow"><i class="bi bi-circle-fill"></i> Tổng quan</span>
+        <h2>Tổng quan kinh doanh</h2>
+        <p>Báo cáo tổng quan hoạt động bán hàng và hiệu suất cửa hàng EMUA</p>
+    </div>
+    <form method="get" class="staff-period staff-period-form">
+        <i class="bi bi-calendar3"></i>
+        <select name="month" aria-label="Chọn tháng">@for (var option = 1; option <= 12; option++) {
+            <option
+            value="@option" selected="@(option == Model.SelectedMonth)">Tháng @option</option>
+        }
+    </select>
+    <select name="year" aria-label="Chọn năm">@for (var option = Model.SelectedYear - 2; option <=
+        Model.SelectedYear + 1; option++) {
+            <option value="@option" selected="@(option == Model.SelectedYear)">
+                @option</option>
+            }
+        </select>
+        <button type="submit" title="Xem thống kê"><i class="bi bi-arrow-right"></i></button>
+    </form>
+</div>
+
+<div class="staff-kpi-grid">
+    <article class="staff-kpi-card">
+        <div><span>Tổng doanh thu</span><strong>@Model.Revenue.ToString("N0")<small>đ</small></strong></div><i
+        class="bi bi-cash-stack"></i>
+        <p class="@(Model.RevenueGrowth >= 0 ? "positive" : "negative")"><i class="bi bi-arrow-up"></i>
+            @Math.Abs(Model.RevenueGrowth)% <em>so với tháng trước</em></p>
+        </article>
+        <article class="staff-kpi-card">
+            <div><span>Đơn hàng mới</span><strong>@Model.OrderCount.ToString("N0")</strong></div><i class="bi bi-cart3"></i>
+            <p class="@(Model.OrderGrowth >= 0 ? "positive" : "negative")"><i class="bi bi-arrow-up"></i>
+                @Math.Abs(Model.OrderGrowth)% <em>so với tháng trước</em></p>
+            </article>
+            <article class="staff-kpi-card">
+                <div><span>Sản phẩm đang bán</span><strong>@Model.SoldUnits.ToString("N0")</strong></div><i
+                class="bi bi-box-seam"></i>
+                <p><b>@Model.LowStockCount</b> SKU sắp hết hàng</p>
+            </article>
+            <article class="staff-kpi-card">
+                <div><span>Khách hàng mới</span><strong>@Model.NewCustomers.ToString("N0")</strong></div><i
+                class="bi bi-person-plus"></i>
+                <p><b>Tháng này</b> có khách hàng mới</p>
+            </article>
+        </div>
+
+        <div class="staff-dashboard-middle">
+            <section class="staff-card staff-revenue-card">
+                <div class="staff-card-title">
+                    <div>
+                        <h2>Biểu đồ doanh thu &amp; tăng trưởng</h2><span>Doanh số bán hàng theo từng tháng năm
+                        @Model.SelectedYear</span>
+                    </div><span class="staff-chart-key"><i></i> Năm @Model.SelectedYear</span>
+                </div>
+                <div class="staff-line-chart">
+                    <div class="staff-y-lines"><i></i><i></i><i></i><i></i></div>
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Biểu đồ doanh thu 12 tháng">
+                        <defs>
+                            <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stop-color="#1b1d24" stop-opacity=".13" />
+                                <stop offset="100%" stop-color="#1b1d24" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <polygon points="0,100 @chartPoints 100,100" fill="url(#revenueFill)" />
+                        <polyline points="@chartPoints" fill="none" stroke="#1a1c23" stroke-width="1.2"
+                                  vector-effect="non-scaling-stroke" />
+                    </svg>
+                </div>
+                <div class="staff-chart-months">@foreach (var month in monthNames) {
+                    <span>@month</span>
+                }
+            </div>
+            <div class="staff-chart-footer">
+                <div><span>Doanh thu tháng này</span><strong>@Model.Revenue.ToString("N0") đ</strong></div>
+                <div><span>Đơn hàng mới</span><strong>@Model.OrderCount đơn</strong></div>
+                <div><span>Tăng trưởng</span><strong
+                    class="@(Model.RevenueGrowth >= 0 ? "positive" : "negative")">@Model.RevenueGrowth%</strong></div>
+                </div>
+            </section>
+            <aside class="staff-card staff-stock-card">
+                <div class="staff-card-title">
+                    <div>
+                        <h2><i class="bi bi-exclamation-triangle"></i> Cảnh báo tồn kho</h2><span>Sản phẩm có số lượng
+                        thấp</span>
+                    </div><a asp-controller="Product" asp-action="Index">Xem kho</a>
+                </div>
+                <p class="staff-stock-description">Các biến thể còn từ 10 sản phẩm trở xuống cần được bổ sung.</p>
+                <div class="staff-stock-list">@foreach(var item in Model.LowStockItems){
+                    <div class="staff-stock-item"><i class="bi bi-box"></i>
+                        <div><strong>@item.ProductName</strong><small>@item.VariantName</small></div><b>Còn @item.Quantity</b>
+                    </div>
+                }
+                @if (!Model.LowStockItems.Any())
+                {
+                    <p class="staff-empty">Kho hàng đang ở mức an toàn.</p>
+                }
+            </div><a class="staff-stock-action" asp-controller="Product" asp-action="Index"><i
+            class="bi bi-clipboard-check"></i>
+            Kiểm tra kho hàng</a>
+        </aside>
+    </div>
+
+    <section class="staff-card staff-recent-card">
+        <div class="staff-card-title">
+            <div>
+                <h2>Đơn hàng gần đây</h2><span>Theo dõi 5 đơn hàng trực tuyến vừa phát sinh</span>
+            </div><a asp-controller="Order" asp-action="Index">Xem tất cả đơn hàng <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="table-responsive">
+            <table class="staff-table staff-dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>@foreach(var order in Model.RecentOrders){
+                    <tr>
+                        <td><strong>#ORD-@order.OrderId.ToString("D4")</strong></td>
+                        <td><span class="staff-customer-avatar">@order.CustomerName[..1].ToUpper()</span>
+                            <div class="staff-customer"><strong>@order.CustomerName</strong><small>@(order.CustomerEmail ??
+                                                                                                    "Khách vãng lai")</small></div>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(order.ProductSummary) ? "Chưa có chi tiết sản phẩm" :
+                                                                                            order.ProductSummary)</td>
+                                <td>@(order.OrderedAt?.ToString("HH:mm - dd/MM") ?? "—")</td>
+                                <td><strong>@order.Total.ToString("N0") đ</strong></td>
+                                <td><span class="staff-badge">@order.Status</span></td>
+                                <td><a class="staff-action-icon" asp-controller="Order" asp-action="Index" title="Xem đơn hàng"><i
+                                    class="bi bi-eye"></i></a></td>
+                                </tr>
+                            }
+                            @if (!Model.RecentOrders.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">Chưa có đơn hàng để hiển thị.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>

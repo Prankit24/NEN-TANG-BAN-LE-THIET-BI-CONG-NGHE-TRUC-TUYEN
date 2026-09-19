@@ -253,8 +253,7 @@
     font-size: 14px;
 }
 
-/* Compact identity strip: intentionally quieter than the sidebar so it
-   doesn't restate the same avatar/name/email as a second headline */
+
 .profile-overview {
     display: flex;
     align-items: center;
@@ -497,7 +496,7 @@
     border-top: 1px solid var(--paper-line);
 }
 
-/* ---------- Avatar picker: one unified card instead of two mismatched boxes ---------- */
+
 
 .avatar-settings {
     padding: 18px;
@@ -697,7 +696,7 @@
         }
 }
 
-/* Hộp báo kết quả AJAX: nhỏ, không làm người dùng mất ngữ cảnh trang. */
+
 .profile-ajax-dialog-backdrop {
     position: fixed;
     z-index: 5000;
@@ -768,7 +767,7 @@
     cursor: pointer;
 }
 
-/* Các phần nhập liệu của trang sửa hồ sơ dùng cạnh vuông nhẹ. */
+
 .profile-editor-card,
 .editor-save-button,
 .editor-validation.validation-summary-errors,
@@ -827,13 +826,7 @@
         background: #3c3b76;
     }
 
-/* ===================================================================
-   PROFILE EDITOR
-   One flowing card. The avatar ring is the single bold accent; every
-   other surface (fields, chips, footer) stays quiet and gets out of
-   the way. Icons live inside the field itself instead of the label,
-   so the eye only has one thing to scan per row.
-=================================================================== */
+
 
 .profile-editor-page {
     padding: 42px 0 72px;
@@ -932,10 +925,7 @@
         transform: translateY(0);
     }
 
-/* asp-validation-summary always renders a <ul><li> (hidden, but present),
-   so it is never truly DOM-empty — :empty never matches and the red bar
-   used to show up even with no errors. Target ASP.NET's own state classes
-   instead: validation-summary-valid (no errors) vs validation-summary-errors. */
+
 .editor-validation {
     display: none;
 }
@@ -1008,7 +998,7 @@
         line-height: 1.45;
     }
 
-/* Avatar preview: a soft conic ring is the one bold accent on the page */
+
 .editor-avatar-preview-wrap {
     position: relative;
     width: 120px;
@@ -1215,8 +1205,7 @@
     transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
-/* Let the textarea's own resize handle grow the shell along with it,
-       instead of the fixed-radius wrapper clipping/fighting the drag. */
+
 .editor-field-shell-textarea {
     overflow: visible;
 }
@@ -1261,8 +1250,7 @@
     align-items: flex-start;
 }
 
-    /* Icon needs a fixed top offset once the shell no longer centers
-       its children, so it doesn't drift when the textarea is resized. */
+    
     .editor-field-shell-textarea > i:first-child {
         margin-top: 13px;
     }

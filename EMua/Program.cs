@@ -82,6 +82,10 @@ if (!File.Exists(domainModelPath))
 {
     DomainModelTrainer.Train(domainDataPath, domainModelPath);
 }
+if (app.Environment.IsDevelopment())
+{
+    await SeedDevelopmentStaffAccountAsync(app);
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -105,3 +109,55 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+static async Task SeedDevelopmentStaffAccountAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+
+    var db = scope.ServiceProvider.GetRequiredService<EMuaDbContext>();
+    var passwordHasher = scope.ServiceProvider
+        .GetRequiredService<IPasswordHasher<NguoiDung>>();
+
+    var staffRole = await db.PhanQuyens
+        .FirstOrDefaultAsync(x =>
+            x.TenQuyen == "NhanVien" ||
+            x.TenQuyen == "Nhân viên");
+
+    if (staffRole == null)
+    {
+        staffRole = new PhanQuyen
+        {
+            TenQuyen = "NhanVien",
+            MoTa = "Nhân viên quản lý bán hàng"
+        };
+
+        db.PhanQuyens.Add(staffRole);
+        await db.SaveChangesAsync();
+    }
+
+    const string staffEmail = "nhanvien@emua.local";
+
+    var staffUser = await db.NguoiDungs
+        .FirstOrDefaultAsync(x => x.Email == staffEmail);
+
+    if (staffUser != null)
+        return;
+
+    staffUser = new NguoiDung
+    {
+        TenDangNhap = "nhanvien",
+        TenNguoiDung = "Nhân viên EMUA",
+        Email = staffEmail,
+        SoDienThoai = "0900000000",
+        MaQuyen = staffRole.MaQuyen,
+        TrangThai = true,
+        NgayTao = DateTime.Now
+    };
+
+    staffUser.MatKhau = passwordHasher.HashPassword(
+        staffUser,
+        "NhanVien@123");
+
+    db.NguoiDungs.Add(staffUser);
+    await db.SaveChangesAsync();
+}

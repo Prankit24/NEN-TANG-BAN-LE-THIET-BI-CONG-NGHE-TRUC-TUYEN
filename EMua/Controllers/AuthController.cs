@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using EMua.Data;
 using EMua.Models.Database;
@@ -53,7 +53,7 @@ public class AuthController : Controller
         var phone = NormalizePhone(model.PhoneNumber);
 
         var emailExists = await _db.NguoiDungs
-            .AnyAsync(x => x.Email == email);
+            .AnyAsync(x => x.Email != null && x.Email.ToLower() == email);
 
         if (emailExists)
         {
@@ -146,7 +146,7 @@ public class AuthController : Controller
 
         var user = await _db.NguoiDungs
             .Include(x => x.MaQuyenNavigation)
-            .FirstOrDefaultAsync(x => x.Email == email);
+            .FirstOrDefaultAsync(x => x.Email != null && x.Email.ToLower() == email);
 
         if (user == null || string.IsNullOrWhiteSpace(user.MatKhau))
         {
@@ -165,8 +165,6 @@ public class AuthController : Controller
         }
         catch (FormatException)
         {
-            // Hỗ trợ tài khoản cũ đang lưu mật khẩu chưa băm:
-            // sau lần đăng nhập đúng đầu tiên sẽ băm lại.
             if (user.MatKhau == model.Password)
             {
                 user.MatKhau = _passwordHasher.HashPassword(
@@ -209,6 +207,14 @@ public class AuthController : Controller
 
         await SignInUserAsync(user, model.RememberMe);
 
+        if (IsStaff(user))
+        {
+            return RedirectToAction(
+                "Index",
+                "Dashboard",
+                new { area = "Staff" });
+        }
+
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
@@ -224,8 +230,6 @@ public class AuthController : Controller
 
         return RedirectToAction("Index", "Home");
     }
-
-    // Dùng chung cho nút Google và Facebook.
     [HttpGet]
     public IActionResult ExternalLogin(
         string provider,
@@ -289,9 +293,6 @@ public class AuthController : Controller
             .FindFirstValue(ClaimTypes.Email)?
             .Trim()
             .ToLowerInvariant();
-
-        // Facebook đôi khi không trả email.
-        // Tạo định danh nội bộ duy nhất để tài khoản vẫn đăng nhập được.
         if (string.IsNullOrWhiteSpace(email) &&
             providerName == "Facebook" &&
             !string.IsNullOrWhiteSpace(providerId))
@@ -312,9 +313,7 @@ public class AuthController : Controller
 
         var user = await _db.NguoiDungs
             .Include(x => x.MaQuyenNavigation)
-            .FirstOrDefaultAsync(x => x.Email == email);
-
-        // Lần đầu đăng nhập Google/Facebook: tự tạo Khách hàng.
+            .FirstOrDefaultAsync(x => x.Email != null && x.Email.ToLower() == email);
         if (user == null)
         {
             var customerRole = await _db.PhanQuyens
@@ -352,8 +351,6 @@ public class AuthController : Controller
                 TrangThai = true,
                 NgayTao = DateTime.Now
             };
-
-            // Cột MatKhau vẫn được lưu giá trị băm an toàn.
             user.MatKhau = _passwordHasher.HashPassword(
                 user,
                 Guid.NewGuid().ToString("N"));
@@ -375,6 +372,14 @@ public class AuthController : Controller
 
         await SignInUserAsync(user, true);
         await HttpContext.SignOutAsync("External");
+
+        if (IsStaff(user))
+        {
+            return RedirectToAction(
+                "Index",
+                "Dashboard",
+                new { area = "Staff" });
+        }
 
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
@@ -441,5 +446,12 @@ public class AuthController : Controller
             result = "0" + result[3..];
 
         return result;
+    }
+
+    private static bool IsStaff(NguoiDung user)
+    {
+        var roleName = user.MaQuyenNavigation?.TenQuyen;
+
+        return roleName is "NhanVien" or "Nhân viên";
     }
 }
