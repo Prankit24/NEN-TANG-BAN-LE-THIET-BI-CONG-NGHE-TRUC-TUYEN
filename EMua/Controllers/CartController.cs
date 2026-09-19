@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using EMua.Data;
 using EMua.Models.Database;
 using Microsoft.AspNetCore.Authorization;
@@ -36,6 +36,7 @@ public class CartController : Controller
 
     // Lấy số lượng sản phẩm để cập nhật badge giỏ hàng.
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> Summary()
     {
         var userId = GetUserId();
@@ -231,6 +232,78 @@ public class CartController : Controller
         return await Summary();
     }
 
+
+    // Gộp giỏ hàng tạm của khách (localStorage) vào giỏ hàng tài khoản sau khi đăng nhập.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MergeGuest(
+        [FromBody] List<GuestCartItemRequest> items)
+    {
+        var userId = GetUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Vui lòng đăng nhập."
+            });
+        }
+
+        if (items == null || items.Count == 0)
+            return await Summary();
+
+        // Gom các variant bị lặp trong localStorage.
+        var normalizedItems = items
+            .Where(x => x.VariantId > 0 && x.Quantity > 0)
+            .GroupBy(x => x.VariantId)
+            .Select(g => new GuestCartItemRequest
+            {
+                VariantId = g.Key,
+                Quantity = g.Sum(x => x.Quantity)
+            })
+            .ToList();
+
+        foreach (var guestItem in normalizedItems)
+        {
+            var variant = await _db.BienTheSanPhams
+                .FirstOrDefaultAsync(x => x.MaBienThe == guestItem.VariantId);
+
+            if (variant == null || variant.TrangThai != "Còn hàng" || variant.SoLuong <= 0)
+                continue;
+
+            var dbItem = await _db.ChiTietGioHangs
+                .FirstOrDefaultAsync(x =>
+                    x.MaNguoiDung == userId &&
+                    x.MaBienThe == guestItem.VariantId);
+
+            var currentQuantity = dbItem?.SoLuong ?? 0;
+            var desiredQuantity = currentQuantity + guestItem.Quantity;
+            var safeQuantity = Math.Min(desiredQuantity, variant.SoLuong);
+
+            if (safeQuantity <= 0)
+                continue;
+
+            if (dbItem == null)
+            {
+                _db.ChiTietGioHangs.Add(new ChiTietGioHang
+                {
+                    MaNguoiDung = userId.Value,
+                    MaBienThe = guestItem.VariantId,
+                    SoLuong = safeQuantity,
+                    NgayThem = DateTime.Now
+                });
+            }
+            else
+            {
+                dbItem.SoLuong = safeQuantity;
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        return await Summary();
+    }
+
     private int? GetUserId()
     {
         var userIdText = User.FindFirstValue(
@@ -248,5 +321,10 @@ public class CartItemRequest
 
     public int VariantId { get; set; }
 
+    public int Quantity { get; set; } = 1;
+}
+public class GuestCartItemRequest
+{
+    public int VariantId { get; set; }
     public int Quantity { get; set; } = 1;
 }

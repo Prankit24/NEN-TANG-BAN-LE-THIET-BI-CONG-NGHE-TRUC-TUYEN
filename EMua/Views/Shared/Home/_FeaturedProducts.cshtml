@@ -1,0 +1,265 @@
+﻿@model IEnumerable<EMua.Models.Database.SanPham>
+
+
+<section class="featured-section">
+
+    <div class="featured-container">
+
+        <div class="featured-heading">
+
+            <span>
+                ĐƯỢC QUAN TÂM
+            </span>
+
+            <h2>
+                Sản phẩm nổi bật
+            </h2>
+
+        </div>
+
+
+        <div class="featured-grid">
+
+            @foreach (var item in Model)
+            {
+                var variant = item.BienTheSanPhams
+                .Where(x => x.SoLuong > 0)
+                .OrderBy(x => x.Gia)
+                .FirstOrDefault();
+
+
+                var photo = item.SanPhamHinhAnhs
+                .OrderByDescending(x => x.LaAnhChinh)
+                .ThenBy(x => x.ThuTu)
+                .FirstOrDefault();
+
+
+                var image =
+                photo?.DuongDanAnh
+                ?? variant?.HinhAnh
+                ?? "/images/no-image.png";
+
+
+                var price =
+                variant?.Gia
+                ?? item.GiaGoc
+                ?? 0;
+
+
+                <article class="featured-card">
+
+                    <div class="featured-image">
+
+                        <img src="@image"
+                             alt="@item.TenSanPham" />
+
+                    </div>
+
+
+                    <div class="featured-body">
+
+                        <small>
+                            @item.MaThuongHieuNavigation?.TenThuongHieu
+                        </small>
+
+                        <h3>
+                            @item.TenSanPham
+                        </h3>
+
+                        <div class="featured-variant">
+
+                            @variant?.PhienBan
+
+                            @if (!string.IsNullOrWhiteSpace(variant?.MauSac))
+                            {
+                                <span>
+                                    · @variant.MauSac
+                                </span>
+                            }
+
+                        </div>
+
+                        <div class="featured-price">
+
+                            @price.ToString("N0")₫
+
+                        </div>
+
+
+                        @if (variant != null)
+                        {
+                            <button type="button"
+                                    onclick="homeAddCart(@variant.MaBienThe)"
+                                    class="featured-cart">
+
+                                <i class="bi bi-cart-plus"></i>
+
+                                Thêm vào giỏ
+
+                            </button>
+                        }
+
+                    </div>
+
+                </article>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .featured-section {
+        padding: 70px 0;
+        background: linear-gradient( 180deg, #f0f0f9, #f7f7fc );
+    }
+
+
+    .featured-container {
+        width: min(1400px,92%);
+        margin: auto;
+    }
+
+
+    .featured-heading {
+        margin-bottom: 28px;
+    }
+
+
+        .featured-heading span {
+            color: #5b67c8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+
+        .featured-heading h2 {
+            margin: 7px 0 0;
+            color: #17172a;
+            font-size: 30px;
+        }
+
+
+    .featured-grid {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 18px;
+    }
+
+
+    .featured-card {
+        overflow: hidden;
+        border-radius: 19px;
+        border: 1px solid rgba(77,74,141,.09);
+        background: #fff;
+        transition: .3s;
+    }
+
+
+        .featured-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 18px 42px rgba(69,65,133,.13);
+        }
+
+
+    .featured-image {
+        height: 235px;
+        padding: 20px;
+        background: linear-gradient( 145deg, #fafafd, #f0f0f7 );
+    }
+
+
+        .featured-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: .35s;
+        }
+
+
+    .featured-card:hover
+    .featured-image img {
+        transform: scale(1.06);
+    }
+
+
+    .featured-body {
+        padding: 17px;
+    }
+
+
+        .featured-body small {
+            color: #9696a7;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+
+        .featured-body h3 {
+            min-height: 44px;
+            margin: 6px 0 8px;
+            color: #202030;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+
+    .featured-variant {
+        min-height: 20px;
+        margin-bottom: 8px;
+        color: #85869a;
+        font-size: 11px;
+    }
+
+
+    .featured-price {
+        margin-bottom: 14px;
+        color: #d83d55;
+        font-size: 19px;
+        font-weight: 760;
+    }
+
+
+    .featured-cart {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: 9px;
+        color: white;
+        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+        transition: .25s;
+    }
+
+
+        .featured-cart:hover {
+            transform: translateY(-2px);
+            background: linear-gradient( 135deg, #5e59aa, #716ad0 );
+        }
+
+
+    @@media(max-width:1050px) {
+
+        .featured-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+
+    @@media(max-width:750px) {
+
+        .featured-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+
+        .featured-image {
+            height: 180px;
+        }
+    }
+
+</style>

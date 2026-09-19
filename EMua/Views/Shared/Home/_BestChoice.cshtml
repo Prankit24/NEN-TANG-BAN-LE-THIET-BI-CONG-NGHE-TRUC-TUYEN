@@ -1,0 +1,307 @@
+﻿@model IEnumerable<EMua.Models.Database.SanPham>
+
+
+<section class="best-choice-section">
+
+    <div class="best-container">
+
+        <div class="best-heading">
+
+            <span>
+                EMUA RECOMMENDS
+            </span>
+
+            <h2>
+                ⭐ Best Choice
+            </h2>
+
+            <p>
+                Những sản phẩm nổi bật được EMUA lựa chọn.
+            </p>
+
+        </div>
+
+
+        <div class="best-grid">
+
+            @foreach (var item in Model)
+            {
+                var variant = item.BienTheSanPhams
+                .Where(x => x.SoLuong > 0)
+                .OrderBy(x => x.Gia)
+                .FirstOrDefault();
+
+
+                var photo = item.SanPhamHinhAnhs
+                .OrderByDescending(x => x.LaAnhChinh)
+                .ThenBy(x => x.ThuTu)
+                .FirstOrDefault();
+
+
+                var image =
+                photo?.DuongDanAnh
+                ?? variant?.HinhAnh
+                ?? "/images/no-image.png";
+
+
+                var price =
+                variant?.Gia
+                ?? item.GiaGoc
+                ?? 0;
+
+
+                <article class="best-card">
+
+                    <div class="best-image">
+
+                        <span class="best-badge">
+                            BEST
+                        </span>
+
+                        <img src="@image"
+                             alt="@item.TenSanPham" />
+
+                    </div>
+
+
+                    <div class="best-body">
+
+                        <small>
+                            @item.MaThuongHieuNavigation?.TenThuongHieu
+                        </small>
+
+                        <h3>
+                            @item.TenSanPham
+                        </h3>
+
+                        <div class="best-variant">
+
+                            @variant?.PhienBan
+
+                        </div>
+
+                        <div class="best-price">
+
+                            @price.ToString("N0")₫
+
+                        </div>
+
+
+                        @if (variant != null)
+                        {
+                            <button type="button"
+                                    onclick="homeAddCart(@variant.MaBienThe)"
+                                    class="best-cart">
+
+                                <i class="bi bi-cart-plus"></i>
+
+                                Thêm vào giỏ
+
+                            </button>
+                        }
+
+                    </div>
+
+                </article>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .best-choice-section {
+        position: relative;
+        padding: 80px 0;
+        overflow: hidden;
+        color: #fff;
+        background: radial-gradient( circle at 85% 25%, rgba(139,124,246,.17), transparent 30% ), radial-gradient( circle at 20% 100%, rgba(91,140,255,.12), transparent 28% ), linear-gradient( 135deg, #15172f, #0d0f25 );
+    }
+
+
+    .best-container {
+        width: min(1400px,92%);
+        margin: auto;
+    }
+
+
+    .best-heading {
+        margin-bottom: 30px;
+    }
+
+
+        .best-heading span {
+            color: #e5c75f;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+
+        .best-heading h2 {
+            margin: 7px 0 7px;
+            color: #fff;
+            font-size: 31px;
+        }
+
+
+        .best-heading p {
+            color: #9e9fb3;
+            margin: 0;
+        }
+
+
+    .best-grid {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 18px;
+    }
+
+
+    .best-card {
+        overflow: hidden;
+        border-radius: 19px;
+        border: 1px solid rgba(255,255,255,.10);
+        background: rgba(255,255,255,.055);
+        backdrop-filter: blur(14px);
+        transition: .3s;
+    }
+
+
+        .best-card:hover {
+            transform: translateY(-7px);
+            border-color: rgba(229,199,95,.28);
+            box-shadow: 0 20px 45px rgba(0,0,0,.25);
+        }
+
+
+    .best-image {
+        position: relative;
+        height: 235px;
+        padding: 20px;
+        background: linear-gradient( 145deg, #fbfbfd, #eeeef4 );
+    }
+
+
+        .best-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: .35s;
+        }
+
+
+    .best-card:hover
+    .best-image img {
+        transform: scale(1.06);
+    }
+
+
+    .best-badge {
+        position: absolute;
+        top: 13px;
+        left: 13px;
+        z-index: 2;
+        padding: 6px 10px;
+        border-radius: 7px;
+        color: #201b08;
+        font-size: 10px;
+        font-weight: 850;
+        background: linear-gradient( 100deg, #a97c13, #edcd66, #fff0a7, #c59219 );
+        background-size: 250%;
+        animation: bestBadgeShine 4s linear infinite;
+    }
+
+
+    .best-body {
+        padding: 17px;
+    }
+
+
+        .best-body small {
+            color: #a7a8ba;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+
+        .best-body h3 {
+            min-height: 44px;
+            margin: 6px 0 8px;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+
+    .best-variant {
+        min-height: 20px;
+        margin-bottom: 8px;
+        color: #9798ac;
+        font-size: 11px;
+    }
+
+
+    .best-price {
+        margin-bottom: 14px;
+        color: #efcf6b;
+        font-size: 19px;
+        font-weight: 760;
+    }
+
+
+    .best-cart {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: 9px;
+        color: #17172a;
+        cursor: pointer;
+        background: linear-gradient( 135deg, #e5c45a, #f3dc87 );
+        transition: .25s;
+    }
+
+
+        .best-cart:hover {
+            transform: translateY(-2px);
+            background: #fff;
+        }
+
+
+    @@keyframes bestBadgeShine {
+
+        from {
+            background-position: 250% center;
+        }
+
+        to {
+            background-position: -250% center;
+        }
+    }
+
+
+    @@media(max-width:1050px) {
+
+        .best-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+
+    @@media(max-width:750px) {
+
+        .best-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+
+        .best-image {
+            height: 180px;
+        }
+    }
+
+</style>

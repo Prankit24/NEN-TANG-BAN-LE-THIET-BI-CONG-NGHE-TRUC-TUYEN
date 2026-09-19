@@ -1,9 +1,208 @@
-﻿@{
+﻿@model EMua.Models.ViewModels.HomeViewModel
+
+@{
     ViewData["Title"] = "Trang chủ";
 }
 
-<partial name="/Views/Shared/Home/_Categories.cshtml" />
+@Html.AntiForgeryToken()
 
-<partial name="/Views/Shared/Home/_FlashSale.cshtml" />
 
-<partial name="/Views/Shared/Home/_Brands.cshtml" />
+<partial name="Home/_Hero" />
+
+<partial name="Home/_IPhoneDuo" />
+
+<partial name="Home/_Categories"
+         model="Model.DanhMucs" />
+
+<partial name="Home/_FlashSale"
+         model="Model.FlashSale" />
+
+<partial name="Home/_FeaturedProducts"
+         model="Model.SanPhamNoiBat" />
+
+<partial name="Home/_BestChoice"
+         model="Model.BestChoice" />
+
+<partial name="Home/_NewProducts"
+         model="Model.SanPhamMoi" />
+
+<partial name="Home/_Brands"
+         model="Model.ThuongHieus" />
+
+
+<script>
+
+    async function homeAddCart(variantId) {
+
+        // Khách chưa đăng nhập vẫn được thêm vào giỏ tạm trên trình duyệt.
+        if (!window.EMUA_IS_AUTHENTICATED) {
+            window.addToGuestCart(variantId, 1);
+            if (typeof showCartAddedFeedback === 'function') showCartAddedFeedback();
+            return;
+        }
+
+        /*
+         * Token được sinh bởi:
+         *
+         * @Html.AntiForgeryToken()
+         */
+        const tokenInput =
+            document.querySelector(
+                'input[name="__RequestVerificationToken"]'
+            );
+
+
+        if (!tokenInput) {
+
+            console.error(
+                'Không tìm thấy __RequestVerificationToken'
+            );
+
+            alert(
+                'Không tìm thấy mã bảo mật.'
+            );
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/Cart/Add',
+                    {
+
+                        method:
+                            'POST',
+
+                        headers: {
+
+                            'Content-Type':
+                                'application/json',
+
+                            'RequestVerificationToken':
+                                tokenInput.value
+                        },
+
+
+                        body:
+                            JSON.stringify({
+
+                                variantId:
+                                    variantId,
+
+                                quantity:
+                                    1
+
+                            })
+
+                    }
+                );
+
+
+            /*
+             * Chưa đăng nhập.
+             */
+            if (
+                response.status === 401
+                ||
+                response.status === 403
+            ) {
+
+                window.location.href =
+                    '/Auth/Login?returnUrl='
+                    +
+                    encodeURIComponent(
+                        window.location.pathname
+                    );
+
+                return;
+            }
+
+
+            /*
+             * Không gọi response.json() bừa nữa.
+             * Kiểm tra content-type trước.
+             */
+            let result = null;
+
+
+            const contentType =
+                response.headers.get(
+                    'content-type'
+                );
+
+
+            if (
+                contentType &&
+                contentType.includes(
+                    'application/json'
+                )
+            ) {
+
+                result =
+                    await response.json();
+
+            }
+
+
+            /*
+             * Nếu lỗi.
+             */
+            if (!response.ok) {
+
+                console.error(
+                    'Cart Add Error',
+                    response.status,
+                    result
+                );
+
+
+                alert(
+                    result?.message
+                    ||
+                    'Không thể thêm sản phẩm vào giỏ hàng.'
+                );
+
+                return;
+            }
+
+
+            /*
+             * Thành công: không hiện toast.
+             * Chỉ nháy icon giỏ hàng và hiện +1.
+             */
+            if (typeof showCartAddedFeedback === 'function') {
+                showCartAddedFeedback();
+            }
+
+
+            const newCount =
+                result?.count
+                ?? result?.cartCount
+                ?? result?.totalQuantity;
+
+            if (newCount !== undefined &&
+                typeof setGlobalCartCount === 'function') {
+                setGlobalCartCount(newCount, false);
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                'Lỗi khi gọi /Cart/Add:',
+                error
+            );
+
+
+            alert(
+                'Không thể kết nối đến giỏ hàng.'
+            );
+
+        }
+
+    }
+
+</script>

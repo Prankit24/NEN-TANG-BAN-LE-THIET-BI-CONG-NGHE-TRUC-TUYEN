@@ -127,7 +127,8 @@
                         <span>Cửa hàng</span>
                     </a>
 
-                    <a asp-controller="Cart" asp-action="Index" class="header-action-btn cart-action">
+                    <a href="@(User.Identity?.IsAuthenticated == true ? "/Cart" : "/Auth/Login?returnUrl=%2FCart")"
+                       class="header-action-btn cart-action">
                         <div class="header-icon-wrapper">
                             <i class="bi bi-cart3"></i>
                             <span class="cart-count">0</span>
