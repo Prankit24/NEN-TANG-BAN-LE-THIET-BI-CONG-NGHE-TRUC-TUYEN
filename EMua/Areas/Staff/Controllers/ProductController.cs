@@ -10,13 +10,7 @@ namespace EMua.Areas.Staff.Controllers;
 public class ProductController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
-    private readonly IWebHostEnvironment _environment;
-
-    public ProductController(EMuaDbContext db, IWebHostEnvironment environment)
-    {
-        _db = db;
-        _environment = environment;
-    }
+    public ProductController(EMuaDbContext db) => _db = db;
 
     public async Task<IActionResult> Index(string? q, string? status, int? brandId)
     {
@@ -49,38 +43,16 @@ public class ProductController : StaffControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ProductCreateViewModel model)
     {
-        ValidateImage(model.ImageFile, required: true);
-        if (model.BienThe.Count == 0)
-            ModelState.AddModelError(nameof(model.BienThe), "Vui lòng nhập ít nhất một biến thể sản phẩm.");
         if (model.MaThuongHieu is null || !await _db.ThuongHieus.AnyAsync(x => x.MaThuongHieu == model.MaThuongHieu))
             ModelState.AddModelError(nameof(model.MaThuongHieu), "Thương hiệu không hợp lệ.");
         if (!ModelState.IsValid) { await LoadSelectionsAsync(); return View(model); }
 
-        var imagePath = await SaveImageAsync(model.ImageFile!);
-        var product = new SanPham {
+        _db.SanPhams.Add(new SanPham {
             TenSanPham = model.TenSanPham.Trim(), MaDanhMuc = model.MaDanhMuc,
             MaThuongHieu = model.MaThuongHieu ?? 0, GiaGoc = model.GiaGoc,
             BaoHanh = model.BaoHanh?.Trim(), MoTa = model.MoTa?.Trim(),
             ThongSoKyThuat = model.ThongSoKyThuat?.Trim(), TrangThaiSanPham = "Còn hàng"
-        };
-        foreach (var variant in model.BienThe)
-        {
-            product.BienTheSanPhams.Add(new BienTheSanPham
-            {
-                MauSac = variant.MauSac?.Trim(),
-                PhienBan = variant.PhienBan?.Trim(),
-                Gia = variant.Gia,
-                SoLuong = variant.SoLuong,
-                TrangThai = variant.SoLuong > 0 ? "Còn hàng" : "Hết hàng"
-            });
-        }
-        product.SanPhamHinhAnhs.Add(new SanPhamHinhAnh
-        {
-            DuongDanAnh = imagePath,
-            LaAnhChinh = true,
-            ThuTu = 0
         });
-        _db.SanPhams.Add(product);
         await _db.SaveChangesAsync();
         TempData["Success"] = "Đã thêm sản phẩm mới.";
         return RedirectToAction(nameof(Index));
@@ -89,28 +61,20 @@ public class ProductController : StaffControllerBase
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var product = await _db.SanPhams.Include(x => x.BienTheSanPhams).Include(x => x.SanPhamHinhAnhs).FirstOrDefaultAsync(x => x.MaSanPham == id);
+        var product = await _db.SanPhams.Include(x => x.BienTheSanPhams).FirstOrDefaultAsync(x => x.MaSanPham == id);
         if (product == null) return NotFound();
         await LoadSelectionsAsync();
-        var variants = product.BienTheSanPhams.Select(variant => new ProductVariantQuantityViewModel
-        {
-            MaBienThe = variant.MaBienThe,
-            MauSac = variant.MauSac,
-            PhienBan = variant.PhienBan,
-            Gia = variant.Gia,
-            SoLuong = variant.SoLuong
-        }).ToList();
-        if (variants.Count == 0)
-            variants.Add(new ProductVariantQuantityViewModel());
-
         return View(new ProductCreateViewModel
         {
             TenSanPham = product.TenSanPham ?? string.Empty,
             MaDanhMuc = product.MaDanhMuc, MaThuongHieu = product.MaThuongHieu,
             GiaGoc = product.GiaGoc, BaoHanh = product.BaoHanh,
             MoTa = product.MoTa, ThongSoKyThuat = product.ThongSoKyThuat,
-            CurrentImageUrl = product.SanPhamHinhAnhs.OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).Select(x => x.DuongDanAnh).FirstOrDefault(),
-            BienThe = variants
+            BienThe = product.BienTheSanPhams.Select(variant => new ProductVariantQuantityViewModel
+            {
+                MaBienThe = variant.MaBienThe, MauSac = variant.MauSac,
+                PhienBan = variant.PhienBan, SoLuong = variant.SoLuong
+            }).ToList()
         });
     }
 
@@ -118,11 +82,8 @@ public class ProductController : StaffControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, ProductCreateViewModel model)
     {
-        var product = await _db.SanPhams.Include(x => x.BienTheSanPhams).Include(x => x.SanPhamHinhAnhs).FirstOrDefaultAsync(x => x.MaSanPham == id);
+        var product = await _db.SanPhams.Include(x => x.BienTheSanPhams).FirstOrDefaultAsync(x => x.MaSanPham == id);
         if (product == null) return NotFound();
-        ValidateImage(model.ImageFile, required: false);
-        if (model.BienThe.Count == 0)
-            ModelState.AddModelError(nameof(model.BienThe), "Sản phẩm phải có ít nhất một biến thể.");
         if (model.MaThuongHieu is null || !await _db.ThuongHieus.AnyAsync(x => x.MaThuongHieu == model.MaThuongHieu))
             ModelState.AddModelError(nameof(model.MaThuongHieu), "Thương hiệu không hợp lệ.");
         if (!ModelState.IsValid) { await LoadSelectionsAsync(); return View(model); }
@@ -132,36 +93,7 @@ public class ProductController : StaffControllerBase
         foreach (var variantModel in model.BienThe)
         {
             var variant = product.BienTheSanPhams.FirstOrDefault(x => x.MaBienThe == variantModel.MaBienThe);
-            if (variant != null)
-            {
-                variant.MauSac = variantModel.MauSac?.Trim();
-                variant.PhienBan = variantModel.PhienBan?.Trim();
-                variant.Gia = variantModel.Gia;
-                variant.SoLuong = variantModel.SoLuong;
-                variant.TrangThai = variantModel.SoLuong > 0 ? "Còn hàng" : "Hết hàng";
-            }
-            else if (variantModel.MaBienThe == 0)
-            {
-                product.BienTheSanPhams.Add(new BienTheSanPham
-                {
-                    MauSac = variantModel.MauSac?.Trim(),
-                    PhienBan = variantModel.PhienBan?.Trim(),
-                    Gia = variantModel.Gia,
-                    SoLuong = variantModel.SoLuong,
-                    TrangThai = variantModel.SoLuong > 0 ? "Còn hàng" : "Hết hàng"
-                });
-            }
-        }
-        if (model.ImageFile is { Length: > 0 })
-        {
-            var imagePath = await SaveImageAsync(model.ImageFile);
-            foreach (var image in product.SanPhamHinhAnhs) image.LaAnhChinh = false;
-            product.SanPhamHinhAnhs.Add(new SanPhamHinhAnh
-            {
-                DuongDanAnh = imagePath,
-                LaAnhChinh = true,
-                ThuTu = product.SanPhamHinhAnhs.Count
-            });
+            if (variant != null) variant.SoLuong = variantModel.SoLuong;
         }
         await _db.SaveChangesAsync(); TempData["Success"] = "Đã cập nhật sản phẩm.";
         return RedirectToAction(nameof(Index));
@@ -183,31 +115,5 @@ public class ProductController : StaffControllerBase
     {
         ViewBag.Categories = new SelectList(await _db.DanhMucSanPhams.AsNoTracking().OrderBy(x => x.TenDanhMuc).ToListAsync(), "MaDanhMuc", "TenDanhMuc");
         ViewBag.Brands = new SelectList(await _db.ThuongHieus.AsNoTracking().Where(x => x.TrangThai).OrderBy(x => x.TenThuongHieu).ToListAsync(), "MaThuongHieu", "TenThuongHieu");
-    }
-
-    private void ValidateImage(IFormFile? image, bool required)
-    {
-        if (required && (image == null || image.Length == 0))
-        {
-            ModelState.AddModelError(nameof(ProductCreateViewModel.ImageFile), "Vui lòng chọn ảnh sản phẩm.");
-            return;
-        }
-        if (image == null || image.Length == 0) return;
-        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-        if (!new[] { ".jpg", ".jpeg", ".png", ".webp" }.Contains(extension))
-            ModelState.AddModelError(nameof(ProductCreateViewModel.ImageFile), "Ảnh chỉ nhận JPG, JPEG, PNG hoặc WEBP.");
-        if (image.Length > 5 * 1024 * 1024)
-            ModelState.AddModelError(nameof(ProductCreateViewModel.ImageFile), "Ảnh không được vượt quá 5 MB.");
-    }
-
-    private async Task<string> SaveImageAsync(IFormFile image)
-    {
-        var folder = Path.Combine(_environment.WebRootPath, "uploads", "products");
-        Directory.CreateDirectory(folder);
-        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
-        var fileName = $"{Guid.NewGuid():N}{extension}";
-        await using var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create);
-        await image.CopyToAsync(stream);
-        return $"/uploads/products/{fileName}";
     }
 }

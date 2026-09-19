@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 
 namespace EMua.Areas.Staff.Models;
 
@@ -80,7 +79,6 @@ public class ProductCreateViewModel
     [Display(Name = "Tên sản phẩm")]
     public string TenSanPham { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng chọn danh mục.")]
     [Display(Name = "Danh mục")]
     public int? MaDanhMuc { get; set; }
 
@@ -88,28 +86,21 @@ public class ProductCreateViewModel
     [Display(Name = "Thương hiệu")]
     public int? MaThuongHieu { get; set; }
 
-    [Range(0.01, double.MaxValue, ErrorMessage = "Giá gốc phải lớn hơn 0.")]
+    [Range(0, double.MaxValue, ErrorMessage = "Giá gốc không hợp lệ.")]
     [Display(Name = "Giá gốc")]
     public decimal? GiaGoc { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập thông tin bảo hành.")]
     [StringLength(50)]
     [Display(Name = "Bảo hành")]
     public string? BaoHanh { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập mô tả sản phẩm.")]
     [StringLength(255)]
     [Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập thông số kỹ thuật.")]
     [Display(Name = "Thông số kỹ thuật")]
     public string? ThongSoKyThuat { get; set; }
 
-    [Display(Name = "Ảnh sản phẩm")]
-    public IFormFile? ImageFile { get; set; }
-
-    public string? CurrentImageUrl { get; set; }
     public List<ProductVariantQuantityViewModel> BienThe { get; set; } = [];
 }
 
@@ -117,13 +108,7 @@ public class ProductVariantQuantityViewModel
 {
     public int MaBienThe { get; set; }
     public string? MauSac { get; set; }
-    [Required(ErrorMessage = "Vui lòng nhập phiên bản biến thể.")]
-    [StringLength(100)]
     public string? PhienBan { get; set; }
-
-    [Range(0.01, double.MaxValue, ErrorMessage = "Giá bán phải lớn hơn 0.")]
-    [Display(Name = "Giá bán")]
-    public decimal Gia { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Số lượng không được âm.")]
     [Display(Name = "Số lượng")]

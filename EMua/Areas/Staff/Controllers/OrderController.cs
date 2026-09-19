@@ -7,7 +7,7 @@ namespace EMua.Areas.Staff.Controllers;
 public class OrderController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
-    private static readonly string[] Statuses = ["Chờ xử lý", "Đang xử lý", "Đã giao", "Đã hoàn thành", "Đã hủy"];
+    private static readonly string[] Statuses = ["Chờ xử lý", "Đang xử lý", "Đã hoàn thành", "Đã hủy"];
     public OrderController(EMuaDbContext db) => _db = db;
 
     public async Task<IActionResult> Index(string? q, string? status)
@@ -38,13 +38,6 @@ public class OrderController : StaffControllerBase
         var order = await _db.DonHangs.FindAsync(id);
         if (order == null) return NotFound();
         order.TrangThaiDonHang = status;
-        _db.LichSuVanChuyens.Add(new EMua.Models.Database.LichSuVanChuyen
-        {
-            MaDonHang = id,
-            TrangThai = status,
-            MoTa = $"Đơn hàng chuyển sang trạng thái: {status}.",
-            ThoiGian = DateTime.Now
-        });
         await _db.SaveChangesAsync();
         TempData["Success"] = $"Đã cập nhật đơn hàng #DH-{id:D5}.";
         return RedirectToAction(nameof(Index), new { status = "all" });

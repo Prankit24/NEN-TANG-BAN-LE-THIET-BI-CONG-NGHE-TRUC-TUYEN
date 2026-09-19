@@ -310,7 +310,7 @@
   }
 }
 
-
+/* Dashboard nhân viên */
 .staff-dashboard-heading {
   display: flex;
   justify-content: space-between;
@@ -702,7 +702,7 @@
   }
 }
 
-
+/* Báo cáo trực quan */
 .report-heading {
   display: flex;
   justify-content: space-between;
@@ -1065,7 +1065,7 @@
   }
 }
 
-
+/* Đồng bộ nút thao tác với giao diện đen - trắng của khu vực nhân viên. */
 .admin-content .btn-primary,
 .staff-search button,
 .staff-status-form button {
