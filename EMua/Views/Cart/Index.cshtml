@@ -1,340 +1,90 @@
-@model IEnumerable<EMua.Models.Database.ChiTietGioHang>
-
+@model EMua.ViewModels.CartViewModel
 @{
     ViewData["Title"] = "Giỏ hàng";
-
-    var cartItems = Model.ToList();
-    var totalQuantity = cartItems.Sum(x => x.SoLuong);
-    var subtotal = cartItems.Sum(x => x.MaBienTheNavigation.Gia * x.SoLuong);
-    var shippingFee = subtotal > 0 ? 30000 : 0;
-    var totalAmount = subtotal + shippingFee;
 }
-
-<link rel="stylesheet" href="~/css/cart.css" asp-append-version="true" />
-
-<section class="cart-page">
-    <div class="container emua-container">
-        <div class="cart-breadcrumb">
-            <a asp-controller="Home" asp-action="Index">Trang chủ</a>
-            <i class="bi bi-chevron-right"></i>
-            <span>Giỏ hàng</span>
-        </div>
-
-        <div class="cart-title">
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">
+    <div class="customer-heading">
+        <div><span class="eyebrow">YOUR BAG</span>
             <h1>Giỏ hàng</h1>
-            <p>Bạn có <strong id="cartQuantity">@totalQuantity</strong> sản phẩm trong giỏ hàng</p>
-        </div>
+            <p>@Model.TotalQuantity sản phẩm đang chờ bạn.</p>
+        </div><a asp-controller="Product" asp-action="Index" class="back-link">Tiếp tục mua sắm <i
+        class="bi bi-arrow-right"></i></a>
+    </div>@if (TempData["Error"] != null) {
+    <div class="customer-alert error">@TempData["Error"]</div>
+}
+@if
+    (TempData["Success"] != null)
+{
+    <div class="customer-alert success">@TempData["Success"]</div>
+}
+@if (Model.Items.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-bag"></i>
+        <h2>Giỏ hàng đang trống</h2>
+        <p>Thêm sản phẩm bạn yêu thích để bắt đầu đặt hàng.</p><a asp-controller="Product" asp-action="Index"
+                                                                  class="customer-button">Khám phá sản phẩm</a>
+    </div>
+}
+else
+{
 
-        @Html.AntiForgeryToken()
+    <div class="cart-layout">
+        <div>@foreach (var item in Model.Items) {
+            <article class="cart-item"
+                     data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                <div class="cart-item-image">@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) {
+                    <img src="@item.ImageUrl" alt="@item.ProductName" />
+                } else
+                {
 
-        <div id="cartMessage"></div>
-
-        <div class="cart-layout-simple">
-            <div class="cart-products-box">
-                <div class="cart-table-head">
-                    <span>Sản phẩm</span>
-                    <span>Đơn giá</span>
-                    <span>Số lượng</span>
-                    <span>Thành tiền</span>
-                    <span>Thao tác</span>
-                </div>
-
-                <div id="cartItems">
-                    @if (!cartItems.Any())
-                    {
-                        <div class="cart-no-product">
-                            <i class="bi bi-cart-x"></i>
-                            <span>Giỏ hàng chưa có sản phẩm.</span>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in cartItems)
-                        {
-                            var product = item.MaBienTheNavigation.MaSanPhamNavigation;
-                            var itemTotal = item.MaBienTheNavigation.Gia * item.SoLuong;
-
-                            <article class="cart-product-row"
-                                     id="cartItem_@item.MaBienThe"
-                                     data-cart-id="@item.MaBienThe"
-                                     data-price="@item.MaBienTheNavigation.Gia">
-                                <div class="cart-product-cell">
-                                    <img src="@(item.MaBienTheNavigation.HinhAnh ?? "/images/products/airpods-4/1.jpg")"
-                                         alt="@product.TenSanPham" />
-
-                                    <div>
-                                        <h2>@product.TenSanPham</h2>
-                                        <p>
-                                            Màu: @(item.MaBienTheNavigation.MauSac ?? "Chưa cập nhật")
-                                            /
-                                            Size: @(item.MaBienTheNavigation.PhienBan ?? "Tiêu chuẩn")
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <span class="cart-unit-price">
-                                    @item.MaBienTheNavigation.Gia.ToString("N0")đ
-                                </span>
-
-                                <div class="cart-quantity">
-                                    <button type="button"
-                                            class="quantity-button decrease-button"
-                                            data-cart-id="@item.MaBienThe">
-                                        −
-                                    </button>
-
-                                    <input type="number"
-                                           class="quantity-input"
-                                           data-cart-id="@item.MaBienThe"
-                                           min="1"
-                                           max="99"
-                                           value="@item.SoLuong" />
-
-                                    <button type="button"
-                                            class="quantity-button increase-button"
-                                            data-cart-id="@item.MaBienThe">
-                                        +
-                                    </button>
-                                </div>
-
-                                <strong class="cart-item-total">
-                                    @itemTotal.ToString("N0")đ
-                                </strong>
-
-                                <button type="button"
-                                        class="cart-delete-button"
-                                        data-cart-id="@item.MaBienThe"
-                                        title="Xóa sản phẩm">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </article>
-                        }
-                    }
-                </div>
+                    <i class="bi bi-image"></i>
+                }
             </div>
-
-            <aside class="cart-total-box">
-                <h2>Tổng tiền</h2>
-
-                <div class="cart-total-row">
-                    <span>Tạm tính (<span id="cartItemCount">@totalQuantity</span> sản phẩm)</span>
-                    <strong id="cartSubtotal">@subtotal.ToString("N0")đ</strong>
-                </div>
-
-                <div class="cart-total-row">
-                    <span>Phí vận chuyển</span>
-                    <strong id="cartShipping">@shippingFee.ToString("N0")đ</strong>
-                </div>
-
-                <div class="cart-total-row">
-                    <span>Giảm giá</span>
-                    <strong>0đ</strong>
-                </div>
-
-                <div class="cart-grand-total">
-                    <span>Tổng cộng</span>
-                    <strong id="cartGrandTotal">@totalAmount.ToString("N0")đ</strong>
-                </div>
-
-                <a asp-controller="Product"
-                   asp-action="Index"
-                   class="cart-continue-button">
-                    Tiếp tục mua sắm
-                </a>
-
-                @if (cartItems.Any())
-                {
-                    <a asp-controller="Checkout"
-                       asp-action="Index"
-                       class="cart-checkout-button">
-                        Thanh toán
-                    </a>
-                }
-                else
-                {
-                    <button type="button"
-                            class="cart-checkout-button disabled"
-                            disabled>
-                        Thanh toán
-                    </button>
-                }
+            <div class="cart-item-info"><a asp-controller="Product" asp-action="Details"
+                                           asp-route-id="@item.ProductId">
+                <h2>@item.ProductName</h2>
+            </a><span>@item.VariantLabel</span><strong>@item.UnitPrice.ToString("N0") đ</strong></div>
+            <form asp-action="Update" method="post" class="quantity-form">@Html.AntiForgeryToken()<input
+                type="hidden" name="id" value="@item.CartItemId" /><input name="quantity" type="number" min="0"
+                                                                          max="@item.Stock" value="@item.Quantity" onchange="this.form.submit()" /></form><strong
+                class="line-total" data-line-total>@item.LineTotal.ToString("N0") đ</strong>
+                <form asp-action="Remove" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id"
+                                                                                           value="@item.CartItemId" /><button class="icon-button danger" title="Xóa"><i
+                    class="bi bi-trash3"></i></button></form>
+                </article>
+            }
+        </div>
+        <aside class="summary-card">
+            <h2>Tóm tắt đơn hàng</h2>
+            <div><span>Tạm tính</span><strong data-cart-total>@Model.Total.ToString("N0") đ</strong></div>
+            <div><span>Vận chuyển</span><span>Được tính khi đặt hàng</span></div>
+            <hr />
+            <div class="summary-total"><span>Tổng cộng</span><strong data-cart-total>@Model.Total.ToString("N0")
+                đ</strong></div><a asp-controller="Checkout" asp-action="Index" class="customer-button">Tiến hành
+                đặt hàng <i class="bi bi-arrow-right"></i></a>
             </aside>
         </div>
-    </div>
-</section>
-
+    }
+</div>
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const money = new Intl.NumberFormat("vi-VN");
-
-            function formatMoney(value) {
-                return money.format(value) + "đ";
-            }
-
-            function refreshTotal() {
-                const items = document.querySelectorAll(".cart-product-row");
-
-                let quantity = 0;
-                let subtotal = 0;
-
-                items.forEach(function (item) {
-                    const price = Number(item.dataset.price);
-                    const itemQuantity = Number(
-                        item.querySelector(".quantity-input").value
-                    );
-
-                    quantity += itemQuantity;
-                    subtotal += price * itemQuantity;
+        document.querySelectorAll('.cart-item input[name="quantity"]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                const item = input.closest('.cart-item');
+                const price = Number(item.dataset.unitPrice || 0);
+                const quantity = Math.max(0, Number(input.value || 0));
+                const lineTotal = item.querySelector('[data-line-total]');
+                if (lineTotal) lineTotal.textContent = (price * quantity).toLocaleString('vi-VN') + ' đ';
+                let total = 0;
+                document.querySelectorAll('.cart-item').forEach(function (row) {
+                    const rowPrice = Number(row.dataset.unitPrice || 0);
+                    const rowQuantity = Math.max(0, Number(row.querySelector('input[name="quantity"]').value || 0));
+                    total += rowPrice * rowQuantity;
                 });
-
-                const shipping = subtotal > 0 ? 30000 : 0;
-                const total = subtotal + shipping;
-
-                document.getElementById("cartQuantity").textContent = quantity;
-                document.getElementById("cartItemCount").textContent = quantity;
-                document.getElementById("cartSubtotal").textContent =
-                    formatMoney(subtotal);
-                document.getElementById("cartShipping").textContent =
-                    formatMoney(shipping);
-                document.getElementById("cartGrandTotal").textContent =
-                    formatMoney(total);
-            }
-
-            async function updateQuantity(variantId, quantity) {
-                const token = document.querySelector(
-                    'input[name="__RequestVerificationToken"]'
-                ).value;
-
-                const formData = new URLSearchParams();
-                formData.append("__RequestVerificationToken", token);
-                formData.append("variantId", variantId);
-                formData.append("quantity", quantity);
-
-                const response = await fetch(
-                    "@Url.Action("UpdateQuantity", "Cart")",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/x-www-form-urlencoded; charset=UTF-8"
-                        },
-                        body: formData.toString()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error("Không thể cập nhật số lượng.");
-                }
-            }
-
-            async function removeItem(variantId) {
-                const token = document.querySelector(
-                    'input[name="__RequestVerificationToken"]'
-                ).value;
-
-                const formData = new URLSearchParams();
-                formData.append("__RequestVerificationToken", token);
-                formData.append("variantId", variantId);
-
-                const response = await fetch(
-                    "@Url.Action("Remove", "Cart")",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/x-www-form-urlencoded; charset=UTF-8"
-                        },
-                        body: formData.toString()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error("Không thể xóa sản phẩm.");
-                }
-            }
-
-            document.addEventListener("click", async function (event) {
-                const increase = event.target.closest(".increase-button");
-                const decrease = event.target.closest(".decrease-button");
-                const deleteButton = event.target.closest(".cart-delete-button");
-
-                try {
-                    if (increase || decrease) {
-                        const button = increase || decrease;
-                        const item = document.getElementById(
-                            "cartItem_" + button.dataset.cartId
-                        );
-
-                        const input = item.querySelector(".quantity-input");
-                        const currentQuantity = Number(input.value);
-
-                        const newQuantity = increase
-                            ? Math.min(99, currentQuantity + 1)
-                            : Math.max(1, currentQuantity - 1);
-
-                        input.value = newQuantity;
-
-                        const price = Number(item.dataset.price);
-                        item.querySelector(".cart-item-total").textContent =
-                            formatMoney(price * newQuantity);
-
-                        await updateQuantity(button.dataset.cartId, newQuantity);
-                        refreshTotal();
-                    }
-
-                    if (deleteButton) {
-                        const variantId = deleteButton.dataset.cartId;
-
-                        if (!confirm("Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?")) {
-                            return;
-                        }
-
-                        await removeItem(variantId);
-
-                        document.getElementById(
-                            "cartItem_" + variantId
-                        ).remove();
-
-                        if (!document.querySelector(".cart-product-row")) {
-                            window.location.reload();
-                            return;
-                        }
-
-                        refreshTotal();
-                    }
-                } catch (error) {
-                    document.getElementById("cartMessage").innerHTML =
-                        `<div class="alert alert-danger">${error.message}</div>`;
-                }
-            });
-
-                       document.addEventListener("change", async function (event) {
-                if (!event.target.classList.contains("quantity-input")) {
-                    return;
-                }
-
-                const input = event.target;
-                const item = input.closest(".cart-product-row");
-                const quantity = Math.max(
-                    1,
-                    Math.min(99, Number(input.value) || 1)
-                );
-
-                input.value = quantity;
-
-                try {
-                    await updateQuantity(input.dataset.cartId, quantity);
-
-                    const price = Number(item.dataset.price);
-                    item.querySelector(".cart-item-total").textContent =
-                        formatMoney(price * quantity);
-
-                    refreshTotal();
-                } catch (error) {
-                    document.getElementById("cartMessage").innerHTML =
-                        `<div class="alert alert-danger">${error.message}</div>`;
-                }
+                document.querySelectorAll('[data-cart-total]').forEach(function (element) {
+                    element.textContent = total.toLocaleString('vi-VN') + ' đ';
+                });
             });
         });
     </script>

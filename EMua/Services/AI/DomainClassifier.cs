@@ -1,4 +1,4 @@
-﻿using EMua.Models.AI;
+using EMua.Models.AI;
 using Microsoft.ML;
 
 namespace EMua.Services.AI

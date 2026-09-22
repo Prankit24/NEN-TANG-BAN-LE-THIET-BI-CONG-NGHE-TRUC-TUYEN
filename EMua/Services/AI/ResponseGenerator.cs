@@ -1,4 +1,4 @@
-﻿namespace EMua.Services.AI
+namespace EMua.Services.AI
 {
     public class ResponseGenerator
     {

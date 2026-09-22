@@ -67,7 +67,7 @@
         transform: translateY(-1px);
     }
 
-/* Layout chính */
+
 
 .category-workspace {
     display: grid;
@@ -112,7 +112,7 @@
     white-space: nowrap;
 }
 
-/* Search */
+
 
 .category-search {
     display: flex;
@@ -146,7 +146,7 @@
         font-size: 12px;
     }
 
-/* Danh sách */
+
 
 .category-list {
     display: grid;
@@ -241,7 +241,7 @@
         background: var(--admin-purple-pale);
     }
 
-/* Chi tiết danh mục */
+
 
 .category-detail-card {
     padding: 25px;
@@ -286,7 +286,7 @@
     font-weight: 700;
 }
 
-/* Form */
+
 
 .category-form {
     margin-top: 22px;
@@ -390,7 +390,7 @@
     font-size: 10.5px;
 }
 
-/* Footer form */
+
 
 .category-form-footer {
     display: flex;
@@ -552,7 +552,7 @@
     cursor: pointer;
 }
 
-/* Giữ màn Category gọn trong một trang desktop */
+
 @media (min-width: 901px) {
     .category-page {
         height: calc(100dvh - 120px);
@@ -615,8 +615,7 @@
     color: #fff;
 }
 
-/* Phong cách form vuông, gọn và dễ quét dữ liệu. Avatar/trạng thái vẫn bo
-   tròn để giữ ý nghĩa nhận diện và trạng thái. */
+
 .category-list-card,
 .category-detail-card,
 .category-primary-button,

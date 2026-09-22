@@ -1,0 +1,28 @@
+@model EMua.ViewModels.ReviewCreateViewModel
+@{
+    ViewData["Title"] = "Đánh giá sản phẩm";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">
+    <div class="form-panel narrow-panel"><span class="eyebrow">YOUR EXPERIENCE</span>
+        <h1>Đánh giá sản phẩm</h1>
+        <p>Chia sẻ trải nghiệm để giúp khách hàng khác lựa chọn tốt hơn.</p>
+        <form asp-action="Create" method="post">@Html.AntiForgeryToken()<input asp-for="ProductId"
+                                                                                   type="hidden" /><input asp-for="OrderId" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="field-error"></div><label>Mức đánh giá<select
+            asp-for="Rating">
+            <option value="5">5 sao - Tuyệt vời</option>
+            <option value="4">4 sao - Tốt</option>
+            <option value="3">3 sao - Ổn</option>
+            <option value="2">2 sao - Chưa tốt</option>
+            <option value="1">1 sao - Không hài lòng</option>
+        </select></label><label>Nhận xét<textarea asp-for="Comment" rows="5"
+                                                  placeholder="Bạn cảm nhận thế nào về sản phẩm?"></textarea></label><span
+        asp-validation-for="Comment" class="field-error"></span><button class="customer-button"
+                                                                        type="submit">Gửi đánh giá <i class="bi bi-send"></i></button>
+    </form>
+</div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

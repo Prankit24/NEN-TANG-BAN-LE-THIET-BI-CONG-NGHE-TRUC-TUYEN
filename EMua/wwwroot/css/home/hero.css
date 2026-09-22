@@ -1,6 +1,4 @@
-﻿/* =========================
-   HERO BANNER
-========================= */
+
 
 .hero-banner {
     position: relative;
@@ -13,7 +11,7 @@
 }
 
 
-/* overlay để chữ dễ đọc */
+
 
 .hero-overlay {
     position: absolute;
@@ -22,9 +20,7 @@
 }
 
 
-/* =========================
-   CONTENT
-========================= */
+
 
 .hero-content {
     position: relative;
@@ -38,7 +34,7 @@
 }
 
 
-/* badge */
+
 
 .hero-badge {
     width: fit-content;
@@ -52,7 +48,7 @@
 }
 
 
-/* title */
+
 
 .hero-content h1 {
     margin: 0;
@@ -62,7 +58,7 @@
 }
 
 
-/* description */
+
 
 .hero-content p {
     margin-top: 14px;
@@ -72,7 +68,7 @@
 }
 
 
-/* CTA */
+
 
 .hero-btn {
     width: fit-content;
@@ -98,9 +94,7 @@
     }
 
 
-/* =========================
-   ARROWS
-========================= */
+
 
 .hero-arrow {
     position: absolute;
@@ -132,9 +126,7 @@
 }
 
 
-/* =========================
-   DOTS
-========================= */
+
 
 .hero-dots {
     position: absolute;
@@ -162,9 +154,7 @@
     }
 
 
-/* =========================
-   RESPONSIVE
-========================= */
+
 
 @media (max-width: 992px) {
 

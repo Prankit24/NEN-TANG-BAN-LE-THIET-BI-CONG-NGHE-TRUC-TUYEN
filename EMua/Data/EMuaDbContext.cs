@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using EMua.Models.Database;
 using Microsoft.EntityFrameworkCore;

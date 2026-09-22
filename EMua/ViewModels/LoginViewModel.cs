@@ -1,17 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace EMua.ViewModels;
 
 public class LoginViewModel
 {
     [Required(
-        ErrorMessage = "Vui lòng nhập email hoặc số điện thoại."
+        ErrorMessage = "Vui lòng nhập email."
     )]
     [StringLength(
         100,
-        ErrorMessage = "Email hoặc số điện thoại không hợp lệ."
+        ErrorMessage = "Email không hợp lệ."
     )]
-    public string Identifier { get; set; } = string.Empty;
+    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
 
 
     [Required(
