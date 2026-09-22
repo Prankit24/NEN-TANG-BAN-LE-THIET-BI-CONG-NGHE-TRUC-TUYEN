@@ -1,0 +1,47 @@
+@model EMua.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Xác nhận đơn hàng";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">
+    <partial name="_CheckoutSteps" model="2" />
+    <div class="customer-heading compact">
+        <div><span class="eyebrow">BƯỚC 2 / 3</span>
+            <h1>Kiểm tra đơn hàng</h1>
+            <p>Xác nhận lại thông tin trước khi chuyển sang thanh toán.</p>
+        </div>
+    </div>
+    <form asp-action="Payment" method="post" class="checkout-review-layout">@Html.AntiForgeryToken()
+        <section class="form-panel">
+            <h2>Thông tin nhận hàng</h2>
+            <div class="confirmation-line"><span>Người nhận</span><strong>@Model.RecipientName</strong></div>
+            <div class="confirmation-line"><span>Số điện thoại</span><strong>@Model.RecipientPhone</strong></div>
+            <div class="confirmation-line"><span>Địa chỉ</span><strong>@Model.ShippingAddress</strong></div>
+            <div class="confirmation-line"><span>Ghi chú</span><strong>@(Model.Note ?? "Không có")</strong></div>
+            <h2>Giao hàng và thanh toán</h2>
+            <div class="confirmation-line"><span>Phương thức giao</span><strong>@(Model.ShippingMethod == "EXPRESS" ?
+                            "Giao nhanh 2 giờ - 25.000 đ" : "Giao tiêu chuẩn - Miễn phí")</strong></div>
+                <div class="confirmation-line"><span>Thanh toán</span><strong>@(Model.PaymentMethod == "COD" ? "Thanh toán khi nhận" : Model.PaymentMethod == "MOMO" ? $"Ví điện tử - {Model.PaymentProvider}" : $"Ngân hàng -               {Model.PaymentProvider}")</strong></div>
+                <h2>Giỏ hàng</h2>@foreach (var item in Model.Items) {
+                <div class="summary-line"><span>@item.ProductName x
+                    @item.Quantity</span><strong>@item.LineTotal.ToString("N0") đ</strong></div>
+                }
+            </section>
+            <aside class="summary-card">
+                <h2>Tóm tắt thanh toán</h2>
+                <div class="summary-line"><span>Tạm tính</span><strong>@Model.Subtotal.ToString("N0") đ</strong></div>
+                <div class="summary-line discount"><span>Giảm giá</span><strong>-@Model.Discount.ToString("N0") đ</strong>
+                </div>
+                <div class="summary-line"><span>Vận chuyển</span><strong>@(Model.ShippingFee == 0 ? "Miễn phí" :
+                                        $"{Model.ShippingFee:N0} đ")</strong></div>
+                    <hr />
+                    <div class="summary-total"><span>Cần thanh toán</span><strong>@Model.Total.ToString("N0") đ</strong></div>
+                    <div class="review-actions"><a asp-action="Index" class="customer-button customer-button-light">Quay
+                        lại</a><button class="customer-button" type="submit">Tiếp tục thanh toán <i
+                        class="bi bi-arrow-right"></i></button></div>
+                    </aside>
+                    <input type="hidden" asp-for="RecipientName" /><input type="hidden" asp-for="RecipientPhone" /><input
+                    type="hidden" asp-for="ShippingAddress" /><input type="hidden" asp-for="Note" /><input type="hidden"
+                                                                                                           asp-for="CouponCode" /><input type="hidden" asp-for="ShippingMethod" /><input type="hidden"
+                                                                                                  asp-for="PaymentMethod" /><input type="hidden" asp-for="PaymentProvider" />
+                </form></div>

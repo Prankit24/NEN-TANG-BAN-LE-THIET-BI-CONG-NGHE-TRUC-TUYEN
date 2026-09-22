@@ -1,4 +1,4 @@
-﻿namespace EMua.Models.AI
+namespace EMua.Models.AI
 {
     public class AIReponse
     {

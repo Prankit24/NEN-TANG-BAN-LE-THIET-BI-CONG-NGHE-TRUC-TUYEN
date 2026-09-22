@@ -1,4 +1,4 @@
-﻿@{
+@{
     var displayName = User.Identity?.Name ?? "Tài khoản";
     var avatarLetter = string.IsNullOrWhiteSpace(displayName)
         ? "U"
@@ -24,7 +24,7 @@
         <div class="container-fluid emua-container">
             <div class="main-header-wrapper">
 
-                <a asp-controller="Home" asp-action="Index" class="emua-logo">
+                <a href="#" class="emua-logo" aria-label="Logo EMUA" onclick="return false;">
                     <div class="emua-logo-icon">
                         <i class="bi bi-lightning-charge"></i>
                     </div>
@@ -122,7 +122,7 @@
                         </ul>
                     </div>
 
-                    <a asp-controller="Favorite" asp-action="Index" class="header-action-btn">
+                    <a asp-controller="Product" asp-action="Index" class="header-action-btn">
                         <i class="bi bi-shop"></i>
                         <span>Cửa hàng</span>
                     </a>
@@ -130,7 +130,7 @@
                     <a asp-controller="Cart" asp-action="Index" class="header-action-btn cart-action">
                         <div class="header-icon-wrapper">
                             <i class="bi bi-cart3"></i>
-                            <span class="cart-count">0</span>
+                            @await Component.InvokeAsync("CartSummary")
                         </div>
 
                         <span>Giỏ hàng</span>

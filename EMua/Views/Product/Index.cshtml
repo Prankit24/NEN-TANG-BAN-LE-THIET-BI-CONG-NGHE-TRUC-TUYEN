@@ -1,0 +1,57 @@
+@model EMua.ViewModels.ProductListViewModel
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<div class="customer-page container py-4">
+    <div class="customer-heading">
+        <div><span class="eyebrow">EMUA STORE</span>
+            <h1>Sản phẩm công nghệ</h1>
+            <p>Tìm kiếm thiết bị phù hợp cho công việc và giải trí.</p>
+        </div>
+        <form method="get" class="catalog-tools"><input name="keyword" value="@Model.Keyword"
+                                                            placeholder="Tìm sản phẩm..." /><select name="sort" onchange="this.form.submit()">
+            <option value="">Mới nhất</option>
+            <option value="price-asc" selected="@(Model.Sort == "price-asc")">Giá thấp đến cao</option>
+            <option value="price-desc" selected="@(Model.Sort == "price-desc")">Giá cao đến thấp</option>
+            <option value="name" selected="@(Model.Sort == "name")">Tên A-Z</option>
+        </select><select name="favoritesOnly" onchange="this.form.submit()"><option value="false">Tất cả sản phẩm</option><option value="true" selected="@Model.FavoritesOnly">Yêu thích</option></select><button class="customer-button" type="submit"><i class="bi bi-search"></i></button></form>
+    </div>
+    @if (TempData["Success"] != null) { <div class="customer-alert success">@TempData["Success"]</div> }
+    @if (Model.FavoritesOnly && !User.Identity!.IsAuthenticated) { <div class="customer-alert error">Vui lòng đăng nhập để xem sản phẩm yêu thích.</div> }
+    <div class="product-grid">
+        @foreach (var product in Model.Products)
+        {
+            <article class="product-card"><a asp-action="Details" asp-route-id="@product.ProductId"
+                                             class="product-image">@if (!string.IsNullOrWhiteSpace(product.ImageUrl)) {
+                <img src="@product.ImageUrl" alt="@product.Name" />
+            } else
+            {
+
+                <i class="bi bi-image"></i>
+            }
+        </a>
+        <div class="product-card-body"><small>@product.Brand</small>
+            <h2><a asp-action="Details" asp-route-id="@product.ProductId">@product.Name</a></h2>
+            <strong>@product.Price.ToString("N0") đ</strong><span class="stock">@(product.Stock > 0 ? $"Còn         {product.Stock} sản phẩm" : "Tạm hết hàng")</span>
+            <div class="product-card-actions">
+                <form asp-controller="Cart" asp-action="Add" method="post">@Html.AntiForgeryToken()<input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><input
+                    type="hidden" name="variantId" value="@product.DefaultVariantId" /><input type="hidden"
+                                                                                              name="productId" value="@product.ProductId" /><button class="customer-button" type="submit"
+                                                                          disabled="@(product.Stock == 0)"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button></form>
+                    <form asp-controller="Product" asp-action="Favorite" method="post">@Html.AntiForgeryToken()<input
+                        type="hidden" name="productId" value="@product.ProductId" /><button class="icon-button"
+                                                                                            type="submit" title="Yêu thích"><i class="bi @(product.IsFavorite ? "bi-heart-fill" : "bi-heart")"></i></button></form>
+                          </div>
+                </div>
+            </article>
+        }
+    </div>
+    @if (Model.Products.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-search"></i>
+            <h2>Không tìm thấy sản phẩm</h2>
+            <p>Thử một từ khóa hoặc bộ lọc khác.</p>
+        </div>
+    }
+</div>

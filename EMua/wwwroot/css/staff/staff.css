@@ -1,3 +1,12 @@
+.staff-product-preview {
+  display: block;
+  width: 140px;
+  height: 100px;
+  margin: 8px 0;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #f5f5fb;
+}
 .staff-sidebar .admin-logo-text small {
     color: #9cc5ff;
 }

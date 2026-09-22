@@ -1,0 +1,30 @@
+@model List<EMua.ViewModels.OrderListItemViewModel>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" /><div class="customer-page container py-4">
+<div class="customer-heading">
+    <div><span class="eyebrow">ORDER HISTORY</span>
+        <h1>Đơn hàng của tôi</h1>
+        <p>Theo dõi toàn bộ lịch sử mua sắm.</p>
+    </div>
+</div>@if (Model.Count == 0) {
+<div class="empty-state"><i class="bi bi-receipt"></i>
+    <h2>Chưa có đơn hàng</h2><a asp-controller="Product" asp-action="Index" class="customer-button">Bắt đầu mua
+    sắm</a>
+</div>
+    } else
+{
+
+    <div class="order-list">@foreach (var order in Model) {
+        <a asp-action="Details"
+           asp-route-id="@order.OrderId" class="order-row">
+            <div><strong>#DH-@order.OrderId.ToString("D5")</strong><span>@order.OrderedAt?.ToString("dd/MM/yyyy HH:mm")
+                · @order.ItemCount sản phẩm</span></div>
+                <div><strong>@order.Total.ToString("N0") đ</strong><span class="order-status">@order.Status</span></div><i
+                class="bi bi-chevron-right"></i>
+            </a>
+        }
+    </div>
+}
+</div>

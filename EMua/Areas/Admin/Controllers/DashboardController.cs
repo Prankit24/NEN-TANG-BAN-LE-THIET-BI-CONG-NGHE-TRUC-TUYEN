@@ -1,4 +1,4 @@
-﻿using EMua.Data;
+using EMua.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,6 @@ public class DashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-        // Chỉ tài khoản có quyền "Quản trị viên" được truy cập.
         if (!User.IsInRole("Quản trị viên"))
         {
             return RedirectToAction(
@@ -35,8 +34,6 @@ public class DashboardController : Controller
 
         var firstDayThisYear = new DateTime(now.Year, 1, 1);
         var firstDayNextYear = firstDayThisYear.AddYears(1);
-
-        // Không tính đơn đã hủy vào doanh thu.
         var validOrders = _db.DonHangs.Where(x =>
             x.NgayDat != null &&
             (x.TrangThaiDonHang == null ||
@@ -69,8 +66,6 @@ public class DashboardController : Controller
             x.MaQuyen == 3 &&
             x.NgayTao >= firstDayLastMonth &&
             x.NgayTao < firstDayThisMonth);
-
-        // Doanh thu từng tháng trong năm hiện tại.
         var rawMonthlyRevenue = await validOrders
             .Where(x =>
                 x.NgayDat >= firstDayThisYear &&
@@ -89,8 +84,6 @@ public class DashboardController : Controller
                     .FirstOrDefault(x => x.Month == month)
                     ?.Revenue ?? 0)
             .ToList();
-
-        // Doanh thu theo danh mục.
         var categorySales = await (
             from detail in _db.ChiTietDonHangs
             join order in validOrders
@@ -114,8 +107,6 @@ public class DashboardController : Controller
         var maxCategorySales = categorySales.Count == 0
             ? 1
             : categorySales.Max(x => x.Total);
-
-        // Đơn hàng gần nhất.
         var recentOrdersRaw = await (
             from order in _db.DonHangs
             join user in _db.NguoiDungs

@@ -79,7 +79,8 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(
                 nameof(model.SelectedAvatar),
-                "Ảnh đại diện được chọn không hợp lệ.");
+                "Ảnh đại diện được chọn không hợp lệ."
+            );
         }
 
         if (model.AvatarFile is { Length: > 0 })
@@ -99,14 +100,16 @@ public class AccountController : Controller
             {
                 ModelState.AddModelError(
                     nameof(model.AvatarFile),
-                    "Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.");
+                    "Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP."
+                );
             }
 
             if (model.AvatarFile.Length > 2 * 1024 * 1024)
             {
                 ModelState.AddModelError(
                     nameof(model.AvatarFile),
-                    "Ảnh đại diện không được vượt quá 2 MB.");
+                    "Ảnh đại diện không được vượt quá 2 MB."
+                );
             }
         }
 
@@ -117,7 +120,6 @@ public class AccountController : Controller
         var currentPhone = string.IsNullOrWhiteSpace(user.SoDienThoai)
             ? null
             : NormalizePhone(user.SoDienThoai);
-
         if (!string.IsNullOrWhiteSpace(phone) && phone != currentPhone)
         {
             var phoneExists = await _db.NguoiDungs.AnyAsync(x =>
@@ -128,7 +130,8 @@ public class AccountController : Controller
             {
                 ModelState.AddModelError(
                     nameof(model.PhoneNumber),
-                    "Số điện thoại này đã được sử dụng.");
+                    "Số điện thoại này đã được sử dụng."
+                );
             }
         }
 
@@ -142,15 +145,13 @@ public class AccountController : Controller
                     message = ModelState.Values
                         .SelectMany(x => x.Errors)
                         .Select(x => x.ErrorMessage)
-                        .FirstOrDefault(x =>
-                            !string.IsNullOrWhiteSpace(x))
+                        .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
                         ?? "Dữ liệu hồ sơ chưa hợp lệ."
                 });
             }
 
             return View(model);
         }
-
         if (model.AvatarFile is { Length: > 0 })
         {
             var extension = Path.GetExtension(model.AvatarFile.FileName)
@@ -159,7 +160,8 @@ public class AccountController : Controller
             var avatarFolder = Path.Combine(
                 _environment.WebRootPath,
                 "uploads",
-                "avatars");
+                "avatars"
+            );
 
             Directory.CreateDirectory(avatarFolder);
 
@@ -168,7 +170,8 @@ public class AccountController : Controller
 
             await using var stream = new FileStream(
                 filePath,
-                FileMode.Create);
+                FileMode.Create
+            );
 
             await model.AvatarFile.CopyToAsync(stream);
 
@@ -216,11 +219,10 @@ public class AccountController : Controller
             return null;
 
         return await _db.NguoiDungs
-    .AsSplitQuery()
-    .Include(x => x.MaQuyenNavigation)
-    .Include(x => x.DonHangs)
-    .Include(x => x.YeuThiches)
-    .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
+            .Include(x => x.MaQuyenNavigation)
+            .Include(x => x.DonHangs)
+            .Include(x => x.YeuThiches)
+            .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
     }
 
     private static AccountProfileViewModel ToProfileViewModel(
@@ -238,13 +240,7 @@ public class AccountController : Controller
         };
 
         var isCustomer = databaseRoleName is "KhachHang" or "Khách hàng";
-
-        // Chỉ tính tổng chi tiêu từ đơn đã giao hoặc hoàn thành.
-        var totalSpending = user.DonHangs
-            .Where(x => x.TrangThaiDonHang is "Đã giao" or "Hoàn thành")
-            .Sum(x => x.TongTien ?? 0);
-
-        var membership = GetMembership(totalSpending);
+        var isStaff = databaseRoleName is "NhanVien" or "Nhân viên";
 
         return new AccountProfileViewModel
         {
@@ -259,41 +255,8 @@ public class AccountController : Controller
             OrderCount = user.DonHangs.Count,
             FavoriteCount = user.YeuThiches.Count,
             IsCustomer = isCustomer,
-
-            TotalSpending = totalSpending,
-            MembershipTier = membership.Tier,
-            MembershipCssClass = membership.CssClass,
-            NextTierAmount = membership.NextTierAmount
+            IsStaff = isStaff
         };
-    }
-
-    private static MembershipInfo GetMembership(decimal totalSpending)
-    {
-        if (totalSpending >= 500_000_000m)
-            return new MembershipInfo("Gương đen", "obsidian", null);
-
-        if (totalSpending >= 200_000_000m)
-            return new MembershipInfo(
-                "Kim cương",
-                "diamond",
-                500_000_000m);
-
-        if (totalSpending >= 50_000_000m)
-            return new MembershipInfo(
-                "Vàng",
-                "gold",
-                200_000_000m);
-
-        if (totalSpending >= 10_000_000m)
-            return new MembershipInfo(
-                "Bạc",
-                "silver",
-                50_000_000m);
-
-        return new MembershipInfo(
-            "Đồng",
-            "bronze",
-            10_000_000m);
     }
 
     private static string NormalizePhone(string phone)
@@ -308,12 +271,6 @@ public class AccountController : Controller
 
     private bool IsAjaxRequest()
     {
-        return Request.Headers["X-Requested-With"] ==
-               "XMLHttpRequest";
+        return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
     }
-
-    private sealed record MembershipInfo(
-        string Tier,
-        string CssClass,
-        decimal? NextTierAmount);
 }

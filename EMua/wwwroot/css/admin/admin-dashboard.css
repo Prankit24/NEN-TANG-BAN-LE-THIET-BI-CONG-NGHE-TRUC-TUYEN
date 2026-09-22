@@ -1,4 +1,4 @@
-﻿.dashboard-stat-grid {
+.dashboard-stat-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(190px, 1fr));
     gap: 16px;
