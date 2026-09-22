@@ -8,14 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Admin\Data\**" />
     <Compile Remove="Areas\Staff\Data\**" />
+    <Content Remove="Areas\Admin\Data\**" />
     <Content Remove="Areas\Staff\Data\**" />
+    <EmbeddedResource Remove="Areas\Admin\Data\**" />
     <EmbeddedResource Remove="Areas\Staff\Data\**" />
+    <None Remove="Areas\Admin\Data\**" />
     <None Remove="Areas\Staff\Data\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Areas\Staff\Controllers\" />
     <Folder Include="Areas\Staff\Models\" />
     <Folder Include="MLModels\" />

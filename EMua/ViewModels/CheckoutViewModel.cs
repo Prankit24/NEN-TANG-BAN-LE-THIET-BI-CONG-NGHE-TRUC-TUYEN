@@ -5,41 +5,55 @@ namespace EMua.ViewModels;
 public class CheckoutViewModel
 {
     // =========================================================
-    // THÔNG TIN NHẬN HÀNG
+    // THÔNG TIN NHẬN HÀNG (Đã thêm Alias để tương thích cả 2 tên)
     // =========================================================
 
     [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
     public string FullName { get; set; } = string.Empty;
+    public string RecipientName
+    {
+        get => FullName;
+        set => FullName = value;
+    }
 
     [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
     public string PhoneNumber { get; set; } = string.Empty;
+    public string RecipientPhone
+    {
+        get => PhoneNumber;
+        set => PhoneNumber = value;
+    }
 
     [Required(ErrorMessage = "Vui lòng nhập địa chỉ nhận hàng.")]
     public string Address { get; set; } = string.Empty;
+    public string ShippingAddress
+    {
+        get => Address;
+        set => Address = value;
+    }
 
     public string? Note { get; set; }
 
-
     // =========================================================
-    // SẢN PHẨM
-    // =========================================================
-
-    public List<CheckoutItemViewModel> Items { get; set; } = [];
-
-
-    // =========================================================
-    // KHUYẾN MÃI
+    // PHƯƠNG THỨC GIAO HÀNG & THANH TOÁN
     // =========================================================
 
-    public string? CouponCode { get; set; }
-
-
-    // =========================================================
-    // THANH TOÁN
-    // =========================================================
+    public string ShippingMethod { get; set; } = "Standard";
 
     public string PaymentMethod { get; set; } = "MBBANK";
+    public string PaymentProvider
+    {
+        get => PaymentMethod;
+        set => PaymentMethod = value;
+    }
 
+    // =========================================================
+    // SẢN PHẨM & KHUYẾN MÃI
+    // =========================================================
+
+    public List<CheckoutItemViewModel> Items { get; set; } = new();
+
+    public string? CouponCode { get; set; }
 
     // =========================================================
     // TỔNG TIỀN
@@ -52,23 +66,12 @@ public class CheckoutViewModel
     public decimal Discount { get; set; }
 
     public decimal Total =>
-        Math.Max(
-            0m,
-            Subtotal + ShippingFee - Discount
-        );
+        Math.Max(0m, Subtotal + ShippingFee - Discount);
 
+    public int TotalQuantity => Items.Sum(x => x.Quantity);
 
-    // =========================================================
-    // THÔNG TIN PHỤ
-    // =========================================================
-
-    public int TotalQuantity =>
-        Items.Sum(x => x.Quantity);
-
-    public bool HasItems =>
-        Items.Count > 0;
+    public bool HasItems => Items.Count > 0;
 }
-
 
 // =============================================================
 // SẢN PHẨM TRONG CHECKOUT
@@ -88,10 +91,8 @@ public class CheckoutItemViewModel
 
     public int Quantity { get; set; }
 
-    public decimal LineTotal =>
-        UnitPrice * Quantity;
+    public decimal LineTotal => UnitPrice * Quantity;
 }
-
 
 // =============================================================
 // REQUEST ÁP DỤNG MÃ GIẢM GIÁ
@@ -101,7 +102,6 @@ public class ApplyCouponRequest
 {
     public string? CouponCode { get; set; }
 }
-
 
 // =============================================================
 // REQUEST ĐẶT HÀNG
