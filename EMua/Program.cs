@@ -16,7 +16,7 @@ builder.Services.AddDbContext<EMuaDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
 
-builder.Services.AddScoped<IPasswordHasher<NguoiDung>,
+builder.Services.AddScoped<IPasswordHasher<NguoiDung>>,
     PasswordHasher<NguoiDung>>();
 
 builder.Services
@@ -82,11 +82,15 @@ if (!File.Exists(domainModelPath))
 {
     DomainModelTrainer.Train(domainDataPath, domainModelPath);
 }
+
 if (app.Environment.IsDevelopment())
 {
     await SeedDevelopmentStaffAccountAsync(app);
 }
 
+// =====================================================
+// ERROR HANDLING & MIDDLEWARE
+// =====================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -108,6 +112,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// =====================================================
+// RUN
+// =====================================================
 app.Run();
 
 static async Task SeedDevelopmentStaffAccountAsync(WebApplication app)

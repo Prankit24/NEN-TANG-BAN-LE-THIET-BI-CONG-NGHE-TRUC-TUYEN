@@ -36,7 +36,6 @@
                 <p class="form-subtitle">Tham gia cộng đồng hơn 500K khách hàng.</p>
 
                 <div class="social-auth">
-
                     <a asp-controller="Auth"
                        asp-action="ExternalLogin"
                        asp-route-provider="Google"
@@ -52,7 +51,6 @@
                         <i class="bi bi-facebook"></i>
                         Facebook
                     </a>
-
                 </div>
 
                 <div class="auth-divider">
@@ -63,6 +61,7 @@
 
                 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
+                <!-- FULL NAME -->
                 <div class="auth-field">
                     <i class="bi bi-person"></i>
                     <input asp-for="FullName"
@@ -71,22 +70,36 @@
                 </div>
                 <span asp-validation-for="FullName"></span>
 
-                <div class="auth-field">
-                    <i class="bi bi-telephone"></i>
-                    <input asp-for="PhoneNumber"
-                           autocomplete="tel"
-                           placeholder="Số điện thoại" />
+                <!-- EMAIL -->
+                <div class="field-group">
+                    <label asp-for="Email" class="field-label">Email</label>
+                    <div class="auth-field">
+                        <i class="fa-solid fa-envelope field-icon" aria-hidden="true"></i>
+                        <input asp-for="Email"
+                               type="email"
+                               placeholder="abc@gmail.com"
+                               autocomplete="email"
+                               aria-describedby="Email-error" />
+                    </div>
+                    <span asp-validation-for="Email" id="Email-error" class="field-validation-error"></span>
                 </div>
-                <span asp-validation-for="PhoneNumber"></span>
 
-                <div class="auth-field">
-                    <i class="bi bi-envelope"></i>
-                    <input asp-for="Email"
-                           autocomplete="email"
-                           placeholder="Địa chỉ email" />
+                <!-- PHONE -->
+                <div class="field-group">
+                    <label asp-for="PhoneNumber" class="field-label">Số điện thoại</label>
+                    <div class="auth-field">
+                        <i class="fa-solid fa-phone field-icon" aria-hidden="true"></i>
+                        <input asp-for="PhoneNumber"
+                               type="tel"
+                               placeholder="0xxx xxx xxx"
+                               autocomplete="tel"
+                               inputmode="tel"
+                               aria-describedby="PhoneNumber-error" />
+                    </div>
+                    <span asp-validation-for="PhoneNumber" id="PhoneNumber-error" class="field-validation-error"></span>
                 </div>
-                <span asp-validation-for="Email"></span>
 
+                <!-- PASSWORD -->
                 <div class="auth-field">
                     <i class="bi bi-lock"></i>
                     <input asp-for="Password"
@@ -95,6 +108,7 @@
                 </div>
                 <span asp-validation-for="Password"></span>
 
+                <!-- CONFIRM PASSWORD -->
                 <div class="auth-field">
                     <i class="bi bi-lock"></i>
                     <input asp-for="ConfirmPassword"
