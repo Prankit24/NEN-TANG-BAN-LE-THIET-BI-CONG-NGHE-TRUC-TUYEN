@@ -16,8 +16,8 @@ builder.Services.AddDbContext<EMuaDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
 
-builder.Services.AddScoped<IPasswordHasher<NguoiDung>>,
-    PasswordHasher<NguoiDung>>();
+// Đăng ký Service PasswordHasher cho NguoiDung
+builder.Services.AddScoped<IPasswordHasher<NguoiDung>, PasswordHasher<NguoiDung>>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

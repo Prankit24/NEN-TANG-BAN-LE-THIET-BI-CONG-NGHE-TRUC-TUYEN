@@ -64,37 +64,7 @@ public class CartItemViewModel
     public decimal LineTotal => UnitPrice * Quantity;
 }
 
-public class CheckoutViewModel
-{
-    public List<CartItemViewModel> Items { get; set; } = [];
-    public List<CouponOptionViewModel> AvailableCoupons { get; set; } = [];
-    public decimal Subtotal => Items.Sum(x => x.LineTotal);
-    public decimal Discount { get; set; }
-    public string ShippingMethod { get; set; } = "STANDARD";
-    public decimal ShippingFee => ShippingMethod == "EXPRESS" ? 25000 : 0;
-    public decimal Total => Math.Max(0, Subtotal - Discount + ShippingFee);
-    public string? CouponCode { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập họ tên người nhận.")]
-    [StringLength(100)]
-    public string RecipientName { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [StringLength(15)]
-    public string RecipientPhone { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Vui lòng nhập địa chỉ giao hàng.")]
-    [StringLength(255)]
-    public string ShippingAddress { get; set; } = string.Empty;
-
-    [StringLength(255)]
-    public string? Note { get; set; }
-
-    [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
-    public string PaymentMethod { get; set; } = "COD";
-
-    public string? PaymentProvider { get; set; }
-}
 
 public class CouponOptionViewModel
 {

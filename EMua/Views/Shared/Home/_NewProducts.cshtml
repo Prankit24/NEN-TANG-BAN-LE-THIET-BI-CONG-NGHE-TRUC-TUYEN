@@ -1,0 +1,330 @@
+﻿@model IEnumerable<EMua.Models.Database.SanPham>
+
+
+<section class="new-product-section"
+         id="new-products">
+
+    <div class="new-product-container">
+
+        <div class="new-product-heading">
+
+            <span>
+                MỚI TẠI EMUA
+            </span>
+
+            <h2>
+                Sản phẩm mới
+            </h2>
+
+            <p>
+                Cập nhật những thiết bị công nghệ mới tại EMUA.
+            </p>
+
+        </div>
+
+
+        <div class="new-product-grid">
+
+            @foreach (var item in Model)
+            {
+                var variant = item.BienTheSanPhams
+                .Where(x => x.SoLuong > 0)
+                .OrderBy(x => x.Gia)
+                .FirstOrDefault();
+
+
+                var photo = item.SanPhamHinhAnhs
+                .OrderByDescending(x => x.LaAnhChinh)
+                .ThenBy(x => x.ThuTu)
+                .FirstOrDefault();
+
+
+                var image =
+                photo?.DuongDanAnh
+                ?? variant?.HinhAnh
+                ?? "/images/no-image.png";
+
+
+                var price =
+                variant?.Gia
+                ?? item.GiaGoc
+                ?? 0;
+
+
+                <article class="new-product-card">
+
+                    <div class="new-product-image">
+
+                        <span class="new-product-badge">
+                            NEW
+                        </span>
+
+                        <img src="@image"
+                             alt="@item.TenSanPham" />
+
+                    </div>
+
+
+                    <div class="new-product-body">
+
+                        <div class="new-product-brand">
+
+                            @item.MaThuongHieuNavigation?.TenThuongHieu
+
+                        </div>
+
+
+                        <h3>
+                            @item.TenSanPham
+                        </h3>
+
+
+                        <div class="new-product-variant">
+
+                            @variant?.PhienBan
+
+                            @if (!string.IsNullOrWhiteSpace(variant?.MauSac))
+                            {
+                                <span>
+                                    · @variant.MauSac
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <div class="new-product-price">
+
+                            @price.ToString("N0")₫
+
+                        </div>
+
+
+                        @if (variant != null)
+                        {
+                            <button type="button"
+                                    class="new-product-cart"
+                                    onclick="homeAddCart(@variant.MaBienThe)">
+
+                                <i class="bi bi-cart-plus"></i>
+
+                                Thêm vào giỏ
+
+                            </button>
+                        }
+
+                    </div>
+
+                </article>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .new-product-section {
+        padding: 75px 0;
+        background: linear-gradient( 180deg, #f8f8fc, #f1f1f8 );
+    }
+
+
+    .new-product-container {
+        width: min(1400px,92%);
+        margin: auto;
+    }
+
+
+    .new-product-heading {
+        margin-bottom: 28px;
+    }
+
+
+        .new-product-heading > span {
+            display: block;
+            color: #625db1;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+
+        .new-product-heading h2 {
+            margin: 7px 0 5px;
+            color: #17172a;
+            font-size: 30px;
+        }
+
+
+        .new-product-heading p {
+            margin: 0;
+            color: #77788c;
+            font-size: 14px;
+        }
+
+
+    .new-product-grid {
+        display: grid;
+        grid-template-columns: repeat(4,minmax(0,1fr));
+        gap: 18px;
+    }
+
+
+    .new-product-card {
+        min-width: 0;
+        overflow: hidden;
+        border-radius: 19px;
+        border: 1px solid rgba(77,74,141,.09);
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(55,51,105,.04);
+        transition: .3s;
+    }
+
+
+        .new-product-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 18px 45px rgba(72,67,137,.13);
+        }
+
+
+    .new-product-image {
+        position: relative;
+        width: 100%;
+        height: 235px;
+        padding: 20px;
+        overflow: hidden;
+        background: linear-gradient( 145deg, #ffffff, #f0f0f7 );
+    }
+
+
+        .new-product-image img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            transition: .35s;
+        }
+
+
+    .new-product-card:hover
+    .new-product-image img {
+        transform: scale(1.06);
+    }
+
+
+    .new-product-badge {
+        position: absolute;
+        top: 13px;
+        left: 13px;
+        z-index: 2;
+        padding: 6px 10px;
+        border-radius: 7px;
+        color: #fff;
+        background: linear-gradient( 135deg, #5b8cff, #7567e8 );
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+
+    .new-product-body {
+        padding: 17px;
+    }
+
+
+    .new-product-brand {
+        color: #85869a;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+
+    .new-product-body h3 {
+        min-height: 44px;
+        margin: 6px 0 8px;
+        color: #202030;
+        font-size: 15px;
+        line-height: 1.45;
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+
+    .new-product-variant {
+        min-height: 20px;
+        margin-bottom: 8px;
+        color: #85869a;
+        font-size: 11px;
+    }
+
+
+    .new-product-price {
+        margin-bottom: 14px;
+        color: #d83d55;
+        font-size: 19px;
+        font-weight: 760;
+    }
+
+
+    .new-product-cart {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: 9px;
+        color: #fff;
+        cursor: pointer;
+        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+        transition: .25s;
+    }
+
+
+        .new-product-cart:hover {
+            transform: translateY(-2px);
+            background: linear-gradient( 135deg, #5d58a6, #716ad0 );
+        }
+
+
+    @@media(max-width:1050px) {
+
+        .new-product-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+
+    @@media(max-width:750px) {
+
+        .new-product-grid {
+            grid-template-columns: repeat(2,1fr);
+            gap: 12px;
+        }
+
+
+        .new-product-image {
+            height: 180px;
+            padding: 15px;
+        }
+    }
+
+
+    @@media(max-width:450px) {
+
+        .new-product-image {
+            height: 155px;
+        }
+
+
+        .new-product-body {
+            padding: 12px;
+        }
+    }
+
+</style>

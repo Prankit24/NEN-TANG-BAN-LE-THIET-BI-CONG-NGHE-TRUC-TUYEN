@@ -1,3 +1,151 @@
+﻿@model IEnumerable<EMua.Models.Database.ThuongHieu>
 
-@{
-}
+
+<section class="emua-brands-section">
+
+    <div class="emua-brands-container">
+
+        <div class="emua-brands-heading">
+
+            <span>
+                THƯƠNG HIỆU
+            </span>
+
+            <h2>
+                Thương hiệu nổi bật
+            </h2>
+
+            <p>
+                Những thương hiệu công nghệ được yêu thích tại EMUA.
+            </p>
+
+        </div>
+
+
+        <div class="emua-brands-grid">
+
+            @foreach (var item in Model)
+            {
+                <div class="emua-brand-card">
+
+                    @if (!string.IsNullOrWhiteSpace(item.Logo))
+                    {
+                        <img src="@item.Logo"
+                             alt="@item.TenThuongHieu" />
+                    }
+                    else
+                    {
+                        <strong>
+                            @item.TenThuongHieu
+                        </strong>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .emua-brands-section {
+        padding: 70px 0 90px;
+        background: #fff;
+    }
+
+
+    .emua-brands-container {
+        width: min(1400px,92%);
+        margin: auto;
+    }
+
+
+    .emua-brands-heading {
+        margin-bottom: 28px;
+    }
+
+
+        .emua-brands-heading span {
+            display: block;
+            color: #625db1;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+
+        .emua-brands-heading h2 {
+            margin: 7px 0 5px;
+            color: #17172a;
+            font-size: 30px;
+        }
+
+
+        .emua-brands-heading p {
+            margin: 0;
+            color: #77788d;
+            font-size: 14px;
+        }
+
+
+    .emua-brands-grid {
+        display: grid;
+        grid-template-columns: repeat(6,1fr);
+        gap: 15px;
+    }
+
+
+    .emua-brand-card {
+        min-height: 105px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        border: 1px solid rgba(77,74,141,.09);
+        background: #fafafd;
+        transition: .3s;
+    }
+
+
+        .emua-brand-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(91,140,255,.30);
+            box-shadow: 0 15px 35px rgba(72,67,137,.10);
+        }
+
+
+        .emua-brand-card img {
+            display: block;
+            max-width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+
+        .emua-brand-card strong {
+            color: #252538;
+            font-size: 17px;
+        }
+
+
+    @@media(max-width:950px) {
+
+        .emua-brands-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+
+    @@media(max-width:550px) {
+
+        .emua-brands-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+</style>

@@ -1,66 +1,529 @@
+@using System.Globalization
 @model EMua.ViewModels.CheckoutViewModel
+
 @{
-    ViewData["Title"] = "Đặt hàng";
+    ViewData["Title"] = "Thanh toán";
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4"><a class="back-link" asp-controller="Cart" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại giỏ hàng</a>
-    <div class="customer-heading compact"><div><span class="eyebrow">BƯỚC 1 / 3</span><h1>Thông tin đặt hàng</h1><p>Nhập thông tin nhận hàng và chọn mã giảm giá.</p></div></div>
-    <partial name="_CheckoutSteps" model="1" />
-    @if (TempData["Success"] != null)
-    {
-        <div class="customer-alert success">@TempData["Success"]</div>
-    }
-    <div asp-validation-summary="ModelOnly" class="customer-alert error"></div>
-    <div class="checkout-layout">
-        <form asp-action="Review" method="post" class="form-panel">@Html.AntiForgeryToken()<h2>Thông tin giao hàng</h2>
-            <label>Họ tên người nhận<input asp-for="RecipientName" /></label><span asp-validation-for="RecipientName" class="field-error"></span>
-            <label>Số điện thoại<input asp-for="RecipientPhone" /></label><span asp-validation-for="RecipientPhone" class="field-error"></span>
-            <label>Địa chỉ giao hàng<textarea asp-for="ShippingAddress" rows="3"></textarea></label><span asp-validation-for="ShippingAddress" class="field-error"></span>
-            <label>Ghi chú<textarea asp-for="Note" rows="2" placeholder="Không bắt buộc"></textarea></label>
-            <section class="checkout-section"><h2><i class="bi bi-truck"></i> Phương thức giao hàng</h2><div class="choice-grid"><label class="choice-card"><input asp-for="ShippingMethod" value="STANDARD" type="radio" /><span class="choice-icon"><i class="bi bi-truck"></i></span><span class="choice-copy"><strong>Giao tiêu chuẩn</strong><small>Nhận hàng trong 2–4 ngày</small></span><strong class="choice-price free">Miễn phí</strong></label><label class="choice-card"><input asp-for="ShippingMethod" value="EXPRESS" type="radio" /><span class="choice-icon"><i class="bi bi-clock"></i></span><span class="choice-copy"><strong>Giao nhanh 2 giờ</strong><small>Áp dụng tại HCM &amp; HN</small></span><strong class="choice-price">25.000 đ</strong></label></div></section>
-            <section class="checkout-section"><h2><i class="bi bi-credit-card"></i> Phương thức thanh toán</h2><div class="choice-grid payment-grid"><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="COD" type="radio" /><i class="bi bi-cash-stack"></i><strong>COD</strong></label><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="MOMO" type="radio" /><i class="bi bi-wallet2"></i><strong>Ví điện tử</strong></label><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="BANK" type="radio" /><i class="bi bi-credit-card"></i><strong>Ngân hàng</strong></label></div><div class="provider-panel" data-provider-group="MOMO"><strong>Chọn ví điện tử liên kết</strong><div class="provider-list"><label><input asp-for="PaymentProvider" value="MOMO" type="radio" /> MoMo</label><label><input asp-for="PaymentProvider" value="ZALOPAY" type="radio" /> ZaloPay</label><label><input asp-for="PaymentProvider" value="APPLEPAY" type="radio" /> Apple Pay</label></div></div><div class="provider-panel" data-provider-group="BANK"><strong>Chọn ngân hàng liên kết</strong><div class="provider-list"><label><input asp-for="PaymentProvider" value="VIETCOMBANK" type="radio" /> Vietcombank</label><label><input asp-for="PaymentProvider" value="VIETINBANK" type="radio" /> VietinBank</label><label><input asp-for="PaymentProvider" value="MB" type="radio" /> MB Bank</label><label><input asp-for="PaymentProvider" value="TPBANK" type="radio" /> TPBank</label></div></div><span asp-validation-for="PaymentProvider" class="field-error"></span></section>
-            <input type="hidden" asp-for="CouponCode" />
-            <button class="customer-button" type="submit">Tiếp tục xác nhận <i class="bi bi-arrow-right"></i></button>
-        </form>
-    <aside class="summary-card">
-        <h2>Mã giảm giá</h2>
-        <form asp-action="ApplyCoupon" method="post" class="coupon-form">@Html.AntiForgeryToken()<input type="hidden" name="ShippingMethod" id="coupon-shipping-method" value="@Model.ShippingMethod" /><input type="hidden" name="PaymentMethod" id="coupon-payment-method" value="@Model.PaymentMethod" /><input type="hidden" name="PaymentProvider" id="coupon-payment-provider" value="@Model.PaymentProvider" /><select
-            asp-for="CouponCode">
-            <option value="">Chọn mã giảm giá</option>@foreach (var coupon in Model.AvailableCoupons)
-            {
-                var fullCouponText = $"{coupon.Code} - {coupon.DiscountText}{(coupon.MinimumOrder.HasValue ? $" (đơn từ {coupon.MinimumOrder.Value:N0} đ)" : "")}";
-                var displayCouponText = fullCouponText.Length > 34 ? $"{fullCouponText[..31]}..." : fullCouponText;
-                <option value="@coupon.Code" title="@fullCouponText">@displayCouponText</option>
-            }
-        </select><button class="customer-button" type="submit">Áp dụng</button></form>
-        <hr />@foreach (var item in Model.Items) {
-        <div class="summary-line"><span>@item.ProductName x
-            @item.Quantity</span><strong>@item.LineTotal.ToString("N0") đ</strong></div>
-        }
-        <div class="summary-line"><span>Tạm tính</span><span>@Model.Subtotal.ToString("N0") đ</span></div>
-        <div class="summary-line discount"><span>Giảm giá</span><span>-@Model.Discount.ToString("N0") đ</span></div>
-        <div class="summary-line"><span>Vận chuyển</span><span>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</span></div>
-        <hr />
-        <div class="summary-total"><span>Cần thanh toán</span><strong>@Model.Total.ToString("N0") đ</strong></div>
-    </aside>
-</div>
-</div>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        var paymentInputs = document.querySelectorAll('input[name="PaymentMethod"]');
-        var providerPanels = document.querySelectorAll('[data-provider-group]');
-        function updatePaymentOptions() {
-            var method = document.querySelector('input[name="PaymentMethod"]:checked')?.value || 'COD';
-            var shipping = document.querySelector('input[name="ShippingMethod"]:checked')?.value || 'STANDARD';
-            document.getElementById('coupon-payment-method').value = method;
-            document.getElementById('coupon-shipping-method').value = shipping;
-            providerPanels.forEach(function (panel) { var visible = panel.dataset.providerGroup === method; panel.hidden = !visible; panel.querySelectorAll('input').forEach(function (input) { input.disabled = !visible; }); });
-            var provider = document.querySelector('input[name="PaymentProvider"]:checked');
-            document.getElementById('coupon-payment-provider').value = provider ? provider.value : '';
-        }
-        paymentInputs.forEach(function (input) { input.addEventListener('change', updatePaymentOptions); });
-        document.querySelectorAll('input[name="ShippingMethod"], input[name="PaymentProvider"]').forEach(function (input) { input.addEventListener('change', updatePaymentOptions); });
-        updatePaymentOptions();
-    </script>
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
 }
+
+<link rel="stylesheet" href="~/css/home/checkout.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/home/checkout-payment.css" asp-append-version="true" />
+
+<div class="checkout-page"
+     data-subtotal="@Model.Subtotal.ToString(CultureInfo.InvariantCulture)"
+     data-shipping="@Model.ShippingFee.ToString(CultureInfo.InvariantCulture)">
+
+    @Html.AntiForgeryToken()
+
+    <div class="container emua-container">
+
+        <div class="checkout-breadcrumb">
+            <a asp-controller="Home" asp-action="Index">
+                Trang chủ
+            </a>
+
+            <i class="bi bi-chevron-right"></i>
+
+            <span>Thanh toán</span>
+        </div>
+
+        <h1>Thanh toán</h1>
+
+
+        @if (!Model.Items.Any())
+        {
+            <div class="checkout-empty">
+
+                <i class="bi bi-cart-x"></i>
+
+                <h3>Giỏ hàng đang trống</h3>
+
+                <p>
+                    Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-dark">
+
+                    Tiếp tục mua sắm
+
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div id="checkoutAlert"></div>
+
+            <div class="checkout-grid">
+
+                <!-- ==================================================
+                     BÊN TRÁI
+                =================================================== -->
+
+                <section class="checkout-left">
+
+
+                    <!-- THÔNG TIN NHẬN HÀNG -->
+
+                    <div class="checkout-card">
+
+                        <h2>
+                            Thông tin nhận hàng
+                        </h2>
+
+                        <div class="form-grid">
+
+                            <div>
+
+                                <label for="fullName">
+                                    Họ và tên
+                                    <span>*</span>
+                                </label>
+
+                                <input id="fullName"
+                                       value="@Model.FullName"
+                                       placeholder="Nhập họ và tên" />
+
+                            </div>
+
+
+                            <div>
+
+                                <label for="phoneNumber">
+                                    Số điện thoại
+                                    <span>*</span>
+                                </label>
+
+                                <input id="phoneNumber"
+                                       value="@Model.PhoneNumber"
+                                       placeholder="Nhập số điện thoại" />
+
+                            </div>
+
+
+                            <div class="full-width">
+
+                                <label for="address">
+                                    Địa chỉ nhận hàng
+                                    <span>*</span>
+                                </label>
+
+                                <input id="address"
+                                       value="@Model.Address"
+                                       placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SẢN PHẨM -->
+
+                    <div class="checkout-card product-card">
+
+                        <h2>
+                            Sản phẩm sẽ đặt mua
+
+                            <small>
+                                (@Model.Items.Sum(x => x.Quantity) sản phẩm)
+                            </small>
+                        </h2>
+
+
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="checkout-product">
+
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         alt="@item.ProductName" />
+                                }
+                                else
+                                {
+                                    <div class="product-image-placeholder">
+
+                                        <i class="bi bi-image"></i>
+
+                                    </div>
+                                }
+
+
+                                <div class="product-info">
+
+                                    <strong>
+                                        @item.ProductName
+                                    </strong>
+
+                                    <span>
+                                        @item.VariantName
+                                    </span>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        Đơn giá
+                                    </span>
+
+                                    <strong>
+                                        @item.UnitPrice.ToString("N0") ₫
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        Số lượng
+                                    </span>
+
+                                    <strong>
+                                        x @item.Quantity
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="line-total">
+
+                                    <span>
+                                        Thành tiền
+                                    </span>
+
+                                    <strong>
+                                        @item.LineTotal.ToString("N0") ₫
+                                    </strong>
+
+                                </div>
+
+                            </div>
+                        }
+
+                </div>
+
+
+                <!-- MÃ GIẢM GIÁ -->
+
+                <div class="checkout-card coupon-card">
+
+                    <h2>
+                        Mã giảm giá
+                    </h2>
+
+                    <div class="coupon-row">
+
+                        <i class="bi bi-ticket-perforated"></i>
+
+                        <input id="couponCode"
+                               placeholder="Nhập mã giảm giá" />
+
+                        <button id="applyCoupon"
+                                type="button">
+
+                            Áp dụng
+
+                        </button>
+
+                    </div>
+
+                    <small id="couponMessage"></small>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- ==================================================
+                 BÊN PHẢI
+            =================================================== -->
+
+            <aside class="checkout-right">
+
+
+                <!-- PAYMENT -->
+
+                <div class="checkout-card payment-card">
+
+                    <h2>
+                        Phương thức thanh toán
+                    </h2>
+
+
+                    <label class="payment-option active">
+
+                        <input type="radio"
+                               name="paymentMethod"
+                               value="MBBANK"
+                               checked />
+
+                        <i class="bi bi-bank"></i>
+
+                        <span>
+
+                            <strong>
+                                MB Bank QR
+                            </strong>
+
+                            <small>
+                                Quét mã để chuyển khoản, tự điền số tiền và nội dung
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="payment-option">
+
+                        <input type="radio"
+                               name="paymentMethod"
+                               value="MOMO" />
+
+                        <i class="bi bi-wallet2"></i>
+
+                        <span>
+
+                            <strong>
+                                Ví điện tử MoMo
+                            </strong>
+
+                            <small>
+                                Thanh toán qua ứng dụng MoMo
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="payment-option">
+
+                        <input type="radio"
+                               name="paymentMethod"
+                               value="CARD" />
+
+                        <i class="bi bi-credit-card"></i>
+
+                        <span>
+
+                            <strong>
+                                Thẻ ngân hàng
+                            </strong>
+
+                            <small>
+                                Demo thanh toán qua thẻ ngân hàng
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="payment-option">
+
+                        <input type="radio"
+                               name="paymentMethod"
+                               value="COD" />
+
+                        <i class="bi bi-cash-stack"></i>
+
+                        <span>
+
+                            <strong>
+                                Thanh toán khi nhận hàng (COD)
+                            </strong>
+
+                            <small>
+                                Thanh toán bằng tiền mặt khi nhận hàng
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <!-- NOTE -->
+
+                <div class="checkout-card">
+
+                    <h2>
+                        Ghi chú đơn hàng
+                    </h2>
+
+                    <textarea id="note"
+                              rows="3"
+                              placeholder="Nhập ghi chú (nếu có)..."></textarea>
+
+                </div>
+
+
+                <!-- SUMMARY -->
+
+                <div class="checkout-card summary-card">
+
+                    <h2>
+                        Tổng thanh toán
+                    </h2>
+
+
+                    <div>
+
+                        <span>
+                            Tạm tính
+                        </span>
+
+                        <strong id="subtotalText">
+                            @Model.Subtotal.ToString("N0") ₫
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Giảm giá
+                        </span>
+
+                        <strong id="discountText">
+                            -0 ₫
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Phí vận chuyển
+                        </span>
+
+                        <strong id="shippingText">
+
+                            @(Model.ShippingFee == 0
+                                                        ? "Miễn phí"
+                                                        : $"{Model.ShippingFee:N0} ₫")
+
+                        </strong>
+
+                        </div>
+
+
+                        <div class="grand-total">
+
+                            <span>
+                                Tổng thanh toán
+                            </span>
+
+                            <strong id="totalText">
+                                @Model.Total.ToString("N0") ₫
+                            </strong>
+
+                        </div>
+
+
+                        <button id="placeOrder"
+                                type="button">
+
+                            Đặt hàng
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </aside>
+
+            </div>
+                }
+
+    </div>
+
+</div>
+
+
+
+<!-- ==================================================
+     PAYMENT MODAL
+=================================================== -->
+
+<div class="modal fade"
+     id="paymentGuideModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Quét mã để thanh toán
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+
+            <div class="modal-body text-center">
+
+                <img id="paymentQrImage"
+                     class="payment-qr-image"
+                     alt="Mã QR thanh toán" />
+
+
+                <h5 id="paymentGuideTitle"
+                    class="mt-3">
+                </h5>
+
+
+                <p id="paymentGuideText"
+                   class="mb-0 text-muted">
+                </p>
+
+
+                <div id="paymentTransferNote"
+                     class="payment-transfer-note">
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <a id="orderSuccessLink"
+                   class="btn btn-dark"
+                   asp-controller="Account"
+                   asp-action="Profile">
+
+                    Xem hồ sơ đơn hàng
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

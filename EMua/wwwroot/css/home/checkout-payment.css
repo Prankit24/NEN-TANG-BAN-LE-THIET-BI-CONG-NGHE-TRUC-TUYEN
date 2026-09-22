@@ -1,0 +1,196 @@
+﻿/* =========================================================
+   PAYMENT OPTIONS
+========================================================= */
+
+.payment-card {
+    overflow: hidden;
+}
+
+.payment-option {
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px 42px minmax(0, 1fr);
+    gap: 11px;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 14px;
+    border: 1px solid #e5e4ed;
+    border-radius: 13px;
+    background: #fbfbfd;
+    cursor: pointer;
+    transition: border-color 0.22s ease, background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+    .payment-option:last-child {
+        margin-bottom: 0;
+    }
+
+    .payment-option:hover {
+        transform: translateY(-2px);
+        border-color: rgba(98, 93, 177, 0.28);
+        box-shadow: 0 8px 22px rgba(67, 62, 127, 0.07);
+    }
+
+    .payment-option.active {
+        border-color: #716bcb;
+        background: linear-gradient( 135deg, #f5f4ff, #f0effc );
+        box-shadow: 0 0 0 3px rgba(98, 93, 177, 0.06);
+    }
+
+    .payment-option input[type="radio"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #625db1;
+        cursor: pointer;
+    }
+
+    .payment-option > i {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        color: #625db1;
+        background: #eeedf9;
+        font-size: 19px;
+        transition: color 0.22s ease, background 0.22s ease;
+    }
+
+    .payment-option.active > i {
+        color: white;
+        background: linear-gradient( 135deg, #4d4a8d, #6c66d5 );
+    }
+
+    .payment-option span {
+        min-width: 0;
+    }
+
+    .payment-option strong {
+        display: block;
+        margin-bottom: 3px;
+        color: #29293b;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .payment-option small {
+        display: block;
+        color: #858698;
+        font-size: 10px;
+        line-height: 1.45;
+    }
+
+
+/* =========================================================
+   QR PAYMENT MODAL
+========================================================= */
+
+#paymentGuideModal .modal-content {
+    overflow: hidden;
+    border: 0;
+    border-radius: 22px;
+    box-shadow: 0 25px 75px rgba(22, 22, 45, 0.24);
+}
+
+#paymentGuideModal .modal-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #ecebf2;
+    background: linear-gradient( 135deg, #f8f8fd, #f1f0fb );
+}
+
+#paymentGuideModal .modal-title {
+    color: #252538;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+#paymentGuideModal .modal-body {
+    padding: 25px 22px;
+}
+
+#paymentGuideModal .modal-footer {
+    padding: 15px 20px 20px;
+    border-top: 1px solid #ecebf2;
+}
+
+.payment-qr-image {
+    width: min(260px, 90%);
+    aspect-ratio: 1 / 1;
+    padding: 9px;
+    border-radius: 18px;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid #e3e2eb;
+    box-shadow: 0 12px 30px rgba(56, 52, 108, 0.10);
+}
+
+#paymentGuideTitle {
+    color: #252538;
+    font-weight: 700;
+}
+
+#paymentGuideText {
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.payment-transfer-note {
+    margin-top: 15px;
+    padding: 12px 14px;
+    border-radius: 11px;
+    color: #56566a;
+    background: #f4f3fb;
+    border: 1px dashed rgba(98, 93, 177, 0.22);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   MODAL BUTTON
+========================================================= */
+
+#orderSuccessLink {
+    min-height: 43px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+    font-size: 12px;
+    font-weight: 650;
+}
+
+    #orderSuccessLink:hover {
+        color: white;
+        box-shadow: 0 8px 22px rgba(77, 74, 141, 0.25);
+    }
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 500px) {
+
+    .payment-option {
+        grid-template-columns: 18px 37px minmax(0, 1fr);
+        gap: 9px;
+        padding: 12px;
+    }
+
+        .payment-option > i {
+            width: 37px;
+            height: 37px;
+            font-size: 17px;
+        }
+
+    .payment-qr-image {
+        width: min(230px, 90%);
+    }
+}

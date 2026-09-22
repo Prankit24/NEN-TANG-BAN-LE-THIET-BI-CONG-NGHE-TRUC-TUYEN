@@ -133,29 +133,29 @@
     min-width: 70px;
 }
 
-.staff-dashboard-link i {
-    font-size: 21px;
+    .staff-dashboard-link i {
+        font-size: 21px;
+    }
+
+.header-action-btn:hover {
+    color: white;
+    opacity: 0.85;
 }
 
-    .header-action-btn:hover {
-        color: white;
-        opacity: 0.85;
-    }
+.header-action-btn i {
+    font-size: 24px;
+}
 
-    .header-action-btn i {
-        font-size: 24px;
-    }
+.header-action-btn > span {
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-    .header-action-btn > span {
-        max-width: 145px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .header-action-btn.dropdown-toggle::after {
-        display: none;
-    }
+.header-action-btn.dropdown-toggle::after {
+    display: none;
+}
 
 
 
@@ -369,5 +369,165 @@
 
     .mobile-menu-button {
         display: block;
+    }
+}
+
+/* Phản hồi khi thêm sản phẩm: chỉ icon giỏ +1, không khung/toast. */
+.cart-action .header-icon-wrapper::after {
+    content: "+1";
+    position: absolute;
+    top: -17px;
+    right: -25px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(7px) scale(.85);
+    pointer-events: none;
+}
+
+.cart-action.cart-added-feedback .header-icon-wrapper {
+    animation: emuaCartIconPop .55s ease;
+}
+
+    .cart-action.cart-added-feedback .header-icon-wrapper::after {
+        animation: emuaCartPlusOne .8s ease forwards;
+    }
+
+@keyframes emuaCartIconPop {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.2);
+    }
+}
+
+@keyframes emuaCartPlusOne {
+    0% {
+        opacity: 0;
+        transform: translateY(7px) scale(.85);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-13px) scale(1);
+    }
+}
+
+
+/* =========================
+   FLOATING CART
+   Giỏ hàng cố định góc phải dưới, nằm phía trên nút AI.
+========================= */
+.emua-floating-cart {
+    position: fixed;
+    right: 28px;
+    bottom: 110px;
+    z-index: 9992;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #5b56bd;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(52, 48, 132, .32);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+    .emua-floating-cart:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 13px 32px rgba(52, 48, 132, .42);
+    }
+
+    .emua-floating-cart > i {
+        font-size: 25px;
+        line-height: 1;
+    }
+
+    .emua-floating-cart .floating-cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        display: none;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        background: #ff1637;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .emua-floating-cart.cart-added-feedback {
+        animation: emuaFloatingCartPop .55s ease;
+    }
+
+    .emua-floating-cart::after {
+        content: "+1";
+        position: absolute;
+        top: -18px;
+        right: -10px;
+        color: #ff1637;
+        font-size: 13px;
+        font-weight: 900;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .emua-floating-cart.cart-added-feedback::after {
+        animation: emuaFloatingPlusOne .8s ease forwards;
+    }
+
+@keyframes emuaFloatingCartPop {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.16);
+    }
+}
+
+@keyframes emuaFloatingPlusOne {
+    0% {
+        opacity: 0;
+        transform: translateY(7px) scale(.85);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-13px) scale(1);
+    }
+}
+
+@media (max-width: 650px) {
+    .emua-floating-cart {
+        right: 15px;
+        bottom: 88px;
+        width: 50px;
+        height: 50px;
     }
 }

@@ -11,261 +11,606 @@ namespace EMua.Controllers;
 [Authorize]
 public class CheckoutController : Controller
 {
+    private const decimal StandardShippingFee = 30000m;
     private readonly EMuaDbContext _db;
 
     public CheckoutController(EMuaDbContext db) => _db = db;
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? couponCode)
+    public async Task<IActionResult> Index()
     {
-        var model = await BuildModelAsync(couponCode);
-        return model.Items.Count == 0 ? RedirectToAction("Index", "Cart") : View(model);
-    }
+        var user = await GetCurrentUserAsync();
+        if (user == null) return RedirectToAction("Login", "Auth");
 
+        return View(await BuildCheckoutAsync(user));
+    }
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApplyCoupon(CheckoutViewModel model)
+    public async Task<IActionResult> PlaceOrder(
+    [FromBody] PlaceOrderRequest request)
     {
-        model.CouponCode = NormalizeCouponCode(model.CouponCode);
-        var refreshed = await BuildModelAsync(model.CouponCode, model);
-        ModelState.Clear();
-        if (!string.IsNullOrWhiteSpace(model.CouponCode) && refreshed.Discount == 0)
-            ModelState.AddModelError(nameof(model.CouponCode), "Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện.");
-        else if (refreshed.Discount > 0)
-            TempData["Success"] = $"Đã áp dụng mã giảm giá {model.CouponCode}.";
-        return View(nameof(Index), refreshed);
-    }
+        var user =
+            await GetCurrentUserAsync();
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Review(CheckoutViewModel model)
-    {
-        model.CouponCode = NormalizeCouponCode(model.CouponCode);
-        NormalizePayment(model);
-        ValidatePaymentProvider(model);
-        if (!ModelState.IsValid)
-            return View(nameof(Index), await BuildModelAsync(model.CouponCode, model));
-
-        return View(nameof(Review), await BuildModelAsync(model.CouponCode, model));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Payment(CheckoutViewModel model)
-    {
-        model.CouponCode = NormalizeCouponCode(model.CouponCode);
-        NormalizePayment(model);
-        ValidatePaymentProvider(model);
-        if (!ModelState.IsValid)
-            return View(nameof(Review), model);
-
-        return View(await BuildModelAsync(model.CouponCode, model));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CompleteOrder(CheckoutViewModel model)
-    {
-        model.CouponCode = NormalizeCouponCode(model.CouponCode);
-        NormalizePayment(model);
-        ValidatePaymentProvider(model);
-        if (!ModelState.IsValid)
-            return View(nameof(Payment), model);
-
-        var executionStrategy = _db.Database.CreateExecutionStrategy();
-        var orderId = await executionStrategy.ExecuteAsync(async () =>
+        if (user == null)
         {
-            await using var transaction = await _db.Database.BeginTransactionAsync();
-            var cartItems = await _db.ChiTietGioHangs.Include(x => x.MaBienTheNavigation)
-                .Where(x => x.MaNguoiDung == CurrentUserId()).ToListAsync();
-            if (cartItems.Count == 0) return (int?)null;
-            if (cartItems.Any(x => x.SoLuong <= 0 || x.SoLuong > x.MaBienTheNavigation.SoLuong))
-                return -1;
-
-            var subtotal = cartItems.Sum(x => x.MaBienTheNavigation.Gia * x.SoLuong);
-            var promotion = await FindPromotionAsync(model.CouponCode, subtotal);
-            var discount = CalculateDiscount(promotion, subtotal);
-            var shippingMethod = NormalizeShippingMethod(model.ShippingMethod);
-            var total = Math.Max(0, subtotal - discount + (shippingMethod == "EXPRESS" ? 25000 : 0));
-            var order = new DonHang
+            return Unauthorized(new
             {
-                MaNguoiDung = CurrentUserId(), NgayDat = DateTime.Now,
-                TongTien = total, TrangThaiDonHang = "Chờ xử lý",
-                HoTenNhanHang = model.RecipientName.Trim(), SoDienThoaiNhanHang = model.RecipientPhone.Trim(),
-                DiaChiNhanHang = model.ShippingAddress.Trim(), GhiChu = model.Note?.Trim(),
-                PhuongThucVanChuyen = shippingMethod == "EXPRESS" ? "Giao hàng nhanh" : "Giao hàng tiêu chuẩn",
-                MaKhuyenMai = promotion?.MaKhuyenMai
+                success = false,
+                message = "Phiên đăng nhập đã hết hạn."
+            });
+        }
+
+
+        // =========================================================
+        // VALIDATE
+        // =========================================================
+
+        if (
+            string.IsNullOrWhiteSpace(request.FullName)
+            ||
+            string.IsNullOrWhiteSpace(request.PhoneNumber)
+            ||
+            string.IsNullOrWhiteSpace(request.Address)
+        )
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message =
+                    "Vui lòng nhập đầy đủ họ tên, số điện thoại và địa chỉ nhận hàng."
+            });
+        }
+
+
+        var allowedMethods =
+            new[]
+            {
+            "CARD",
+            "MBBANK",
+            "MOMO",
+            "COD"
             };
-            _db.DonHangs.Add(order);
 
-            foreach (var item in cartItems)
+
+        if (
+            !allowedMethods.Contains(
+                request.PaymentMethod
+            )
+        )
+        {
+            return BadRequest(new
             {
-                item.MaBienTheNavigation.SoLuong -= item.SoLuong;
-                order.ChiTietDonHangs.Add(new ChiTietDonHang
-                {
-                    MaBienThe = item.MaBienThe, SoLuong = item.SoLuong,
-                    DonGia = item.MaBienTheNavigation.Gia,
-                    ThanhTien = item.MaBienTheNavigation.Gia * item.SoLuong
-                });
+                success = false,
+                message =
+                    "Phương thức thanh toán không hợp lệ."
+            });
+        }
+
+
+
+        // =========================================================
+        // EXECUTION STRATEGY
+        // =========================================================
+
+        var strategy =
+            _db.Database
+                .CreateExecutionStrategy();
+
+
+        try
+        {
+            var result =
+                await strategy.ExecuteAsync(
+                    async () =>
+                    {
+                        /*
+                         * Mỗi lần strategy retry,
+                         * phải query lại dữ liệu trong transaction.
+                         */
+                        await using var transaction =
+                            await _db.Database
+                                .BeginTransactionAsync();
+
+
+                        try
+                        {
+                            // =================================================
+                            // LẤY GIỎ HÀNG
+                            // =================================================
+
+                            var cartItems =
+                                await GetCartItemsAsync(
+                                    user.MaNguoiDung
+                                );
+
+
+                            if (
+                                cartItems.Count == 0
+                            )
+                            {
+                                return new
+                                {
+                                    Success = false,
+                                    StatusCode = 400,
+
+                                    Data = (object)new
+                                    {
+                                        success = false,
+                                        message =
+                                            "Giỏ hàng đang trống."
+                                    }
+                                };
+                            }
+
+
+                            // =================================================
+                            // KIỂM TRA TỒN KHO
+                            // =================================================
+
+                            if (
+                                cartItems.Any(
+                                    x =>
+                                        x.SoLuong
+                                        >
+                                        x.MaBienTheNavigation.SoLuong
+                                )
+                            )
+                            {
+                                return new
+                                {
+                                    Success = false,
+                                    StatusCode = 400,
+
+                                    Data = (object)new
+                                    {
+                                        success = false,
+                                        message =
+                                            "Một số sản phẩm không còn đủ số lượng trong kho."
+                                    }
+                                };
+                            }
+
+
+                            // =================================================
+                            // TÍNH TIỀN
+                            // =================================================
+
+                            var subtotal =
+                                cartItems.Sum(
+                                    x =>
+                                        x.SoLuong
+                                        *
+                                        x.MaBienTheNavigation.Gia
+                                );
+
+
+                            var shipping =
+                                subtotal >= 500000m
+                                    ? 0m
+                                    : StandardShippingFee;
+
+
+                            var coupon =
+                                await FindValidCouponAsync(
+                                    request.CouponCode,
+                                    subtotal
+                                );
+
+
+                            var discount =
+                                coupon == null
+                                    ? 0m
+                                    : CalculateDiscount(
+                                        coupon,
+                                        subtotal
+                                    );
+
+
+                            var total =
+                                Math.Max(
+                                    0m,
+                                    subtotal
+                                    +
+                                    shipping
+                                    -
+                                    discount
+                                );
+
+
+                            // =================================================
+                            // TẠO ĐƠN HÀNG
+                            // =================================================
+
+                            var order =
+                                new DonHang
+                                {
+                                    MaNguoiDung =
+                                        user.MaNguoiDung,
+
+                                    NgayDat =
+                                        DateTime.Now,
+
+                                    TongTien =
+                                        total,
+
+                                    TrangThaiDonHang =
+                                        request.PaymentMethod
+                                        == "COD"
+
+                                            ? "Chờ xác nhận"
+
+                                            : "Chờ thanh toán",
+
+                                    HoTenNhanHang =
+                                        request.FullName.Trim(),
+
+                                    SoDienThoaiNhanHang =
+                                        request.PhoneNumber.Trim(),
+
+                                    DiaChiNhanHang =
+                                        request.Address.Trim(),
+
+                                    GhiChu =
+                                        string.IsNullOrWhiteSpace(
+                                            request.Note
+                                        )
+
+                                            ? null
+
+                                            : request.Note.Trim(),
+
+                                    PhuongThucVanChuyen =
+                                        "Giao hàng tiêu chuẩn",
+
+                                    MaKhuyenMai =
+                                        coupon?.MaKhuyenMai
+                                };
+
+
+                            _db.DonHangs.Add(
+                                order
+                            );
+
+
+                            /*
+                             * Save lần 1 để có MaDonHang
+                             */
+                            await _db.SaveChangesAsync();
+
+
+
+                            // =================================================
+                            // CHI TIẾT ĐƠN HÀNG
+                            // =================================================
+
+                            foreach (
+                                var item
+                                in cartItems
+                            )
+                            {
+                                var variant =
+                                    item.MaBienTheNavigation;
+
+
+                                _db.ChiTietDonHangs.Add(
+                                    new ChiTietDonHang
+                                    {
+                                        MaDonHang =
+                                            order.MaDonHang,
+
+                                        MaBienThe =
+                                            variant.MaBienThe,
+
+                                        SoLuong =
+                                            item.SoLuong,
+
+                                        DonGia =
+                                            variant.Gia,
+
+                                        ThanhTien =
+                                            variant.Gia
+                                            *
+                                            item.SoLuong
+                                    }
+                                );
+
+
+                                // Trừ tồn kho
+                                variant.SoLuong -=
+                                    item.SoLuong;
+                            }
+
+
+
+                            // =================================================
+                            // GIẢM SỐ LƯỢNG COUPON
+                            // =================================================
+
+                            if (
+                                coupon?.SoLuong
+                                is > 0
+                            )
+                            {
+                                coupon.SoLuong--;
+                            }
+
+
+
+                            // =================================================
+                            // XÓA GIỎ HÀNG
+                            // =================================================
+
+                            _db.ChiTietGioHangs
+                                .RemoveRange(
+                                    cartItems
+                                );
+
+
+
+                            // =================================================
+                            // THANH TOÁN
+                            // =================================================
+
+                            var paymentName =
+                                request.PaymentMethod switch
+                                {
+                                    "CARD" =>
+                                        "Thẻ ngân hàng",
+
+                                    "MBBANK" =>
+                                        "MB Bank",
+
+                                    "MOMO" =>
+                                        "MoMo",
+
+                                    _ =>
+                                        "COD"
+                                };
+
+
+                            var payment =
+                                new ThanhToan
+                                {
+                                    MaDonHang =
+                                        order.MaDonHang,
+
+                                    PhuongThuc =
+                                        paymentName,
+
+                                    SoTien =
+                                        total,
+
+                                    TrangThai =
+                                        request.PaymentMethod
+                                        == "COD"
+
+                                            ? "Chưa thanh toán"
+
+                                            : "Chờ thanh toán",
+
+                                    MaGiaoDich =
+                                        $"EMUA{order.MaDonHang:D6}",
+
+                                    NgayTao =
+                                        DateTime.Now
+                                };
+
+
+                            _db.ThanhToans.Add(
+                                payment
+                            );
+
+
+                            /*
+                             * Save toàn bộ:
+                             *
+                             * - ChiTietDonHang
+                             * - tồn kho
+                             * - coupon
+                             * - xóa giỏ
+                             * - ThanhToan
+                             */
+                            await _db.SaveChangesAsync();
+
+
+
+                            // =================================================
+                            // COMMIT
+                            // =================================================
+
+                            await transaction
+                                .CommitAsync();
+
+
+
+                            // =================================================
+                            // QR
+                            // =================================================
+
+                            var transferContent =
+                                $"EMUA{order.MaDonHang:D6}";
+
+
+                            var bankQrUrl =
+                                $"https://img.vietqr.io/image/MB-22224032005-compact2.png" +
+                                $"?amount={total:0}" +
+                                $"&addInfo={Uri.EscapeDataString(transferContent)}" +
+                                $"&accountName=TECH";
+
+
+                            var momoData =
+                                "https://momo.vn/0963453170";
+
+
+                            var momoQrUrl =
+                                "https://api.qrserver.com/v1/create-qr-code/" +
+                                "?size=260x260" +
+                                $"&data={Uri.EscapeDataString(momoData)}";
+
+
+                            // =================================================
+                            // SUCCESS RESULT
+                            // =================================================
+
+                            return new
+                            {
+                                Success = true,
+                                StatusCode = 200,
+
+                                Data = (object)new
+                                {
+                                    success = true,
+
+                                    orderId =
+                                        order.MaDonHang,
+
+                                    paymentMethod =
+                                        request.PaymentMethod,
+
+                                    amount =
+                                        total,
+
+                                    transferContent,
+
+                                    bankQrUrl,
+
+                                    momoQrUrl,
+
+                                    message =
+                                        request.PaymentMethod
+                                        == "COD"
+
+                                            ? "Đặt hàng thành công. Đơn hàng đang chờ xác nhận."
+
+                                            : "Đã tạo đơn hàng. Vui lòng hoàn tất thanh toán theo hướng dẫn."
+                                }
+                            };
+                        }
+                        catch
+                        {
+                            await transaction
+                                .RollbackAsync();
+
+                            throw;
+                        }
+                    }
+                );
+
+
+            // =========================================================
+            // TRẢ RESPONSE
+            // =========================================================
+
+            if (!result.Success)
+            {
+                return StatusCode(
+                    result.StatusCode,
+                    result.Data
+                );
             }
 
-            if (promotion?.SoLuong is > 0)
-                promotion.SoLuong--;
 
-            order.ThanhToans.Add(new ThanhToan
-            {
-                PhuongThuc = model.PaymentMethod == "COD" ? "COD" : $"{model.PaymentMethod} - {model.PaymentProvider}",
-                SoTien = total,
-                TrangThai = model.PaymentMethod == "COD" ? "Chưa thanh toán" : "Đã thanh toán",
-                MaGiaoDich = model.PaymentMethod == "COD" ? null : $"LOCAL-{Guid.NewGuid():N}"[..20],
-                NgayTao = DateTime.Now,
-                NgayThanhToan = model.PaymentMethod == "COD" ? null : DateTime.Now
-            });
-            order.LichSuVanChuyens.Add(new LichSuVanChuyen
-            {
-                TrangThai = "Chờ xử lý", MoTa = "Đơn hàng đã được tiếp nhận.", ThoiGian = DateTime.Now
-            });
-            _db.ChiTietGioHangs.RemoveRange(cartItems);
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return (int?)order.MaDonHang;
-        });
-
-        if (orderId == null) return RedirectToAction("Index", "Cart");
-        if (orderId == -1)
-        {
-            ModelState.AddModelError(string.Empty, "Tồn kho đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.");
-            return View(nameof(Payment), model);
+            return Json(
+                result.Data
+            );
         }
-        return RedirectToAction(nameof(Success), new { id = orderId.Value });
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Success(int id)
-    {
-        var payment = await _db.ThanhToans.AsNoTracking()
-            .Include(x => x.MaDonHangNavigation)
-            .FirstOrDefaultAsync(x => x.MaDonHang == id && x.MaDonHangNavigation.MaNguoiDung == CurrentUserId());
-        if (payment == null) return NotFound();
-        return View(new CheckoutSuccessViewModel
+        catch (Exception ex)
         {
-            OrderId = id,
-            Total = payment.SoTien,
-            IsPaid = payment.TrangThai == "Đã thanh toán"
+            Console.WriteLine(
+                "PLACE ORDER ERROR:"
+            );
+
+            Console.WriteLine(
+                ex.ToString()
+            );
+
+
+            return StatusCode(
+                500,
+                new
+                {
+                    success = false,
+
+                    message =
+                        "Không thể tạo đơn hàng. Vui lòng thử lại.",
+
+                    error =
+                        ex.Message
+                }
+            );
+        }
+    }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApplyCoupon([FromBody] ApplyCouponRequest request)
+    {
+        var user = await GetCurrentUserAsync();
+        if (user == null) return Unauthorized(new { success = false, message = "Phiên đăng nhập đã hết hạn." });
+
+        var checkout = await BuildCheckoutAsync(user);
+        var coupon = await FindValidCouponAsync(request.CouponCode, checkout.Subtotal);
+        if (coupon == null)
+            return BadRequest(new { success = false, message = "Mã giảm giá không hợp lệ, đã hết hạn hoặc chưa đủ giá trị đơn tối thiểu." });
+
+        checkout.Discount = CalculateDiscount(coupon, checkout.Subtotal);
+        return Json(new
+        {
+            success = true,
+            message = $"Đã áp dụng mã {coupon.MaCode}.",
+            couponCode = coupon.MaCode,
+            discount = checkout.Discount,
+            shippingFee = checkout.ShippingFee,
+            total = checkout.Total
         });
     }
 
-    private async Task<CheckoutViewModel> BuildModelAsync(string? code, CheckoutViewModel? posted = null)
+    
+    private async Task<CheckoutViewModel> BuildCheckoutAsync(NguoiDung user)
     {
-        var user = await _db.NguoiDungs.AsNoTracking().FirstOrDefaultAsync(x => x.MaNguoiDung == CurrentUserId());
-        var entities = await _db.ChiTietGioHangs.AsNoTracking()
-            .Include(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
-            .Where(x => x.MaNguoiDung == CurrentUserId()).OrderBy(x => x.NgayThem).ToListAsync();
-        var items = entities.Select(x => new CartItemViewModel
+        var cartItems = await GetCartItemsAsync(user.MaNguoiDung);
+        var model = new CheckoutViewModel
         {
-            CartItemId = x.MaChiTietGioHang, ProductId = x.MaBienTheNavigation.MaSanPham, VariantId = x.MaBienThe,
-            ProductName = x.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham ?? "Sản phẩm",
-            VariantLabel = string.Join(" / ", new[] { x.MaBienTheNavigation.MauSac, x.MaBienTheNavigation.PhienBan }.Where(v => !string.IsNullOrWhiteSpace(v))),
-            ImageUrl = x.MaBienTheNavigation.HinhAnh, UnitPrice = x.MaBienTheNavigation.Gia,
-            Quantity = x.SoLuong, Stock = x.MaBienTheNavigation.SoLuong
-        }).ToList();
-        var promotion = await FindPromotionAsync(code, items.Sum(x => x.LineTotal));
-        var model = posted ?? new CheckoutViewModel();
-        model.Items = items; model.CouponCode = code;
-        model.Discount = CalculateDiscount(promotion, model.Subtotal);
-        model.AvailableCoupons = await GetAvailableCouponsAsync(model.Subtotal);
-        if (string.IsNullOrWhiteSpace(model.RecipientName)) model.RecipientName = user?.TenNguoiDung ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(model.RecipientPhone)) model.RecipientPhone = user?.SoDienThoai ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(model.ShippingAddress)) model.ShippingAddress = user?.DiaChi ?? string.Empty;
+            FullName = user.TenNguoiDung ?? string.Empty,
+            PhoneNumber = user.SoDienThoai ?? string.Empty,
+            Address = user.DiaChi ?? string.Empty,
+            Items = cartItems.Select(x => new CheckoutItemViewModel
+            {
+                VariantId = x.MaBienThe,
+                ProductName = x.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham ?? "Sản phẩm",
+                VariantName = string.Join(" · ", new[] { x.MaBienTheNavigation.MauSac, x.MaBienTheNavigation.PhienBan }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                ImageUrl = x.MaBienTheNavigation.HinhAnh,
+                UnitPrice = x.MaBienTheNavigation.Gia,
+                Quantity = x.SoLuong
+            }).ToList()
+        };
+        model.Subtotal = model.Items.Sum(x => x.LineTotal);
+        model.ShippingFee = model.Subtotal >= 500000m ? 0 : StandardShippingFee;
         return model;
     }
 
-    private async Task<List<CouponOptionViewModel>> GetAvailableCouponsAsync(decimal subtotal)
-    {
-        var now = DateTime.Now;
-        var promotions = await _db.KhuyenMais.AsNoTracking()
-            .Where(x => x.TrangThai && (x.SoLuong == null || x.SoLuong > 0) &&
-                (!x.NgayBatDau.HasValue || x.NgayBatDau <= now) &&
-                (!x.NgayKetThuc.HasValue || x.NgayKetThuc >= now) &&
-                (!x.GiaTriDonHangToiThieu.HasValue || subtotal >= x.GiaTriDonHangToiThieu))
-            .OrderBy(x => x.GiaTriDonHangToiThieu)
-            .ThenBy(x => x.MaCode)
-            .ToListAsync();
+    private Task<List<ChiTietGioHang>> GetCartItemsAsync(int userId) => _db.ChiTietGioHangs
+        .Include(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
+        .Where(x => x.MaNguoiDung == userId).ToListAsync();
 
-        return promotions.Select(x => new CouponOptionViewModel
-        {
-            Code = x.MaCode,
-            Name = x.TenKhuyenMai,
-            DiscountText = IsPercentagePromotion(x.LoaiGiamGia)
-                ? $"Giảm {x.GiaTriGiam:0.##}%"
-                : $"Giảm {x.GiaTriGiam:N0} đ",
-            MinimumOrder = x.GiaTriDonHangToiThieu
-        }).ToList();
+    private async Task<NguoiDung?> GetCurrentUserAsync()
+    {
+        var idText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(idText, out var id) ? await _db.NguoiDungs.FindAsync(id) : null;
     }
 
-    private async Task<KhuyenMai?> FindPromotionAsync(string? code, decimal subtotal)
+    private async Task<KhuyenMai?> FindValidCouponAsync(string? code, decimal subtotal)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
         var now = DateTime.Now;
-        var normalizedCode = NormalizeCouponCode(code);
-        return await _db.KhuyenMais.FirstOrDefaultAsync(x => x.MaCode != null &&
-            x.MaCode.ToLower() == normalizedCode.ToLower() && x.TrangThai &&
-            (x.SoLuong == null || x.SoLuong > 0) && (!x.NgayBatDau.HasValue || x.NgayBatDau <= now) &&
-            (!x.NgayKetThuc.HasValue || x.NgayKetThuc >= now) &&
-            (!x.GiaTriDonHangToiThieu.HasValue || subtotal >= x.GiaTriDonHangToiThieu));
+        var coupon = await _db.KhuyenMais.FirstOrDefaultAsync(x => x.MaCode.ToLower() == code.Trim().ToLower());
+        if (coupon == null || !coupon.TrangThai || coupon.SoLuong is <= 0 || coupon.NgayBatDau > now || coupon.NgayKetThuc < now || (coupon.GiaTriDonHangToiThieu ?? 0) > subtotal)
+            return null;
+        return coupon;
     }
 
-    private static decimal CalculateDiscount(KhuyenMai? promotion, decimal subtotal)
-    {
-        if (promotion == null) return 0;
-        var discountType = promotion.LoaiGiamGia?.Trim().ToLowerInvariant() ?? string.Empty;
-        var discount = IsPercentagePromotion(discountType)
-            ? subtotal * promotion.GiaTriGiam / 100 : promotion.GiaTriGiam;
-        return Math.Min(subtotal, Math.Max(0, discount));
-    }
-
-    private static bool IsPercentagePromotion(string? type)
-    {
-        var normalizedType = type?.Trim().ToLowerInvariant() ?? string.Empty;
-        return normalizedType.Contains('%') || normalizedType.Contains("phần trăm") ||
-               normalizedType.Contains("phan tram") || normalizedType.Contains("percent");
-    }
-
-    private static string NormalizeCouponCode(string? code) =>
-        string.IsNullOrWhiteSpace(code) ? string.Empty : code.Trim().ToUpperInvariant();
-
-    private static string NormalizePaymentSelection(string? method) => method?.Trim().ToUpperInvariant() switch
-    {
-        "BANK" => "BANK", "MOMO" => "MOMO", _ => "COD"
-    };
-
-    private static void NormalizePayment(CheckoutViewModel model)
-    {
-        model.PaymentMethod = NormalizePaymentSelection(model.PaymentMethod);
-        model.PaymentProvider = NormalizePaymentProvider(model.PaymentMethod, model.PaymentProvider);
-    }
-
-    private void ValidatePaymentProvider(CheckoutViewModel model)
-    {
-        if (model.PaymentMethod != "COD" && string.IsNullOrWhiteSpace(model.PaymentProvider))
-            ModelState.AddModelError(nameof(model.PaymentProvider), "Vui lòng chọn ví điện tử hoặc ngân hàng.");
-    }
-
-    private static string? NormalizePaymentProvider(string paymentMethod, string? provider)
-    {
-        var normalizedProvider = provider?.Trim().ToUpperInvariant();
-        return paymentMethod switch
-        {
-            "MOMO" when normalizedProvider is "MOMO" or "ZALOPAY" or "APPLEPAY" => normalizedProvider,
-            "BANK" when normalizedProvider is "VIETCOMBANK" or "VIETINBANK" or "MB" or "TPBANK" => normalizedProvider,
-            _ => null
-        };
-    }
-
-    private static string NormalizeShippingMethod(string? method) => method?.Trim().ToUpperInvariant() switch
-    {
-        "EXPRESS" => "EXPRESS", _ => "STANDARD"
-    };
-
-    private int CurrentUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private static decimal CalculateDiscount(KhuyenMai coupon, decimal subtotal) =>
+        coupon.LoaiGiamGia.Contains("%") || coupon.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)
+            ? Math.Min(subtotal, subtotal * coupon.GiaTriGiam / 100m)
+            : Math.Min(subtotal, coupon.GiaTriGiam);
 }
