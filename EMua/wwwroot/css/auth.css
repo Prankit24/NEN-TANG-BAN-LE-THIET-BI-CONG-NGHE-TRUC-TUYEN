@@ -1,314 +1,587 @@
+/* ==========================================
+   AUTH SECTION & LAYOUT SETUP
+   ========================================== */
 .auth-section {
-    padding: 38px 24px 56px;
-    background: #f7f7fc;
+    padding: 40px 20px;
+    background: #f4f6f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
 }
 
 .auth-page {
-    width: min(1120px, 100%);
-    min-height: 660px;
+    width: min(1100px, 100%);
+    min-height: 620px;
     margin: auto;
     display: grid;
     grid-template-columns: 42% 58%;
     overflow: hidden;
-    border-radius: 16px;
-    background: #fbfbff;
-    box-shadow: 0 12px 35px rgba(20, 18, 60, .13);
+    border-radius: 8px; /* Bo góc vuông vức, khỏe khoắn */
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
 }
 
+/* ==========================================
+   LEFT SIDE: BRAND & BENEFITS
+   ========================================== */
 .auth-brand {
-    padding: 65px 11%;
-    color: #fff;
-    background: radial-gradient(circle at 92% 5%, rgba(82, 80, 143, .22) 0 155px, transparent 156px), radial-gradient(circle at -5% 96%, rgba(255, 206, 151, .13) 0 115px, transparent 116px), linear-gradient(145deg, #14132f 0%, #29275f 100%);
+    background: linear-gradient(135deg, #0d6efd 0%, #084298 100%);
+    color: #ffffff;
+    padding: 48px 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    z-index: 1;
 }
 
+    .auth-brand::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: -1;
+    }
+
 .brand-logo {
-    color: #fff;
-    font-size: 40px;
+    font-size: 30px;
     font-weight: 800;
     letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: #ffffff;
 }
 
 .auth-brand p {
-    margin: 80px 0 15px;
-    color: #fff;
-    font-size: 31px;
+    font-size: 26px;
     font-weight: 700;
-    line-height: 1.28;
+    line-height: 1.35;
+    margin-bottom: 14px;
 }
 
 .auth-brand span {
-    color: #e4e6f6;
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 32px;
+    display: block;
 }
 
 .auth-benefits {
-    margin: 32px 0 0;
-    padding: 0;
     list-style: none;
-    color: #fff;
-    font-size: 14px;
-    line-height: 2.15;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-    .auth-benefits i {
-        margin-right: 8px;
-        color: #00e68a;
+    .auth-benefits li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #ffffff;
     }
 
+    .auth-benefits i {
+        font-size: 16px;
+        color: #6ea8fe;
+    }
+
+/* ==========================================
+   RIGHT SIDE: FORM AREA
+   ========================================== */
 .auth-form-area {
+    padding: 48px 56px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    padding: 40px 58px;
-    background: #fbfbff;
+    background-color: #ffffff;
 }
 
 .auth-form {
-    width: min(100%, 430px);
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
 }
 
     .auth-form h1 {
-        margin: 0 0 8px;
-        color: #111b35;
-        font-size: 30px;
-        font-weight: 800;
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
     }
 
 .form-subtitle {
-    margin: 0 0 22px;
-    color: #606583;
     font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
 }
 
+/* Social Buttons */
 .social-auth {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+    margin-bottom: 24px;
 }
 
 .social-auth-btn {
-    padding: 11px;
-    border: 1px solid #d8d8eb;
-    border-radius: 12px;
-    color: #24234d;
-    background: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: not-allowed;
-    opacity: .76;
-}
-
-    .social-auth-btn i {
-        margin-right: 7px;
-    }
-
-.auth-divider {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: 20px 0;
-    color: #70738d;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 6px; /* Thiết kế ô vuông sắc nét */
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
 }
 
-    .auth-divider span {
-        height: 1px;
-        flex: 1;
-        background: #dcddec;
+    .social-auth-btn:hover {
+        background-color: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
     }
 
-    .auth-divider small {
-        white-space: nowrap;
-        font-size: 12px;
-    }
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.google-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.facebook-icon {
+    color: #1877f2;
+    font-size: 16px;
+}
+
+/* Field Groups & Inputs */
+.field-group {
+    margin-bottom: 16px;
+}
+
+.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
 
 .auth-field {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 13px;
-    padding: 0 14px;
-    border: 1px solid transparent;
-    border-radius: 14px;
-    background: #efeff9;
 }
 
-    .auth-field:focus-within {
-        border-color: #49478e;
-        background: #fff;
-        box-shadow: 0 0 0 3px #e3e2f5;
+.field-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    font-size: 14px;
+    pointer-events: none;
+    transition: color 0.15s ease;
+}
+
+.auth-field input {
+    width: 100%;
+    padding: 10px 40px 10px 38px;
+    font-size: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px; /* Vuông vức, phẳng phiu */
+    outline: none;
+    background-color: #ffffff;
+    color: #0f172a;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+    .auth-field input::placeholder {
+        color: #94a3b8;
     }
 
-    .auth-field i {
-        color: #596078;
-        font-size: 17px;
+    .auth-field input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
     }
 
-    .auth-field input {
-        width: 100%;
-        padding: 14px 0;
-        border: 0;
-        outline: 0;
-        color: #20234c;
-        background: transparent;
-        font-size: 15px;
-    }
-
-        .auth-field input::placeholder {
-            color: #8589a6;
+        .auth-field input:focus + .field-icon,
+        .auth-field input:focus ~ .field-icon {
+            color: #0d6efd;
         }
+
+/* Eye Toggle Password Button */
+.field-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    padding: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+    .field-toggle:hover {
+        color: #334155;
+    }
+
+/* Password Strength Bar */
+.password-strength {
+    margin-top: 8px;
+}
+
+.strength-track {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    height: 4px;
+    background-color: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-segment {
+    height: 100%;
+    background-color: #e2e8f0;
+    transition: background-color 0.25s ease;
+}
+
+.password-strength[data-level="1"] .strength-segment:nth-child(1) {
+    background-color: #ef4444;
+}
+
+.password-strength[data-level="2"] .strength-segment:nth-child(-n+2) {
+    background-color: #f59e0b;
+}
+
+.password-strength[data-level="3"] .strength-segment:nth-child(-n+3) {
+    background-color: #06b6d4;
+}
+
+.password-strength[data-level="4"] .strength-segment:nth-child(-n+4) {
+    background-color: #10b981;
+}
+
+.strength-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.password-strength[data-level="1"] .strength-label {
+    color: #ef4444;
+}
+
+.password-strength[data-level="2"] .strength-label {
+    color: #d97706;
+}
+
+.password-strength[data-level="3"] .strength-label {
+    color: #0891b2;
+}
+
+.password-strength[data-level="4"] .strength-label {
+    color: #059669;
+}
+
+.field-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 6px;
+    margin-bottom: 0;
+}
+
+/* Checkbox & Options */
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+}
 
 .check-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 17px 0;
-    color: #22244b;
     font-size: 13px;
+    color: #334155;
+    cursor: pointer;
 }
 
-    .check-row input {
+    .check-row input[type="checkbox"] {
+        margin: 0;
+        accent-color: #0d6efd;
         width: 15px;
         height: 15px;
-        accent-color: #47458d;
+        border-radius: 3px;
+        cursor: pointer;
     }
 
-    .check-row a,
-    .forgot-password,
-    .switch-auth a {
-        color: #3f3d85;
-        font-weight: 700;
-        text-decoration: none;
+    .check-row a {
+        color: #0d6efd;
+        text-decoration: underline;
     }
 
-.login-options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-    .login-options .check-row {
-        margin: 17px 0;
-    }
+        .check-row a:hover {
+            color: #0a58ca;
+        }
 
 .forgot-password {
     font-size: 13px;
+    color: #0d6efd;
+    font-weight: 600;
+    text-decoration: none;
 }
 
-.phone-quick-auth {
-    width: 100%;
-    margin: 0 0 12px;
-    padding: 10px;
-    border: 0;
-    color: #696c91;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: not-allowed;
-}
-
-    .phone-quick-auth i {
-        margin-right: 6px;
-        color: #47458d;
+    .forgot-password:hover {
+        text-decoration: underline;
     }
 
+/* Validation Messages */
+.field-validation-error {
+    display: block;
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+}
+
+.validation-summary-errors {
+    color: #b91c1c;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+.captcha-message {
+    font-size: 13px;
+    color: #dc2626;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+/* Primary Button & Spinner */
 .primary-button {
     width: 100%;
-    padding: 14px;
-    border: 0;
-    border-radius: 14px;
-    color: #fff;
-    background: #47458d;
-    box-shadow: 0 5px 10px rgba(71, 69, 141, .2);
-    font-size: 16px;
-    font-weight: 700;
+    padding: 11px;
+    margin-top: 16px;
+    background-color: #0d6efd;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px; /* Vuông đồng bộ với ô input */
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.15s ease;
 }
 
     .primary-button:hover {
-        background: #373576;
+        background-color: #0b5ed7;
     }
 
-.switch-auth {
-    margin: 20px 0 0;
-    color: #606583;
-    font-size: 14px;
-    text-align: center;
+    .primary-button:disabled {
+        background-color: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+.button-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
-.field-validation-error,
-.validation-summary-errors {
-    display: block;
-    margin-top: 5px;
-    color: #ce344d;
+.primary-button.is-loading .button-spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Switch Auth Link */
+.switch-auth {
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 20px;
+}
+
+    .switch-auth a {
+        color: #0d6efd;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .switch-auth a:hover {
+            text-decoration: underline;
+        }
+
+/* Phone Login Section */
+.phone-login-coming {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    color: #94a3b8;
     font-size: 12px;
 }
 
-.validation-summary ul {
-    margin: 0 0 8px;
-    padding-left: 18px;
+.phone-login-coming-line {
+    flex: 1;
+    height: 1px;
+    background-color: #e2e8f0;
 }
 
-.success-message {
-    padding: 11px 12px;
-    margin-bottom: 14px;
-    border-radius: 10px;
-    color: #176e56;
-    background: #dcf6ed;
-    font-size: 13px;
+.phone-login-coming-text {
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-@media (max-width: 800px) {
-    .auth-section {
-        padding: 20px 14px 36px;
+/* ==========================================
+   HIDE GEETEST CAPTCHA LOGO
+   ========================================== */
+.geetest_logo,
+.geetest_commit,
+.geetest_copyright,
+.geetest_radar_tip,
+a.geetest_logo,
+a.geetest_copyright,
+a[href*="geetest"],
+svg[class*="geetest"],
+[class*="geetest_logo"],
+[class*="geetest_copyright"],
+[class*="geetest_brand"],
+[class*="geetest_footer"] > a,
+[class*="geetest_bottom"] > a {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+#captcha-box,
+.geetest_holder {
+    position: relative !important;
+}
+
+    #captcha-box::after,
+    .geetest_holder::after {
+        content: "";
+        position: absolute;
+        right: 8px;
+        bottom: 4px;
+        width: 110px;
+        height: 28px;
+        background-color: #ffffff;
+        z-index: 9999;
+        pointer-events: none;
     }
+/* ==========================================
+   CENTER ALIGNMENT FOR TITLE & SUBTITLE
+   ========================================== */
+.auth-form h1 {
+    text-align: center;
+}
 
+.form-subtitle {
+    text-align: center;
+}
+
+/* Căn giữa câu chuyển đổi Đăng ký / Đăng nhập ở cuối */
+.switch-auth {
+    text-align: center;
+}
+/* ==========================================
+   RESPONSIVE DESIGN (MOBILE & TABLET)
+   ========================================== */
+@media (max-width: 992px) {
     .auth-page {
         grid-template-columns: 1fr;
+        max-width: 480px;
     }
 
     .auth-brand {
-        min-height: 280px;
-        padding: 38px;
+        display: none;
     }
-
-        .auth-brand p {
-            margin-top: 32px;
-            font-size: 26px;
-        }
 
     .auth-form-area {
-        padding: 34px 24px;
+        padding: 36px 24px;
     }
 }
-.social-google-btn {
-    display: block;
-    color: #24234d;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    opacity: 1;
-}
-
-    .social-google-btn:hover {
-        border-color: #47458d;
-        color: #47458d;
-        background: #f7f7fc;
-    }
-.social-facebook-btn {
-    display: block;
-    color: #24234d;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    opacity: 1;
+/* Override triệt để màu nền xám tím của Bootstrap/Site.css */
+.auth-field input {
+    width: 100% !important;
+    padding: 10px 40px 10px 38px !important;
+    font-size: 14px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    outline: none !important;
+    background-color: #ffffff !important; /* Xóa màu tím xám */
+    color: #0f172a !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
 }
 
-    .social-facebook-btn:hover {
-        border-color: #1877f2;
-        color: #1877f2;
-        background: #f4f8ff;
-    }
+/* Fix nút mắt xem mật khẩu bị đóng khung xám */
+.field-toggle {
+    position: absolute;
+    right: 10px;
+    background: transparent !important;
+    border: none !important;
+    padding: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+/* Fix ô Google / Facebook không bị tràn */
+.social-auth-btn {
+    box-sizing: border-box !important;
+    background-color: #ffffff !important;
+}

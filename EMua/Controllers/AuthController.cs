@@ -86,13 +86,9 @@ public class AuthController : Controller
             return View(model);
         }
 
-        // Luôn chuẩn hóa email về chữ thường
         var email = model.Email.Trim().ToLowerInvariant();
         var phone = NormalizePhone(model.PhoneNumber);
 
-        // =====================================================
-        // KIỂM TRA EMAIL
-        // =====================================================
         var emailExists = await _db.NguoiDungs
             .AnyAsync(x => x.Email != null && x.Email.ToLower() == email);
 
@@ -103,9 +99,6 @@ public class AuthController : Controller
                 "Email này đã được sử dụng.");
         }
 
-        // =====================================================
-        // KIỂM TRA SỐ ĐIỆN THOẠI
-        // =====================================================
         var phoneExists = await _db.NguoiDungs
             .AnyAsync(x => x.SoDienThoai == phone);
 
@@ -116,9 +109,6 @@ public class AuthController : Controller
                 "Số điện thoại này đã được sử dụng.");
         }
 
-        // =====================================================
-        // KIỂM TRA QUYỀN KHÁCH HÀNG (MaQuyen = 3)
-        // =====================================================
         var customerRoleExists = await _db.PhanQuyens
             .AnyAsync(x => x.MaQuyen == 3);
 
@@ -132,9 +122,6 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        // =====================================================
-        // TẠO NGƯỜI DÙNG
-        // =====================================================
         var user = new NguoiDung
         {
             TenNguoiDung = model.FullName.Trim(),
@@ -197,27 +184,30 @@ public class AuthController : Controller
     {
         ViewData["ReturnUrl"] = returnUrl;
 
+        // 1. KIỂM TRA MÔ HÌNH VÀ THỜI GIAN KHÓA TÀI KHOẢN/SESSION
+        var lockUntilTicks = HttpContext.Session.GetString("LockUntil");
+        if (!string.IsNullOrEmpty(lockUntilTicks) && long.TryParse(lockUntilTicks, out long ticks))
+        {
+            var lockUntil = new DateTime(ticks);
+            if (lockUntil > DateTime.Now)
+            {
+                var remainingMinutes = Math.Ceiling((lockUntil - DateTime.Now).TotalMinutes);
+                ModelState.AddModelError("", $"Tài khoản tạm khóa do nhập sai quá 5 lần. Vui lòng thử lại sau {remainingMinutes} phút.");
+                return View(model);
+            }
+        }
+
         if (!ModelState.IsValid)
             return View(model);
 
-        // GEETEST CAPTCHA
-        if (!await VerifyGeeTestAsync(
-                "Login",
-                lotNumber,
-                captchaOutput,
-                passToken,
-                genTime))
+        // 2. BƯỚC 1: XÁC MINH CAPTCHA
+        if (!await VerifyGeeTestAsync("Login", lotNumber, captchaOutput, passToken, genTime))
         {
-            ModelState.AddModelError(
-                "",
-                "Xác minh bảo mật không thành công. Vui lòng thử lại.");
-
+            ModelState.AddModelError("", "Xác minh bảo mật (Captcha) không thành công hoặc đã hết hạn. Vui lòng thử lại.");
             return View(model);
         }
 
-        // =====================================================
-        // EMAIL HOẶC SỐ ĐIỆN THOẠI
-        // =====================================================
+        // 3. BƯỚC 2: TÌM NGƯỜI DÙNG
         var identifier = model.Identifier.Trim();
         NguoiDung? user;
 
@@ -238,13 +228,11 @@ public class AuthController : Controller
 
         if (user == null || string.IsNullOrWhiteSpace(user.MatKhau))
         {
-            ModelState.AddModelError("", "Tài khoản hoặc mật khẩu không đúng.");
+            HandleFailedLogin();
             return View(model);
         }
 
-        // =====================================================
-        // KIỂM TRA MẬT KHẨU
-        // =====================================================
+        // 4. BƯỚC 3: KIỂM TRA MẬT KHẨU
         PasswordVerificationResult verifyResult;
 
         try
@@ -256,7 +244,6 @@ public class AuthController : Controller
         }
         catch (FormatException)
         {
-            // Hỗ trợ mật khẩu dạng plain text cũ
             if (user.MatKhau == model.Password)
             {
                 user.MatKhau = _passwordHasher.HashPassword(user, model.Password);
@@ -265,23 +252,20 @@ public class AuthController : Controller
             }
             else
             {
-                ModelState.AddModelError("", "Tài khoản hoặc mật khẩu không đúng.");
+                HandleFailedLogin();
                 return View(model);
             }
         }
 
         if (verifyResult == PasswordVerificationResult.Failed)
         {
-            ModelState.AddModelError("", "Tài khoản hoặc mật khẩu không đúng.");
+            HandleFailedLogin();
             return View(model);
         }
 
         if (!user.TrangThai)
         {
-            ModelState.AddModelError(
-                "",
-                "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
-
+            ModelState.AddModelError("", "Tài khoản đã bị khóa bởi quản trị viên.");
             return View(model);
         }
 
@@ -291,17 +275,15 @@ public class AuthController : Controller
             await _db.SaveChangesAsync();
         }
 
-        // =====================================================
-        // ĐĂNG NHẬP THÀNH CÔNG & ĐIỀU HƯỚNG
-        // =====================================================
+        // 5. ĐĂNG NHẬP THÀNH CÔNG -> CLEAR SESSION
+        HttpContext.Session.Remove("FailedPasswordCount");
+        HttpContext.Session.Remove("LockUntil");
+
         await SignInUserAsync(user, model.RememberMe);
 
         if (IsStaff(user))
         {
-            return RedirectToAction(
-                "Index",
-                "Dashboard",
-                new { area = "Staff" });
+            return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
         }
 
         if (Url.IsLocalUrl(returnUrl))
@@ -347,9 +329,6 @@ public class AuthController : Controller
         return Challenge(properties, providerScheme);
     }
 
-    // =====================================================
-    // EXTERNAL LOGIN CALLBACK
-    // =====================================================
     [HttpGet]
     public async Task<IActionResult> ExternalLoginCallback(
         string? provider = null,
@@ -454,6 +433,29 @@ public class AuthController : Controller
     // =====================================================
     // HELPER METHODS
     // =====================================================
+    private void HandleFailedLogin()
+    {
+        int failedAttempts = HttpContext.Session.GetInt32("FailedPasswordCount") ?? 0;
+        failedAttempts++;
+        HttpContext.Session.SetInt32("FailedPasswordCount", failedAttempts);
+
+        if (failedAttempts >= 5)
+        {
+            var lockUntil = DateTime.Now.AddMinutes(15);
+            HttpContext.Session.SetString("LockUntil", lockUntil.Ticks.ToString());
+            ModelState.AddModelError("", "Bạn đã nhập sai mật khẩu 5 lần liên tiếp. Tạm thời bị khóa 15 phút.");
+        }
+        else if (failedAttempts >= 3)
+        {
+            int remaining = 5 - failedAttempts;
+            ModelState.AddModelError("", $"Tài khoản hoặc mật khẩu không đúng. Bạn còn {remaining} lần thử.");
+        }
+        else
+        {
+            ModelState.AddModelError("", "Tài khoản hoặc mật khẩu không đúng.");
+        }
+    }
+
     private async Task SignInUserAsync(NguoiDung user, bool rememberMe)
     {
         var claims = new List<Claim>

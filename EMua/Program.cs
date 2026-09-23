@@ -11,6 +11,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// =====================================================
+// 1. ĐĂNG KÝ HTTPCLIENT (Rất quan trọng cho GeeTest CAPTCHA)
+// =====================================================
+builder.Services.AddHttpClient();
+
+// =====================================================
+// 2. CẤU HÌNH DỊCH VỤ SESSION
+// =====================================================
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddDbContext<EMuaDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -100,6 +116,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// 3. KÍCH HOẠT SESSION MIDDLEWARE
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
