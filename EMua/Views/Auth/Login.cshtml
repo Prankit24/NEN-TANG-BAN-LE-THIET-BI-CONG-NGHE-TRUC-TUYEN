@@ -7,6 +7,7 @@
     var captchaId = Configuration["GeeTest:Login:CaptchaId"];
     var returnUrl = ViewData["ReturnUrl"]?.ToString();
 }
+
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
@@ -15,16 +16,11 @@
 
         <!-- LEFT -->
         <div class="auth-brand">
-
-            <div class="brand-logo">
-                EMUA
-            </div>
-
+            <div class="brand-logo">EMUA</div>
             <p>
                 Công nghệ trong<br />
                 tầm tay bạn.
             </p>
-
             <span>
                 Khám phá sản phẩm công nghệ chính hãng,
                 giá tốt và trải nghiệm mua sắm hiện đại.
@@ -32,30 +28,22 @@
 
             <ul class="auth-benefits">
                 <li>
-                    <i class="fa-solid fa-circle-check"
-                       aria-hidden="true"></i>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                     Sản phẩm chính hãng
                 </li>
-
                 <li>
-                    <i class="fa-solid fa-circle-check"
-                       aria-hidden="true"></i>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                     Thanh toán an toàn
                 </li>
-
                 <li>
-                    <i class="fa-solid fa-circle-check"
-                       aria-hidden="true"></i>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                     Giao hàng nhanh chóng
                 </li>
             </ul>
-
         </div>
-
 
         <!-- RIGHT -->
         <div class="auth-form-area">
-
             <form asp-controller="Auth"
                   asp-action="Login"
                   method="post"
@@ -65,112 +53,57 @@
 
                 @Html.AntiForgeryToken()
 
-                <input type="hidden"
-                       name="returnUrl"
-                       value="@returnUrl" />
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
 
                 <!-- CAPTCHA DATA -->
-                <input type="hidden"
-                       id="lotNumber"
-                       name="lotNumber" />
-
-                <input type="hidden"
-                       id="captchaOutput"
-                       name="captchaOutput" />
-
-                <input type="hidden"
-                       id="passToken"
-                       name="passToken" />
-
-                <input type="hidden"
-                       id="genTime"
-                       name="genTime" />
-
+                <input type="hidden" id="lotNumber" name="lotNumber" />
+                <input type="hidden" id="captchaOutput" name="captchaOutput" />
+                <input type="hidden" id="passToken" name="passToken" />
+                <input type="hidden" id="genTime" name="genTime" />
 
                 <!-- TITLE -->
-                <h1>
-                    Đăng nhập
-                </h1>
-
+                <h1>Đăng nhập</h1>
                 <p class="form-subtitle">
                     Đăng nhập để tiếp tục mua sắm tại EMUA
                 </p>
 
-
                 <!-- SOCIAL LOGIN -->
                 <div class="social-auth">
-
-                    <!-- GOOGLE -->
                     <a asp-controller="Auth"
                        asp-action="ExternalLogin"
                        asp-route-provider="Google"
                        asp-route-returnUrl="@returnUrl"
                        class="social-auth-btn social-google">
-
-                        <span class="social-icon google-icon"
-                              aria-hidden="true">
-
-                            <svg viewBox="0 0 24 24"
-                                 xmlns="http://www.w3.org/2000/svg">
-
-                                <path fill="#4285F4"
-                                      d="M21.6 12.227c0-.709-.064-1.391-.182-2.045H12v3.873h5.382a4.6 4.6 0 0 1-1.995 3.018v2.509h3.227c1.889-1.736 2.986-4.3 2.986-7.355z" />
-
-                                <path fill="#34A853"
-                                      d="M12 22c2.7 0 4.964-.895 6.614-2.418l-3.227-2.509c-.895.6-2.041.955-3.387.955-2.605 0-4.809-1.759-5.6-4.123H3.064v2.591A9.996 9.996 0 0 0 12 22z" />
-
-                                <path fill="#FBBC05"
-                                      d="M6.4 13.905A6.02 6.02 0 0 1 6.086 12c0-.66.114-1.3.314-1.905V7.504H3.064A9.997 9.997 0 0 0 2 12c0 1.614.386 3.141 1.064 4.496L6.4 13.905z" />
-
-                                <path fill="#EA4335"
-                                      d="M12 5.973c1.468 0 2.786.505 3.823 1.496l2.864-2.864C16.959 2.995 14.695 2 12 2a9.996 9.996 0 0 0-8.936 5.504L6.4 10.095C7.191 7.732 9.395 5.973 12 5.973z" />
-
+                        <span class="social-icon google-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path fill="#4285F4" d="M21.6 12.227c0-.709-.064-1.391-.182-2.045H12v3.873h5.382a4.6 4.6 0 0 1-1.995 3.018v2.509h3.227c1.889-1.736 2.986-4.3 2.986-7.355z" />
+                                <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.614-2.418l-3.227-2.509c-.895.6-2.041.955-3.387.955-2.605 0-4.809-1.759-5.6-4.123H3.064v2.591A9.996 9.996 0 0 0 12 22z" />
+                                <path fill="#FBBC05" d="M6.4 13.905A6.02 6.02 0 0 1 6.086 12c0-.66.114-1.3.314-1.905V7.504H3.064A9.997 9.997 0 0 0 2 12c0 1.614.386 3.141 1.064 4.496L6.4 13.905z" />
+                                <path fill="#EA4335" d="M12 5.973c1.468 0 2.786.505 3.823 1.496l2.864-2.864C16.959 2.995 14.695 2 12 2a9.996 9.996 0 0 0-8.936 5.504L6.4 10.095C7.191 7.732 9.395 5.973 12 5.973z" />
                             </svg>
-
                         </span>
-
-                        <span>
-                            Google
-                        </span>
-
+                        <span>Google</span>
                     </a>
 
-
-                    <!-- FACEBOOK -->
                     <a asp-controller="Auth"
                        asp-action="ExternalLogin"
                        asp-route-provider="Facebook"
                        asp-route-returnUrl="@returnUrl"
                        class="social-auth-btn social-facebook">
-
-                        <span class="social-icon facebook-icon"
-                              aria-hidden="true">
-
+                        <span class="social-icon facebook-icon" aria-hidden="true">
                             <i class="fa-brands fa-facebook-f"></i>
-
                         </span>
-
-                        <span>
-                            Facebook
-                        </span>
-
+                        <span>Facebook</span>
                     </a>
-
                 </div>
 
-
-             
                 <!-- SUCCESS -->
                 @if (TempData["SuccessMessage"] != null)
                 {
-                    <div class="success-message"
-                         role="status">
-
+                    <div class="success-message" role="status">
                         @TempData["SuccessMessage"]
-
                     </div>
                 }
-
 
                 <!-- VALIDATION SUMMARY -->
                 <div asp-validation-summary="ModelOnly"
@@ -179,56 +112,26 @@
                      aria-live="polite">
                 </div>
 
-
-                <!-- EMAIL -->
+                <!-- EMAIL / IDENTIFIER -->
                 <div class="field-group">
-
-                    <label asp-for="Identifier"
-                           class="field-label">
-
-                        Email
-
-                    </label>
-
+                    <label asp-for="Identifier" class="field-label">Email</label>
                     <div class="auth-field">
-
-                        <i class="fa-solid fa-envelope field-icon"
-                           aria-hidden="true">
-                        </i>
-
+                        <i class="fa-solid fa-envelope field-icon" aria-hidden="true"></i>
                         <input asp-for="Identifier"
                                type="email"
                                id="emailInput"
                                placeholder="abc@gmail.com"
                                autocomplete="email"
                                aria-describedby="Identifier-error" />
-
                     </div>
-
-                    <span asp-validation-for="Identifier"
-                          id="Identifier-error"
-                          class="field-validation-error">
-                    </span>
-
+                    <span asp-validation-for="Identifier" id="Identifier-error" class="field-validation-error"></span>
                 </div>
-
 
                 <!-- PASSWORD -->
                 <div class="field-group">
-
-                    <label asp-for="Password"
-                           class="field-label">
-
-                        Mật khẩu
-
-                    </label>
-
+                    <label asp-for="Password" class="field-label">Mật khẩu</label>
                     <div class="auth-field">
-
-                        <i class="fa-solid fa-lock field-icon"
-                           aria-hidden="true">
-                        </i>
-
+                        <i class="fa-solid fa-lock field-icon" aria-hidden="true"></i>
                         <input asp-for="Password"
                                type="password"
                                id="loginPassword"
@@ -241,497 +144,162 @@
                                 data-toggle-target="loginPassword"
                                 aria-label="Hiện mật khẩu"
                                 aria-pressed="false">
-
-                            <i class="fa-solid fa-eye"
-                               aria-hidden="true">
-                            </i>
-
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
                         </button>
-
                     </div>
-
-                    <span asp-validation-for="Password"
-                          id="Password-error"
-                          class="field-validation-error">
-                    </span>
-
+                    <span asp-validation-for="Password" id="Password-error" class="field-validation-error"></span>
                 </div>
-
 
                 <!-- OPTIONS -->
                 <div class="login-options">
-
                     <label class="check-row">
-
-                        <input asp-for="RememberMe"
-                               type="checkbox" />
-
-                        <span>
-                            Ghi nhớ đăng nhập
-                        </span>
-
+                        <input asp-for="RememberMe" type="checkbox" />
+                        <span>Ghi nhớ đăng nhập</span>
                     </label>
 
-                    <a asp-controller="Auth"
-                       asp-action="ForgotPassword"
-                       class="forgot-password">
-
+                    <a asp-controller="Auth" asp-action="ForgotPassword" class="forgot-password">
                         Quên mật khẩu?
-
                     </a>
-
                 </div>
-
 
                 <!-- CAPTCHA MESSAGE -->
-                <div id="captchaMessage"
-                     class="captcha-message"
-                     role="status"
-                     aria-live="polite">
-                </div>
-
+                <div id="captchaMessage" class="captcha-message" role="status" aria-live="polite"></div>
 
                 <!-- LOGIN BUTTON -->
-                <button type="submit"
-                        class="primary-button"
-                        id="loginButton">
-
-                    <span class="button-spinner"
-                          aria-hidden="true">
-                    </span>
-
-                    <span class="button-label">
-                        Đăng nhập
-                    </span>
-
+                <button type="submit" class="primary-button" id="loginButton">
+                    <span class="button-spinner" aria-hidden="true"></span>
+                    <span class="button-label">Đăng nhập</span>
                 </button>
 
-
-                <!-- QUICK LOGIN BY PHONE - UI ONLY -->
+                <!-- QUICK LOGIN BY PHONE -->
                 <div class="phone-login-coming">
-
                     <span class="phone-login-coming-line"></span>
-
                     <span class="phone-login-coming-text">
-
-                        <i class="fa-solid fa-mobile-screen-button"
-                           aria-hidden="true">
-                        </i>
-
+                        <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
                         Đăng nhập nhanh bằng số điện thoại
-
                     </span>
-
                     <span class="phone-login-coming-line"></span>
-
                 </div>
-
 
                 <!-- REGISTER -->
                 <p class="switch-auth">
-
                     Chưa có tài khoản?
-
-                    <a asp-controller="Auth"
-                       asp-action="Register">
-
-                        Đăng ký ngay
-
-                    </a>
-
+                    <a asp-controller="Auth" asp-action="Register">Đăng ký ngay</a>
                 </p>
 
             </form>
-
         </div>
-
     </div>
 </section>
 
-
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
-
     <script src="https://static.geetest.com/v4/gt4.js"></script>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("loginForm");
+            const button = document.getElementById("loginButton");
+            const message = document.getElementById("captchaMessage");
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-
-                const form =
-                    document.getElementById("loginForm");
-
-                const button =
-                    document.getElementById("loginButton");
-
-                const message =
-                    document.getElementById("captchaMessage");
-
-
-                const captchaId = @Html.Raw(
-                                    System.Text.Json.JsonSerializer.Serialize(
-                                            captchaId ?? ""
-                                    )
-                            );
-
+            const captchaId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(captchaId ?? ""));
 
             let captchaObj = null;
-            let captchaReady = false;
             let verified = false;
 
-
-                /*
-                 * SHOW / HIDE PASSWORD
-                 */
-                document
-                    .querySelectorAll(".field-toggle")
-                    .forEach(function (toggle) {
-
-                        toggle.addEventListener(
-                            "click",
-                            function () {
-
-                                const targetId =
-                                    toggle.getAttribute(
-                                        "data-toggle-target"
-                                    );
-
-                                const input =
-                                    document.getElementById(
-                                        targetId
-                                    );
-
-                                const icon =
-                                    toggle.querySelector("i");
-
-                                const isHidden =
-                                    input.type === "password";
-
-
-                                input.type =
-                                    isHidden
-                                        ? "text"
-                                        : "password";
-
-
-                                toggle.setAttribute(
-                                    "aria-pressed",
-                                    isHidden
-                                        ? "true"
-                                        : "false"
-                                );
-
-
-                                toggle.setAttribute(
-                                    "aria-label",
-                                    isHidden
-                                        ? "Ẩn mật khẩu"
-                                        : "Hiện mật khẩu"
-                                );
-
-
-                                icon.classList.toggle(
-                                    "fa-eye",
-                                    !isHidden
-                                );
-
-
-                                icon.classList.toggle(
-                                    "fa-eye-slash",
-                                    isHidden
-                                );
-
-                            }
-                        );
-
-                    });
-
-
-                /*
-                 * CAPTCHA CONFIG
-                 */
-                if (!captchaId) {
-
-                    console.error(
-                        "GeeTest Login CaptchaId chưa được cấu hình."
-                    );
-
-                    message.textContent =
-                        "CAPTCHA chưa được cấu hình trên máy chủ.";
-
-                    button.disabled =
-                        true;
-
-                    return;
-                }
-
-
-                if (
-                    typeof initGeetest4 !== "function"
-                ) {
-
-                    console.error(
-                        "Không tìm thấy initGeetest4."
-                    );
-
-                    message.textContent =
-                        "Không thể tải CAPTCHA. Vui lòng tải lại trang.";
-
-                    return;
-                }
-
-
-                function setLoading(
-                    isLoading
-                ) {
-
-                    button.classList.toggle(
-                        "is-loading",
-                        isLoading
-                    );
-
-                    button.disabled =
-                        isLoading;
-                }
-
-
-                /*
-                 * INIT GEETEST
-                 */
-                initGeetest4(
-
-                    {
-                        captchaId:
-                            captchaId,
-
-                        product:
-                            "bind",
-
-                        riskType:
-                            "slide"
-                    },
-
-                    function (captcha) {
-
-                        captchaObj =
-                            captcha;
-
-
-                        captcha.onReady(
-                            function () {
-
-                                captchaReady =
-                                    true;
-
-                            }
-                        );
-
-
-                        captcha.onSuccess(
-                            function () {
-
-                                const result =
-                                    captcha.getValidate();
-
-
-                                if (!result) {
-
-                                    message.textContent =
-                                        "Không lấy được kết quả CAPTCHA.";
-
-                                    verified =
-                                        false;
-
-                                    setLoading(
-                                        false
-                                    );
-
-                                    return;
-                                }
-
-
-                                document
-                                    .getElementById(
-                                        "lotNumber"
-                                    )
-                                    .value =
-                                    result.lot_number
-                                    || "";
-
-
-                                document
-                                    .getElementById(
-                                        "captchaOutput"
-                                    )
-                                    .value =
-                                    result.captcha_output
-                                    || "";
-
-
-                                document
-                                    .getElementById(
-                                        "passToken"
-                                    )
-                                    .value =
-                                    result.pass_token
-                                    || "";
-
-
-                                document
-                                    .getElementById(
-                                        "genTime"
-                                    )
-                                    .value =
-                                    result.gen_time
-                                    || "";
-
-
-                                verified =
-                                    true;
-
-                                message.textContent =
-                                    "";
-
-
-                                setLoading(
-                                    true
-                                );
-
-
-                                form.submit();
-
-                            }
-                        );
-
-
-                        captcha.onError(
-                            function (error) {
-
-                                console.error(
-                                    "GeeTest Login ERROR:",
-                                    error
-                                );
-
-
-                                verified =
-                                    false;
-
-
-                                setLoading(
-                                    false
-                                );
-
-
-                                message.textContent =
-                                    "Không thể xác minh CAPTCHA. Vui lòng thử lại.";
-
-                            }
-                        );
-
+            /* SHOW / HIDE PASSWORD */
+            document.querySelectorAll(".field-toggle").forEach(function (toggle) {
+                toggle.addEventListener("click", function () {
+                    const targetId = toggle.getAttribute("data-toggle-target");
+                    const input = document.getElementById(targetId);
+                    const icon = toggle.querySelector("i");
+                    if (!input) return;
+
+                    const isHidden = input.type === "password";
+                    input.type = isHidden ? "text" : "password";
+                    toggle.setAttribute("aria-pressed", isHidden ? "true" : "false");
+                    if (icon) {
+                        icon.classList.toggle("fa-eye", !isHidden);
+                        icon.classList.toggle("fa-eye-slash", isHidden);
                     }
-                );
+                });
+            });
 
-
-                /*
-                 * SUBMIT FORM
-                 */
-                form.addEventListener(
-                    "submit",
-                    function (event) {
-
-                        if (verified) {
-                            return;
-                        }
-
-
-                        event.preventDefault();
-
-
-                        if (!form.checkValidity()) {
-
-                            form.reportValidity();
-
-                            return;
-                        }
-
-
-                        if (!captchaObj) {
-
-                            message.textContent =
-                                "CAPTCHA chưa sẵn sàng. Vui lòng tải lại trang.";
-
-                            return;
-                        }
-
-
-                        if (!captchaReady) {
-
-                            message.textContent =
-                                "CAPTCHA đang tải, vui lòng thử lại sau giây lát.";
-
-                            return;
-                        }
-
-
-                        document
-                            .getElementById("lotNumber")
-                            .value = "";
-
-
-                        document
-                            .getElementById("captchaOutput")
-                            .value = "";
-
-
-                        document
-                            .getElementById("passToken")
-                            .value = "";
-
-
-                        document
-                            .getElementById("genTime")
-                            .value = "";
-
-
-                        captchaObj.showCaptcha();
-
-                    }
-                );
-
-
-                /*
-                 * INPUT CHANGE
-                 */
-                form
-                    .querySelectorAll("input")
-                    .forEach(function (input) {
-
-                        input.addEventListener(
-                            "input",
-                            function () {
-
-                                if (
-                                    input.name === "Identifier"
-                                    ||
-                                    input.name === "Password"
-                                ) {
-
-                                    verified =
-                                        false;
-
-                                }
-
-                            }
-                        );
-
-                    });
-
+            function setLoading(isLoading) {
+                if (!button) return;
+                button.classList.toggle("is-loading", isLoading);
+                button.disabled = isLoading;
             }
-        );
 
+            function initCaptcha() {
+                if (!captchaId || typeof initGeetest4 !== "function") {
+                    if (message) message.textContent = "Chưa cấu hình CAPTCHA.";
+                    return;
+                }
+
+                if (captchaObj && typeof captchaObj.destroy === "function") {
+                    captchaObj.destroy();
+                }
+
+                initGeetest4(
+                    {
+                        captchaId: captchaId,
+                        product: "bind",
+                        riskType: "slide"
+                    },
+                    function (captcha) {
+                        captchaObj = captcha;
+
+                        captcha.onSuccess(function () {
+                            const result = captcha.getValidate();
+                            if (!result) {
+                                setLoading(false);
+                                return;
+                            }
+
+                            document.getElementById("lotNumber").value = result.lot_number || "";
+                            document.getElementById("captchaOutput").value = result.captcha_output || "";
+                            document.getElementById("passToken").value = result.pass_token || "";
+                            document.getElementById("genTime").value = result.gen_time || "";
+
+                            verified = true;
+                            if (message) message.textContent = "";
+
+                            setLoading(true);
+                            form.submit();
+                        });
+
+                        captcha.onClose(function () {
+                            setLoading(false);
+                        });
+
+                        captcha.onError(function (error) {
+                            console.error("GeeTest Login ERROR:", error);
+                            setLoading(false);
+                        });
+                    }
+                );
+            }
+
+            initCaptcha();
+
+            form.addEventListener("submit", function (event) {
+                if (verified) return;
+
+                event.preventDefault();
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                if (!captchaObj) {
+                    return;
+                }
+
+                setLoading(true);
+                captchaObj.showCaptcha();
+            });
+        });
     </script>
-
 }
