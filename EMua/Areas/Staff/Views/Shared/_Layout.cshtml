@@ -1,598 +1,283 @@
 @{
-    var currentController =
-        ViewContext.RouteData.Values["Controller"]?.ToString();
+    var displayName = User.Identity?.Name ?? "Nhân viên";
+    var avatarLetter = string.IsNullOrWhiteSpace(displayName)
+        ? "N"
+        : displayName[..1].ToUpperInvariant();
 
-    var currentAction =
-        ViewContext.RouteData.Values["Action"]?.ToString();
-
-    var hideFloatingCart =
-        string.Equals(
-            currentController,
-            "Checkout",
-            StringComparison.OrdinalIgnoreCase
-        )
-        ||
-        string.Equals(
-            currentController,
-            "Cart",
-            StringComparison.OrdinalIgnoreCase
-        );
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
 }
-
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EMUA Nhân viên</title>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
-
-    <title>
-        @ViewData["Title"] - EMUA
-    </title>
-
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
     <link rel="stylesheet"
-          href="~/css/site.css"
+          href="~/css/admin/admin-layout.css"
+          asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/css/staff/staff.css"
           asp-append-version="true" />
 
-    <link rel="stylesheet"
-          href="~/css/header.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/footer.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/ai-chat.css"
-          asp-append-version="true" />
-
-
-    @await RenderSectionAsync(
-    "Styles",
-        required: false
-        )
-
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-
-
 <body>
+    <div class="admin-shell staff-shell">
+        <div class="admin-sidebar-backdrop"
+             id="staffSidebarBackdrop"></div>
 
-
-    <!-- =========================================
-         HEADER
-    ========================================== -->
-
-    <partial name="_Header" />
-
-
-
-    <!-- =========================================
-         MAIN
-    ========================================== -->
-
-    <main>
-
-        @RenderBody()
-
-    </main>
-
-
-
-    <!-- =========================================
-         FLOATING CART
-         Không hiện ở Cart và Checkout
-    ========================================== -->
-    @if (!hideFloatingCart)
-    {
-        <a asp-controller="Cart"
-           asp-action="Index"
-           id="emuaFloatingCart"
-           class="emua-floating-cart"
-           title="Xem giỏ hàng">
-
-            <div class="floating-cart-icon">
-
-                <i class="bi bi-cart3"></i>
-
-                <span id="floatingCartCount"
-                      class="floating-cart-count">
-                    0
+        <aside class="admin-sidebar staff-sidebar"
+               id="staffSidebar">
+            <a asp-area="Staff"
+               asp-controller="Dashboard"
+               asp-action="Index"
+               class="admin-logo"
+               title="EMUA Nhân viên">
+                <span class="admin-logo-text">
+                    <strong>EMUA</strong>
+                    <small>Nhân viên</small>
                 </span>
+                <span class="admin-logo-mini">EM</span>
+            </a>
 
+            <nav class="admin-nav">
+                <span class="admin-nav-label">Tổng quan</span>
+
+                <a class="@(currentController == "Dashboard" ? "active" : "")"
+                   data-tooltip="Tổng quan"
+                   asp-area="Staff"
+                   asp-controller="Dashboard"
+                   asp-action="Index">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Tổng quan</span>
+                </a>
+
+                <span class="admin-nav-label">Quản lý bán hàng</span>
+
+                <a class="@(currentController == "Product" ? "active" : "")"
+                   data-tooltip="Sản phẩm"
+                   asp-area="Staff"
+                   asp-controller="Product"
+                   asp-action="Index">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="@(currentController == "Order" ? "active" : "")"
+                   data-tooltip="Đơn hàng"
+                   asp-area="Staff"
+                   asp-controller="Order"
+                   asp-action="Index">
+                    <i class="bi bi-receipt"></i>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <a class="@(currentController == "Promotion" ? "active" : "")"
+                   data-tooltip="Khuyến mãi"
+                   asp-area="Staff"
+                   asp-controller="Promotion"
+                   asp-action="Index">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Khuyến mãi</span>
+                </a>
+
+                <a class="@(currentController == "Invoice" ? "active" : "")"
+                   data-tooltip="Hóa đơn"
+                   asp-area="Staff"
+                   asp-controller="Invoice"
+                   asp-action="Index">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Hóa đơn</span>
+                </a>
+
+                <a class="@(currentController == "Report" ? "active" : "")"
+                   data-tooltip="Báo cáo"
+                   asp-area="Staff"
+                   asp-controller="Report"
+                   asp-action="Index">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Báo cáo thống kê</span>
+                </a>
+
+                <span class="admin-nav-label">Tài khoản</span>
+
+                <a class="@(currentController == "Profile" ? "active" : "")"
+                   data-tooltip="Cài đặt"
+                   asp-area="Staff"
+                   asp-controller="Profile"
+                   asp-action="Index">
+                    <i class="bi bi-gear"></i>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+
+            <div class="admin-sidebar-bottom">
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   class="admin-bottom-link"
+                   data-tooltip="Xem website">
+                    <i class="bi bi-eye"></i>
+                    <span>Xem website</span>
+                </a>
+
+                <form asp-area=""
+                      asp-controller="Auth"
+                      asp-action="Logout"
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit"
+                            class="admin-bottom-link logout"
+                            data-tooltip="Đăng xuất">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
             </div>
+        </aside>
 
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <button type="button"
+                            class="admin-menu-toggle"
+                            id="staffMenuToggle"
+                            aria-label="Thu gọn menu"
+                            aria-controls="staffSidebar"
+                            aria-expanded="true">
+                        <i class="bi bi-list"></i>
+                    </button>
 
-            <span class="floating-cart-text">
-                Giỏ hàng
-            </span>
+                    <div>
+                        <h1>@ViewData["Title"]</h1>
+                        <p>EMUA Nhân viên — @DateTime.Now.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
 
-        </a>
-    }
+                <div class="admin-header-actions staff-header-actions">
+                    <a asp-area=""
+                       asp-controller="Home"
+                       asp-action="Index"
+                       class="admin-header-link"
+                       title="Xem website">
+                        <i class="bi bi-house-door"></i>
+                        <span>Trang chủ</span>
+                    </a>
 
+                    <button type="button"
+                            class="admin-header-link"
+                            title="Thông báo">
+                        <i class="bi bi-bell"></i>
+                        <span>Thông báo</span>
+                    </button>
 
+                    <div class="admin-user" title="@displayName">
+                        <div class="admin-avatar">@avatarLetter</div>
+                        <span class="staff-user-name">@displayName</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
 
-    <!-- =========================================
-         AI CHAT
-    ========================================== -->
+            <section class="admin-content staff-content">
+                @if (TempData["Success"] is string successMessage)
+                {
+                    <div class="alert alert-success staff-alert">@successMessage</div>
+                }
 
-    <partial name="_AIChat" />
-
-
-
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
-    <partial name="_Footer" />
-
-
-
-    <!-- =========================================
-         CSS FLOATING CART
-    ========================================== -->
-
-    <style>
-
-        .emua-floating-cart {
-            position: fixed;
-            right: 28px;
-            bottom: 30px;
-            z-index: 9990;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 15px 10px 10px;
-            border-radius: 999px;
-            color: white;
-            text-decoration: none;
-            background: linear-gradient( 135deg, #4d4a8d, #7068df );
-            box-shadow: 0 12px 35px rgba(54, 49, 130, .38);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(25px) scale(.9);
-            pointer-events: none;
-            transition: opacity .3s ease, transform .3s ease, visibility .3s ease, box-shadow .3s ease;
-        }
-
-
-            .emua-floating-cart.show {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0) scale(1);
-                pointer-events: auto;
-            }
-
-
-            .emua-floating-cart:hover {
-                color: white;
-                transform: translateY(-4px) scale(1.03);
-                box-shadow: 0 17px 45px rgba(54, 49, 130, .50);
-            }
-
-
-        .floating-cart-icon {
-            position: relative;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba( 255, 255, 255, .14 );
-            font-size: 21px;
-        }
-
-
-        .floating-cart-count {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 21px;
-            height: 21px;
-            padding: 0 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            color: white;
-            background: #ed3655;
-            border: 2px solid #5a55a4;
-            font-size: 10px;
-            font-weight: 800;
-        }
-
-
-        .floating-cart-text {
-            padding-right: 3px;
-            font-size: 13px;
-            font-weight: 650;
-            white-space: nowrap;
-        }
-
-
-        .emua-floating-cart.cart-pop {
-            animation: floatingCartPop .55s ease;
-        }
-
-
-        @@keyframes floatingCartPop {
-
-            0% {
-                transform: scale(1);
-            }
-
-            40% {
-                transform: scale(1.18);
-            }
-
-            70% {
-                transform: scale(.96);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-
-        @@media(max-width:600px) {
-
-            .emua-floating-cart {
-                right: 15px;
-                bottom: 18px;
-                padding: 8px;
-            }
-
-
-            .floating-cart-text {
-                display: none;
-            }
-
-
-            .floating-cart-icon {
-                width: 48px;
-                height: 48px;
-            }
-        }
-
-    </style>
-
-
-
-    <!-- =========================================
-         JS
-    ========================================== -->
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+                @RenderBody()
+            </section>
+        </main>
+    </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="~/js/site.js"
-            asp-append-version="true"></script>
-
-
-
     <script>
-
-        /*
-         * =========================================
-         * CẬP NHẬT COUNT TOÀN WEBSITE
-         * =========================================
-         */
-
-        window.setGlobalCartCount =
-            function (
-                count,
-                animate = true
-            ) {
-
-                count =
-                    parseInt(count)
-                    || 0;
-
-
-                /*
-                 * Badge trên Header
-                 */
-                const headerBadges =
-                    document.querySelectorAll(
-                        '.cart-count'
-                    );
-
-
-                headerBadges.forEach(
-                    function (badge) {
-
-                        badge.textContent =
-                            count;
-
-                    }
-                );
-
-
-                /*
-                 * Badge Floating Cart
-                 */
-                const floatingCount =
-                    document.getElementById(
-                        'floatingCartCount'
-                    );
-
-
-                if (floatingCount) {
-
-                    floatingCount.textContent =
-                        count;
-
-                }
-
-
-                /*
-                 * Lưu count
-                 */
-                localStorage.setItem(
-                    'emuaCartCount',
-                    count
-                );
-
-
-                const floatingCart =
-                    document.getElementById(
-                        'emuaFloatingCart'
-                    );
-
-
-                /*
-                 * Nếu trang đang không có floating cart
-                 * ví dụ Cart / Checkout
-                 */
-                if (!floatingCart)
-                    return;
-
-
-                /*
-                 * Có hàng và đang cuộn xuống
-                 */
-                if (
-                    count > 0
-                    &&
-                    window.scrollY > 250
-                ) {
-
-                    floatingCart
-                        .classList
-                        .add('show');
-
-                }
-                else {
-
-                    floatingCart
-                        .classList
-                        .remove('show');
-
-                }
-
-
-                /*
-                 * Animation khi thêm hàng
-                 */
-                if (animate) {
-
-                    floatingCart
-                        .classList
-                        .remove(
-                            'cart-pop'
-                        );
-
-
-                    void floatingCart.offsetWidth;
-
-
-                    floatingCart
-                        .classList
-                        .add(
-                            'cart-pop'
-                        );
-
-
-                    setTimeout(
-                        function () {
-
-                            floatingCart
-                                .classList
-                                .remove(
-                                    'cart-pop'
-                                );
-
-                        },
-                        600
-                    );
-
-                }
-
-            };
-
-
-
-        /*
-         * =========================================
-         * KHI LOAD TRANG
-         * =========================================
-         */
-
-        document.addEventListener(
-            'DOMContentLoaded',
-            function () {
-
-                const floatingCart =
-                    document.getElementById(
-                        'emuaFloatingCart'
-                    );
-
-
-                /*
-                 * Trang Cart / Checkout
-                 * không có floating cart
-                 */
-                if (!floatingCart)
-                    return;
-
-
-                const floatingCount =
-                    document.getElementById(
-                        'floatingCartCount'
-                    );
-
-
-                const headerCount =
-                    document.querySelector(
-                        '.cart-count'
-                    );
-
-
-                /*
-                 * Lấy count đã lưu
-                 */
-                let storedCount =
-                    parseInt(
-                        localStorage.getItem(
-                            'emuaCartCount'
-                        )
-                    )
-                    || 0;
-
-
-                /*
-                 * Nếu Header đang có count > 0
-                 * thì dùng giá trị Header
-                 */
-                if (headerCount) {
-
-                    const headerValue =
-                        parseInt(
-                            headerCount.textContent
-                        )
-                        || 0;
-
-
-                    if (
-                        headerValue > 0
-                    ) {
-
-                        storedCount =
-                            headerValue;
-
-                    }
-
-                }
-
-
-                /*
-                 * Set số ban đầu
-                 */
-                if (floatingCount) {
-
-                    floatingCount.textContent =
-                        storedCount;
-
-                }
-
-
-                /*
-                 * Đồng bộ Header
-                 */
-                document
-                    .querySelectorAll(
-                        '.cart-count'
-                    )
-                    .forEach(
-                        function (badge) {
-
-                            badge.textContent =
-                                storedCount;
-
-                        }
-                    );
-
-
-                /*
-                 * Hàm kiểm tra hiện/ẩn
-                 */
-                function checkFloatingCart() {
-
-                    const count =
-                        parseInt(
-                            floatingCount
-                                ?.textContent
-                        )
-                        || 0;
-
-
-                    if (
-                        count > 0
-                        &&
-                        window.scrollY > 250
-                    ) {
-
-                        floatingCart
-                            .classList
-                            .add(
-                                'show'
-                            );
-
-                    }
-                    else {
-
-                        floatingCart
-                            .classList
-                            .remove(
-                                'show'
-                            );
-
-                    }
-
-                }
-
-
-                /*
-                 * Scroll
-                 */
-                window.addEventListener(
-                    'scroll',
-                    checkFloatingCart,
-                    {
-                        passive: true
-                    }
-                );
-
-
-                /*
-                 * Check lần đầu
-                 */
-                checkFloatingCart();
-
+        const sidebar = document.getElementById("staffSidebar");
+        const backdrop = document.getElementById("staffSidebarBackdrop");
+        const menuToggle = document.getElementById("staffMenuToggle");
+
+        const desktopBreakpoint = 850;
+        const sidebarStorageKey = "emua_staff_sidebar_collapsed";
+
+        function isMobile() {
+            return window.innerWidth <= desktopBreakpoint;
+        }
+
+        function closeMobileSidebar() {
+            sidebar?.classList.remove("is-open");
+            backdrop?.classList.remove("is-visible");
+        }
+
+        function updateDesktopSidebar() {
+            if (isMobile()) {
+                document.body.classList.remove("admin-sidebar-collapsed");
+                closeMobileSidebar();
+                return;
             }
-        );
 
+            const isCollapsed =
+                localStorage.getItem(sidebarStorageKey) === "true";
+
+            document.body.classList.toggle(
+                "admin-sidebar-collapsed",
+                isCollapsed
+            );
+
+            menuToggle?.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle?.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        }
+
+        menuToggle?.addEventListener("click", function () {
+            if (isMobile()) {
+                const isOpen = sidebar?.classList.toggle("is-open");
+                backdrop?.classList.toggle("is-visible", !!isOpen);
+                return;
+            }
+
+            const isCollapsed =
+                !document.body.classList.contains("admin-sidebar-collapsed");
+
+            document.body.classList.toggle(
+                "admin-sidebar-collapsed",
+                isCollapsed
+            );
+
+            localStorage.setItem(
+                sidebarStorageKey,
+                isCollapsed.toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        });
+
+        backdrop?.addEventListener("click", closeMobileSidebar);
+
+        window.addEventListener("resize", updateDesktopSidebar);
+        updateDesktopSidebar();
     </script>
 
-
-
-    @await RenderSectionAsync(
-    "Scripts",
-        required: false
-        )
-
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
-
 </html>
