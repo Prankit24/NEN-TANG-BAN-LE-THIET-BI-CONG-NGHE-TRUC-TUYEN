@@ -5,6 +5,7 @@ using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EMua.Areas.Admin.Controllers;
 
@@ -270,8 +271,9 @@ public class BrandController : Controller
         return $"/uploads/brands/{name}";
     }
 
+    // ĐÃ SỬA HÀM NÀY ĐỂ TRÁNH BỊ BỎ SÓT ROLE
     private bool IsFixedAdmin()
     {
-        return User.IsInRole("Quản trị viên");
+        return User.IsInRole("Quản trị viên") || User.IsInRole("Admin") || User.IsInRole("QuanTriVien");
     }
 }

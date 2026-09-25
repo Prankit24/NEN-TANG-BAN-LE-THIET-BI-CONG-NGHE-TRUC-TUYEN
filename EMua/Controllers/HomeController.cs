@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using EMua.Data;
-using EMua.Models;
 using EMua.Models.ViewModels;
+using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

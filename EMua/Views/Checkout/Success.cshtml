@@ -1,18 +1,132 @@
 @model EMua.ViewModels.CheckoutSuccessViewModel
+
 @{
-    ViewData["Title"] = "Đặt hàng thành công";
+    ViewData["Title"] = "Hoàn tất đơn hàng";
+
+    // Tự động tạo Link VietQR chuẩn
+    var bankQrUrl = !string.IsNullOrEmpty(Model.BankQrUrl)
+        ? Model.BankQrUrl
+        : $"https://img.vietqr.io/image/MB-22224032005-compact2.png?amount={(long)Model.TotalAmount}&addInfo={Model.TransferContent}&accountName=TECH";
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4">    <partial name="_CheckoutSteps" model="4" />
-    <section class="checkout-success"><i class="bi bi-check-circle-fill"></i><span class="eyebrow">HOÀN TẤT</span>
-        <h1>Đặt hàng thành công</h1>
-        <p>Mã đơn hàng: <strong>#DH-@Model.OrderId.ToString("D5")</strong></p><strong
-        class="success-total">@Model.Total.ToString("N0") đ</strong>@if (Model.IsPaid) {
-        <small>Đã thanh
-            toán</small>
-        }
-        <div><a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId"
-                    class="customer-button">Xem chi tiết đơn hàng</a><a asp-controller="Home" asp-action="Index"
-                                                                class="back-link">Tiếp tục mua sắm</a></div>
-        </section>
+
+<div class="checkout-success-container container my-5">
+    <!-- Stepper Tiến trình -->
+    <div class="d-flex justify-content-center align-items-center mb-4 gap-2 text-muted small">
+        <span>1. Thông tin</span> &gt; <span>2. Xác nhận</span> &gt; <strong class="text-dark">3. Thanh toán</strong>
     </div>
+
+    <div class="card border-0 shadow-sm mx-auto overflow-hidden" style="max-width: 680px; border-radius: 16px;">
+
+        @if (Model.PaymentMethod == "COD")
+        {
+            <!-- HEADER TÍNH NĂNG COD -->
+            <div class="card-header bg-white border-0 text-center pt-4 pb-2">
+                <div class="mb-3">
+                    <span class="badge rounded-circle bg-success-subtle text-success p-3 display-6">
+                        <i class="bi bi-box-seam"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold text-success">Đặt hàng thành công!</h3>
+                <p class="text-muted mb-0">Đơn hàng của bạn đã được ghi nhận và đang chuẩn bị giao.</p>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="bg-light p-3 rounded-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <span class="text-muted d-block small">Mã đơn hàng</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted d-block small">Tổng thanh toán</span>
+                            <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4">
+                    <i class="bi bi-clock-history fs-2 text-success"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Thời gian giao hàng dự kiến: 30 - 45 phút</h6>
+                        <small class="text-secondary">Đơn hàng sẽ được giao đến địa chỉ: <strong>@Model.Address</strong>. Bạn vui lòng chuẩn bị đúng số tiền khi nhận hàng.</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-dark btn-lg py-2 fs-6">
+                        <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg py-2 fs-6">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- HEADER TÍNH NĂNG CHUYỂN KHOẢN (BANK / MOMO) -->
+            <div class="card-header bg-white border-0 text-center pt-4 pb-2">
+                <div class="mb-3">
+                    <span class="badge rounded-circle bg-primary-subtle text-primary p-3 display-6">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold text-primary">Vui lòng hoàn tất thanh toán</h3>
+                <p class="text-muted mb-0">Quét mã QR bên dưới để chuyển khoản. Nhân viên sẽ duyệt đơn ngay khi nhận tiền.</p>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="bg-light p-3 rounded-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <span class="text-muted d-block small">Mã đơn hàng</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted d-block small">Tổng thanh toán</span>
+                            <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qr-box border border-primary-subtle rounded-3 p-4 bg-light text-center mb-4">
+                    <span class="badge bg-primary mb-2">Thanh toán qua @Model.PaymentMethod</span>
+                    <h5 class="fw-bold mb-3">Quét mã QR để thanh toán</h5>
+
+                    <div class="d-inline-block p-2 bg-white rounded shadow-sm mb-3">
+                        @if (Model.PaymentMethod == "MOMO")
+                        {
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=@Model.TransferContent" alt="MoMo QR" class="img-fluid" style="max-width: 220px;" />
+                        }
+                        else
+                        {
+                            <img src="@bankQrUrl" alt="VietQR Bank" class="img-fluid" style="max-width: 220px;" />
+                        }
+                    </div>
+
+                    <div class="text-start bg-white p-3 rounded border">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Nội dung chuyển khoản:</span>
+                            <span class="fw-bold text-primary">@Model.TransferContent</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Trạng thái xác thực:</span>
+                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Chờ nhân viên duyệt</span>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để nhân viên đối soát nhanh nhất.</small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-dark btn-lg py-2 fs-6">
+                        <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg py-2 fs-6">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

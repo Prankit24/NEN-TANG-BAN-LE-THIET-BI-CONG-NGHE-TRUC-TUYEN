@@ -281,14 +281,27 @@ public class AuthController : Controller
 
         await SignInUserAsync(user, model.RememberMe);
 
+        // =====================================================
+        // ÉP CHUYỂN HƯỚNG TRỰC TIẾP THEO QUYỀN
+        // =====================================================
+
+        // 1. ADMIN (MaQuyen == 1) -> Vào thẳng Admin Dashboard ngay lập tức
+        if (IsAdmin(user))
+        {
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+        }
+
+        // 2. STAFF (MaQuyen == 2) -> Vào thẳng Staff Dashboard
         if (IsStaff(user))
         {
             return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
         }
 
+        // 3. Khách hàng nếu có returnUrl hợp lệ
         if (Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl!);
 
+        // 4. Mặc định là Khách hàng -> Về trang chủ
         return RedirectToAction("Index", "Home");
     }
 
@@ -419,6 +432,12 @@ public class AuthController : Controller
         await SignInUserAsync(user, true);
         await HttpContext.SignOutAsync("External");
 
+        // ÉP CHUYỂN HƯỚNG TRỰC TIẾP
+        if (IsAdmin(user))
+        {
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+        }
+
         if (IsStaff(user))
         {
             return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
@@ -458,12 +477,19 @@ public class AuthController : Controller
 
     private async Task SignInUserAsync(NguoiDung user, bool rememberMe)
     {
+        var roleName = user.MaQuyenNavigation?.TenQuyen ?? (user.MaQuyen switch
+        {
+            1 => "Quản trị viên",
+            2 => "Nhân viên",
+            _ => "Khách hàng"
+        });
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.MaNguoiDung.ToString()),
-            new(ClaimTypes.Name, user.TenNguoiDung ?? "Khách hàng"),
+            new(ClaimTypes.Name, user.TenNguoiDung ?? "Người dùng"),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
-            new(ClaimTypes.Role, user.MaQuyenNavigation?.TenQuyen ?? "KhachHang")
+            new(ClaimTypes.Role, roleName)
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -555,10 +581,16 @@ public class AuthController : Controller
         return result;
     }
 
+    private static bool IsAdmin(NguoiDung user)
+    {
+        var roleName = user.MaQuyenNavigation?.TenQuyen;
+        return user.MaQuyen == 1 || roleName is "QuanTriVien" or "Quản trị viên" or "Admin";
+    }
+
     private static bool IsStaff(NguoiDung user)
     {
         var roleName = user.MaQuyenNavigation?.TenQuyen;
-        return roleName is "NhanVien" or "Nhân viên";
+        return user.MaQuyen == 2 || roleName is "NhanVien" or "Nhân viên";
     }
 
     private sealed class GeeTestValidationResult

@@ -2,6 +2,7 @@ using EMua.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EMua.Areas.Admin.Controllers;
 
@@ -18,12 +19,12 @@ public class DashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-        if (!User.IsInRole("Quản trị viên"))
+        // Kiểm tra xem User có phải là Admin/Quản trị viên không
+        var isAuthorized = User.IsInRole("Quản trị viên") || User.IsInRole("Admin") || User.IsInRole("QuanTriVien");
+
+        if (!isAuthorized)
         {
-            return RedirectToAction(
-                "Index",
-                "Home",
-                new { area = "" });
+            return RedirectToAction("Index", "Home", new { area = "" });
         }
 
         var now = DateTime.Now;
@@ -34,6 +35,7 @@ public class DashboardController : Controller
 
         var firstDayThisYear = new DateTime(now.Year, 1, 1);
         var firstDayNextYear = firstDayThisYear.AddYears(1);
+
         var validOrders = _db.DonHangs.Where(x =>
             x.NgayDat != null &&
             (x.TrangThaiDonHang == null ||
@@ -66,6 +68,7 @@ public class DashboardController : Controller
             x.MaQuyen == 3 &&
             x.NgayTao >= firstDayLastMonth &&
             x.NgayTao < firstDayThisMonth);
+
         var rawMonthlyRevenue = await validOrders
             .Where(x =>
                 x.NgayDat >= firstDayThisYear &&
@@ -84,6 +87,7 @@ public class DashboardController : Controller
                     .FirstOrDefault(x => x.Month == month)
                     ?.Revenue ?? 0)
             .ToList();
+
         var categorySales = await (
             from detail in _db.ChiTietDonHangs
             join order in validOrders
@@ -107,6 +111,7 @@ public class DashboardController : Controller
         var maxCategorySales = categorySales.Count == 0
             ? 1
             : categorySales.Max(x => x.Total);
+
         var recentOrdersRaw = await (
             from order in _db.DonHangs
             join user in _db.NguoiDungs

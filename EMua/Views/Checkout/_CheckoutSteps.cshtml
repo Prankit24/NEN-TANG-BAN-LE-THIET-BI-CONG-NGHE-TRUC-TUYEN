@@ -1,8 +1,20 @@
 @model int
+
 <nav class="checkout-steps" aria-label="Tiến trình đặt hàng">
-    <div class="checkout-step @(Model >= 1 ? "active" : "")"><span>1</span><strong>Thông tin</strong></div>
+    <div class="checkout-step @(Model >= 1 ? "active" : "")">
+        <span>1</span>
+        <strong>Thông tin</strong>
+    </div>
     <i class="bi bi-chevron-right"></i>
-    <div class="checkout-step @(Model >= 2 ? "active" : "")"><span>2</span><strong>Xác nhận</strong></div>
+
+    <div class="checkout-step @(Model >= 2 ? "active" : "")">
+        <span>2</span>
+        <strong>Xác nhận</strong>
+    </div>
     <i class="bi bi-chevron-right"></i>
-    <div class="checkout-step @(Model >= 3 ? "active" : "")"><span>3</span><strong>Thanh toán</strong></div>
+
+    <div class="checkout-step @(Model >= 3 ? "active" : "")">
+        <span>3</span>
+        <strong>Thanh toán</strong>
+    </div>
 </nav>
