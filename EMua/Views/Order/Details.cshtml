@@ -1,64 +1,283 @@
-@model EMua.ViewModels.OrderDetailsViewModel
+@using EMua.ViewModels
+@model OrderDetailsViewModel
 @{
     ViewData["Title"] = $"Đơn hàng #{Model.OrderId:D5}";
-}
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" /><div class="customer-page container py-4"><a class="back-link" asp-action="Index"><i class="bi bi-arrow-left"></i> Đơn
-hàng của tôi</a>
-<div class="customer-heading compact">
-    <div><span class="eyebrow">ORDER #DH-@Model.OrderId.ToString("D5")</span>
-        <h1>Chi tiết đơn hàng</h1>
-        <p>@Model.OrderedAt?.ToString("dd/MM/yyyy HH:mm") · <strong>@Model.Status</strong></p>
-    </div>
-</div>@if (TempData["Success"] != null) {
-<div class="customer-alert success">@TempData["Success"]</div>
+
+    string FixImageUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return "/images/default-product.png";
+
+        if (url.StartsWith("http://") || url.StartsWith("https://"))
+            return url;
+
+        if (!url.StartsWith("/"))
+            url = "/" + url;
+
+        return url;
     }
-@if
-    (TempData["Error"] != null)
-{
-    <div class="customer-alert error">@TempData["Error"]</div>
+
+    // Chỉ cho chỉnh số lượng / xoá sản phẩm khi đơn còn ở trạng thái chờ xử lý,
+    // khớp với điều kiện phía server (UpdateOrderItem) để tránh bấm mà không có tác dụng.
+    bool canEdit = Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán";
 }
-<div
-    class="order-detail-layout">
-    <section class="form-panel">
-        <h2>Sản phẩm đã mua</h2>@foreach (var item in Model.Items) {
-        <div class="order-product">
-            <div><strong>@item.ProductName</strong><span>@item.VariantLabel · @item.Quantity sản phẩm</span></div>
-            <div><strong>@item.LineTotal.ToString("N0") đ</strong>@if (Model.Status == "Đã hoàn thành" ||
-                Model.Status == "Đã giao") {
-                    <a asp-controller="Review" asp-action="Create"
-                       asp-route-productId="@item.ProductId" asp-route-orderId="@Model.OrderId">Đánh giá</a>
+
+<link rel="stylesheet" href="~/css/order.css" asp-append-version="true" />
+@Html.AntiForgeryToken()
+
+<div class="order-page-container">
+    <!-- Header Cố định -->
+    <div class="order-heading-inline">
+        <a asp-action="Index" class="btn-back-icon" title="Quay lại danh sách đơn hàng">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="order-header-info">
+            <span class="order-code-eyebrow">ĐƠN HÀNG #DH-@Model.OrderId.ToString("D5")</span>
+            <h1>Chi tiết đơn hàng</h1>
+            <p class="order-sub-meta">
+                <i class="bi bi-clock me-1"></i>@Model.OrderedAt?.ToString("dd/MM/yyyy HH:mm")
+                <span class="mx-1">•</span>
+                <span class="order-status-badge status-completed">@Model.Status</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Thông báo Alert -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="order-alert success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="order-alert error">@TempData["Error"]</div>
+    }
+
+    <!-- Layout Chi tiết đơn hàng -->
+    <div class="order-detail-layout">
+        <!-- Cột trái: Danh sách Sản phẩm -->
+        <section class="order-form-panel">
+            <h2 class="panel-title"><i class="bi bi-box-seam me-2"></i>Sản phẩm đã mua</h2>
+
+            <div class="order-product-list" id="orderProductList">
+                @foreach (var item in Model.Items)
+                {
+                    decimal unitPrice = item.Quantity > 0 ? (item.LineTotal / item.Quantity) : 0;
+
+                    <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice">
+                        <!-- Thumbnail ảnh sản phẩm -->
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-thumb-box">
+                            <img src="@FixImageUrl(item.ImageUrl)"
+                                 alt="@item.ProductName"
+                                 onerror="this.onerror=null; this.src='/images/default-product.png';" />
+                        </a>
+
+                        <!-- Thông tin sản phẩm -->
+                        <div class="product-info-wrap">
+                            <strong class="product-name">@item.ProductName</strong>
+                            <div class="product-sub-info">
+                                <span>@item.VariantLabel</span>
+                                <span>•</span>
+                                <span>Đơn giá: <strong class="unit-price-label">@unitPrice.ToString("N0") đ</strong></span>
+                            </div>
+
+                            <!-- Bộ tăng/giảm số lượng + Xoá sản phẩm (chỉ khi đơn còn chỉnh được) -->
+                            <div class="product-controls-row mt-2">
+                                @if (canEdit)
+                                {
+                                    <div class="quantity-control-group">
+                                        <button type="button" class="btn-qty-minus" onclick="updateQuantity(@Model.OrderId, @item.VariantId, -1)">-</button>
+                                        <input type="number" class="input-qty" id="qty-input-@item.VariantId" value="@item.Quantity" readonly />
+                                        <button type="button" class="btn-qty-plus" onclick="updateQuantity(@Model.OrderId, @item.VariantId, 1)">+</button>
+                                    </div>
+
+                                    <button type="button" class="btn-remove-item ms-2" onclick="removeItem(@Model.OrderId, @item.VariantId)" title="Xóa khỏi đơn">
+                                        <i class="bi bi-trash3 text-danger"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Số lượng: <strong>@item.Quantity</strong></span>
+                                }
+                            </div>
+
+                            <div class="product-price-row mt-2">
+                                <strong class="product-price line-total-val" id="line-total-@item.VariantId">@item.LineTotal.ToString("N0") đ</strong>
+
+                                @if (Model.Status == "Đã hoàn thành" || Model.Status == "Đã giao")
+                                {
+                                    <a asp-controller="Review"
+                                       asp-action="Create"
+                                       asp-route-productId="@item.ProductId"
+                                       asp-route-orderId="@Model.OrderId"
+                                       class="btn-review-item">
+                                        <i class="bi bi-star-fill me-1"></i>Đánh giá
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 }
             </div>
-        </div>
-    }
-    <div class="summary-total"><span>Tổng thanh toán</span><strong>@Model.Total.ToString("N0") đ</strong>
-    </div>
-</section>
-<aside>
-    <div class="summary-card">
-<h2>Giao hàng</h2><strong>@Model.RecipientName</strong>
-<p>@Model.RecipientPhone<br />@Model.ShippingAddress</p>
-<h2>Thanh toán</h2>
-<p>@Model.PaymentMethod<br /><span class="order-status">@Model.PaymentStatus</span></p>@if (Model.Status
-                == "Chờ xử lý") {
-            <form asp-action="Cancel" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                       name="id" value="@Model.OrderId" /><button class="customer-button danger-button">Hủy đơn
-                hàng</button></form>
-            }
-            @if (Model.PaymentMethod != "COD" && Model.PaymentStatus != "Đã thanh toán")
-            {
-                <form asp-action="ConfirmPayment" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                                   name="id" value="@Model.OrderId" /><button class="customer-button">Xác nhận thanh toán</button>
-                </form>
-            }
-        </div>
-        <div class="timeline">@foreach (var status in Model.StatusHistory) {
-            <div>
-                <b>@status.Status</b><small>@status.Time.ToString("dd/MM/yyyy HH:mm")</small>
-                <p>@status.Description</p>
+
+            <!-- Tổng thanh toán -->
+            <div class="summary-total">
+                <span>Tổng thanh toán</span>
+                <strong id="orderTotalDisplay">@Model.Total.ToString("N0") đ</strong>
             </div>
-        }
+        </section>
+
+        <!-- Cột phải: Thông tin Giao hàng & Thanh toán -->
+        <aside class="order-sidebar">
+            <div class="order-summary-card">
+                <!-- Giao hàng -->
+                <div class="info-block">
+                    <h3><i class="bi bi-geo-alt me-1"></i>Giao hàng</h3>
+                    <strong class="recipient-name">@Model.RecipientName</strong>
+                    <p class="info-text"><i class="bi bi-telephone me-1"></i>@Model.RecipientPhone</p>
+                    <p class="info-text">@Model.ShippingAddress</p>
+                </div>
+
+                <div class="card-divider"></div>
+
+                <!-- Thanh toán -->
+                <div class="info-block">
+                    <h3><i class="bi bi-credit-card me-1"></i>Thanh toán</h3>
+                    <p class="info-text">Phương thức: <strong>@Model.PaymentMethod</strong></p>
+                    <p class="info-text mt-1">
+                        Trạng thái: <span class="order-status-badge status-completed">@Model.PaymentStatus</span>
+                    </p>
+                </div>
+
+                <!-- Nút Tiếp tục thanh toán (dẫn tới trang QR) -->
+                @if (Model.PaymentMethod != "COD" && Model.PaymentStatus != "Đã thanh toán" && Model.Status != "Đã hủy")
+                {
+                    <a asp-controller="Checkout"
+                       asp-action="Success"
+                       asp-route-id="@Model.OrderId"
+                       class="order-btn-action btn-primary-action mt-3">
+                        <i class="bi bi-qr-code-scan me-1"></i> Tiếp tục thanh toán
+                    </a>
+                }
+
+                <!-- Nút Hủy đơn hàng -->
+                @if (Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán")
+                {
+                    <form asp-action="Cancel" method="post" class="mt-3" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="order-btn-action danger-button">Hủy đơn hàng</button>
+                    </form>
+                }
+            </div>
+
+            <!-- Lịch sử đơn hàng (Timeline) -->
+            @if (Model.StatusHistory != null && Model.StatusHistory.Any())
+            {
+                <div class="order-summary-card">
+                    <h3><i class="bi bi-clock-history me-1"></i>Lịch sử đơn hàng</h3>
+                    <div class="timeline">
+                        @foreach (var status in Model.StatusHistory)
+                        {
+                            <div class="timeline-item">
+                                <b>@status.Status</b>
+                                <small>@status.Time.ToString("dd/MM/yyyy HH:mm")</small>
+                                <p>@status.Description</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </aside>
     </div>
-</aside>
 </div>
-</div>
+
+@section Scripts {
+    <script>
+        // Cập nhật số lượng sản phẩm & Tính toán tiền trực tiếp trên UI
+        function updateQuantity(orderId, variantId, delta) {
+            const input = document.getElementById(`qty-input-${variantId}`);
+            if (!input) return;
+
+            let currentQty = parseInt(input.value) || 1;
+            let newQty = currentQty + delta;
+
+            if (newQty <= 0) {
+                removeItem(orderId, variantId);
+                return;
+            }
+
+            // Gửi request lên server trước; chỉ cập nhật giao diện khi server xác nhận thành công
+            sendUpdateToServer(orderId, variantId, newQty, () => {
+                input.value = newQty;
+                recalculateTotals();
+            });
+        }
+
+        // Xóa sản phẩm khỏi danh sách
+        function removeItem(orderId, variantId) {
+            const remainingRows = document.querySelectorAll("#orderProductList .order-product-item").length;
+            if (remainingRows <= 1) {
+                alert("Đơn hàng phải có ít nhất 1 sản phẩm. Nếu muốn huỷ toàn bộ đơn, vui lòng dùng nút \"Hủy đơn hàng\".");
+                return;
+            }
+
+            if (!confirm("Bạn có chắc muốn xóa sản phẩm này khỏi đơn hàng?")) return;
+
+            sendUpdateToServer(orderId, variantId, 0, () => {
+                const row = document.getElementById(`product-row-${variantId}`);
+                if (row) row.remove();
+                recalculateTotals();
+            });
+        }
+
+        // Tự động tính toán lại Thành tiền từng món & Tổng tiền đơn hàng trên Frontend
+        function recalculateTotals() {
+            let totalOrder = 0;
+            const rows = document.querySelectorAll(".order-product-item");
+
+            rows.forEach(row => {
+                const unitPrice = parseFloat(row.getAttribute("data-unit-price")) || 0;
+                const qtyInput = row.querySelector(".input-qty");
+                const qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 1;
+
+                const lineTotal = unitPrice * qty;
+                totalOrder += lineTotal;
+
+                const lineTotalElem = row.querySelector(".line-total-val");
+                if (lineTotalElem) {
+                    lineTotalElem.textContent = lineTotal.toLocaleString('vi-VN') + " đ";
+                }
+            });
+
+            const totalDisplay = document.getElementById("orderTotalDisplay");
+            if (totalDisplay) {
+                totalDisplay.textContent = totalOrder.toLocaleString('vi-VN') + " đ";
+            }
+        }
+
+        // Hàm gọi Controller cập nhật vào Database.
+        // onSuccess chỉ chạy khi server xác nhận đã lưu thành công.
+        async function sendUpdateToServer(orderId, variantId, quantity, onSuccess) {
+            try {
+                const response = await fetch('/Order/UpdateOrderItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? ''
+                    },
+                    body: JSON.stringify({ orderId, variantId, quantity })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    alert(result.message || "Cập nhật đơn hàng thất bại!");
+                    return;
+                }
+                if (onSuccess) onSuccess(result);
+            } catch (err) {
+                console.error("Lỗi khi kết nối server:", err);
+                alert("Không thể kết nối tới server, vui lòng thử lại.");
+            }
+        }
+    </script>
+}

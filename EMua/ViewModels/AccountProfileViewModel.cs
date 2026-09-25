@@ -29,6 +29,20 @@ public sealed class AccountProfileViewModel
 
     public bool IsStaff { get; init; }
 
+    // Tổng tiền tích lũy từ các đơn hàng hoàn thành
+    public decimal TotalSpent { get; init; }
+
+    // Logic tính phân hạng tự động
+    public string MembershipTier => TotalSpent switch
+    {
+        >= 100_000_000m => "Thân Thiết",
+        >= 55_000_000m => "Kim Cương",
+        >= 25_000_000m => "Vàng",
+        >= 5_000_000m => "Bạc",
+        >= 1_000_000m => "Đồng",
+        _ => "Khách hàng Mới"
+    };
+
     public string Initial =>
         string.IsNullOrWhiteSpace(FullName)
             ? "U"
@@ -58,4 +72,16 @@ public sealed class EditAccountProfileViewModel
     public string? SelectedAvatar { get; set; }
 
     public IFormFile? AvatarFile { get; set; }
+
+    public decimal TotalSpent { get; set; }
+
+    public string MembershipTier => TotalSpent switch
+    {
+        >= 100_000_000m => "Thân Thiết",
+        >= 55_000_000m => "Kim Cương",
+        >= 25_000_000m => "Vàng",
+        >= 5_000_000m => "Bạc",
+        >= 1_000_000m => "Đồng",
+        _ => "Khách hàng Mới"
+    };
 }

@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using EMua.Data;
 using EMua.Models.Database;
+using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ namespace EMua.Controllers;
 public class CartController : Controller
 {
     private readonly EMuaDbContext _db;
+    private const string CouponSessionKey = "Cart_CouponCode";
 
     public CartController(EMuaDbContext db)
     {
@@ -31,7 +33,75 @@ public class CartController : Controller
             .Where(x => x.MaNguoiDung == userId)
             .ToListAsync();
 
-        return View(items);
+        var viewModel = new CartViewModel
+        {
+            Items = items.Select(x =>
+            {
+                var variant = x.MaBienTheNavigation;
+                var product = variant?.MaSanPhamNavigation;
+
+                var variantLabel = string.Join(" - ",
+                    new[] { variant?.MauSac, variant?.PhienBan }
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                );
+
+                return new CartItemViewModel
+                {
+                    CartItemId = x.MaChiTietGioHang,
+                    ProductId = variant?.MaSanPham ?? 0,
+                    VariantId = x.MaBienThe,
+                    ProductName = product?.TenSanPham ?? "Sản phẩm",
+                    VariantLabel = variantLabel,
+                    ImageUrl = variant?.HinhAnh,
+                    UnitPrice = variant?.Gia ?? 0m,
+                    Quantity = x.SoLuong,
+                    Stock = variant?.SoLuong ?? 0
+                };
+            }).ToList()
+        };
+
+        await ApplyCouponFromSessionAsync(viewModel);
+        viewModel.AvailableCoupons = await GetAvailableCouponsAsync(viewModel.Subtotal);
+
+        return View(viewModel);
+    }
+
+    // Áp dụng mã khuyến mãi cho giỏ hàng, lưu lại qua Session để giữ khi đổi số lượng/tải lại trang.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApplyCoupon(string code)
+    {
+        var userId = GetUserId();
+        if (userId == null) return RedirectToAction("Login", "Auth");
+
+        var subtotal = await _db.ChiTietGioHangs
+            .Include(x => x.MaBienTheNavigation)
+            .Where(x => x.MaNguoiDung == userId)
+            .SumAsync(x => x.SoLuong * (x.MaBienTheNavigation!.Gia));
+
+        var coupon = await FindValidCouponAsync(code, subtotal);
+
+        if (coupon == null)
+        {
+            TempData["Error"] = "Mã khuyến mãi không hợp lệ, đã hết hạn, hết lượt dùng hoặc đơn hàng chưa đạt giá trị tối thiểu.";
+        }
+        else
+        {
+            HttpContext.Session.SetString(CouponSessionKey, coupon.MaCode);
+            TempData["Success"] = $"Đã áp dụng mã \"{coupon.MaCode}\" thành công!";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Gỡ mã khuyến mãi đang áp dụng khỏi giỏ hàng.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult RemoveCoupon()
+    {
+        HttpContext.Session.Remove(CouponSessionKey);
+        TempData["Success"] = "Đã gỡ mã khuyến mãi khỏi giỏ hàng.";
+        return RedirectToAction(nameof(Index));
     }
 
     // Lấy số lượng sản phẩm để cập nhật badge giỏ hàng.
@@ -66,8 +136,7 @@ public class CartController : Controller
     // Thêm sản phẩm vào giỏ hàng bằng AJAX.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Add(
-        [FromBody] CartItemRequest request)
+    public async Task<IActionResult> Add([FromBody] CartItemRequest request)
     {
         var userId = GetUserId();
 
@@ -80,7 +149,7 @@ public class CartController : Controller
             });
         }
 
-        if (request.VariantId <= 0 || request.Quantity <= 0)
+        if (request == null || request.VariantId <= 0 || request.Quantity <= 0)
         {
             return BadRequest(new
             {
@@ -106,8 +175,7 @@ public class CartController : Controller
                 x.MaNguoiDung == userId &&
                 x.MaBienThe == request.VariantId);
 
-        var newQuantity = (cartItem?.SoLuong ?? 0)
-                          + request.Quantity;
+        var newQuantity = (cartItem?.SoLuong ?? 0) + request.Quantity;
 
         if (newQuantity > variant.SoLuong)
         {
@@ -138,106 +206,58 @@ public class CartController : Controller
         return await Summary();
     }
 
-    // Tăng hoặc giảm số lượng sản phẩm trong giỏ hàng.
+    // Xử lý Cập nhật số lượng từ Form trong Index.cshtml
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateQuantity(
-        [FromBody] CartItemRequest request)
+    public async Task<IActionResult> Update(int id, int quantity)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-        {
-            return Unauthorized(new
-            {
-                success = false,
-                message = "Phiên đăng nhập đã hết hạn."
-            });
-        }
+        if (userId == null) return RedirectToAction("Login", "Auth");
 
         var item = await _db.ChiTietGioHangs
             .Include(x => x.MaBienTheNavigation)
-            .FirstOrDefaultAsync(x =>
-                x.MaChiTietGioHang == request.CartItemId &&
-                x.MaNguoiDung == userId);
+            .FirstOrDefaultAsync(x => x.MaChiTietGioHang == id && x.MaNguoiDung == userId);
 
-        if (item == null)
+        if (item != null)
         {
-            return NotFound(new
+            if (quantity <= 0)
             {
-                success = false,
-                message = "Không tìm thấy sản phẩm trong giỏ hàng."
-            });
-        }
-
-        // Nếu số lượng bằng 0 thì xóa khỏi giỏ.
-        if (request.Quantity <= 0)
-        {
-            _db.ChiTietGioHangs.Remove(item);
-        }
-        else
-        {
-            if (request.Quantity > item.MaBienTheNavigation.SoLuong)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Số lượng yêu cầu vượt quá tồn kho."
-                });
+                _db.ChiTietGioHangs.Remove(item);
             }
-
-            item.SoLuong = request.Quantity;
+            else if (quantity <= item.MaBienTheNavigation.SoLuong)
+            {
+                item.SoLuong = quantity;
+            }
+            await _db.SaveChangesAsync();
         }
 
-        await _db.SaveChangesAsync();
-
-        return await Summary();
+        return RedirectToAction(nameof(Index));
     }
 
-    // Xóa một sản phẩm khỏi giỏ hàng.
+    // Xử lý Xóa sản phẩm từ Form trong Index.cshtml
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Remove(
-        [FromBody] CartItemRequest request)
+    public async Task<IActionResult> Remove(int id)
     {
         var userId = GetUserId();
-
-        if (userId == null)
-        {
-            return Unauthorized(new
-            {
-                success = false,
-                message = "Phiên đăng nhập đã hết hạn."
-            });
-        }
+        if (userId == null) return RedirectToAction("Login", "Auth");
 
         var item = await _db.ChiTietGioHangs
-            .FirstOrDefaultAsync(x =>
-                x.MaChiTietGioHang == request.CartItemId &&
-                x.MaNguoiDung == userId);
+            .FirstOrDefaultAsync(x => x.MaChiTietGioHang == id && x.MaNguoiDung == userId);
 
-        if (item == null)
+        if (item != null)
         {
-            return NotFound(new
-            {
-                success = false,
-                message = "Sản phẩm không còn trong giỏ hàng."
-            });
+            _db.ChiTietGioHangs.Remove(item);
+            await _db.SaveChangesAsync();
         }
 
-        _db.ChiTietGioHangs.Remove(item);
-
-        await _db.SaveChangesAsync();
-
-        return await Summary();
+        return RedirectToAction(nameof(Index));
     }
-
 
     // Gộp giỏ hàng tạm của khách (localStorage) vào giỏ hàng tài khoản sau khi đăng nhập.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> MergeGuest(
-        [FromBody] List<GuestCartItemRequest> items)
+    public async Task<IActionResult> MergeGuest([FromBody] List<GuestCartItemRequest> items)
     {
         var userId = GetUserId();
 
@@ -253,7 +273,6 @@ public class CartController : Controller
         if (items == null || items.Count == 0)
             return await Summary();
 
-        // Gom các variant bị lặp trong localStorage.
         var normalizedItems = items
             .Where(x => x.VariantId > 0 && x.Quantity > 0)
             .GroupBy(x => x.VariantId)
@@ -304,10 +323,80 @@ public class CartController : Controller
         return await Summary();
     }
 
+    // Đọc mã khuyến mãi đã lưu trong Session (nếu có), kiểm tra lại còn hợp lệ với giỏ hàng hiện tại không.
+    // Nếu không còn hợp lệ (hết hạn, hết lượt, giỏ hàng không còn đạt tối thiểu...) thì tự gỡ và báo cho khách.
+    private async Task ApplyCouponFromSessionAsync(CartViewModel model)
+    {
+        var code = HttpContext.Session.GetString(CouponSessionKey);
+        if (string.IsNullOrWhiteSpace(code)) return;
+
+        var coupon = await FindValidCouponAsync(code, model.Subtotal);
+
+        if (coupon == null)
+        {
+            HttpContext.Session.Remove(CouponSessionKey);
+            TempData["Error"] = $"Mã \"{code}\" không còn áp dụng được cho giỏ hàng hiện tại nên đã được tự động gỡ bỏ.";
+            return;
+        }
+
+        model.CouponCode = coupon.MaCode;
+        model.Discount = CalculateDiscount(coupon, model.Subtotal);
+    }
+
+    private async Task<KhuyenMai?> FindValidCouponAsync(string? code, decimal subtotal)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return null;
+
+        var now = DateTime.Now;
+        var coupon = await _db.KhuyenMais
+            .FirstOrDefaultAsync(x => x.MaCode.ToLower() == code.Trim().ToLower());
+
+        if (coupon == null
+            || !coupon.TrangThai
+            || coupon.SoLuong is <= 0
+            || coupon.NgayBatDau > now
+            || coupon.NgayKetThuc < now
+            || (coupon.GiaTriDonHangToiThieu ?? 0) > subtotal)
+        {
+            return null;
+        }
+
+        return coupon;
+    }
+
+    private static decimal CalculateDiscount(KhuyenMai coupon, decimal subtotal) =>
+        coupon.LoaiGiamGia.Contains("%") || coupon.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)
+            ? Math.Min(subtotal, subtotal * coupon.GiaTriGiam / 100m)
+            : Math.Min(subtotal, coupon.GiaTriGiam);
+
+    // Lấy các mã khuyến mãi đang còn hiệu lực để gợi ý cho khách ngay trên trang giỏ hàng.
+    private async Task<List<CouponOptionViewModel>> GetAvailableCouponsAsync(decimal subtotal)
+    {
+        var now = DateTime.Now;
+
+        return await _db.KhuyenMais.AsNoTracking()
+            .Where(x => x.TrangThai
+                && x.SoLuong > 0
+                && (x.NgayBatDau == null || x.NgayBatDau <= now)
+                && (x.NgayKetThuc == null || x.NgayKetThuc >= now))
+            .OrderBy(x => x.GiaTriDonHangToiThieu ?? 0)
+            .ThenByDescending(x => x.GiaTriGiam)
+            .Take(4)
+            .Select(x => new CouponOptionViewModel
+            {
+                Code = x.MaCode,
+                Name = x.TenKhuyenMai,
+                DiscountText = x.LoaiGiamGia.Contains("%")
+                    ? $"Giảm {x.GiaTriGiam:N0}%"
+                    : $"Giảm {x.GiaTriGiam:N0}đ",
+                MinimumOrder = x.GiaTriDonHangToiThieu
+            })
+            .ToListAsync();
+    }
+
     private int? GetUserId()
     {
-        var userIdText = User.FindFirstValue(
-            ClaimTypes.NameIdentifier);
+        var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         return int.TryParse(userIdText, out var userId)
             ? userId
@@ -318,11 +407,10 @@ public class CartController : Controller
 public class CartItemRequest
 {
     public int CartItemId { get; set; }
-
     public int VariantId { get; set; }
-
     public int Quantity { get; set; } = 1;
 }
+
 public class GuestCartItemRequest
 {
     public int VariantId { get; set; }

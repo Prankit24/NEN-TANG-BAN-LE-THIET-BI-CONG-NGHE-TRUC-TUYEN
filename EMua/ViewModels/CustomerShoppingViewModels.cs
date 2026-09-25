@@ -45,9 +45,28 @@ public class ProductVariantViewModel
 
 public class CartViewModel
 {
+    private const decimal StandardShippingFee = 30000m;
+    private const decimal FreeShippingThreshold = 500000m;
+
     public List<CartItemViewModel> Items { get; set; } = [];
     public int TotalQuantity => Items.Sum(x => x.Quantity);
-    public decimal Total => Items.Sum(x => x.LineTotal);
+    public int ItemCount => Items.Count;
+
+    // Tạm tính (chưa trừ khuyến mãi)
+    public decimal Subtotal => Items.Sum(x => x.LineTotal);
+
+    // Phí vận chuyển: miễn phí từ 500.000đ trở lên (đồng bộ với trang Checkout)
+    public decimal ShippingFee => Subtotal <= 0 ? 0 : (Subtotal >= FreeShippingThreshold ? 0 : StandardShippingFee);
+
+    // Mã khuyến mãi đang được áp dụng cho giỏ hàng (lưu qua Session)
+    public string? CouponCode { get; set; }
+    public decimal Discount { get; set; }
+
+    // Tổng cộng = Tạm tính + Phí vận chuyển - Giảm giá
+    public decimal FinalTotal => Math.Max(0m, Subtotal + ShippingFee - Discount);
+
+    // Danh sách mã khuyến mãi đang khả dụng để gợi ý cho khách
+    public List<CouponOptionViewModel> AvailableCoupons { get; set; } = [];
 }
 
 public class CartItemViewModel
@@ -63,9 +82,16 @@ public class CartItemViewModel
     public int Stock { get; set; }
     public decimal LineTotal => UnitPrice * Quantity;
 }
-
-
-
+public class OrderDetailItemViewModel
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string VariantLabel { get; set; } = string.Empty;
+    public string? ProductImageUrl { get; set; } // Thêm thuộc tính này
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal LineTotal => UnitPrice * Quantity;
+}
 public class CouponOptionViewModel
 {
     public string Code { get; set; } = string.Empty;
@@ -78,9 +104,19 @@ public class OrderListItemViewModel
 {
     public int OrderId { get; set; }
     public DateTime? OrderedAt { get; set; }
+    public string Status { get; set; }
     public decimal Total { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public int ItemCount { get; set; }
+    public List<OrderItemSummaryViewModel> Items { get; set; } = new(); // Danh sách sản phẩm
+    public int ItemCount { get; internal set; }
+}
+
+public class OrderItemSummaryViewModel
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public string ProductImageUrl { get; set; }
+    public int Quantity { get; set; }
+    public decimal Price { get; set; }
 }
 
 public class OrderDetailsViewModel
@@ -126,9 +162,23 @@ public class ReviewCreateViewModel
     public string Comment { get; set; } = string.Empty;
 }
 
+// --- CẬP NHẬT TRANG THÀNH CÔNG / TIẾP TỤC THANH TOÁN ---
 public class CheckoutSuccessViewModel
 {
     public int OrderId { get; set; }
-    public decimal Total { get; set; }
-    public bool IsPaid { get; set; }
+    public decimal TotalAmount { get; set; }
+    public decimal Total { get => TotalAmount; set => TotalAmount = value; }
+    public bool IsPaid => PaymentStatus == "Đã thanh toán";
+    public string PaymentMethod { get; set; } = "COD";
+    public string PaymentStatus { get; set; } = "Chưa thanh toán";
+
+    public string FullName { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+
+    public string? BankQrUrl { get; set; }
+    public string? MomoQrUrl { get; set; }
+    public string TransferContent { get; set; } = string.Empty;
+
+    public List<CheckoutItemViewModel> Items { get; set; } = [];
 }

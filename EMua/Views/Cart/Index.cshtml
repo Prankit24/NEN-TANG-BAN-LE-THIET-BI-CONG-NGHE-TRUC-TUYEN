@@ -3,89 +3,206 @@
     ViewData["Title"] = "Giỏ hàng";
 }
 <link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4">
-    <div class="customer-heading">
-        <div><span class="eyebrow">YOUR BAG</span>
-            <h1>Giỏ hàng</h1>
-            <p>@Model.TotalQuantity sản phẩm đang chờ bạn.</p>
-        </div><a asp-controller="Product" asp-action="Index" class="back-link">Tiếp tục mua sắm <i
-        class="bi bi-arrow-right"></i></a>
-    </div>@if (TempData["Error"] != null) {
-    <div class="customer-alert error">@TempData["Error"]</div>
-}
-@if
-    (TempData["Success"] != null)
-{
-    <div class="customer-alert success">@TempData["Success"]</div>
-}
-@if (Model.Items.Count == 0)
-{
-    <div class="empty-state"><i class="bi bi-bag"></i>
-        <h2>Giỏ hàng đang trống</h2>
-        <p>Thêm sản phẩm bạn yêu thích để bắt đầu đặt hàng.</p><a asp-controller="Product" asp-action="Index"
-                                                                  class="customer-button">Khám phá sản phẩm</a>
-    </div>
-}
-else
-{
 
-    <div class="cart-layout">
-        <div>@foreach (var item in Model.Items) {
-            <article class="cart-item"
-                     data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
-                <div class="cart-item-image">@if (!string.IsNullOrWhiteSpace(item.ImageUrl)) {
-                    <img src="@item.ImageUrl" alt="@item.ProductName" />
-                } else
-                {
+<div class="cart-container">
+    <!-- 1. Tiêu đề trang -->
+    <header class="cart-header">
+        <h1>Giỏ hàng</h1>
+        <p>Bạn có @Model.TotalQuantity sản phẩm trong giỏ hàng</p>
+    </header>
 
-                    <i class="bi bi-image"></i>
-                }
-            </div>
-            <div class="cart-item-info"><a asp-controller="Product" asp-action="Details"
-                                           asp-route-id="@item.ProductId">
-                <h2>@item.ProductName</h2>
-            </a><span>@item.VariantLabel</span><strong>@item.UnitPrice.ToString("N0") đ</strong></div>
-            <form asp-action="Update" method="post" class="quantity-form">@Html.AntiForgeryToken()<input
-                type="hidden" name="id" value="@item.CartItemId" /><input name="quantity" type="number" min="0"
-                                                                          max="@item.Stock" value="@item.Quantity" onchange="this.form.submit()" /></form><strong
-                class="line-total" data-line-total>@item.LineTotal.ToString("N0") đ</strong>
-                <form asp-action="Remove" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id"
-                                                                                           value="@item.CartItemId" /><button class="icon-button danger" title="Xóa"><i
-                    class="bi bi-trash3"></i></button></form>
-                </article>
-            }
+    @if (TempData["Error"] != null)
+    {
+        <div class="customer-alert error">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="customer-alert success">@TempData["Success"]</div>
+    }
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state">
+            <h2>Giỏ hàng đang trống</h2>
+            <p>Thêm sản phẩm bạn yêu thích để bắt đầu đặt hàng.</p>
+            <a asp-controller="Product" asp-action="Index" class="btn-outline">Khám phá sản phẩm</a>
         </div>
-        <aside class="summary-card">
-            <h2>Tóm tắt đơn hàng</h2>
-            <div><span>Tạm tính</span><strong data-cart-total>@Model.Total.ToString("N0") đ</strong></div>
-            <div><span>Vận chuyển</span><span>Được tính khi đặt hàng</span></div>
-            <hr />
-            <div class="summary-total"><span>Tổng cộng</span><strong data-cart-total>@Model.Total.ToString("N0")
-                đ</strong></div><a asp-controller="Checkout" asp-action="Index" class="customer-button">Tiến hành
-                đặt hàng <i class="bi bi-arrow-right"></i></a>
+    }
+    else
+    {
+        <div class="cart-main-grid">
+            <!-- Khối bên trái: Bảng danh sách sản phẩm -->
+            <div class="cart-card">
+                <!-- 2. Bảng tiêu đề sản phẩm -->
+                <div class="cart-table-head">
+                    <div class="col-info">Sản phẩm</div>
+                    <div class="col-price">Đơn giá</div>
+                    <div class="col-qty">Số lượng</div>
+                    <div class="col-total">Thành tiền</div>
+                    <div class="col-action">Thao tác</div>
+                </div>
+
+                <div class="cart-table-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <article class="cart-row" data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                            <!-- Thông tin sản phẩm -->
+                            <div class="col-info product-meta">
+                                <div class="product-thumb">
+                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.ProductName" />
+                                    }
+                                    else
+                                    {
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                                    }
+                                </div>
+                                <div class="product-details">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-title">
+                                        @item.ProductName
+                                    </a>
+                                    @if (!string.IsNullOrEmpty(item.VariantLabel))
+                                    {
+                                        <span class="product-variant">@item.VariantLabel</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Đơn giá -->
+                            <div class="col-price">
+                                <span>@item.UnitPrice.ToString("N0")đ</span>
+                            </div>
+
+                            <!-- 3. Bộ tăng/giảm số lượng -->
+                            <div class="col-qty">
+                                <form asp-action="Update" method="post" class="qty-control">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.CartItemId" />
+                                    <button type="button" class="qty-btn qty-minus">−</button>
+                                    <input name="quantity" type="number" min="0" max="@item.Stock" value="@item.Quantity" readonly />
+                                    <button type="button" class="qty-btn qty-plus">+</button>
+                                </form>
+                            </div>
+
+                            <!-- Thành tiền -->
+                            <div class="col-total">
+                                <span data-line-total>@item.LineTotal.ToString("N0")đ</span>
+                            </div>
+
+                            <!-- 4. Nút xóa -->
+                            <div class="col-action">
+                                <form asp-action="Remove" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.CartItemId" />
+                                    <button type="submit" class="btn-delete" title="Xóa">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+
+            <!-- Khối bên phải: Tổng tiền & Mã giảm giá -->
+            <aside class="cart-card summary-card">
+                <h2>Tổng tiền</h2>
+
+                <!-- KHỐI CHỌN / NHẬP VOUCHER -->
+                <div class="voucher-box">
+                    <form asp-action="ApplyVoucher" method="post" class="voucher-form">
+                        @Html.AntiForgeryToken()
+                        <input type="text" name="voucherCode" class="voucher-input" placeholder="Nhập mã giảm giá..." value="@ViewBag.VoucherCode" />
+                        <button type="submit" class="btn-apply-voucher">Áp dụng</button>
+                    </form>
+                </div>
+
+                <div class="summary-row">
+                    <span>Tạm tính (@Model.TotalQuantity sản phẩm)</span>
+                    <span data-cart-subtotal>@Model.Subtotal.ToString("N0")đ</span>
+                </div>
+
+                <div class="summary-row">
+                    <span>Phí vận chuyển</span>
+                    <span>30.000đ</span>
+                </div>
+
+                <div class="summary-row" id="discount-row" style="@(Model.Discount > 0 ? "" : "display:none;")">
+                    <span>Giảm giá</span>
+                    <span id="discount-amount" class="text-danger">-@Model.Discount.ToString("N0")đ</span>
+                </div>
+
+                <div class="summary-divider"></div>
+
+                <!-- 5. Tổng cộng -->
+                <div class="summary-row total-row">
+                    <span>Tổng cộng</span>
+                    <strong data-cart-finaltotal>@Model.FinalTotal.ToString("N0")đ</strong>
+                </div>
+
+                <!-- 6 & 7. Các nút chuyển hướng -->
+                <div class="summary-actions">
+                    <a asp-controller="Product" asp-action="Index" class="btn-outline">
+                        Tiếp tục mua sắm
+                    </a>
+                    <a asp-controller="Checkout" asp-action="Index" class="btn-solid">
+                        Thanh toán
+                    </a>
+                </div>
             </aside>
         </div>
     }
 </div>
+
 @section Scripts {
     <script>
-        document.querySelectorAll('.cart-item input[name="quantity"]').forEach(function (input) {
-            input.addEventListener('input', function () {
-                const item = input.closest('.cart-item');
-                const price = Number(item.dataset.unitPrice || 0);
-                const quantity = Math.max(0, Number(input.value || 0));
-                const lineTotal = item.querySelector('[data-line-total]');
-                if (lineTotal) lineTotal.textContent = (price * quantity).toLocaleString('vi-VN') + ' đ';
-                let total = 0;
-                document.querySelectorAll('.cart-item').forEach(function (row) {
+        const cartDiscount = @Html.Raw(Model.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+        document.querySelectorAll('.cart-row').forEach(function (item) {
+            const input = item.querySelector('input[name="quantity"]');
+            const price = Number(item.dataset.unitPrice || 0);
+            const lineTotal = item.querySelector('[data-line-total]');
+            const max = Number(input.max || Infinity);
+            const minusBtn = item.querySelector('.qty-minus');
+            const plusBtn = item.querySelector('.qty-plus');
+
+            function updateCalculations() {
+                const qty = Math.max(0, Number(input.value || 0));
+                if (lineTotal) lineTotal.textContent = (price * qty).toLocaleString('vi-VN') + 'đ';
+
+                let subtotal = 0;
+                document.querySelectorAll('.cart-row').forEach(function (row) {
                     const rowPrice = Number(row.dataset.unitPrice || 0);
-                    const rowQuantity = Math.max(0, Number(row.querySelector('input[name="quantity"]').value || 0));
-                    total += rowPrice * rowQuantity;
+                    const rowQty = Math.max(0, Number(row.querySelector('input[name="quantity"]').value || 0));
+                    subtotal += rowPrice * rowQty;
                 });
-                document.querySelectorAll('[data-cart-total]').forEach(function (element) {
-                    element.textContent = total.toLocaleString('vi-VN') + ' đ';
+
+                document.querySelectorAll('[data-cart-subtotal]').forEach(e => e.textContent = subtotal.toLocaleString('vi-VN') + 'đ');
+                document.querySelectorAll('[data-cart-finaltotal]').forEach(e => {
+                    const finalTotal = Math.max(0, subtotal - cartDiscount + 30000);
+                    e.textContent = finalTotal.toLocaleString('vi-VN') + 'đ';
                 });
-            });
+            }
+
+            if (minusBtn) {
+                minusBtn.addEventListener('click', function () {
+                    if (Number(input.value) > 1) {
+                        input.value = Number(input.value) - 1;
+                        updateCalculations();
+                        input.form.submit();
+                    }
+                });
+            }
+            if (plusBtn) {
+                plusBtn.addEventListener('click', function () {
+                    if (Number(input.value) < max) {
+                        input.value = Number(input.value) + 1;
+                        updateCalculations();
+                        input.form.submit();
+                    }
+                });
+            }
         });
     </script>
 }
