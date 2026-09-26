@@ -5,11 +5,13 @@ namespace EMua.ViewModels;
 public class CheckoutViewModel
 {
     // =========================================================
-    // THÔNG TIN NHẬN HÀNG (Đã thêm Alias để tương thích cả 2 tên)
+    // THÔNG TIN NHẬN HÀNG
     // =========================================================
 
     [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
+    [StringLength(100, ErrorMessage = "Họ và tên không được vượt quá 100 ký tự.")]
     public string FullName { get; set; } = string.Empty;
+
     public string RecipientName
     {
         get => FullName;
@@ -17,7 +19,9 @@ public class CheckoutViewModel
     }
 
     [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+    [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "Số điện thoại không hợp lệ (Phải đúng định dạng SĐT Việt Nam 10 số).")]
     public string PhoneNumber { get; set; } = string.Empty;
+
     public string RecipientPhone
     {
         get => PhoneNumber;
@@ -25,35 +29,44 @@ public class CheckoutViewModel
     }
 
     [Required(ErrorMessage = "Vui lòng nhập địa chỉ nhận hàng.")]
+    [StringLength(255, ErrorMessage = "Địa chỉ nhận hàng quá dài.")]
     public string Address { get; set; } = string.Empty;
+
     public string ShippingAddress
     {
         get => Address;
         set => Address = value;
     }
 
+    [StringLength(500, ErrorMessage = "Ghi chú không được quá 500 ký tự.")]
     public string? Note { get; set; }
 
-    // =========================================================
-    // PHƯƠNG THỨC GIAO HÀNG & THANH TOÁN
-    // =========================================================
-
-    public string ShippingMethod { get; set; } = "Standard";
-
-    public string PaymentMethod { get; set; } = "MBBANK";
-    public string PaymentProvider
-    {
-        get => PaymentMethod;
-        set => PaymentMethod = value;
-    }
 
     // =========================================================
-    // SẢN PHẨM & KHUYẾN MÃI
+    // PHƯƠNG THỨC GIAO HÀNG
+    // =========================================================
+
+    public string ShippingMethod { get; set; } = "STANDARD";
+
+
+    // =========================================================
+    // PHƯƠNG THỨC THANH TOÁN
+    // COD / BANK_TRANSFER / WEB3
+    // =========================================================
+
+    public string PaymentMethod { get; set; } = "COD";
+
+    public string? PaymentProvider { get; set; }
+
+
+    // =========================================================
+    // SẢN PHẨM & COUPON
     // =========================================================
 
     public List<CheckoutItemViewModel> Items { get; set; } = new();
 
     public string? CouponCode { get; set; }
+
 
     // =========================================================
     // TỔNG TIỀN
@@ -68,10 +81,13 @@ public class CheckoutViewModel
     public decimal Total =>
         Math.Max(0m, Subtotal + ShippingFee - Discount);
 
-    public int TotalQuantity => Items.Sum(x => x.Quantity);
+    public int TotalQuantity =>
+        Items?.Sum(x => x.Quantity) ?? 0;
 
-    public bool HasItems => Items.Count > 0;
+    public bool HasItems =>
+        Items != null && Items.Count > 0;
 }
+
 
 // =============================================================
 // SẢN PHẨM TRONG CHECKOUT
@@ -91,8 +107,10 @@ public class CheckoutItemViewModel
 
     public int Quantity { get; set; }
 
-    public decimal LineTotal => UnitPrice * Quantity;
+    public decimal LineTotal =>
+        UnitPrice * Quantity;
 }
+
 
 // =============================================================
 // REQUEST ÁP DỤNG MÃ GIẢM GIÁ
@@ -103,24 +121,28 @@ public class ApplyCouponRequest
     public string? CouponCode { get; set; }
 }
 
+
 // =============================================================
 // REQUEST ĐẶT HÀNG
 // =============================================================
 
 public class PlaceOrderRequest
 {
-    [Required]
+    [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
+    [StringLength(100)]
     public string FullName { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+    [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "Số điện thoại không hợp lệ.")]
     public string PhoneNumber { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Vui lòng nhập địa chỉ nhận hàng.")]
+    [StringLength(255)]
     public string Address { get; set; } = string.Empty;
 
     public string? Note { get; set; }
 
     public string? CouponCode { get; set; }
 
-    public string PaymentMethod { get; set; } = "MBBANK";
+    public string PaymentMethod { get; set; } = "COD";
 }

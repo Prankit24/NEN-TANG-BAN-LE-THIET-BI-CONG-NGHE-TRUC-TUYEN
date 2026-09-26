@@ -2,105 +2,140 @@
 
 @{
     ViewData["Title"] = "Xác nhận đơn hàng";
+    string paymentMethod = ViewBag.PaymentMethod as string ?? Model.PaymentMethod ?? "COD";
 }
 
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
 
 <div class="customer-page container py-4">
-    <partial name="_CheckoutSteps" model="2" />
+    <partial name="_CheckoutSteps" model="3" />
 
-    <div class="customer-heading compact">
+    <div class="customer-heading compact mb-4">
         <div>
-            <span class="eyebrow">BƯỚC 2 / 3</span>
-            <h1>Kiểm tra đơn hàng</h1>
-            <p>Xác nhận lại thông tin trước khi chuyển sang thanh toán.</p>
+            <span class="eyebrow">BƯỚC 3 / 3</span>
+            <h1>Xác nhận đặt hàng</h1>
+            <p>Vui lòng kiểm tra lại thông tin trước khi hoàn tất.</p>
         </div>
     </div>
 
-    <form asp-action="Payment" method="post" class="checkout-review-layout">
-        @Html.AntiForgeryToken()
-
+    <div class="checkout-review-layout">
+        <!-- Cột trái: Thông tin nhận hàng & PTTT -->
         <section class="form-panel">
-            <h2>Thông tin nhận hàng</h2>
+            <h2>Thông tin giao hàng</h2>
             <div class="confirmation-line">
                 <span>Người nhận</span>
-                <strong>@Model.RecipientName</strong>
-            </div>
-            <div class="confirmation-line">
-                <span>Số điện thoại</span>
-                <strong>@Model.RecipientPhone</strong>
+                <strong>@Model.FullName (@Model.PhoneNumber)</strong>
             </div>
             <div class="confirmation-line">
                 <span>Địa chỉ</span>
-                <strong>@Model.ShippingAddress</strong>
+                <strong>@Model.Address</strong>
             </div>
-            <div class="confirmation-line">
-                <span>Ghi chú</span>
-                <strong>@(string.IsNullOrEmpty(Model.Note) ? "Không có" : Model.Note)</strong>
-            </div>
-
-            <h2>Giao hàng và thanh toán</h2>
-            <div class="confirmation-line">
-                <span>Phương thức giao</span>
-                <strong>@(Model.ShippingMethod == "EXPRESS" ? "Giao nhanh 2 giờ - 25.000 đ" : "Giao tiêu chuẩn - Miễn phí")</strong>
-            </div>
-            <div class="confirmation-line">
-                <span>Thanh toán</span>
-                <strong>
-                    @(Model.PaymentMethod == "COD"
-                                        ? "Thanh toán khi nhận hàng"
-                                        : Model.PaymentMethod == "MOMO"
-                                        ? $"Ví điện tử - {Model.PaymentProvider}"
-                                        : $"Ngân hàng - {Model.PaymentProvider}")
-                </strong>
-            </div>
-
-            <h2>Giỏ hàng (@Model.Items.Sum(x => x.Quantity) sản phẩm)</h2>
-            @foreach (var item in Model.Items)
+            @if (!string.IsNullOrWhiteSpace(Model.Note))
             {
-                <div class="summary-line">
-                    <span>@item.ProductName x @item.Quantity</span>
-                    <strong>@item.LineTotal.ToString("N0") đ</strong>
+                <div class="confirmation-line">
+                    <span>Ghi chú</span>
+                    <strong>@Model.Note</strong>
+                </div>
+            }
+
+            <h2 class="mt-4">Phương thức thanh toán</h2>
+            @if (paymentMethod == "BANK_TRANSFER")
+            {
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-qr-code-scan fs-4 text-primary"></i>
+                        <div>
+                            <strong>Chuyển khoản Ngân hàng (MB Bank)</strong>
+                            <div class="small text-muted">Mã QR và Nội dung chuyển khoản chứa Mã đơn hàng sẽ hiển thị ngay sau khi bấm "Đặt hàng".</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (paymentMethod == "WEB3")
+            {
+                <div class="alert alert-warning">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-wallet2 fs-4 text-warning"></i>
+                        <div>
+                            <strong>Ví Web3 (Crypto / USDT)</strong>
+                            <div class="small text-muted">Thông tin ví nhận tiền sẽ hiển thị ngay ở bước tiếp theo.</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary">
+                    <i class="bi bi-cash-coin me-1"></i> <strong>Thanh toán khi nhận hàng (COD)</strong>
                 </div>
             }
         </section>
 
+        <!-- Cột phải: Chi tiết sản phẩm & Tổng tiền -->
         <aside class="summary-card">
-            <h2>Tóm tắt thanh toán</h2>
-            <div class="summary-line">
-                <span>Tạm tính</span>
-                <strong>@Model.Subtotal.ToString("N0") đ</strong>
-            </div>
-            <div class="summary-line discount">
-                <span>Giảm giá</span>
-                <strong>-@Model.Discount.ToString("N0") đ</strong>
-            </div>
-            <div class="summary-line">
-                <span>Vận chuyển</span>
-                <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
+            <h2>Chi tiết sản phẩm</h2>
+            <div class="mb-3" style="max-height: 220px; overflow-y: auto;">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="summary-line">
+                        <span>
+                            @item.ProductName
+                            <!-- Đã sửa lỗi hiển thị dính chữ ở đây -->
+                            <small class="text-muted d-block">(x@(item.Quantity))</small>
+                        </span>
+                        <strong>@item.LineTotal.ToString("N0") đ</strong>
+                    </div>
+                }
             </div>
             <hr />
             <div class="summary-total">
-                <span>Cần thanh toán</span>
+                <span>Tổng thanh toán</span>
                 <strong>@Model.Total.ToString("N0") đ</strong>
             </div>
 
-            <div class="review-actions mt-3">
-                <a asp-action="Index" class="customer-button customer-button-light">Quay lại</a>
-                <button class="customer-button" type="submit">
-                    Tiếp tục thanh toán <i class="bi bi-arrow-right"></i>
-                </button>
-            </div>
+            <form id="placeOrderForm" class="mt-3">
+                @Html.AntiForgeryToken()
+                <div class="review-actions">
+                    <a asp-action="Payment" class="customer-button customer-button-light">Quay lại</a>
+                    <button type="button" onclick="submitOrder()" class="customer-button">
+                        Đặt hàng <i class="bi bi-check2"></i>
+                    </button>
+                </div>
+            </form>
         </aside>
-
-        <!-- Hidden inputs giữ dữ liệu ViewModel -->
-        <input type="hidden" asp-for="RecipientName" />
-        <input type="hidden" asp-for="RecipientPhone" />
-        <input type="hidden" asp-for="ShippingAddress" />
-        <input type="hidden" asp-for="Note" />
-        <input type="hidden" asp-for="CouponCode" />
-        <input type="hidden" asp-for="ShippingMethod" />
-        <input type="hidden" asp-for="PaymentMethod" />
-        <input type="hidden" asp-for="PaymentProvider" />
-    </form>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        async function submitOrder() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo đơn...';
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const response = await fetch('/Checkout/PlaceOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success && result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    alert(result.message || 'Đặt hàng thất bại!');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Đặt hàng <i class="bi bi-check2"></i>';
+                }
+            } catch (err) {
+                alert('Lỗi kết nối máy chủ!');
+                btn.disabled = false;
+                btn.innerHTML = 'Đặt hàng <i class="bi bi-check2"></i>';
+            }
+        }
+    </script>
+}

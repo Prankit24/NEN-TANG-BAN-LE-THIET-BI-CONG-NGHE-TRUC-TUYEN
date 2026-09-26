@@ -4,7 +4,7 @@
     ViewData["Title"] = "Thanh toán - Thông tin giao hàng";
 }
 
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
 
 <div class="customer-page container py-4">
     <partial name="_CheckoutSteps" model="1" />
@@ -42,13 +42,22 @@
 
                 <div class="form-group mb-3">
                     <label asp-for="RecipientPhone" class="form-label">Số điện thoại <span>*</span></label>
-                    <input asp-for="RecipientPhone" class="form-control" placeholder="Nhập số điện thoại" />
+                    <input asp-for="RecipientPhone" class="form-control" placeholder="Nhập số điện thoại (VD: 0905123456)" />
                     <span asp-validation-for="RecipientPhone" class="text-danger"></span>
                 </div>
 
+                <!-- Khung nhập địa chỉ tích hợp Định vị GPS -->
                 <div class="form-group mb-3">
-                    <label asp-for="ShippingAddress" class="form-label">Địa chỉ nhận hàng <span>*</span></label>
-                    <input asp-for="ShippingAddress" class="form-control" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" />
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="ShippingAddress" class="form-label mb-0">Địa chỉ nhận hàng <span>*</span></label>
+                        <button type="button" id="btnGetLocation" onclick="getCurrentLocation()" class="btn btn-sm btn-outline-primary border-0 p-0 text-decoration-underline" style="font-size: 13px;">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="ShippingAddress" id="shippingAddressInput" class="form-control" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." />
+                    </div>
                     <span asp-validation-for="ShippingAddress" class="text-danger"></span>
                 </div>
 
@@ -70,34 +79,9 @@
                         <strong>Giao nhanh 2 giờ</strong> - 25.000 đ
                     </label>
                 </div>
-
-                <h2>Phương thức thanh toán</h2>
-                <div class="form-check mb-2">
-                    <input type="radio" asp-for="PaymentMethod" value="COD" id="payCod" class="form-check-input" checked />
-                    <label for="payCod" class="form-check-label">
-                        <strong>Thanh toán khi nhận hàng (COD)</strong>
-                    </label>
-                </div>
-                <div class="form-check mb-2">
-                    <input type="radio" asp-for="PaymentMethod" value="MOMO" id="payMomo" class="form-check-input" />
-                    <label for="payMomo" class="form-check-label">
-                        <strong>Ví điện tử MoMo</strong>
-                    </label>
-                </div>
-                <div class="form-check mb-3">
-                    <input type="radio" asp-for="PaymentMethod" value="BANK" id="payBank" class="form-check-input" />
-                    <label for="payBank" class="form-check-label">
-                        <strong>Chuyển khoản ngân hàng</strong>
-                    </label>
-                </div>
             </section>
 
             <aside class="summary-card">
-                <h2>Mã giảm giá</h2>
-                <div class="form-group mb-3">
-                    <input asp-for="CouponCode" class="form-control" placeholder="Nhập mã giảm giá (nếu có)" />
-                </div>
-
                 <h2>Tóm tắt đơn hàng</h2>
                 <div class="summary-line">
                     <span>Số lượng</span>
@@ -123,7 +107,7 @@
 
                 <div class="review-actions mt-3">
                     <button class="customer-button w-100" type="submit">
-                        Tiếp tục: Xác nhận <i class="bi bi-arrow-right"></i>
+                        Tiếp tục: Chọn PTTT <i class="bi bi-arrow-right"></i>
                     </button>
                 </div>
             </aside>
@@ -133,4 +117,52 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+               function getCurrentLocation() {
+            const btn = document.getElementById('btnGetLocation');
+            const addressInput = document.getElementById('shippingAddressInput');
+
+            if (!navigator.geolocation) {
+                alert("Trình duyệt của bạn không hỗ trợ định vị GPS.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lấy vị trí...';
+
+            navigator.geolocation.getCurrentPosition(async function (position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                try {
+                    // Sử dụng API BigDataCloud ổn định hơn trên Client JS
+                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=vi`);
+                    const data = await response.json();
+
+                    if (data) {
+                        const addressParts = [
+                            data.locality,
+                            data.city || data.principalSubdivision,
+                            data.countryName
+                        ].filter(Boolean);
+
+                        addressInput.value = addressParts.join(', ');
+                    } else {
+                        alert("Không thể giải mã địa chỉ từ tọa độ. Vui lòng nhập thủ công.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Có lỗi xảy ra khi kết nối máy chủ định vị.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại';
+                }
+            }, function (error) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại';
+                alert("Không thể lấy vị trí. Hãy chắc chắn bạn đã bật GPS và cấp quyền vị trí cho trình duyệt.");
+            });
+        }
+    </script>
 }

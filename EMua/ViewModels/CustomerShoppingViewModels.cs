@@ -132,6 +132,12 @@ public class OrderDetailsViewModel
     public string PaymentStatus { get; set; } = string.Empty;
     public List<CartItemViewModel> Items { get; set; } = [];
     public List<OrderStatusViewModel> StatusHistory { get; set; } = [];
+
+    // Ngày dự kiến giao hàng - lấy từ order.NgayDuKienGiao (Staff nhập khi cập nhật giao nhận)
+    public DateTime? EstimatedDeliveryDate { get; set; }
+
+    // Ảnh xác nhận đã giao hàng - lấy từ order.AnhXacNhanGiao
+    public string? DeliveryProofImageUrl { get; set; }
 }
 
 public class OrderStatusViewModel

@@ -2,13 +2,18 @@
 @{
     ViewData["Title"] = "Giỏ hàng";
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/shopping-cart.css" asp-append-version="true" />
 
 <div class="cart-container">
-    <!-- 1. Tiêu đề trang -->
+    <!-- 1. Tiêu đề trang + Nút quay lại -->
     <header class="cart-header">
-        <h1>Giỏ hàng</h1>
-        <p>Bạn có @Model.TotalQuantity sản phẩm trong giỏ hàng</p>
+        <a asp-controller="Product" asp-action="Index" class="btn-back-icon" title="Quay lại mua sắm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1>Giỏ hàng</h1>
+            <p>Bạn có @Model.TotalQuantity sản phẩm trong giỏ hàng</p>
+        </div>
     </header>
 
     @if (TempData["Error"] != null)

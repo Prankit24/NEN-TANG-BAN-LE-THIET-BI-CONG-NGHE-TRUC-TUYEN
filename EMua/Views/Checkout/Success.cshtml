@@ -3,31 +3,50 @@
 @{
     ViewData["Title"] = "Hoàn tất đơn hàng";
 
-    // Tự động tạo Link VietQR chuẩn
-    var bankQrUrl = !string.IsNullOrEmpty(Model.BankQrUrl)
-        ? Model.BankQrUrl
-        : $"https://img.vietqr.io/image/MB-22224032005-compact2.png?amount={(long)Model.TotalAmount}&addInfo={Model.TransferContent}&accountName=TECH";
+    string mbAccountNo = "0963453170";
+    string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
+
+    string transferContent = Model.TransferContent ?? $"EMUA{Model.OrderId:D6}";
+    string bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
+    string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
 }
 
-<div class="checkout-success-container container my-5">
-    <!-- Stepper Tiến trình -->
-    <div class="d-flex justify-content-center align-items-center mb-4 gap-2 text-muted small">
-        <span>1. Thông tin</span> &gt; <span>2. Xác nhận</span> &gt; <strong class="text-dark">3. Thanh toán</strong>
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
+
+<div class="customer-page container py-4">
+
+    <!-- Custom CSS Stepper -->
+    <div class="checkout-steps">
+        <div class="checkout-step active">
+            <span>1</span>
+            <strong>Thông tin</strong>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+
+        <div class="checkout-step active">
+            <span>2</span>
+            <strong>Thanh toán</strong>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+
+        <div class="checkout-step active">
+            <span>3</span>
+            <strong>Hoàn tất</strong>
+        </div>
     </div>
 
-    <div class="card border-0 shadow-sm mx-auto overflow-hidden" style="max-width: 680px; border-radius: 16px;">
+    <div class="card border-0 shadow-sm mx-auto overflow-hidden mt-4" style="max-width: 680px; border-radius: 16px;">
 
-        @if (Model.PaymentMethod == "COD")
+        @if (Model.PaymentMethod.Contains("COD") || Model.PaymentMethod == "COD")
         {
-            <!-- HEADER TÍNH NĂNG COD -->
             <div class="card-header bg-white border-0 text-center pt-4 pb-2">
                 <div class="mb-3">
-                    <span class="badge rounded-circle bg-success-subtle text-success p-3 display-6">
-                        <i class="bi bi-box-seam"></i>
+                    <span class="badge rounded-circle bg-success-subtle text-success p-3 fs-1">
+                        <i class="bi bi-check-circle-fill"></i>
                     </span>
                 </div>
                 <h3 class="fw-bold text-success">Đặt hàng thành công!</h3>
-                <p class="text-muted mb-0">Đơn hàng của bạn đã được ghi nhận và đang chuẩn bị giao.</p>
+                <p class="text-muted mb-0">Cảm ơn bạn đã mua sắm tại EMUA.</p>
             </div>
 
             <div class="card-body p-4">
@@ -38,25 +57,17 @@
                             <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-muted d-block small">Tổng thanh toán</span>
+                            <span class="text-muted d-block small">Cần thanh toán</span>
                             <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4">
-                    <i class="bi bi-clock-history fs-2 text-success"></i>
-                    <div>
-                        <h6 class="fw-bold mb-1">Thời gian giao hàng dự kiến: 30 - 45 phút</h6>
-                        <small class="text-secondary">Đơn hàng sẽ được giao đến địa chỉ: <strong>@Model.Address</strong>. Bạn vui lòng chuẩn bị đúng số tiền khi nhận hàng.</small>
-                    </div>
-                </div>
-
                 <div class="d-grid gap-2">
-                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-dark btn-lg py-2 fs-6">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="customer-button text-center">
                         <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
                     </a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg py-2 fs-6">
+                    <a asp-controller="Home" asp-action="Index" class="customer-button customer-button-light text-center">
                         Tiếp tục mua sắm
                     </a>
                 </div>
@@ -64,15 +75,14 @@
         }
         else
         {
-            <!-- HEADER TÍNH NĂNG CHUYỂN KHOẢN (BANK / MOMO) -->
             <div class="card-header bg-white border-0 text-center pt-4 pb-2">
                 <div class="mb-3">
-                    <span class="badge rounded-circle bg-primary-subtle text-primary p-3 display-6">
+                    <span class="badge rounded-circle bg-primary-subtle text-primary p-3 fs-2">
                         <i class="bi bi-qr-code-scan"></i>
                     </span>
                 </div>
-                <h3 class="fw-bold text-primary">Vui lòng hoàn tất thanh toán</h3>
-                <p class="text-muted mb-0">Quét mã QR bên dưới để chuyển khoản. Nhân viên sẽ duyệt đơn ngay khi nhận tiền.</p>
+                <h3 class="fw-bold text-primary">Vui lòng thanh toán đơn hàng</h3>
+                <p class="text-muted mb-0">Mã QR đã được tạo tự động kèm đúng số tiền và nội dung chuyển khoản.</p>
             </div>
 
             <div class="card-body p-4">
@@ -83,45 +93,57 @@
                             <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-muted d-block small">Tổng thanh toán</span>
+                            <span class="text-muted d-block small">Tổng tiền</span>
                             <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="qr-box border border-primary-subtle rounded-3 p-4 bg-light text-center mb-4">
-                    <span class="badge bg-primary mb-2">Thanh toán qua @Model.PaymentMethod</span>
-                    <h5 class="fw-bold mb-3">Quét mã QR để thanh toán</h5>
-
-                    <div class="d-inline-block p-2 bg-white rounded shadow-sm mb-3">
-                        @if (Model.PaymentMethod == "MOMO")
-                        {
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=@Model.TransferContent" alt="MoMo QR" class="img-fluid" style="max-width: 220px;" />
-                        }
-                        else
-                        {
-                            <img src="@bankQrUrl" alt="VietQR Bank" class="img-fluid" style="max-width: 220px;" />
-                        }
+                @if (Model.PaymentMethod.Contains("WEB3"))
+                {
+                    <div class="qr-box text-center p-4 border rounded bg-light mb-4">
+                        <span class="badge bg-warning text-dark mb-2">Thanh toán Ví Web3</span>
+                        <p class="small text-muted mb-2">Chuyển đúng số tiền vào địa chỉ ví bên dưới:</p>
+                        <code class="d-block p-2 bg-dark text-warning rounded text-break mb-2 fs-6">@web3WalletAddress</code>
                     </div>
+                }
+                else
+                {
+                    <div class="qr-box text-center p-4 border border-primary-subtle rounded bg-light mb-4">
+                        <span class="badge bg-primary mb-2">Chuyển khoản MB Bank</span>
+                        <h5 class="fw-bold mb-3">Quét mã QR để thanh toán tự động</h5>
 
-                    <div class="text-start bg-white p-3 rounded border">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Nội dung chuyển khoản:</span>
-                            <span class="fw-bold text-primary">@Model.TransferContent</span>
+                        <div class="d-inline-block p-2 bg-white rounded shadow-sm mb-3">
+                            <img src="@bankQrUrl" alt="VietQR MB Bank" class="img-fluid" style="max-width: 220px;" />
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted small">Trạng thái xác thực:</span>
-                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Chờ nhân viên duyệt</span>
+
+                        <div class="text-start bg-white p-3 rounded border">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Số tài khoản:</span>
+                                <strong class="text-dark">@mbAccountNo (MB Bank)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Chủ tài khoản:</span>
+                                <strong class="text-dark">PHAN DANG PHUONG ANH</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Nội dung chuyển khoản:</span>
+                                <strong class="text-danger fs-6">@transferContent</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Trạng thái:</span>
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận</span>
+                            </div>
                         </div>
+                        <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống đối soát chính xác.</small>
                     </div>
-                    <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để nhân viên đối soát nhanh nhất.</small>
-                </div>
+                }
 
                 <div class="d-grid gap-2">
-                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-dark btn-lg py-2 fs-6">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="customer-button text-center">
                         <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
                     </a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg py-2 fs-6">
+                    <a asp-controller="Home" asp-action="Index" class="customer-button customer-button-light text-center">
                         Tiếp tục mua sắm
                     </a>
                 </div>

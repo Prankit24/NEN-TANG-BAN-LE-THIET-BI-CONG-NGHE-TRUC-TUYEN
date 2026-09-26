@@ -107,5 +107,16 @@ namespace EMua.Controllers
                             ?? HttpContext.TraceIdentifier
             });
         }
+        // Action cho Landing Page Bản đồ Hệ thống Cửa hàng
+        public IActionResult StoreLocations()
+        {
+            return View();
+        }
+
+        // Action Trang Nhượng quyền (nếu chưa có)
+        public IActionResult Franchise()
+        {
+            return View();
+        }
     }
 }

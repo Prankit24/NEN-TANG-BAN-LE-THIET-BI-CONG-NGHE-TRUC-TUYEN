@@ -1,66 +1,83 @@
 @model EMua.ViewModels.CheckoutViewModel
 
 @{
-    ViewData["Title"] = "Thanh toán";
+    ViewData["Title"] = "Chọn phương thức thanh toán";
+    string selectedMethod = ViewBag.PaymentMethod as string ?? Model.PaymentMethod ?? "COD";
 }
 
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
 
 <div class="customer-page container py-4">
-    <partial name="_CheckoutSteps" model="3" />
+    <partial name="_CheckoutSteps" model="2" />
 
-    <div class="customer-heading compact">
+    <div class="customer-heading compact mb-4">
         <div>
-            <span class="eyebrow">BƯỚC 3 / 3</span>
-            <h1>Thanh toán</h1>
-            <p>Xác nhận phương thức thanh toán để hoàn tất đơn hàng.</p>
+            <span class="eyebrow">BƯỚC 2 / 3</span>
+            <h1>Phương thức thanh toán</h1>
+            <p>Chọn phương thức thanh toán phù hợp với bạn.</p>
         </div>
     </div>
 
-    <form asp-action="CompleteOrder" method="post" class="checkout-review-layout">
+    <form asp-action="Payment" method="post" class="checkout-review-layout">
         @Html.AntiForgeryToken()
 
         <section class="form-panel">
-            <h2>Thông tin thanh toán</h2>
-            <div class="confirmation-line">
-                <span>Người nhận</span>
-                <strong>@Model.RecipientName</strong>
-            </div>
-            <div class="confirmation-line">
-                <span>Địa chỉ</span>
-                <strong>@Model.ShippingAddress</strong>
-            </div>
-            <div class="confirmation-line">
-                <span>Giao hàng</span>
-                <strong>@(Model.ShippingMethod == "EXPRESS" ? "Giao nhanh 2 giờ" : "Giao tiêu chuẩn")</strong>
-            </div>
-            <div class="confirmation-line">
-                <span>Thanh toán</span>
-                <strong>
-                    @(Model.PaymentMethod == "COD"
-                                        ? "Thanh toán khi nhận hàng"
-                                        : Model.PaymentMethod == "MOMO"
-                                        ? $"Ví điện tử - {Model.PaymentProvider}"
-                                        : $"Ngân hàng - {Model.PaymentProvider}")
-                </strong>
+            <h2>Lựa chọn thanh toán</h2>
+
+            <!-- Option 1: COD -->
+            <label class="form-check p-3 mb-2 cursor-pointer">
+                <input type="radio" name="paymentMethod" value="COD" class="form-check-input" @(selectedMethod == "COD" ? "checked" : "") onchange="togglePaymentDetails('COD')" />
+                <span class="form-check-label ms-2">
+                    <i class="bi bi-cash-stack text-success me-2 fs-5"></i>
+                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                </span>
+            </label>
+
+            <!-- Option 2: BANK QR -->
+            <label class="form-check p-3 mb-2 cursor-pointer">
+                <input type="radio" name="paymentMethod" value="BANK_TRANSFER" class="form-check-input" @(selectedMethod == "BANK_TRANSFER" ? "checked" : "") onchange="togglePaymentDetails('BANK_TRANSFER')" />
+                <span class="form-check-label ms-2">
+                    <i class="bi bi-qr-code-scan text-primary me-2 fs-5"></i>
+                    <strong>Chuyển khoản Ngân hàng (VietQR / MB Bank)</strong>
+                </span>
+            </label>
+
+            <!-- Box thông tin QR Bank -->
+            <div id="bank-details-box" class="payment-notice alert alert-info mt-2" style="display: none;">
+                <div class="d-flex flex-column flex-sm-row align-items-center gap-3">
+                    <img src="https://img.vietqr.io/image/MB-0963453170-compact2.png?accountName=PHAN%20DANG%20PHUONG%20ANH" alt="QR MB Bank" style="width: 140px; height: 140px;" class="rounded border" />
+                    <div class="small">
+                        <h6 class="fw-bold mb-1 text-primary"><i class="bi bi-bank me-1"></i>Thông tin MB Bank</h6>
+                        <p class="mb-1">Số TK: <strong class="fs-6 text-dark">0963453170</strong></p>
+                        <p class="mb-1">Chủ TK: <strong>PHAN DANG PHUONG ANH</strong></p>
+                        <p class="mb-0 text-muted">* Bạn có thể quét mã QR thanh toán ngay bây giờ.</p>
+                    </div>
+                </div>
             </div>
 
-            @if (Model.PaymentMethod == "COD")
-            {
-                <div class="payment-notice mt-3 alert alert-info">
-                    <i class="bi bi-cash-stack me-2"></i> Bạn sẽ thanh toán bằng tiền mặt khi nhận hàng.
-                </div>
-            }
-            else
-            {
-                <div class="payment-notice mt-3 alert alert-warning">
-                    <i class="bi bi-shield-check me-2"></i> Bạn sẽ được chuyển đến trang toán trực tuyến của cổng thanh toán đã chọn.
-                </div>
-            }
+            <!-- Option 3: WEB3 -->
+            <label class="form-check p-3 mb-2 cursor-pointer">
+                <input type="radio" name="paymentMethod" value="WEB3" class="form-check-input" @(selectedMethod == "WEB3" ? "checked" : "") onchange="togglePaymentDetails('WEB3')" />
+                <span class="form-check-label ms-2">
+                    <i class="bi bi-wallet2 text-warning me-2 fs-5"></i>
+                    <strong>Ví Web3 (Crypto / USDT)</strong>
+                </span>
+            </label>
+
+            <!-- Box thông tin Web3 -->
+            <div id="web3-details-box" class="payment-notice alert alert-warning mt-2" style="display: none;">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-currency-bitcoin me-1"></i>Địa chỉ ví nhận USDT (BEP20 / ERC20)</h6>
+                <code class="d-block p-2 bg-dark text-warning rounded mt-2 text-break">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</code>
+            </div>
         </section>
 
         <aside class="summary-card">
-            <h2>Tổng đơn hàng</h2>
+            <h2>Mã giảm giá</h2>
+            <div class="form-group mb-3">
+                <input name="couponCode" value="@Model.CouponCode" class="form-control" placeholder="Nhập mã giảm giá (nếu có)" />
+            </div>
+
+            <h2>Tóm tắt đơn hàng</h2>
             <div class="summary-line">
                 <span>Tạm tính</span>
                 <strong>@Model.Subtotal.ToString("N0") đ</strong>
@@ -75,30 +92,32 @@
             </div>
             <hr />
             <div class="summary-total">
-                <span>Cần thanh toán</span>
+                <span>Tổng cần thanh toán</span>
                 <strong>@Model.Total.ToString("N0") đ</strong>
             </div>
 
             <div class="review-actions mt-3">
-                <a asp-action="Payment" class="customer-button customer-button-light">Quay lại</a>
+                <a asp-action="Index" class="customer-button customer-button-light">Quay lại</a>
                 <button class="customer-button" type="submit">
-                    @(Model.PaymentMethod == "COD" ? "Đặt hàng" : "Thanh toán ngay") <i class="bi bi-check2"></i>
+                    Tiếp tục: Xác nhận <i class="bi bi-arrow-right"></i>
                 </button>
             </div>
         </aside>
-
-        <!-- Hidden inputs giữ dữ liệu ViewModel -->
-        <input type="hidden" asp-for="RecipientName" />
-        <input type="hidden" asp-for="RecipientPhone" />
-        <input type="hidden" asp-for="ShippingAddress" />
-        <input type="hidden" asp-for="Note" />
-        <input type="hidden" asp-for="CouponCode" />
-        <input type="hidden" asp-for="ShippingMethod" />
-        <input type="hidden" asp-for="PaymentMethod" />
-        <input type="hidden" asp-for="PaymentProvider" />
     </form>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePaymentDetails(method) {
+            document.getElementById('bank-details-box').style.display = (method === 'BANK_TRANSFER') ? 'block' : 'none';
+            document.getElementById('web3-details-box').style.display = (method === 'WEB3') ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            if (checkedRadio) {
+                togglePaymentDetails(checkedRadio.value);
+            }
+        });
+    </script>
 }

@@ -16,6 +16,9 @@ public class CheckoutController : Controller
 
     public CheckoutController(EMuaDbContext db) => _db = db;
 
+    // Các phương thức thanh toán hợp lệ
+    private static readonly string[] AllowedPaymentMethods = { "COD", "BANK_TRANSFER", "WEB3" };
+
     // =========================================================
     // STEP 1: ĐIỀN THÔNG TIN GIAO HÀNG
     // =========================================================
@@ -75,28 +78,59 @@ public class CheckoutController : Controller
     // =========================================================
 
     [HttpGet]
-    public IActionResult Payment()
+    public async Task<IActionResult> Payment()
     {
         if (TempData["Checkout_FullName"] == null)
             return RedirectToAction(nameof(Index));
 
-        ViewBag.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() ?? "COD";
-        ViewBag.CouponCode = TempData["Checkout_CouponCode"]?.ToString();
+        var user = await GetCurrentUserAsync();
+        if (user == null) return RedirectToAction("Login", "Auth");
+
+        var model = await BuildCheckoutAsync(user);
+        if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
+
+        model.FullName = TempData["Checkout_FullName"]?.ToString() ?? string.Empty;
+        model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? string.Empty;
+        model.Address = TempData["Checkout_Address"]?.ToString() ?? string.Empty;
+        model.Note = TempData["Checkout_Note"]?.ToString();
+
+        model.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() ?? "COD";
+        model.CouponCode = TempData["Checkout_CouponCode"]?.ToString();
+
+        var coupon = await FindValidCouponAsync(model.CouponCode, model.Subtotal);
+        if (coupon != null)
+        {
+            model.Discount = CalculateDiscount(coupon, model.Subtotal);
+        }
+
+        ViewBag.PaymentMethod = model.PaymentMethod;
+        ViewBag.CouponCode = model.CouponCode;
 
         TempData.Keep();
-        return View();
+        return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Payment(string paymentMethod, string? couponCode)
+    public async Task<IActionResult> Payment(string paymentMethod, string? couponCode)
     {
-        var allowedMethods = new[] { "CARD", "MBBANK", "MOMO", "COD" };
-        if (!allowedMethods.Contains(paymentMethod))
+        if (!AllowedPaymentMethods.Contains(paymentMethod))
         {
             ModelState.AddModelError(string.Empty, "Phương thức thanh toán không hợp lệ.");
-            TempData.Keep();
-            return View();
+
+            var user = await GetCurrentUserAsync();
+            if (user != null)
+            {
+                var model = await BuildCheckoutAsync(user);
+                model.FullName = TempData["Checkout_FullName"]?.ToString() ?? string.Empty;
+                model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? string.Empty;
+                model.Address = TempData["Checkout_Address"]?.ToString() ?? string.Empty;
+                model.Note = TempData["Checkout_Note"]?.ToString();
+
+                TempData.Keep();
+                return View(model);
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         TempData["Checkout_PaymentMethod"] = paymentMethod;
@@ -167,8 +201,7 @@ public class CheckoutController : Controller
             return BadRequest(new { success = false, message = "Thiếu thông tin giao hàng. Vui lòng quay lại bước 1." });
         }
 
-        var allowedMethods = new[] { "CARD", "MBBANK", "MOMO", "COD" };
-        if (string.IsNullOrWhiteSpace(paymentMethod) || !allowedMethods.Contains(paymentMethod))
+        if (string.IsNullOrWhiteSpace(paymentMethod) || !AllowedPaymentMethods.Contains(paymentMethod))
         {
             return BadRequest(new { success = false, message = "Phương thức thanh toán không hợp lệ." });
         }
@@ -248,13 +281,12 @@ public class CheckoutController : Controller
                     // 7. Xóa giỏ hàng
                     _db.ChiTietGioHangs.RemoveRange(cartItems);
 
-                    // 8. Tạo bản ghi ThanhToan
+                    // 8. Đặt tên phương thức hiển thị chuẩn
                     var paymentName = paymentMethod switch
                     {
-                        "CARD" => "Thẻ ngân hàng",
-                        "MBBANK" => "MB Bank",
-                        "MOMO" => "MoMo",
-                        _ => "COD"
+                        "BANK_TRANSFER" => "Chuyển khoản ngân hàng (QR)",
+                        "WEB3" => "Ví Web3 (Crypto)",
+                        _ => "Thanh toán khi nhận hàng (COD)"
                     };
 
                     var payment = new ThanhToan
@@ -318,7 +350,7 @@ public class CheckoutController : Controller
     }
 
     // =========================================================
-    // STEP 4: TRANG THÀNH CÔNG & HIỂN THỊ QR THANH TOÁN
+    // STEP 4: TRANG THÀNH CÔNG & THÔNG TIN THANH TOÁN
     // =========================================================
 
     [HttpGet]
@@ -340,15 +372,16 @@ public class CheckoutController : Controller
         var transferContent = $"EMUA{order.MaDonHang:D6}";
         var orderTotal = order.TongTien;
 
-        // Cấu hình thông tin ngân hàng MB Bank
-        string mbAccountNo = "0963453170"; // Thay bằng số tài khoản MB của bạn
-        string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH"); // Thay bằng tên chủ tài khoản (viết hoa không dấu)
-
+        // Cấu hình Chuyển khoản VietQR (MB Bank)
+        string mbAccountNo = "0963453170";
+        string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
         var bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)orderTotal}&addInfo={transferContent}&accountName={mbAccountName}";
-        var momoQrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=260x260&data={Uri.EscapeDataString($"2|99|0963453170|PHUONG ANH||0|0|{(long)orderTotal}|{transferContent}|transfer_myqr")}";
+
+        // Cấu hình Ví Web3 (Địa chỉ ví USDT/ETH nhận tiền của Shop)
+        string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"; // Thay địa chỉ ví thực tế
 
         ViewBag.BankQrUrl = bankQrUrl;
-        ViewBag.MomoQrUrl = momoQrUrl;
+        ViewBag.Web3WalletAddress = web3WalletAddress;
         ViewBag.TransferContent = transferContent;
 
         var viewModel = new CheckoutSuccessViewModel
@@ -361,7 +394,6 @@ public class CheckoutController : Controller
             PhoneNumber = order.SoDienThoaiNhanHang ?? string.Empty,
             Address = order.DiaChiNhanHang ?? string.Empty,
             BankQrUrl = bankQrUrl,
-            MomoQrUrl = momoQrUrl,
             TransferContent = transferContent,
             Items = order.ChiTietDonHangs.Select(x => new CheckoutItemViewModel
             {

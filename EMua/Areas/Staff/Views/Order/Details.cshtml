@@ -1,4 +1,374 @@
 @model DonHang
-@{ ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}"; }
-<div class="staff-toolbar"><a class="btn btn-light" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại</a><form asp-action="CreateInvoice" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.MaDonHang"/><button class="btn btn-primary"><i class="bi bi-printer"></i> Xuất hóa đơn</button></form></div>
-<div class="staff-order-detail"><section class="staff-card"><h2>Thông tin đơn hàng</h2><div class="staff-info-grid"><div><span>Khách hàng</span><strong>@(Model.HoTenNhanHang ?? Model.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</strong></div><div><span>Số điện thoại</span><strong>@(Model.SoDienThoaiNhanHang ?? "—")</strong></div><div><span>Địa chỉ nhận</span><strong>@(Model.DiaChiNhanHang ?? "—")</strong></div><div><span>Phương thức giao</span><strong>@(Model.PhuongThucVanChuyen ?? "—")</strong></div><div><span>Ghi chú</span><strong>@(Model.GhiChu ?? "Không có")</strong></div><div><span>Trạng thái</span><strong><span class="staff-badge">@(Model.TrangThaiDonHang ?? "Chờ xử lý")</span></strong></div></div></section><section class="staff-card"><h2>Sản phẩm trong đơn</h2><div class="table-responsive"><table class="staff-table"><thead><tr><th>Sản phẩm</th><th>Biến thể</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>@foreach(var detail in Model.ChiTietDonHangs){<tr><td>@detail.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td><td>@detail.MaBienTheNavigation.MauSac @detail.MaBienTheNavigation.PhienBan</td><td>@detail.DonGia.ToString("N0") đ</td><td>@detail.SoLuong</td><td>@detail.ThanhTien.ToString("N0") đ</td></tr>}</tbody></table></div><div class="staff-order-total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></div></section></div>
+@{
+    ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}";
+
+    // Danh sách trạng thái để vẽ thanh tiến trình - cần Controller truyền ViewBag.Statuses
+    // giống như Index.cshtml đang làm (var statuses = (string[])ViewBag.Statuses;)
+    var allStatuses = (ViewBag.Statuses as string[]) ?? Array.Empty<string>();
+    var currentStatus = Model.TrangThaiDonHang ?? "Chờ xử lý";
+
+    // Trạng thái "hủy" tách riêng khỏi tiến trình chính (không tính vào các bước)
+    var progressStatuses = allStatuses.Where(s => !s.Contains("hủy", StringComparison.OrdinalIgnoreCase)).ToArray();
+    var isCancelled = currentStatus.Contains("hủy", StringComparison.OrdinalIgnoreCase);
+    var currentIndex = Array.IndexOf(progressStatuses, currentStatus);
+    if (currentIndex < 0) currentIndex = 0;
+
+    // Icon cho từng bước theo vị trí (bước cuối luôn là "đã giao")
+    string[] stepIcons = { "bi-hourglass-split", "bi-box-seam", "bi-truck", "bi-house-check-fill" };
+}
+
+<style>
+    .staff-tracker {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0 32px;
+    }
+
+        .staff-tracker::before {
+            content: "";
+            position: absolute;
+            top: 22px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+    .staff-tracker-progress {
+        position: absolute;
+        top: 22px;
+        left: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4f46e5, #38bdf8);
+        border-radius: 2px;
+        z-index: 1;
+        transition: width .6s ease;
+    }
+
+    .staff-tracker-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        text-align: center;
+    }
+
+        .staff-tracker-step .icon-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #adb5bd;
+            transition: all .3s ease;
+        }
+
+        .staff-tracker-step.done .icon-circle {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: #fff;
+        }
+
+        .staff-tracker-step.active .icon-circle {
+            background: #fff;
+            border-color: #4f46e5;
+            color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79,70,229,.15);
+            animation: staff-pulse 1.6s infinite;
+        }
+
+    @@keyframes staff-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(79,70,229,.35);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(79,70,229,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(79,70,229,0);
+        }
+    }
+
+    .staff-tracker-step .step-label {
+        margin-top: 8px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .staff-tracker-step.done .step-label,
+    .staff-tracker-step.active .step-label {
+        color: #1f2937;
+    }
+
+    .staff-truck-runner {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        font-size: 1.3rem;
+        color: #4f46e5;
+        transition: left .6s ease;
+        animation: staff-bounce 1.2s infinite;
+    }
+
+    @@keyframes staff-bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    .staff-eta-banner {
+        background: #eef2ff;
+        border: 1px dashed #4f46e5;
+        border-radius: .5rem;
+        padding: .65rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #3730a3;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .staff-proof-photo {
+        max-width: 260px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: .5rem;
+        border: 1px solid #dee2e6;
+        margin-top: 8px;
+    }
+
+    .staff-delivery-form .form-group {
+        margin-bottom: 14px;
+    }
+
+    .staff-delivery-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+        font-size: .9rem;
+    }
+
+    .staff-delivery-form input[type="text"],
+    .staff-delivery-form input[type="datetime-local"],
+    .staff-delivery-form input[type="file"],
+    .staff-delivery-form textarea,
+    .staff-delivery-form select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: .4rem;
+        font-size: .9rem;
+    }
+
+    .staff-delivery-form .proof-box {
+        border: 1px solid #d1fae5;
+        background: #ecfdf5;
+        border-radius: .5rem;
+        padding: 12px;
+        display: none;
+    }
+
+        .staff-delivery-form .proof-box.show {
+            display: block;
+        }
+
+    .staff-checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+</style>
+
+<div class="staff-toolbar">
+    <a class="btn btn-light" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <form asp-action="CreateInvoice" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.MaDonHang" />
+        <button class="btn btn-primary"><i class="bi bi-printer"></i> Xuất hóa đơn</button>
+    </form>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@TempData["SuccessMessage"]</div>
+}
+
+<!-- Thanh tiến trình giao hàng -->
+<section class="staff-card">
+    <h2>Tiến trình giao hàng</h2>
+
+    @if (isCancelled)
+    {
+        <div class="alert alert-danger mb-0">
+            <i class="bi bi-x-octagon-fill me-1"></i> Đơn hàng đã bị hủy. Trạng thái: <strong>@currentStatus</strong>
+        </div>
+    }
+    else if (progressStatuses.Length > 0)
+    {
+        var pct = progressStatuses.Length > 1 ? (currentIndex * 100.0 / (progressStatuses.Length - 1)) : 0;
+        <div class="staff-tracker" style="margin-top:26px;">
+            <div class="staff-tracker-progress" style="width:@pct.ToString("0.##")%"></div>
+            @if (currentIndex < progressStatuses.Length - 1)
+            {
+                <div class="staff-truck-runner" style="left:@pct.ToString("0.##")%"><i class="bi bi-truck"></i></div>
+            }
+            @for (int i = 0; i < progressStatuses.Length; i++)
+            {
+                var cls = i < currentIndex ? "done" : (i == currentIndex ? "active" : "");
+                var icon = stepIcons[Math.Min(i, stepIcons.Length - 1)];
+                <div class="staff-tracker-step @cls">
+                    <div class="icon-circle"><i class="bi @icon"></i></div>
+                    <div class="step-label">@progressStatuses[i]</div>
+                </div>
+            }
+        </div>
+
+        @if (Model.NgayDuKienGiao.HasValue && currentIndex < progressStatuses.Length - 1)
+        {
+            <div class="staff-eta-banner">
+                <i class="bi bi-calendar-check"></i>
+                <span>Dự kiến giao hàng: @Model.NgayDuKienGiao.Value.ToString("HH:mm, dd/MM/yyyy")</span>
+            </div>
+        }
+    }
+</section>
+
+<div class="staff-order-detail">
+    <section class="staff-card">
+        <h2>Thông tin đơn hàng</h2>
+        <div class="staff-info-grid">
+            <div><span>Khách hàng</span><strong>@(Model.HoTenNhanHang ?? Model.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</strong></div>
+            <div><span>Số điện thoại</span><strong>@(Model.SoDienThoaiNhanHang ?? "—")</strong></div>
+            <div><span>Địa chỉ nhận</span><strong>@(Model.DiaChiNhanHang ?? "—")</strong></div>
+            <div><span>Phương thức giao</span><strong>@(Model.PhuongThucVanChuyen ?? "—")</strong></div>
+            <div><span>Ghi chú</span><strong>@(Model.GhiChu ?? "Không có")</strong></div>
+            <div><span>Trạng thái</span><strong><span class="staff-badge">@currentStatus</span></strong></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.AnhXacNhanGiao))
+        {
+            <div style="margin-top:14px;">
+                <span><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao:</span><br />
+                <img src="@Model.AnhXacNhanGiao" alt="Ảnh xác nhận giao hàng" class="staff-proof-photo" />
+            </div>
+        }
+    </section>
+
+    <section class="staff-card">
+        <h2>Sản phẩm trong đơn</h2>
+        <div class="table-responsive">
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Biến thể</th>
+                        <th>Đơn giá</th>
+                        <th>SL</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detail in Model.ChiTietDonHangs)
+                    {
+                        <tr>
+                            <td>@detail.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td>
+                            <td>@detail.MaBienTheNavigation.MauSac @detail.MaBienTheNavigation.PhienBan</td>
+                            <td>@detail.DonGia.ToString("N0") đ</td>
+                            <td>@detail.SoLuong</td>
+                            <td>@detail.ThanhTien.ToString("N0") đ</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="staff-order-total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></div>
+    </section>
+
+    <!-- Cập nhật giao nhận: ghi chú ngày dự kiến giao + upload ảnh khi đã giao -->
+    <section class="staff-card">
+        <h2>Cập nhật giao nhận</h2>
+        <form asp-action="UpdateDeliveryStatus" method="post" enctype="multipart/form-data" class="staff-delivery-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.MaDonHang" />
+
+            <div class="form-group">
+                <label>Trạng thái đơn hàng</label>
+                <select name="status" id="statusSelect">
+                    @foreach (var status in allStatuses)
+                    {
+                        <option value="@status" selected="@(currentStatus == status)">@status</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><i class="bi bi-calendar-event me-1"></i>Ngày dự kiến giao hàng</label>
+                <input type="datetime-local" name="ngayDuKienGiao" id="etaInput"
+                       value="@((Model.NgayDuKienGiao ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+
+            <div class="proof-box" id="proofBox">
+                <label><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao <span style="color:#dc2626">*</span></label>
+                <input type="file" name="anhXacNhanGiao" id="proofInput" accept="image/*" />
+                <div style="font-size:.8rem;color:#6b7280;margin-top:4px;">Chụp ảnh kiện hàng/sản phẩm tại nơi giao để xác nhận hoàn tất.</div>
+                <img id="proofPreview" class="staff-proof-photo" style="display:none;" alt="Xem trước ảnh" />
+            </div>
+
+            <div class="form-group">
+                <label>Ghi chú giao hàng</label>
+                <textarea name="ghiChuGiaoHang" rows="3" placeholder="Nhập ghi chú (lý do hủy, ghi chú thời gian, v.v...)"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Lưu cập nhật</button>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var statusSelect = document.getElementById('statusSelect');
+            var proofBox = document.getElementById('proofBox');
+            var proofInput = document.getElementById('proofInput');
+            var proofPreview = document.getElementById('proofPreview');
+
+            function toggleProofBox() {
+                var show = statusSelect.value === 'Đã hoàn thành';
+                proofBox.classList.toggle('show', show);
+                proofInput.required = show;
+            }
+
+            statusSelect.addEventListener('change', toggleProofBox);
+            toggleProofBox();
+
+            proofInput.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) { proofPreview.style.display = 'none'; return; }
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    proofPreview.src = e.target.result;
+                    proofPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
+}
