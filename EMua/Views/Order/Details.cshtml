@@ -20,10 +20,235 @@
     // Chỉ cho chỉnh số lượng / xoá sản phẩm khi đơn còn ở trạng thái chờ xử lý,
     // khớp với điều kiện phía server (UpdateOrderItem) để tránh bấm mà không có tác dụng.
     bool canEdit = Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán";
+
+    // ===== Dữ liệu cho thanh tiến trình giao hàng (kiểu Shopee) =====
+    var progressSteps = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành" };
+    var isCancelled = Model.Status == "Đã hủy";
+    var currentStepIndex = Array.IndexOf(progressSteps, Model.Status);
+    if (currentStepIndex < 0) currentStepIndex = 0;
+    string[] stepIcons = { "bi-receipt", "bi-truck", "bi-house-check-fill" };
+    string[] stepLabels = { "Đã đặt hàng", "Đang giao hàng", "Đã giao hàng" };
 }
 
 <link rel="stylesheet" href="~/css/order.css" asp-append-version="true" />
 @Html.AntiForgeryToken()
+
+<style>
+    /* ===== Thanh tiến trình giao hàng kiểu Shopee ===== */
+    .delivery-progress-card {
+        background: #fff;
+        border-radius: .75rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        padding: 1.5rem 1.25rem 1.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .delivery-progress-track {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0 6px;
+    }
+
+        .delivery-progress-track::before {
+            content: "";
+            position: absolute;
+            top: 20px;
+            left: 6%;
+            right: 6%;
+            height: 3px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+    .delivery-progress-fill {
+        position: absolute;
+        top: 20px;
+        left: 6%;
+        height: 3px;
+        background: linear-gradient(90deg, #ee4d2d, #ff7337);
+        z-index: 1;
+        transition: width .6s ease;
+    }
+
+    .delivery-progress-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 33.33%;
+        text-align: center;
+    }
+
+        .delivery-progress-step .dot {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            color: #b0b0b0;
+        }
+
+        .delivery-progress-step.done .dot {
+            background: #ee4d2d;
+            border-color: #ee4d2d;
+            color: #fff;
+        }
+
+        .delivery-progress-step.active .dot {
+            background: #fff;
+            border-color: #ee4d2d;
+            color: #ee4d2d;
+            box-shadow: 0 0 0 4px rgba(238,77,45,.15);
+            animation: delivery-pulse 1.6s infinite;
+        }
+
+    @@keyframes delivery-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(238,77,45,.35);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(238,77,45,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(238,77,45,0);
+        }
+    }
+
+    .delivery-progress-step .step-text {
+        margin-top: 8px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #9ca3af;
+    }
+
+    .delivery-progress-step.done .step-text,
+    .delivery-progress-step.active .step-text {
+        color: #212529;
+    }
+
+    .delivery-truck-icon {
+        position: absolute;
+        top: -4px;
+        transform: translateX(-50%);
+        font-size: 1.2rem;
+        color: #ee4d2d;
+        transition: left .6s ease;
+        animation: delivery-bounce 1.2s infinite;
+    }
+
+    @@keyframes delivery-bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    .delivery-eta-banner {
+        margin-top: 18px;
+        background: #fff7ed;
+        border: 1px dashed #fb923c;
+        border-radius: .5rem;
+        padding: .6rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #9a3412;
+        font-weight: 600;
+        font-size: .9rem;
+    }
+
+    .delivery-proof-block {
+        margin-top: 16px;
+        border-top: 1px dashed #e5e7eb;
+        padding-top: 14px;
+    }
+
+        .delivery-proof-block img {
+            max-width: 240px;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: .5rem;
+            border: 1px solid #e5e7eb;
+            margin-top: 8px;
+            display: block;
+        }
+
+    /* ===== Timeline lịch sử đẹp hơn ===== */
+    .delivery-timeline {
+        position: relative;
+        margin-top: 4px;
+        padding-left: 22px;
+    }
+
+        .delivery-timeline::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 4px;
+            bottom: 4px;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+    .delivery-timeline-item {
+        position: relative;
+        padding-bottom: 18px;
+    }
+
+        .delivery-timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .delivery-timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -22px;
+            top: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ee4d2d;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #ee4d2d;
+        }
+
+        .delivery-timeline-item:first-child::before {
+            background: #ee4d2d;
+        }
+
+        .delivery-timeline-item:not(:first-child)::before {
+            background: #d1d5db;
+            box-shadow: 0 0 0 2px #d1d5db;
+        }
+
+        .delivery-timeline-item b {
+            display: block;
+            font-size: .92rem;
+            color: #212529;
+        }
+
+        .delivery-timeline-item small {
+            color: #9ca3af;
+            font-size: .78rem;
+        }
+
+        .delivery-timeline-item p {
+            margin: 2px 0 0;
+            font-size: .85rem;
+            color: #6b7280;
+        }
+</style>
 
 <div class="order-page-container">
     <!-- Header Cố định -->
@@ -51,6 +276,51 @@
     {
         <div class="order-alert error">@TempData["Error"]</div>
     }
+
+    <!-- ===== Lộ trình giao hàng (kiểu Shopee) ===== -->
+    <div class="delivery-progress-card">
+        @if (isCancelled)
+        {
+            <div class="order-alert error mb-0">
+                <i class="bi bi-x-octagon-fill me-1"></i> Đơn hàng đã bị hủy.
+            </div>
+        }
+        else
+        {
+            var pct = currentStepIndex * 50; // 3 bước: 0%, 50%, 100%
+                                             <div class="delivery-progress-track">
+                                                 <div class="delivery-progress-fill" style="width:calc(@(pct)% * 0.88)"></div>
+                @if (currentStepIndex < progressSteps.Length - 1)
+                {
+                    <div class="delivery-truck-icon" style="left:calc(6% + @(pct)% * 0.88)"><i class="bi bi-truck"></i></div>
+                }
+                @for (int i = 0; i < progressSteps.Length; i++)
+                {
+                    var cls = i < currentStepIndex ? "done" : (i == currentStepIndex ? "active" : "");
+                    <div class="delivery-progress-step @cls">
+                        <div class="dot"><i class="bi @stepIcons[i]"></i></div>
+                        <div class="step-text">@stepLabels[i]</div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.EstimatedDeliveryDate.HasValue && currentStepIndex < progressSteps.Length - 1)
+            {
+                <div class="delivery-eta-banner">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Dự kiến giao hàng: @Model.EstimatedDeliveryDate.Value.ToString("HH:mm, dd/MM/yyyy")</span>
+                </div>
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(Model.DeliveryProofImageUrl))
+        {
+            <div class="delivery-proof-block">
+                <span><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao hàng:</span>
+                <img src="@Model.DeliveryProofImageUrl" alt="Ảnh xác nhận giao hàng" />
+            </div>
+        }
+    </div>
 
     <!-- Layout Chi tiết đơn hàng -->
     <div class="order-detail-layout">
@@ -175,10 +445,10 @@
             {
                 <div class="order-summary-card">
                     <h3><i class="bi bi-clock-history me-1"></i>Lịch sử đơn hàng</h3>
-                    <div class="timeline">
+                    <div class="delivery-timeline">
                         @foreach (var status in Model.StatusHistory)
                         {
-                            <div class="timeline-item">
+                            <div class="delivery-timeline-item">
                                 <b>@status.Status</b>
                                 <small>@status.Time.ToString("dd/MM/yyyy HH:mm")</small>
                                 <p>@status.Description</p>

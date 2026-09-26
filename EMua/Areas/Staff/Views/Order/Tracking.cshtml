@@ -1,0 +1,383 @@
+﻿@model EMua.Areas.Staff.Models.OrderTrackingViewModel
+
+@{
+    ViewData["Title"] = "Theo dõi đơn hàng #" + Model.OrderId;
+    Layout = "_StaffLayout"; // Hoặc Layout chung của Staff
+
+    // Xác định bước hiện tại trên thanh tiến trình
+    var steps = new[] { "Chờ xác nhận", "Đã xác nhận", "Đang giao hàng", "Đã giao hàng" };
+    var isCancelled = Model.CurrentStatus == "Đã hủy";
+    var currentIndex = Array.IndexOf(steps, Model.CurrentStatus);
+    if (currentIndex < 0) currentIndex = 0;
+}
+
+<style>
+    /* ===== Thanh tiến trình giao hàng ===== */
+    .delivery-tracker {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0 40px;
+    }
+
+        .delivery-tracker::before {
+            content: "";
+            position: absolute;
+            top: 22px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+        .delivery-tracker .tracker-progress {
+            position: absolute;
+            top: 22px;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+            border-radius: 2px;
+            z-index: 1;
+            transition: width .6s ease;
+        }
+
+    .tracker-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 25%;
+        text-align: center;
+    }
+
+        .tracker-step .icon-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #adb5bd;
+            transition: all .3s ease;
+        }
+
+        .tracker-step.done .icon-circle {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        .tracker-step.active .icon-circle {
+            background: #fff;
+            border-color: #0d6efd;
+            color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13,110,253,.15);
+            animation: pulse 1.6s infinite;
+        }
+
+        .tracker-step.cancelled .icon-circle {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #fff;
+        }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(13,110,253,.35);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(13,110,253,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+        }
+    }
+
+    .tracker-step .step-label {
+        margin-top: 8px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .tracker-step.done .step-label,
+    .tracker-step.active .step-label {
+        color: #212529;
+    }
+
+    /* Xe giao hàng chạy dọc thanh tiến trình khi đang giao */
+    .truck-runner {
+        position: absolute;
+        top: 2px;
+        transform: translateX(-50%);
+        font-size: 1.4rem;
+        color: #0d6efd;
+        transition: left .6s ease;
+        animation: bounce 1.2s infinite;
+    }
+
+    @@keyframes bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    .eta-banner {
+        background: #e7f1ff;
+        border: 1px dashed #0d6efd;
+        border-radius: .5rem;
+        padding: .75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        color: #0d47a1;
+        font-weight: 600;
+    }
+
+    .proof-photo-preview {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: .5rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .extra-small {
+        font-size: .72rem;
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold m-0"><i class="bi bi-truck me-2 text-primary"></i>Theo dõi & Quản lý giao nhận #DH-@Model.OrderId.ToString("D5")</h3>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- ===== Thanh tiến trình trực quan ===== -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            @if (isCancelled)
+            {
+                <div class="alert alert-danger mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-x-octagon-fill fs-4"></i>
+                    <div><strong>Đơn hàng đã bị hủy.</strong> @Model.CurrentStatus</div>
+                </div>
+            }
+            else
+            {
+                <div class="delivery-tracker" id="deliveryTracker" data-current-index="@currentIndex">
+                    <div class="tracker-progress" id="trackerProgress"></div>
+                    <div class="truck-runner" id="truckRunner"><i class="bi bi-truck"></i></div>
+
+                    <div class="tracker-step @(currentIndex > 0 ? "done" : "active")">
+                        <div class="icon-circle"><i class="bi bi-hourglass-split"></i></div>
+                        <div class="step-label">Chờ xác nhận</div>
+                    </div>
+                    <div class="tracker-step @(currentIndex > 1 ? "done" : currentIndex == 1 ? "active" : "")">
+                        <div class="icon-circle"><i class="bi bi-box-seam"></i></div>
+                        <div class="step-label">Đang đóng gói</div>
+                    </div>
+                    <div class="tracker-step @(currentIndex > 2 ? "done" : currentIndex == 2 ? "active" : "")">
+                        <div class="icon-circle"><i class="bi bi-truck"></i></div>
+                        <div class="step-label">Đang giao hàng</div>
+                    </div>
+                    <div class="tracker-step @(currentIndex >= 3 ? "done" : "")">
+                        <div class="icon-circle"><i class="bi bi-house-check-fill"></i></div>
+                        <div class="step-label">Đã giao hàng</div>
+                    </div>
+                </div>
+
+                @if (Model.EstimatedDeliveryDate.HasValue && currentIndex < 3)
+                {
+                    <div class="eta-banner mt-2">
+                        <i class="bi bi-calendar-check fs-5"></i>
+                        <span>Dự kiến giao hàng: @Model.EstimatedDeliveryDate.Value.ToString("HH:mm, dd/MM/yyyy")</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cột trái: Thông tin & Tiến trình (Tracking) -->
+        <div class="col-lg-8">
+            <!-- Thẻ Thông tin người nhận -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3">Thông tin giao hàng</h5>
+                    <div class="row g-2">
+                        <div class="col-sm-6"><strong>Người nhận:</strong> @Model.CustomerName</div>
+                        <div class="col-sm-6"><strong>Số điện thoại:</strong> @Model.CustomerPhone</div>
+                        <div class="col-12"><strong>Địa chỉ:</strong> @Model.ShippingAddress</div>
+                        <div class="col-sm-6"><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@Model.TotalAmount.ToString("N0") đ</span></div>
+                        <div class="col-sm-6"><strong>Trạng thái hiện tại:</strong> <span class="badge bg-primary fs-6">@Model.CurrentStatus</span></div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.DeliveryProofImageUrl))
+                    {
+                        <hr />
+                        <div>
+                            <strong class="d-block mb-2"><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao:</strong>
+                            <img src="@Model.DeliveryProofImageUrl" alt="Ảnh xác nhận giao hàng" class="proof-photo-preview" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Thẻ Lịch sử vận chuyển (Timeline / Stepper) -->
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-clock-history me-2"></i>Lịch sử vận chuyển</h5>
+
+                    <ul class="list-group list-group-flush position-relative border-start ms-3 ps-3">
+                        @foreach (var log in Model.TrackingLogs)
+                        {
+                            <li class="list-group-item bg-transparent border-0 ps-0 pb-3 position-relative">
+                                <span class="position-absolute top-0 start-0 translate-middle p-1 bg-primary border border-light rounded-circle" style="left: -16px !important;"></span>
+                                <div class="fw-bold text-dark">@log.Status</div>
+                                <div class="small text-muted">@log.LocationOrNote</div>
+                                <div class="extra-small text-secondary">@log.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (!string.IsNullOrEmpty(log.ImageUrl))
+                                {
+                                    <img src="@log.ImageUrl" alt="Ảnh cập nhật" class="mt-2 rounded" style="max-width:160px;max-height:120px;object-fit:cover;" />
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Quản lý giao nhận (Cập nhật trạng thái) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-pencil-square me-2"></i>Cập nhật giao nhận</h5>
+
+                    <form asp-action="UpdateDeliveryStatus" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Trạng thái mới <span class="text-danger">*</span></label>
+                            <select name="NewStatus" id="newStatusSelect" class="form-select" required>
+                                <option value="Chờ xác nhận" selected="@(Model.CurrentStatus == "Chờ xác nhận")">Chờ xác nhận</option>
+                                <option value="Đã xác nhận" selected="@(Model.CurrentStatus == "Đã xác nhận")">Đã xác nhận (Đang đóng gói)</option>
+                                <option value="Đang giao hàng" selected="@(Model.CurrentStatus == "Đang giao hàng")">Đang giao hàng</option>
+                                <option value="Đã giao hàng" selected="@(Model.CurrentStatus == "Đã giao hàng")">Đã giao hàng (Hoàn tất)</option>
+                                <option value="Đã hủy" selected="@(Model.CurrentStatus == "Đã hủy")">Đã hủy đơn</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Đơn vị vận chuyển</label>
+                            <input type="text" name="ShippingProvider" class="form-control" placeholder="VD: GHN, Viettel Post, Shipper Shop..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mã vận đơn (Tracking Code)</label>
+                            <input type="text" name="TrackingNumber" class="form-control" placeholder="Nhập mã vận đơn..." />
+                        </div>
+
+                        <!-- Ngày dự kiến giao hàng: hiện khi đang giao / đã xác nhận -->
+                        <div class="mb-3" id="etaField">
+                            <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Ngày dự kiến giao hàng</label>
+                            <input type="datetime-local" name="EstimatedDeliveryDate" class="form-control"
+                                   value="@(Model.EstimatedDeliveryDate?.ToString("yyyy-MM-ddTHH:mm"))" />
+                        </div>
+
+                        <!-- Ảnh xác nhận: chỉ hiện & bắt buộc khi chọn "Đã giao hàng" -->
+                        <div class="mb-3 border rounded-3 p-3 bg-light-subtle d-none" id="proofPhotoField">
+                            <label class="form-label fw-semibold text-success">
+                                <i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao hàng <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" name="DeliveryProofImage" id="proofPhotoInput" class="form-control" accept="image/*" />
+                            <div class="form-text">Chụp ảnh sản phẩm/kiện hàng tại nơi giao để xác nhận hoàn tất đơn.</div>
+                            <img id="proofPhotoPreview" class="proof-photo-preview mt-2 d-none" alt="Xem trước ảnh" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ghi chú vận chuyển</label>
+                            <textarea name="Note" class="form-control" rows="3" placeholder="Nhập ghi chú hoặc lý do chuyển trạng thái..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-save me-1"></i> Lưu thay đổi
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            // ----- Vẽ thanh tiến trình + vị trí xe giao hàng -----
+            var tracker = document.getElementById('deliveryTracker');
+            if (tracker) {
+                var idx = parseInt(tracker.dataset.currentIndex, 10) || 0;
+                var totalSteps = 4;
+                var pct = (idx / (totalSteps - 1)) * 100;
+                document.getElementById('trackerProgress').style.width = pct + '%';
+
+                var truck = document.getElementById('truckRunner');
+                truck.style.left = pct + '%';
+                // Chỉ hiện icon xe khi đang trong quá trình giao (chưa hoàn tất)
+                if (idx >= totalSteps - 1) {
+                    truck.style.display = 'none';
+                }
+            }
+
+            // ----- Hiện/ẩn ô upload ảnh xác nhận khi chọn "Đã giao hàng" -----
+            var statusSelect = document.getElementById('newStatusSelect');
+            var proofField = document.getElementById('proofPhotoField');
+            var proofInput = document.getElementById('proofPhotoInput');
+            var proofPreview = document.getElementById('proofPhotoPreview');
+
+            function toggleProofField() {
+                var isDelivered = statusSelect.value === 'Đã giao hàng';
+                proofField.classList.toggle('d-none', !isDelivered);
+                proofInput.required = isDelivered;
+            }
+
+            statusSelect.addEventListener('change', toggleProofField);
+            toggleProofField();
+
+            proofInput.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) {
+                    proofPreview.classList.add('d-none');
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    proofPreview.src = e.target.result;
+                    proofPreview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+    </script>
+}

@@ -62,4 +62,11 @@ public partial class DonHang
 
     [InverseProperty("MaDonHangNavigation")]
     public virtual ICollection<ThanhToan> ThanhToans { get; set; } = new List<ThanhToan>();
+    
+    /// <summary>Ngày dự kiến giao hàng, nhân viên nhập khi đơn đang đóng gói/vận chuyển.</summary>
+    public DateTime? NgayDuKienGiao { get; set; }
+
+    /// <summary>Đường dẫn ảnh xác nhận đã giao hàng (do nhân viên upload khi hoàn tất).</summary>
+    public string? AnhXacNhanGiao { get; set; }
 }
+

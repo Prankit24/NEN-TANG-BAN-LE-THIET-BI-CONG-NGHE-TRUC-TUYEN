@@ -13,7 +13,7 @@
             <div class="topbar-content">
                 <span>🚀 Miễn phí vận chuyển đơn từ 500K</span>
                 <span class="topbar-divider">|</span>
-                <span>Giao 2 giờ tại Đà Nẵng</span>
+                <span>Giao 2 giờ tại Đà Nẵng & Hà Nội</span>
                 <span class="topbar-divider">|</span>
                 <span>Hotline: <strong>1800 2005</strong></span>
             </div>
@@ -123,10 +123,82 @@
                         </ul>
                     </div>
 
-                    <a asp-controller="Product" asp-action="Index" class="header-action-btn">
-                        <i class="bi bi-shop"></i>
-                        <span>Cửa hàng</span>
-                    </a>
+                    <!-- Bấm vào nút Cửa hàng mới xổ ra Danh sách cửa hàng toàn quốc -->
+                    <div class="dropdown">
+                        <button class="header-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-shop"></i>
+                            <span>Cửa hàng</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow p-2" style="min-width: 320px; max-height: 480px; overflow-y: auto;">
+                            <li>
+                                <div class="px-2 py-1 mb-2">
+                                    <small class="text-muted d-block fw-bold text-uppercase">📍 HỆ THỐNG CỬA HÀNG EMUA</small>
+                                </div>
+                            </li>
+
+                            <!-- Danh sách 4 cơ sở -->
+                            <li>
+                                <div class="px-3 py-2 bg-light rounded-2 mb-2 border-start border-3 border-danger">
+                                    <span class="fw-bold text-dark d-block">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Cơ sở 1: Nguyễn Văn Linh
+                                    </span>
+                                    <small class="text-secondary d-block ps-3">1020 Nguyễn Văn Linh, Đà Nẵng</small>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="px-3 py-2 bg-light rounded-2 mb-2 border-start border-3 border-danger">
+                                    <span class="fw-bold text-dark d-block">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Cơ sở 2: Nguyễn Lương Bằng
+                                    </span>
+                                    <small class="text-secondary d-block ps-3">540 Nguyễn Lương Bằng, Đà Nẵng</small>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="px-3 py-2 bg-light rounded-2 mb-2 border-start border-3 border-danger">
+                                    <span class="fw-bold text-dark d-block">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Cơ sở 3: Tôn Thất Đạm
+                                    </span>
+                                    <small class="text-secondary d-block ps-3">65 Tôn Thất Đạm, Đà Nẵng</small>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="px-3 py-2 bg-light rounded-2 mb-2 border-start border-3 border-danger">
+                                    <span class="fw-bold text-dark d-block">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> Cơ sở 4: Ngô Xuân Thu
+                                    </span>
+                                    <small class="text-secondary d-block ps-3">76 Ngô Xuân Thu, Đà Nẵng</small>
+                                </div>
+                            </li>
+
+                            <li>
+                                <div class="px-3 py-2 bg-light rounded-2 mb-2 border-start border-3 border-primary">
+                                    <span class="fw-bold text-dark d-block">
+                                        <i class="bi bi-geo-alt-fill text-primary me-1"></i> Cơ sở Hà Nội: Ba Đình
+                                    </span>
+                                    <small class="text-secondary d-block ps-3">13 Ba Đình, Hà Nội</small>
+                                </div>
+                            </li>
+
+                            <li><hr class="dropdown-divider my-2" /></li>
+
+                            <!-- Nút chuyển tới Landing Page Bản đồ hệ thống cửa hàng Việt Nam -->
+                            <li>
+                                <a class="dropdown-item py-2 rounded-2 fw-bold text-primary bg-primary-subtle mb-1" asp-controller="Home" asp-action="StoreLocations">
+                                    <i class="bi bi-map-fill me-2"></i> Bản đồ hệ thống cửa hàng (Toàn quốc)
+                                </a>
+                            </li>
+
+                            <!-- Đường dẫn Nhượng quyền cửa hàng -->
+                            <li>
+                                <a class="dropdown-item py-2 rounded-2 text-warning fw-bold" asp-controller="Home" asp-action="Franchise">
+                                    <i class="bi bi-award-fill me-2"></i> Nhượng quyền cửa hàng
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
                     <a href="@(User.Identity?.IsAuthenticated == true ? "/Cart" : "/Auth/Login?returnUrl=%2FCart")"
                        class="header-action-btn cart-action">
@@ -201,6 +273,13 @@
             <a asp-controller="Product" asp-action="Index" asp-route-category="PhuKien">Phụ kiện</a>
             <a asp-controller="Product" asp-action="Index" asp-route-category="AmThanh">Âm thanh</a>
             <a asp-controller="Product" asp-action="Index" asp-route-category="ThietBiThongMinh">Thiết bị thông minh</a>
+            <hr class="my-2" />
+            <a asp-controller="Home" asp-action="StoreLocations" class="text-primary fw-bold">
+                <i class="bi bi-map-fill me-1"></i> Bản đồ cửa hàng toàn quốc
+            </a>
+            <a asp-controller="Home" asp-action="Franchise" class="text-warning fw-bold">
+                <i class="bi bi-award-fill me-1"></i> Nhượng quyền cửa hàng
+            </a>
         </div>
     </div>
 

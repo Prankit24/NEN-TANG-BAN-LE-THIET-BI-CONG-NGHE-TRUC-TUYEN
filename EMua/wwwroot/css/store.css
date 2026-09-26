@@ -1,0 +1,902 @@
+﻿/* =========================================================
+   EMUA STORE SYSTEM
+   PREMIUM TECHNOLOGY UI
+   ========================================================= */
+
+:root {
+    --emua-blue: #2563eb;
+    --emua-blue-dark: #1747b5;
+    --emua-red: #ef4444;
+    --emua-dark: #101828;
+    --emua-text: #344054;
+    --emua-muted: #667085;
+    --emua-border: #e8edf5;
+    --emua-bg: #f5f7fb;
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.store-page {
+    min-height: calc(100vh - 80px);
+    padding: 32px 0 65px;
+    background: radial-gradient( circle at 10% 0%, rgba(37, 99, 235, .06), transparent 30% ), #f5f7fb;
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.store-hero {
+    position: relative;
+    min-height: 275px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 45px 55px;
+    margin-bottom: 25px;
+    border-radius: 24px;
+    background: linear-gradient( 120deg, #0f172a 0%, #172554 55%, #1d4ed8 100% );
+    box-shadow: 0 20px 50px rgba(15, 23, 42, .16);
+}
+
+
+.store-hero-content {
+    position: relative;
+    z-index: 5;
+    max-width: 670px;
+}
+
+
+.store-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 13px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 50px;
+    background: rgba(255,255,255,.08);
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+
+    .store-eyebrow i {
+        color: #60a5fa;
+    }
+
+
+.store-hero h1 {
+    margin: 0 0 12px;
+    color: white;
+    font-size: 38px;
+    line-height: 1.15;
+    font-weight: 850;
+    letter-spacing: -.8px;
+}
+
+
+    .store-hero h1 span {
+        color: #60a5fa;
+    }
+
+
+.store-hero-content > p {
+    max-width: 610px;
+    margin: 0;
+    color: #b9c6dc;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   HERO STATS
+   ========================================================= */
+
+.store-hero-stats {
+    display: flex;
+    gap: 35px;
+    margin-top: 27px;
+}
+
+
+.hero-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+
+    .hero-stat strong {
+        color: white;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+
+    .hero-stat span {
+        color: #94a3b8;
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+
+/* =========================================================
+   HERO DECORATION
+   ========================================================= */
+
+.store-hero-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+
+.hero-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.07);
+}
+
+
+.circle-1 {
+    width: 390px;
+    height: 390px;
+    right: -80px;
+    top: -130px;
+}
+
+
+.circle-2 {
+    width: 260px;
+    height: 260px;
+    right: 45px;
+    bottom: -150px;
+}
+
+
+.hero-location-icon {
+    position: absolute;
+    right: 135px;
+    top: 72px;
+    font-size: 105px;
+    color: rgba(255,255,255,.08);
+    transform: rotate(-10deg);
+}
+
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.store-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 17px 20px;
+    margin-bottom: 18px;
+    background: white;
+    border: 1px solid var(--emua-border);
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(16,24,40,.045);
+}
+
+
+.store-toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.toolbar-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: var(--emua-blue);
+}
+
+
+.store-toolbar-title strong {
+    display: block;
+    color: var(--emua-dark);
+    font-size: 14px;
+}
+
+
+.store-toolbar-title small {
+    display: block;
+    color: var(--emua-muted);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+
+/* =========================================================
+   FILTER
+   ========================================================= */
+
+.store-filter {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px;
+    background: #f2f4f7;
+    border-radius: 11px;
+}
+
+
+.store-filter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    padding: 8px 13px;
+    border-radius: 8px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+
+    .store-filter-btn b {
+        min-width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: #e4e7ec;
+        color: #667085;
+        font-size: 10px;
+    }
+
+
+    .store-filter-btn:hover {
+        color: var(--emua-blue);
+    }
+
+
+    .store-filter-btn.active {
+        background: white;
+        color: var(--emua-blue);
+        box-shadow: 0 3px 10px rgba(16,24,40,.09);
+    }
+
+
+        .store-filter-btn.active b {
+            background: #dbeafe;
+            color: var(--emua-blue);
+        }
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.store-layout {
+    display: grid;
+    grid-template-columns: 44% 56%;
+    gap: 18px;
+    align-items: stretch;
+}
+
+
+/* =========================================================
+   STORE LIST HEADER
+   ========================================================= */
+
+.store-list-wrapper {
+    min-width: 0;
+}
+
+
+.store-list-header {
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 19px;
+    background: white;
+    border: 1px solid var(--emua-border);
+    border-radius: 16px 16px 0 0;
+}
+
+
+    .store-list-header h3 {
+        margin: 0;
+        color: var(--emua-dark);
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+
+    .store-list-header span {
+        display: block;
+        margin-top: 4px;
+        color: #98a2b3;
+        font-size: 10px;
+    }
+
+
+        .store-list-header span i {
+            color: #22c55e;
+            margin-right: 3px;
+        }
+
+
+.store-list-header-icon {
+    color: #d0d5dd;
+    font-size: 23px;
+}
+
+
+/* =========================================================
+   STORE LIST
+   ========================================================= */
+
+.store-list {
+    max-height: 530px;
+    overflow-y: auto;
+    padding: 12px;
+    background: #eef2f7;
+    border: 1px solid var(--emua-border);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+}
+
+
+    .store-list::-webkit-scrollbar {
+        width: 5px;
+    }
+
+
+    .store-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+
+    .store-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+
+/* =========================================================
+   STORE CARD
+   ========================================================= */
+
+.store-item {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    min-height: 145px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background: white;
+    border: 1px solid #e8edf3;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+
+    .store-item:last-child {
+        margin-bottom: 0;
+    }
+
+
+    .store-item:hover {
+        transform: translateX(3px);
+        border-color: #bfdbfe;
+        box-shadow: 0 9px 25px rgba(37,99,235,.10);
+    }
+
+
+/* =========================================================
+   NUMBER
+   ========================================================= */
+
+.store-number {
+    width: 39px;
+    height: 39px;
+    flex: 0 0 39px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 13px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    transition: .25s ease;
+}
+
+
+.store-item:hover .store-number {
+    background: #eff6ff;
+    color: var(--emua-blue);
+}
+
+
+/* =========================================================
+   STORE CONTENT
+   ========================================================= */
+
+.store-content {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.store-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+
+.store-city {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+
+.danang-badge {
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+
+.hanoi-badge {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+
+.store-open {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #16a34a;
+    font-size: 9px;
+    font-weight: 650;
+}
+
+
+    .store-open i {
+        width: 6px;
+        height: 6px;
+        display: block;
+        background: #22c55e;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px #dcfce7;
+    }
+
+
+.store-content h4 {
+    margin: 10px 0 8px;
+    color: #172033;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+.store-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+    .store-info i {
+        color: #ef4444;
+        margin-top: 2px;
+    }
+
+
+.store-bottom {
+    display: flex;
+    gap: 15px;
+    margin-top: 11px;
+    padding-top: 9px;
+    border-top: 1px solid #f0f2f5;
+    color: #98a2b3;
+    font-size: 9px;
+}
+
+
+    .store-bottom i {
+        color: #64748b;
+        margin-right: 3px;
+    }
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+.store-arrow {
+    position: absolute;
+    right: 13px;
+    bottom: 13px;
+    width: 27px;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #94a3b8;
+    font-size: 12px;
+    transition: .25s ease;
+}
+
+
+.store-item:hover .store-arrow {
+    background: var(--emua-blue);
+    color: white;
+}
+
+
+/* =========================================================
+   MAP CARD
+   ========================================================= */
+
+.store-map-card {
+    min-width: 0;
+    overflow: hidden;
+    background: white;
+    border: 1px solid var(--emua-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(16,24,40,.06);
+}
+
+
+/* =========================================================
+   MAP HEADER
+   ========================================================= */
+
+.map-header {
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+.map-label {
+    color: var(--emua-blue);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .8px;
+}
+
+
+    .map-label i {
+        margin-right: 4px;
+    }
+
+
+.map-header h3 {
+    margin: 3px 0 0;
+    color: var(--emua-dark);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+
+.map-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 50px;
+    background: #f0fdf4;
+    color: #16a34a;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+    .map-status span {
+        width: 6px;
+        height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+    }
+
+
+/* =========================================================
+   LEAFLET MAP
+   ========================================================= */
+
+#storeMap {
+    width: 100%;
+    height: 530px;
+}
+
+
+.leaflet-container {
+    font-family: inherit;
+    background: #e5e7eb;
+}
+
+
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 5px 15px rgba(16,24,40,.15) !important;
+}
+
+
+    .leaflet-control-zoom a {
+        border: none !important;
+        color: #344054 !important;
+    }
+
+
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,.16);
+}
+
+
+.leaflet-popup-content {
+    margin: 13px 15px;
+}
+
+
+/* =========================================================
+   CUSTOM POPUP
+   ========================================================= */
+
+.emua-popup {
+    min-width: 190px;
+}
+
+
+.popup-title {
+    color: #172033;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+
+.popup-address {
+    display: flex;
+    gap: 6px;
+    color: #667085;
+    font-size: 10px;
+    line-height: 1.5;
+    margin-bottom: 7px;
+}
+
+
+    .popup-address i {
+        color: #ef4444;
+    }
+
+
+.popup-time {
+    display: flex;
+    gap: 6px;
+    color: #16a34a;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+    .popup-time i {
+        color: #22c55e;
+    }
+
+
+/* =========================================================
+   MAP FOOTER
+   ========================================================= */
+
+.map-footer {
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    border-top: 1px solid #edf0f4;
+    color: #98a2b3;
+    font-size: 9px;
+}
+
+
+    .map-footer i {
+        color: #94a3b8;
+        margin-right: 3px;
+    }
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 991px) {
+
+    .store-hero {
+        padding: 38px 35px;
+    }
+
+
+        .store-hero h1 {
+            font-size: 31px;
+        }
+
+
+    .store-layout {
+        grid-template-columns: 1fr;
+    }
+
+
+    .store-list {
+        max-height: 500px;
+    }
+
+
+    #storeMap {
+        height: 430px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 575px) {
+
+    .store-page {
+        padding: 15px 0 35px;
+    }
+
+
+    .store-hero {
+        min-height: 280px;
+        padding: 30px 24px;
+        border-radius: 18px;
+    }
+
+
+        .store-hero h1 {
+            font-size: 27px;
+        }
+
+
+    .store-hero-content > p {
+        font-size: 12px;
+    }
+
+
+    .store-hero-stats {
+        gap: 23px;
+        margin-top: 23px;
+    }
+
+
+    .hero-stat strong {
+        font-size: 17px;
+    }
+
+
+    .hero-location-icon {
+        right: 15px;
+        top: 25px;
+        font-size: 75px;
+    }
+
+
+    .store-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 15px;
+    }
+
+
+    .store-filter {
+        width: 100%;
+    }
+
+
+    .store-filter-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 5px;
+    }
+
+
+    .store-layout {
+        gap: 14px;
+    }
+
+
+    .store-list-header {
+        height: 60px;
+    }
+
+
+    .store-list {
+        padding: 9px;
+    }
+
+
+    .store-item {
+        min-height: 150px;
+        padding: 13px;
+    }
+
+
+    .store-number {
+        width: 33px;
+        height: 33px;
+        flex-basis: 33px;
+        margin-right: 9px;
+    }
+
+
+    .store-content h4 {
+        font-size: 13px;
+    }
+
+
+    .store-top {
+        align-items: flex-start;
+    }
+
+
+    .store-open {
+        display: none;
+    }
+
+
+    .store-bottom {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+
+    .store-map-card {
+        border-radius: 14px;
+    }
+
+
+    #storeMap {
+        height: 350px;
+    }
+
+
+    .map-footer {
+        font-size: 8px;
+    }
+}

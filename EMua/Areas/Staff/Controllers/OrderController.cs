@@ -1,4 +1,5 @@
 using EMua.Data;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,8 +8,14 @@ namespace EMua.Areas.Staff.Controllers;
 public class OrderController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
+    private readonly IWebHostEnvironment _webHostEnvironment;
     private static readonly string[] Statuses = ["Chờ xử lý", "Đang xử lý", "Đã hoàn thành", "Đã hủy"];
-    public OrderController(EMuaDbContext db) => _db = db;
+
+    public OrderController(EMuaDbContext db, IWebHostEnvironment webHostEnvironment)
+    {
+        _db = db;
+        _webHostEnvironment = webHostEnvironment;
+    }
 
     public async Task<IActionResult> Index(string? q, string? status)
     {
@@ -46,6 +53,9 @@ public class OrderController : StaffControllerBase
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
+        // Cần cho thanh tiến trình giao hàng ở Details.cshtml
+        ViewBag.Statuses = Statuses;
+
         var order = await _db.DonHangs.AsNoTracking()
             .Include(x => x.MaNguoiDungNavigation)
             .Include(x => x.ChiTietDonHangs).ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
@@ -78,5 +88,68 @@ public class OrderController : StaffControllerBase
                 .ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
             .FirstOrDefaultAsync(x => x.MaHoaDon == id);
         return invoice == null ? NotFound() : View(invoice);
+    }
+
+    // =========================================================
+    // QUẢN LÝ GIAO NHẬN: cập nhật trạng thái, ngày dự kiến giao,
+    // và ảnh xác nhận khi đơn đã được giao (dùng trực tiếp trong Details.cshtml)
+    // =========================================================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateDeliveryStatus(
+        int id,
+        string status,
+        DateTime? ngayDuKienGiao,
+        IFormFile? anhXacNhanGiao,
+        string? ghiChuGiaoHang)
+    {
+        if (!Statuses.Contains(status)) return BadRequest();
+
+        var order = await _db.DonHangs
+            .Include(o => o.ChiTietDonHangs)
+            .FirstOrDefaultAsync(o => o.MaDonHang == id);
+
+        if (order == null) return NotFound();
+
+        order.TrangThaiDonHang = status;
+        order.NgayDuKienGiao = ngayDuKienGiao.HasValue
+    ? DateTime.SpecifyKind(ngayDuKienGiao.Value, DateTimeKind.Utc)
+    : null;
+
+        if (!string.IsNullOrWhiteSpace(ghiChuGiaoHang))
+        {
+            order.GhiChu = string.IsNullOrWhiteSpace(order.GhiChu)
+                ? ghiChuGiaoHang
+                : order.GhiChu + " | " + ghiChuGiaoHang;
+        }
+
+        // Bắt buộc có ảnh khi trạng thái chuyển sang "Đã hoàn thành"
+        var isDelivered = status == "Đã hoàn thành";
+        if (isDelivered)
+        {
+            if (anhXacNhanGiao == null || anhXacNhanGiao.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Vui lòng chọn ảnh xác nhận đã giao hàng.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "delivery-proof");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"order-{id}-{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(anhXacNhanGiao.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await anhXacNhanGiao.CopyToAsync(stream);
+            }
+
+            order.AnhXacNhanGiao = $"/uploads/delivery-proof/{fileName}";
+        }
+
+        await _db.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Cập nhật giao nhận thành công.";
+        return RedirectToAction(nameof(Details), new { id });
     }
 }

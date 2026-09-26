@@ -144,3 +144,60 @@ public class PromotionCreateViewModel
     public DateTime? NgayKetThuc { get; set; }
     public string? MoTa { get; set; }
 }
+
+// ViewModel dùng cho form cập nhật trạng thái/giao nhận (POST từ trang theo dõi đơn hàng)
+public class DeliveryUpdateViewModel
+{
+    public int OrderId { get; set; }
+    public string? OrderCode { get; set; }
+    public string CurrentStatus { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng chọn trạng thái mới.")]
+    public string NewStatus { get; set; } = string.Empty;
+
+    public string? ShippingProvider { get; set; }
+    public string? TrackingNumber { get; set; }
+    public string? Note { get; set; }
+
+    // Ngày dự kiến giao hàng, nhập khi đơn đang được đóng gói/vận chuyển
+    [Display(Name = "Ngày dự kiến giao hàng")]
+    public DateTime? EstimatedDeliveryDate { get; set; }
+
+    // Ảnh xác nhận đã giao, bắt buộc khi NewStatus = "Đã giao hàng"
+    [Display(Name = "Ảnh xác nhận đã giao")]
+    public IFormFile? DeliveryProofImage { get; set; }
+}
+
+// ViewModel lịch sử vận chuyển
+public class ShippingHistoryViewModel
+{
+    public int HistoryId { get; set; }
+    public int OrderId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string LocationOrNote { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+
+    // Ảnh đính kèm tại mốc lịch sử này (vd: ảnh xác nhận đã giao)
+    public string? ImageUrl { get; set; }
+}
+
+// ViewModel theo dõi tiến trình
+public class OrderTrackingViewModel
+{
+    public int OrderId { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
+    public string ShippingAddress { get; set; } = string.Empty;
+    public string CurrentStatus { get; set; } = string.Empty;
+    public decimal TotalAmount { get; set; }
+    public DateTime OrderDate { get; set; }
+
+    // Ngày dự kiến giao hàng, hiển thị trên banner ETA khi đơn chưa hoàn tất
+    public DateTime? EstimatedDeliveryDate { get; set; }
+
+    // Ảnh xác nhận đã giao hàng (khi CurrentStatus = "Đã giao hàng")
+    public string? DeliveryProofImageUrl { get; set; }
+
+    public List<ShippingHistoryViewModel> TrackingLogs { get; set; } = new();
+}
