@@ -6,35 +6,65 @@
     string FixImageUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
-            return "/images/default-product.png";
+        {
+            return "/images/no-image.png";
+        }
 
-        if (url.StartsWith("http://") || url.StartsWith("https://"))
+        url = url.Trim().Replace("\\", "/");
+
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
             return url;
+        }
 
-        if (!url.StartsWith("/"))
-            url = "/" + url;
+        if (url.StartsWith("/"))
+        {
+            if (url.StartsWith("/images/", StringComparison.OrdinalIgnoreCase))
+                return url;
 
-        return url;
+            return "/images" + url;
+        }
+
+        if (url.Contains("/"))
+        {
+            return "/" + url;
+        }
+
+        return "/images/" + url;
     }
 
-    // Chỉ cho chỉnh số lượng / xoá sản phẩm khi đơn còn ở trạng thái chờ xử lý,
-    // khớp với điều kiện phía server (UpdateOrderItem) để tránh bấm mà không có tác dụng.
     bool canEdit = Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán";
+    bool canActionAfterDelivery = Model.Status == "Đã hoàn thành" || Model.Status == "Đã giao";
 
-    // ===== Dữ liệu cho thanh tiến trình giao hàng (kiểu Shopee) =====
-    var progressSteps = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành" };
+    bool isReturnProcess = Model.Status == "Yêu cầu đổi trả" || Model.Status == "Đang đổi trả" || Model.Status == "Đã nhận đổi trả" || Model.Status == "Đã hoàn tiền" || Model.Status == "Từ chối đổi trả";
+
+    string[] progressSteps;
+    string[] stepIcons;
+    string[] stepLabels;
+
+    if (isReturnProcess)
+    {
+        progressSteps = new[] { "Yêu cầu đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền" };
+        stepIcons = new[] { "bi-exclamation-triangle-fill", "bi-arrow-repeat", "bi-cash-coin" };
+        stepLabels = new[] { "Đã gửi yêu cầu", "Shop đã nhận & xử lý", "Hoàn tất hoàn tiền" };
+    }
+    else
+    {
+        progressSteps = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành" };
+        stepIcons = new[] { "bi-receipt", "bi-truck", "bi-house-check-fill" };
+        stepLabels = new[] { "Đã đặt hàng", "Đang giao hàng", "Đã giao hàng" };
+    }
+
     var isCancelled = Model.Status == "Đã hủy";
     var currentStepIndex = Array.IndexOf(progressSteps, Model.Status);
     if (currentStepIndex < 0) currentStepIndex = 0;
-    string[] stepIcons = { "bi-receipt", "bi-truck", "bi-house-check-fill" };
-    string[] stepLabels = { "Đã đặt hàng", "Đang giao hàng", "Đã giao hàng" };
 }
 
 <link rel="stylesheet" href="~/css/order.css" asp-append-version="true" />
 @Html.AntiForgeryToken()
 
 <style>
-    /* ===== Thanh tiến trình giao hàng kiểu Shopee ===== */
     .delivery-progress-card {
         background: #fff;
         border-radius: .75rem;
@@ -184,7 +214,6 @@
             display: block;
         }
 
-    /* ===== Timeline lịch sử đẹp hơn ===== */
     .delivery-timeline {
         position: relative;
         margin-top: 4px;
@@ -248,10 +277,256 @@
             font-size: .85rem;
             color: #6b7280;
         }
+
+    .after-delivery-panel {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: .75rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        padding: 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .action-tab-buttons {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-tab-toggle {
+        flex: 1;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        border: 1px solid #d1d5db;
+        background-color: #f9fafb;
+        color: #4b5563;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-tab-toggle:hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+
+        .btn-tab-toggle.active-review {
+            background-color: #fffbe3;
+            border-color: #f59e0b;
+            color: #b45309;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-tab-toggle.active-return {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+            color: #dc2626;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+    .star-rating-input {
+        direction: rtl;
+        display: inline-flex;
+    }
+
+        .star-rating-input input {
+            display: none;
+        }
+
+        .star-rating-input label {
+            color: #d1d5db;
+            font-size: 1.6rem;
+            padding: 0 3px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+            .star-rating-input input:checked ~ label,
+            .star-rating-input label:hover,
+            .star-rating-input label:hover ~ label {
+                color: #ffc107;
+            }
+
+    .reviewed-badge {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #16a34a;
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.375rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    @@keyframes phone-ring {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        10% {
+            transform: rotate(15deg);
+        }
+
+        20% {
+            transform: rotate(-10deg);
+        }
+
+        30% {
+            transform: rotate(15deg);
+        }
+
+        40% {
+            transform: rotate(-5deg);
+        }
+
+        50% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+    .animate-bounce {
+        display: inline-block;
+        animation: phone-ring 1.5s infinite ease-in-out;
+    }
+
+    .return-chat-card {
+        background: #fff;
+        border: 1px solid #e7eaf0;
+        border-radius: 16px;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, .07);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    .return-chat-intro, .return-chat-ended {
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .return-chat-icon {
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: #eef4ff;
+        color: #2563eb;
+        font-size: 1.25rem;
+    }
+
+        .return-chat-icon.ended {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+    .return-chat-copy {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .return-chat-title {
+        font-weight: 750;
+        color: #172033;
+        font-size: .98rem;
+    }
+
+    .return-chat-desc {
+        color: #6b7280;
+        font-size: .84rem;
+        line-height: 1.55;
+        margin-top: 3px;
+    }
+
+    .return-chat-start {
+        white-space: nowrap;
+    }
+
+    .return-chat-header {
+        padding: 13px 16px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .return-chat-header .return-chat-title {
+            color: #fff;
+        }
+
+    .return-chat-online {
+        font-size: .73rem;
+        opacity: .9;
+        margin-top: 2px;
+    }
+
+        .return-chat-online span {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #86efac;
+            margin-right: 4px;
+        }
+
+    .return-chat-messages {
+        min-height: 240px;
+        max-height: 360px;
+        overflow-y: auto;
+        padding: 16px;
+        background: #f7f9fc;
+    }
+
+    .return-chat-composer {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid #edf0f4;
+        background: #fff;
+    }
+
+        .return-chat-composer input {
+            border-radius: 10px;
+        }
+
+        .return-chat-composer button {
+            border-radius: 10px;
+        }
+
+    @@media (max-width: 640px) {
+        .return-chat-intro, .return-chat-ended {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            padding: 15px;
+        }
+
+        .return-chat-copy {
+            width: calc(100% - 62px);
+        }
+
+        .return-chat-start, .return-chat-ended button {
+            width: 100%;
+        }
+
+        .return-chat-header {
+            padding: 12px;
+        }
+    }
 </style>
 
 <div class="order-page-container">
-    <!-- Header Cố định -->
     <div class="order-heading-inline">
         <a asp-action="Index" class="btn-back-icon" title="Quay lại danh sách đơn hàng">
             <i class="bi bi-arrow-left"></i>
@@ -267,7 +542,6 @@
         </div>
     </div>
 
-    <!-- Thông báo Alert -->
     @if (TempData["Success"] != null)
     {
         <div class="order-alert success">@TempData["Success"]</div>
@@ -277,7 +551,6 @@
         <div class="order-alert error">@TempData["Error"]</div>
     }
 
-    <!-- ===== Lộ trình giao hàng (kiểu Shopee) ===== -->
     <div class="delivery-progress-card">
         @if (isCancelled)
         {
@@ -287,12 +560,14 @@
         }
         else
         {
-            var pct = currentStepIndex * 50; // 3 bước: 0%, 50%, 100%
-                                             <div class="delivery-progress-track">
-                                                 <div class="delivery-progress-fill" style="width:calc(@(pct)% * 0.88)"></div>
+            var pct = currentStepIndex * 50;
+            <div class="delivery-progress-track">
+                <div class="delivery-progress-fill" style="width:calc(@(pct)% * 0.88)"></div>
                 @if (currentStepIndex < progressSteps.Length - 1)
                 {
-                    <div class="delivery-truck-icon" style="left:calc(6% + @(pct)% * 0.88)"><i class="bi bi-truck"></i></div>
+                    <div class="delivery-truck-icon" style="left:calc(6% + @(pct)% * 0.88)">
+                        <i class="bi @(isReturnProcess ? "bi-arrow-repeat" : "bi-truck")"></i>
+                    </div>
                 }
                 @for (int i = 0; i < progressSteps.Length; i++)
                 {
@@ -304,7 +579,7 @@
                 }
             </div>
 
-            @if (Model.EstimatedDeliveryDate.HasValue && currentStepIndex < progressSteps.Length - 1)
+            @if (Model.EstimatedDeliveryDate.HasValue && currentStepIndex < progressSteps.Length - 1 && !isReturnProcess)
             {
                 <div class="delivery-eta-banner">
                     <i class="bi bi-calendar-check"></i>
@@ -322,9 +597,50 @@
         }
     </div>
 
-    <!-- Layout Chi tiết đơn hàng -->
+    <!-- KHUNG CHAT ĐỔI TRẢ (TẠM THỜI TRONG RAM) -->
+    @if (isReturnProcess)
+    {
+        <section class="return-chat-card" id="customerReturnChatCard">
+            <div class="return-chat-intro" id="customerChatClosedState">
+                <div class="return-chat-icon"><i class="bi bi-headset"></i></div>
+                <div class="return-chat-copy">
+                    <div class="return-chat-title">Cần trao đổi với nhân viên?</div>
+                    <div class="return-chat-desc">Bạn có thể mở một phiên trò chuyện riêng để trao đổi về yêu cầu đổi trả. Nội dung trò chuyện <strong>không được lưu vào lịch sử đơn hàng</strong>.</div>
+                </div>
+                <button type="button" class="btn btn-primary return-chat-start" id="btnStartCustomerChat">
+                    <i class="bi bi-chat-dots-fill me-1"></i> Bắt đầu trò chuyện
+                </button>
+            </div>
+
+            <div id="customerChatEndedState" class="return-chat-ended d-none">
+                <div class="return-chat-icon ended"><i class="bi bi-check2-circle"></i></div>
+                <div>
+                    <div class="return-chat-title">Phiên trò chuyện đã kết thúc</div>
+                    <div class="return-chat-desc">Tin nhắn của phiên vừa rồi đã được xoá. Nếu cần hỗ trợ thêm, bạn có thể mở một phiên mới.</div>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="btnRestartCustomerChat">Mở phiên mới</button>
+            </div>
+
+            <div id="customerChatActiveState" class="d-none">
+                <div class="return-chat-header">
+                    <div>
+                        <div class="return-chat-title"><i class="bi bi-chat-dots-fill me-2"></i>Đang trao đổi với nhân viên</div>
+                        <div class="return-chat-online"><span></span> Cuộc trò chuyện đang hoạt động • Không lưu lịch sử vui lòng ở lại cuộc trò chuyện</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light text-danger fw-semibold" id="btnEndCustomerChat">Kết thúc</button>
+                </div>
+                <div class="return-chat-messages" id="customerChatMessageList">
+                    <div class="text-center text-muted py-4">Chưa có tin nhắn. Hãy gửi nội dung cần hỗ trợ.</div>
+                </div>
+                <form id="customerChatForm" class="return-chat-composer">
+                    <input type="text" id="customerChatInput" class="form-control" placeholder="Nhập nội dung cần trao đổi..." autocomplete="off" maxlength="1000" required />
+                    <button type="submit" class="btn btn-primary px-3"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </section>
+    }
+
     <div class="order-detail-layout">
-        <!-- Cột trái: Danh sách Sản phẩm -->
         <section class="order-form-panel">
             <h2 class="panel-title"><i class="bi bi-box-seam me-2"></i>Sản phẩm đã mua</h2>
 
@@ -334,14 +650,10 @@
                     decimal unitPrice = item.Quantity > 0 ? (item.LineTotal / item.Quantity) : 0;
 
                     <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice">
-                        <!-- Thumbnail ảnh sản phẩm -->
                         <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-thumb-box">
-                            <img src="@FixImageUrl(item.ImageUrl)"
-                                 alt="@item.ProductName"
-                                 onerror="this.onerror=null; this.src='/images/default-product.png';" />
+                            <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" onerror="this.onerror=null; this.src='/images/default-product.png';" />
                         </a>
 
-                        <!-- Thông tin sản phẩm -->
                         <div class="product-info-wrap">
                             <strong class="product-name">@item.ProductName</strong>
                             <div class="product-sub-info">
@@ -350,7 +662,6 @@
                                 <span>Đơn giá: <strong class="unit-price-label">@unitPrice.ToString("N0") đ</strong></span>
                             </div>
 
-                            <!-- Bộ tăng/giảm số lượng + Xoá sản phẩm (chỉ khi đơn còn chỉnh được) -->
                             <div class="product-controls-row mt-2">
                                 @if (canEdit)
                                 {
@@ -359,7 +670,6 @@
                                         <input type="number" class="input-qty" id="qty-input-@item.VariantId" value="@item.Quantity" readonly />
                                         <button type="button" class="btn-qty-plus" onclick="updateQuantity(@Model.OrderId, @item.VariantId, 1)">+</button>
                                     </div>
-
                                     <button type="button" class="btn-remove-item ms-2" onclick="removeItem(@Model.OrderId, @item.VariantId)" title="Xóa khỏi đơn">
                                         <i class="bi bi-trash3 text-danger"></i>
                                     </button>
@@ -372,16 +682,18 @@
 
                             <div class="product-price-row mt-2">
                                 <strong class="product-price line-total-val" id="line-total-@item.VariantId">@item.LineTotal.ToString("N0") đ</strong>
-
-                                @if (Model.Status == "Đã hoàn thành" || Model.Status == "Đã giao")
+                                @if (canActionAfterDelivery)
                                 {
-                                    <a asp-controller="Review"
-                                       asp-action="Create"
-                                       asp-route-productId="@item.ProductId"
-                                       asp-route-orderId="@Model.OrderId"
-                                       class="btn-review-item">
-                                        <i class="bi bi-star-fill me-1"></i>Đánh giá
-                                    </a>
+                                    @if (Model.ReviewedProductIds != null && Model.ReviewedProductIds.Contains(item.ProductId))
+                                    {
+                                        <span class="reviewed-badge"><i class="bi bi-check-circle-fill me-1"></i>Đã đánh giá</span>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Review" asp-action="Create" asp-route-productId="@item.ProductId" asp-route-orderId="@Model.OrderId" class="btn-review-item">
+                                            <i class="bi bi-star-fill me-1"></i>Đánh giá món này
+                                        </a>
+                                    }
                                 }
                             </div>
                         </div>
@@ -389,17 +701,164 @@
                 }
             </div>
 
-            <!-- Tổng thanh toán -->
-            <div class="summary-total">
+            <div class="summary-total mb-4">
                 <span>Tổng thanh toán</span>
                 <strong id="orderTotalDisplay">@Model.Total.ToString("N0") đ</strong>
             </div>
+
+            @if (canActionAfterDelivery)
+            {
+                <div class="after-delivery-panel">
+                    <h2 class="panel-title fs-5 mb-3">
+                        <i class="bi bi-arrow-repeat me-2 text-primary"></i>Hỗ trợ đơn hàng đã nhận
+                    </h2>
+
+                    <div class="action-tab-buttons">
+                        <button type="button" class="btn-tab-toggle active-review" id="btnShowReview" onclick="switchActionTab('review')">
+                            <i class="bi bi-star-fill text-warning me-2"></i>Đánh giá đơn hàng
+                        </button>
+                        <button type="button" class="btn-tab-toggle" id="btnShowReturn" onclick="switchActionTab('return')">
+                            <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>Yêu cầu Đổi trả / Hoàn tiền
+                        </button>
+                    </div>
+
+                    <div id="tabReviewSection">
+                        @if (Model.IsOrderReviewed)
+                        {
+                            <div class="p-3 bg-light text-success border border-success rounded-3">
+                                <i class="bi bi-check-circle-fill me-2 fs-6"></i>
+                                <strong>Cảm ơn bạn!</strong> Bạn đã gửi đánh giá cho đơn hàng này rồi.
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-3">Ý kiến đóng góp của bạn giúp EMUA nâng cao chất lượng dịch vụ tốt hơn.</p>
+                            <form asp-controller="Review" asp-action="SubmitReview" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small d-block mb-1">Mức độ hài lòng chung</label>
+                                    <div class="star-rating-input">
+                                        <input type="radio" id="star5" name="Rating" value="5" required />
+                                        <label for="star5" title="5 sao"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star4" name="Rating" value="4" />
+                                        <label for="star4" title="4 sao"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star3" name="Rating" value="3" />
+                                        <label for="star3" title="3 sao"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star2" name="Rating" value="2" />
+                                        <label for="star2" title="2 sao"><i class="bi bi-star-fill"></i></label>
+                                        <input type="radio" id="star1" name="Rating" value="1" />
+                                        <label for="star1" title="1 sao"><i class="bi bi-star-fill"></i></label>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small mb-1">Nội dung đánh giá</label>
+                                    <textarea class="form-control" name="Comment" rows="3" placeholder="Viết nhận xét về dịch vụ, thời gian giao hàng, chất lượng đóng gói..." required></textarea>
+                                </div>
+
+                                <button type="submit" class="order-btn-action btn-primary-action w-auto px-4">
+                                    <i class="bi bi-send me-1"></i> Gửi đánh giá
+                                </button>
+                            </form>
+                        }
+                    </div>
+
+                    <div id="tabReturnSection" style="display: none;">
+                        <p class="text-muted small mb-3">Sản phẩm bị lỗi, hỏng hóc hoặc giao không đúng? Vui lòng gửi yêu cầu để EMUA hỗ trợ bạn ngay.</p>
+                        <form asp-controller="Order" asp-action="RequestReturn" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold small mb-1">Sản phẩm cần đổi trả / hoàn tiền <span class="text-danger">*</span></label>
+                                @if (Model.Items != null && Model.Items.Count > 1)
+                                {
+                                    <div class="border rounded p-2 bg-light">
+                                        <p class="small text-muted mb-2">Vui lòng chọn ít nhất một sản phẩm:</p>
+                                        @foreach (var item in Model.Items)
+                                        {
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input return-item-checkbox" type="checkbox" name="SelectedVariantIds" value="@item.VariantId" id="return_item_@item.VariantId" onchange="validateReturnItems()">
+                                                <label class="form-check-label small d-flex align-items-center" for="return_item_@item.VariantId">
+                                                    <img src="@FixImageUrl(item.ImageUrl)" style="width: 36px; height: 36px; object-fit: cover;" class="rounded me-2" />
+                                                    <div>
+                                                        <strong class="d-block">@item.ProductName</strong>
+                                                        <span class="text-muted">@item.VariantLabel - SL: @item.Quantity</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div id="returnItemError" class="text-danger small mt-1" style="display:none;">Vui lòng chọn ít nhất 1 sản phẩm cần trả.</div>
+                                }
+                                else if (Model.Items != null && Model.Items.Count == 1)
+                                {
+                                    var singleItem = Model.Items.First();
+                                    <input type="hidden" name="SelectedVariantIds" value="@singleItem.VariantId" />
+                                    <div class="p-2 border rounded bg-light d-flex align-items-center">
+                                        <img src="@FixImageUrl(singleItem.ImageUrl)" style="width: 36px; height: 36px; object-fit: cover;" class="rounded me-2" />
+                                        <div>
+                                            <strong class="d-block small">@singleItem.ProductName</strong>
+                                            <span class="text-muted small">@singleItem.VariantLabel - SL: @singleItem.Quantity</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold small mb-1">Lý do đổi trả / hoàn tiền <span class="text-danger">*</span></label>
+                                <select name="Reason" class="form-select text-dark" required>
+                                    <option value="">-- Chọn lý do --</option>
+                                    <option value="Sản phẩm bị lỗi/bể vỡ">Sản phẩm bị lỗi hoặc hư hỏng khi vận chuyển</option>
+                                    <option value="Giao sai sản phẩm">Giao không đúng sản phẩm đã đặt</option>
+                                    <option value="Thiếu hàng/phụ kiện">Thiếu sản phẩm hoặc phụ kiện kèm theo</option>
+                                    <option value="Khác">Lý do khác</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold small mb-1">Mô tả chi tiết sự cố <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="Description" rows="3" placeholder="Mô tả rõ tình trạng sản phẩm gặp sự cố..." required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold small mb-1">Hình ảnh bằng chứng (nếu có)</label>
+                                <input type="file" name="EvidenceImages" class="form-control" accept="image/*" multiple onchange="previewReturnImages(this)">
+                                <small class="text-muted d-block mt-1">Có thể tải lên 1 hoặc nhiều ảnh chụp cận cảnh lỗi sản phẩm/mã đơn hàng.</small>
+                                <div id="imagePreviewContainer" class="d-flex gap-2 flex-wrap mt-2"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-dark fw-semibold small mb-1 d-block">Liên hệ khẩn cấp / Hỗ trợ trực tiếp</label>
+                                <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="fw-bold text-dark small mb-1">
+                                            <i class="bi bi-headset text-primary me-1"></i> Hotline hỗ trợ EMUA:
+                                        </div>
+                                        <a href="tel:0963453170" class="btn btn-sm btn-outline-danger font-monospace fw-bold fs-6 rounded-pill px-3 py-1 d-inline-flex align-items-center gap-2">
+                                            <i class="bi bi-telephone-fill animate-bounce"></i> 0963 453 170
+                                        </a>
+                                    </div>
+                                    <a href="tel:0963453170" class="btn btn-danger btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" title="Gọi ngay">
+                                        <i class="bi bi-telephone-outbound-fill fs-6"></i>
+                                    </a>
+                                </div>
+                                <input type="hidden" name="ContactPhone" value="0963453170" />
+                            </div>
+
+                            <button type="submit" id="btnSubmitReturn" class="order-btn-action danger-button w-auto px-4">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Gửi yêu cầu đổi trả
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
         </section>
 
-        <!-- Cột phải: Thông tin Giao hàng & Thanh toán -->
         <aside class="order-sidebar">
             <div class="order-summary-card">
-                <!-- Giao hàng -->
                 <div class="info-block">
                     <h3><i class="bi bi-geo-alt me-1"></i>Giao hàng</h3>
                     <strong class="recipient-name">@Model.RecipientName</strong>
@@ -409,7 +868,6 @@
 
                 <div class="card-divider"></div>
 
-                <!-- Thanh toán -->
                 <div class="info-block">
                     <h3><i class="bi bi-credit-card me-1"></i>Thanh toán</h3>
                     <p class="info-text">Phương thức: <strong>@Model.PaymentMethod</strong></p>
@@ -418,18 +876,13 @@
                     </p>
                 </div>
 
-                <!-- Nút Tiếp tục thanh toán (dẫn tới trang QR) -->
                 @if (Model.PaymentMethod != "COD" && Model.PaymentStatus != "Đã thanh toán" && Model.Status != "Đã hủy")
                 {
-                    <a asp-controller="Checkout"
-                       asp-action="Success"
-                       asp-route-id="@Model.OrderId"
-                       class="order-btn-action btn-primary-action mt-3">
+                    <a asp-controller="Checkout" asp-action="Success" asp-route-id="@Model.OrderId" class="order-btn-action btn-primary-action mt-3">
                         <i class="bi bi-qr-code-scan me-1"></i> Tiếp tục thanh toán
                     </a>
                 }
 
-                <!-- Nút Hủy đơn hàng -->
                 @if (Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán")
                 {
                     <form asp-action="Cancel" method="post" class="mt-3" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
@@ -440,7 +893,6 @@
                 }
             </div>
 
-            <!-- Lịch sử đơn hàng (Timeline) -->
             @if (Model.StatusHistory != null && Model.StatusHistory.Any())
             {
                 <div class="order-summary-card">
@@ -463,7 +915,27 @@
 
 @section Scripts {
     <script>
-        // Cập nhật số lượng sản phẩm & Tính toán tiền trực tiếp trên UI
+        function switchActionTab(tabName) {
+            const btnReview = document.getElementById('btnShowReview');
+            const btnReturn = document.getElementById('btnShowReturn');
+            const secReview = document.getElementById('tabReviewSection');
+            const secReturn = document.getElementById('tabReturnSection');
+
+            if (!btnReview || !btnReturn || !secReview || !secReturn) return;
+
+            if (tabName === 'review') {
+                btnReview.classList.add('active-review');
+                btnReturn.classList.remove('active-return');
+                secReview.style.display = 'block';
+                secReturn.style.display = 'none';
+            } else if (tabName === 'return') {
+                btnReturn.classList.add('active-return');
+                btnReview.classList.remove('active-review');
+                secReview.style.display = 'none';
+                secReturn.style.display = 'block';
+            }
+        }
+
         function updateQuantity(orderId, variantId, delta) {
             const input = document.getElementById(`qty-input-${variantId}`);
             if (!input) return;
@@ -476,14 +948,12 @@
                 return;
             }
 
-            // Gửi request lên server trước; chỉ cập nhật giao diện khi server xác nhận thành công
             sendUpdateToServer(orderId, variantId, newQty, () => {
                 input.value = newQty;
                 recalculateTotals();
             });
         }
 
-        // Xóa sản phẩm khỏi danh sách
         function removeItem(orderId, variantId) {
             const remainingRows = document.querySelectorAll("#orderProductList .order-product-item").length;
             if (remainingRows <= 1) {
@@ -500,7 +970,6 @@
             });
         }
 
-        // Tự động tính toán lại Thành tiền từng món & Tổng tiền đơn hàng trên Frontend
         function recalculateTotals() {
             let totalOrder = 0;
             const rows = document.querySelectorAll(".order-product-item");
@@ -525,8 +994,6 @@
             }
         }
 
-        // Hàm gọi Controller cập nhật vào Database.
-        // onSuccess chỉ chạy khi server xác nhận đã lưu thành công.
         async function sendUpdateToServer(orderId, variantId, quantity, onSuccess) {
             try {
                 const response = await fetch('/Order/UpdateOrderItem', {
@@ -549,5 +1016,184 @@
                 alert("Không thể kết nối tới server, vui lòng thử lại.");
             }
         }
+
+        function previewReturnImages(input) {
+            const container = document.getElementById('imagePreviewContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (input.files) {
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;';
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        function validateReturnItems() {
+            const checkboxes = document.querySelectorAll('.return-item-checkbox');
+            if (checkboxes.length === 0) return true;
+
+            const isChecked = Array.from(checkboxes).some(cb => cb.checked);
+            const errorDiv = document.getElementById('returnItemError');
+            const submitBtn = document.getElementById('btnSubmitReturn');
+
+            if (!isChecked) {
+                if (errorDiv) errorDiv.style.display = 'block';
+                if (submitBtn) submitBtn.disabled = true;
+                return false;
+            } else {
+                if (errorDiv) errorDiv.style.display = 'none';
+                if (submitBtn) submitBtn.disabled = false;
+                return true;
+            }
+        }
+
+        // SCRIPT CHAT ĐỔI TRẢ (TẠM THỜI TRONG RAM)
+        const customerOrderId = @Model.OrderId;
+        const closedState = document.getElementById('customerChatClosedState');
+        const endedState = document.getElementById('customerChatEndedState');
+        const activeState = document.getElementById('customerChatActiveState');
+        const chatBox = document.getElementById('customerChatMessageList');
+        const chatForm = document.getElementById('customerChatForm');
+        const chatInput = document.getElementById('customerChatInput');
+        let customerChatActive = false;
+        let leavingPage = false;
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value ?? '';
+            return div.innerHTML;
+        }
+
+        function showCustomerChat(active) {
+            customerChatActive = active;
+            if (closedState) closedState.classList.toggle('d-none', active);
+            if (endedState) endedState.classList.add('d-none');
+            if (activeState) activeState.classList.toggle('d-none', !active);
+        }
+
+        function showCustomerChatEnded() {
+            customerChatActive = false;
+            if (closedState) closedState.classList.add('d-none');
+            if (activeState) activeState.classList.add('d-none');
+            if (endedState) endedState.classList.remove('d-none');
+        }
+
+        function appendCustomerMessageUI(msg) {
+            if (!chatBox) return;
+            const isMe = !msg.isStaff;
+            const wrapper = document.createElement('div');
+            wrapper.className = `d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-3`;
+            wrapper.innerHTML = `
+                <small class="text-muted mb-1">${escapeHtml(msg.senderName)} • ${escapeHtml(msg.time)}</small>
+                <div class="p-2 px-3 ${isMe ? 'bg-primary text-white' : 'bg-white border text-dark'} rounded-3 shadow-sm" style="max-width:80%;word-break:break-word;">${escapeHtml(msg.message)}</div>`;
+            chatBox.appendChild(wrapper);
+        }
+
+        async function loadCustomerMessages() {
+            if (!customerChatActive || !chatBox) return;
+            try {
+                const response = await fetch(`/Order/GetOrderMessages?orderId=${customerOrderId}`, { cache: 'no-store' });
+                if (!response.ok) return;
+                const messages = await response.json();
+                chatBox.innerHTML = '';
+                if (!messages.length) {
+                    chatBox.innerHTML = '<div class="text-center text-muted py-4">Chưa có tin nhắn. Hãy gửi nội dung cần hỗ trợ.</div>';
+                    return;
+                }
+                messages.forEach(appendCustomerMessageUI);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (err) { console.error('Lỗi tải chat:', err); }
+        }
+
+        async function startCustomerChat() {
+            try {
+                const response = await fetch('/Order/StartOrderChat', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: customerOrderId })
+                });
+                const res = await response.json();
+                if (!res.success) { alert(res.message || 'Không thể mở phiên chat.'); return; }
+                showCustomerChat(true);
+                if (chatInput) chatInput.focus();
+                await loadCustomerMessages();
+            } catch (err) { console.error(err); alert('Không thể kết nối tới phiên hỗ trợ.'); }
+        }
+
+        async function endCustomerChat(sendBeaconSafe = false) {
+            if (!customerChatActive || leavingPage) return;
+            customerChatActive = false;
+            const payload = JSON.stringify({ orderId: customerOrderId });
+            try {
+                await fetch('/Order/EndOrderChat', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload,
+                    keepalive: sendBeaconSafe
+                });
+            } catch (_) {}
+        }
+
+        if (document.getElementById('btnStartCustomerChat'))
+            document.getElementById('btnStartCustomerChat').addEventListener('click', startCustomerChat);
+        if (document.getElementById('btnRestartCustomerChat'))
+            document.getElementById('btnRestartCustomerChat').addEventListener('click', startCustomerChat);
+        if (document.getElementById('btnEndCustomerChat'))
+            document.getElementById('btnEndCustomerChat').addEventListener('click', async () => {
+                await endCustomerChat(false);
+                showCustomerChatEnded();
+            });
+
+        if (chatForm) {
+            chatForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                if (!customerChatActive) return;
+                const text = chatInput.value.trim();
+                if (!text) return;
+                chatInput.value = '';
+                try {
+                    const response = await fetch('/Order/SendOrderMessage', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: customerOrderId, message: text })
+                    });
+                    const res = await response.json();
+                    if (!res.success) { alert(res.message || 'Phiên chat đã kết thúc.'); showCustomerChatEnded(); return; }
+                    await loadCustomerMessages();
+                } catch (err) { console.error(err); }
+            });
+        }
+
+        async function checkCustomerChatStatus() {
+            try {
+                const response = await fetch(`/Order/GetOrderChatStatus?orderId=${customerOrderId}`, { cache: 'no-store' });
+                if (!response.ok) return;
+                const res = await response.json();
+                if (res.active) {
+                    showCustomerChat(true);
+                    await loadCustomerMessages();
+                }
+            } catch (_) { }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const returnForm = document.querySelector('#tabReturnSection form');
+            if (returnForm) returnForm.addEventListener('submit', function (e) { if (!validateReturnItems()) e.preventDefault(); });
+            checkCustomerChatStatus();
+            setInterval(() => { if (customerChatActive) loadCustomerMessages(); }, 2500);
+        });
+
+        window.addEventListener('pagehide', function () {
+            if (!customerChatActive) return;
+            leavingPage = true;
+            fetch('/Order/EndOrderChat', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: customerOrderId }), keepalive: true
+            }).catch(() => {});
+        });
     </script>
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace EMua.Areas.Staff.Models;
 
@@ -88,6 +89,7 @@ public class ProductCreateViewModel
 
     [Range(0, double.MaxValue, ErrorMessage = "Giá gốc không hợp lệ.")]
     [Display(Name = "Giá gốc")]
+    [DisplayFormat(DataFormatString = "{0:0.#}", ApplyFormatInEditMode = true)]
     public decimal? GiaGoc { get; set; }
 
     [StringLength(50)]
@@ -100,10 +102,22 @@ public class ProductCreateViewModel
 
     [Display(Name = "Thông số kỹ thuật")]
     public string? ThongSoKyThuat { get; set; }
-    [Display(Name = "Ảnh sản phẩm")]
+
+    // Giữ tương thích với form upload 1 file đơn
+    [Display(Name = "Ảnh sản phẩm chính")]
     public IFormFile? ImageFile { get; set; }
 
+    // Hỗ trợ chọn/upload nhiều ảnh cùng lúc
+    [Display(Name = "Bộ sưu tập ảnh sản phẩm")]
+    public List<IFormFile>? ImageFiles { get; set; } = [];
+
     public string? CurrentImageUrl { get; set; }
+
+    // THUỘC TÍNH MỚI BỔ SUNG: Đường dẫn ảnh chính được chọn từ giao diện Edit
+    public string? SelectedMainImageUrl { get; set; }
+
+    // Danh sách đường dẫn tất cả ảnh hiện có (khi Edit)
+    public List<string> CurrentImageUrls { get; set; } = [];
 
     public List<ProductVariantQuantityViewModel> BienThe { get; set; } = [];
 }
@@ -113,13 +127,16 @@ public class ProductVariantQuantityViewModel
     public int MaBienThe { get; set; }
     public string? MauSac { get; set; }
     public string? PhienBan { get; set; }
+
     [Range(0.01, double.MaxValue, ErrorMessage = "Giá biến thể phải lớn hơn 0.")]
     [Display(Name = "Giá bán")]
+    [DisplayFormat(DataFormatString = "{0:0.#}", ApplyFormatInEditMode = true)]
     public decimal Gia { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Số lượng không được âm.")]
     [Display(Name = "Số lượng")]
     public int SoLuong { get; set; }
+    public string? TrangThai { get; set; } = "Còn hàng";
 }
 
 public class PromotionCreateViewModel
@@ -145,7 +162,6 @@ public class PromotionCreateViewModel
     public string? MoTa { get; set; }
 }
 
-// ViewModel dùng cho form cập nhật trạng thái/giao nhận (POST từ trang theo dõi đơn hàng)
 public class DeliveryUpdateViewModel
 {
     public int OrderId { get; set; }
@@ -159,16 +175,13 @@ public class DeliveryUpdateViewModel
     public string? TrackingNumber { get; set; }
     public string? Note { get; set; }
 
-    // Ngày dự kiến giao hàng, nhập khi đơn đang được đóng gói/vận chuyển
     [Display(Name = "Ngày dự kiến giao hàng")]
     public DateTime? EstimatedDeliveryDate { get; set; }
 
-    // Ảnh xác nhận đã giao, bắt buộc khi NewStatus = "Đã giao hàng"
     [Display(Name = "Ảnh xác nhận đã giao")]
     public IFormFile? DeliveryProofImage { get; set; }
 }
 
-// ViewModel lịch sử vận chuyển
 public class ShippingHistoryViewModel
 {
     public int HistoryId { get; set; }
@@ -177,12 +190,9 @@ public class ShippingHistoryViewModel
     public string LocationOrNote { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public string? UpdatedBy { get; set; }
-
-    // Ảnh đính kèm tại mốc lịch sử này (vd: ảnh xác nhận đã giao)
     public string? ImageUrl { get; set; }
 }
 
-// ViewModel theo dõi tiến trình
 public class OrderTrackingViewModel
 {
     public int OrderId { get; set; }
@@ -192,12 +202,7 @@ public class OrderTrackingViewModel
     public string CurrentStatus { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
     public DateTime OrderDate { get; set; }
-
-    // Ngày dự kiến giao hàng, hiển thị trên banner ETA khi đơn chưa hoàn tất
     public DateTime? EstimatedDeliveryDate { get; set; }
-
-    // Ảnh xác nhận đã giao hàng (khi CurrentStatus = "Đã giao hàng")
     public string? DeliveryProofImageUrl { get; set; }
-
     public List<ShippingHistoryViewModel> TrackingLogs { get; set; } = new();
 }

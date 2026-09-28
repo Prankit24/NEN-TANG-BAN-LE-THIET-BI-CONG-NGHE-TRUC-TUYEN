@@ -7,8 +7,10 @@
     string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
 
     string transferContent = Model.TransferContent ?? $"EMUA{Model.OrderId:D6}";
-    string bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
+    string bankQrUrl = Model.BankQrUrl ?? $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
     string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+
+    bool isPaid = Model.PaymentStatus == "Đã thanh toán" || Model.PaymentMethod.Contains("COD");
 }
 
 <link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
@@ -37,7 +39,7 @@
 
     <div class="card border-0 shadow-sm mx-auto overflow-hidden mt-4" style="max-width: 680px; border-radius: 16px;">
 
-        @if (Model.PaymentMethod.Contains("COD") || Model.PaymentMethod == "COD")
+        @if (isPaid)
         {
             <div class="card-header bg-white border-0 text-center pt-4 pb-2">
                 <div class="mb-3">
@@ -45,7 +47,9 @@
                         <i class="bi bi-check-circle-fill"></i>
                     </span>
                 </div>
-                <h3 class="fw-bold text-success">Đặt hàng thành công!</h3>
+                <h3 class="fw-bold text-success">
+                    @(Model.PaymentMethod.Contains("COD") ? "Đặt hàng thành công!" : "Đơn hàng đã được thanh toán / xác nhận!")
+                </h3>
                 <p class="text-muted mb-0">Cảm ơn bạn đã mua sắm tại EMUA.</p>
             </div>
 
@@ -57,7 +61,7 @@
                             <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
                         </div>
                         <div class="col-6 text-end">
-                            <span class="text-muted d-block small">Cần thanh toán</span>
+                            <span class="text-muted d-block small">Tổng tiền</span>
                             <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
                         </div>
                     </div>
@@ -132,7 +136,7 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted small">Trạng thái:</span>
-                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xác nhận</span>
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>@Model.PaymentStatus</span>
                             </div>
                         </div>
                         <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống đối soát chính xác.</small>

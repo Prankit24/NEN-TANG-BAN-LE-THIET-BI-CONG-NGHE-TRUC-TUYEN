@@ -1,64 +1,288 @@
 @model ProductCreateViewModel
 @{
     ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    var productId = ViewContext.RouteData.Values["id"];
 }
+
 <section class="staff-card staff-form-card">
-    <form method="post" enctype="multipart/form-data" class="row g-3">
+    <form method="post" enctype="multipart/form-data" class="row g-3" id="editProductForm">
+        @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <div class="col-md-6"><label asp-for="TenSanPham"></label><input asp-for="TenSanPham"
-                                                                             class="form-control" /><span asp-validation-for="TenSanPham"></span></div>
-            <div class="col-md-6"><label asp-for="ImageFile"></label>@if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
-                {
-                    <img src="@Model.CurrentImageUrl" alt="Ảnh hiện tại" class="staff-product-preview" />
-                }
-                <input
-                asp-for="ImageFile" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" /><span
-                asp-validation-for="ImageFile"></span></div>
-                <div class="col-md-6"><label asp-for="MaThuongHieu"></label><select asp-for="MaThuongHieu"
-                                                                                        asp-items="ViewBag.Brands" class="form-select"></select><span asp-validation-for="MaThuongHieu"></span>
+
+        <input type="hidden" asp-for="SelectedMainImageUrl" id="selectedMainImageUrl" value="@Model.CurrentImageUrl" />
+
+        <div class="col-md-6">
+            <label asp-for="TenSanPham"></label>
+            <input asp-for="TenSanPham" class="form-control" />
+            <span asp-validation-for="TenSanPham" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MaThuongHieu"></label>
+            <select asp-for="MaThuongHieu" asp-items="ViewBag.Brands" class="form-select">
+                <option value="">-- Chọn thương hiệu --</option>
+            </select>
+            <span asp-validation-for="MaThuongHieu" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="MaDanhMuc"></label>
+            <select asp-for="MaDanhMuc" asp-items="ViewBag.Categories" class="form-select">
+                <option value="">-- Chưa phân loại --</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="GiaGoc"></label>
+            <input asp-for="GiaGoc" type="number" step="1" min="0" value="@(Model.GiaGoc.HasValue? Convert.ToInt64(Model.GiaGoc.Value) : "")" class="form-control" />
+            <span asp-validation-for="GiaGoc" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="BaoHanh"></label>
+            <input asp-for="BaoHanh" class="form-control" placeholder="VD: 12 tháng" />
+        </div>
+
+        <!-- BỘ SƯU TẬP ẢNH HIỆN CÓ - CLICK ĐỂ LƯU & ĐỔI ẢNH CHÍNH NGAY LẬP TỨC -->
+        <div class="col-12">
+            <label class="form-label fw-bold">Bộ sưu tập ảnh hiện tại <small class="text-primary fw-normal">(Click vào ảnh để đổi làm Ảnh chính ngay lập tức)</small></label>
+
+            <div id="saveToast" class="alert alert-success d-none py-2 px-3 mb-2 small" role="alert">
+                <i class="bi bi-check-circle-fill me-1"></i> <span id="toastMsg">Đã lưu ảnh chính thành công!</span>
+            </div>
+
+            @if (Model.CurrentImageUrls != null && Model.CurrentImageUrls.Any())
+            {
+                <div class="d-flex flex-wrap gap-3 p-3 border rounded bg-light" id="imageGallery">
+                    @foreach (var imgUrl in Model.CurrentImageUrls)
+                    {
+                        var isMain = (imgUrl == Model.CurrentImageUrl) || (imgUrl == Model.SelectedMainImageUrl);
+                        <div class="gallery-item position-relative text-center border rounded p-1 bg-white @(isMain ? "border-primary border-2 shadow-sm" : "")"
+                             style="width: 110px; cursor: pointer; transition: all 0.2s;"
+                             onclick="quickSelectMainImage('@imgUrl', this, '@productId')">
+
+                            <img src="@imgUrl" class="img-fluid rounded mb-1" style="height: 80px; object-fit: contain;" />
+
+                            <!-- Badge Ảnh chính -->
+                            <span class="main-badge badge bg-primary position-absolute top-0 start-0 m-1 @(isMain ? "" : "d-none")" style="font-size: 9px;">Ảnh chính</span>
+
+                            <div class="small text-muted status-text" style="font-size: 11px;">
+                                @(isMain ? "Đang chọn" : "Bấm để chọn")
+                            </div>
+                        </div>
+                    }
                 </div>
-                <div class="col-md-6"><label asp-for="MaDanhMuc"></label><select asp-for="MaDanhMuc"
-                                                                                 asp-items="ViewBag.Categories" class="form-select">
-                    <option value="">-- Chưa phân loại --</option>
-                </select></div>
-                <div class="col-md-6"><label asp-for="GiaGoc"></label><input asp-for="GiaGoc" type="number" min="0" step="0.01"
-                                                                                 class="form-control" /></div>
-                    <div class="col-md-6"><label asp-for="BaoHanh"></label><input asp-for="BaoHanh" class="form-control" /></div>
-                    <div class="col-12"><label asp-for="MoTa"></label><textarea asp-for="MoTa" class="form-control"
-                                                                                    rows="3"></textarea></div>
-                        <div class="col-12"><label asp-for="ThongSoKyThuat"></label><textarea asp-for="ThongSoKyThuat"
-                                                                                                  class="form-control" rows="4"></textarea></div>
-                            <div class="col-12">
-                                <h3>Biến thể sản phẩm</h3>
-                                <div class="table-responsive">
-                                    <table class="staff-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Màu sắc</th>
-                                                <th>Phiên bản</th>
-                                                <th>Giá bán</th>
-                                                <th>Số lượng</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>@for (var i = 0; i < Model.BienThe.Count; i++) {
-                                            <tr>
-                                                <td><input asp-for="BienThe[i].MauSac" class="form-control" /><input
-                                                    asp-for="BienThe[i].MaBienThe" type="hidden" /></td>
-                                                    <td><input asp-for="BienThe[i].PhienBan" class="form-control" /></td>
-                                                    <td><input asp-for="BienThe[i].Gia" type="number" min="0.01" step="0.01"
-                                                                   class="form-control" /><span asp-validation-for="BienThe[i].Gia"></span></td>
-                                                        <td><input asp-for="BienThe[i].SoLuong" type="number" min="0" class="form-control" /><span
-                                                            asp-validation-for="BienThe[i].SoLuong"></span></td>
-                                                        </tr>
-                                                    }
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Lưu thay đổi</button><a asp-action="Index"
-                                                                                                                                 class="btn btn-light">Hủy</a></div>
-                                    </form>
-                                </section>
-                                @section Scripts {
-                                    <partial name="_ValidationScriptsPartial" />
-                                }
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
+            {
+                <div class="p-2 border rounded bg-light d-inline-block">
+                    <img src="@Model.CurrentImageUrl" class="img-fluid rounded" style="height: 80px; object-fit: contain;" />
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small">Chưa có ảnh nào trong bộ sưu tập.</p>
+            }
+        </div>
+
+        <div class="col-12">
+            <label class="form-label fw-bold">Tải lên ảnh mới (Chọn một hoặc nhiều ảnh)</label>
+            <input name="ImageFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp" class="form-control" />
+            <span asp-validation-for="ImageFile" class="text-danger"></span>
+            <small class="text-muted d-block mt-1">Giữ phím <b>Ctrl</b> hoặc <b>Shift</b> để chọn nhiều ảnh cùng lúc.</small>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="MoTa"></label>
+            <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="ThongSoKyThuat"></label>
+            <textarea asp-for="ThongSoKyThuat" class="form-control" rows="4"></textarea>
+        </div>
+
+        <!-- QUẢN LÝ BIẾN THỂ -->
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h3 class="m-0">Biến thể sản phẩm</h3>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariantRow()">
+                    <i class="bi bi-plus-lg"></i> + Thêm biến thể
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="staff-table" id="variantTable">
+                    <thead>
+                        <tr>
+                            <th>Màu sắc</th>
+                            <th>Phiên bản</th>
+                            <th>Giá bán</th>
+                            <th>Số lượng</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="variantTableBody">
+                        @for (var i = 0; i < Model.BienThe.Count; i++)
+                        {
+                            <tr class="variant-row">
+                                <td>
+                                    <input asp-for="BienThe[i].MauSac" class="form-control" placeholder="VD: Chery" />
+                                    <input asp-for="BienThe[i].MaBienThe" type="hidden" />
+                                </td>
+                                <td>
+                                    <input asp-for="BienThe[i].PhienBan" class="form-control" placeholder="VD: 512GB" />
+                                </td>
+                                <td>
+                                    <input asp-for="BienThe[i].Gia" type="number" step="1" min="0" value="@Convert.ToInt64(Model.BienThe[i].Gia)" class="form-control" />
+                                </td>
+                                <td>
+                                    <input asp-for="BienThe[i].SoLuong" type="number" min="0" class="form-control" />
+                                </td>
+                                <td>
+                                    <select asp-for="BienThe[i].TrangThai" class="form-select">
+                                        <option value="Còn hàng">Đang bán</option>
+                                        <option value="Ẩn">Ẩn biến thể</option>
+                                    </select>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeVariantRow(this)" title="Xóa">
+                                        &times;
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Lưu toàn bộ thay đổi</button>
+            <a asp-action="Index" class="btn btn-light">Hủy</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Xử lý tự động lưu & đổi ảnh chính ngay lập tức qua AJAX
+        function quickSelectMainImage(imgUrl, element, productId) {
+            // Update UI ngay trên màn hình
+            document.getElementById('selectedMainImageUrl').value = imgUrl;
+
+            document.querySelectorAll('#imageGallery .gallery-item').forEach(item => {
+                item.classList.remove('border-primary', 'border-2', 'shadow-sm');
+                const badge = item.querySelector('.main-badge');
+                if (badge) badge.classList.add('d-none');
+                const text = item.querySelector('.status-text');
+                if (text) text.innerText = 'Bấm để chọn';
+            });
+
+            element.classList.add('border-primary', 'border-2', 'shadow-sm');
+            const selectedBadge = element.querySelector('.main-badge');
+            if (selectedBadge) selectedBadge.classList.remove('d-none');
+            const selectedText = element.querySelector('.status-text');
+            if (selectedText) selectedText.innerText = 'Ảnh chính';
+
+            // Gửi request AJAX lưu vào Database tức thì
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('imageUrl', imgUrl);
+
+            fetch('/Staff/Product/SetMainImage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const toast = document.getElementById('saveToast');
+                const toastMsg = document.getElementById('toastMsg');
+                if (data.success) {
+                    toastMsg.innerText = data.message;
+                    toast.classList.remove('d-none', 'alert-danger');
+                    toast.classList.add('alert-success');
+                } else {
+                    toastMsg.innerText = data.message || 'Lưu thất bại';
+                    toast.classList.remove('d-none', 'alert-success');
+                    toast.classList.add('alert-danger');
+                }
+                setTimeout(() => { toast.classList.add('d-none'); }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function addVariantRow() {
+            const tbody = document.getElementById('variantTableBody');
+            const index = tbody.querySelectorAll('.variant-row').length;
+
+            const row = document.createElement('tr');
+            row.className = 'variant-row';
+            row.innerHTML = `
+                <td>
+                    <input name="BienThe[${index}].MauSac" class="form-control" placeholder="VD: Titan Sa Mạc" />
+                    <input name="BienThe[${index}].MaBienThe" type="hidden" value="0" />
+                </td>
+                <td>
+                    <input name="BienThe[${index}].PhienBan" class="form-control" placeholder="VD: 1TB" />
+                </td>
+                <td>
+                    <input name="BienThe[${index}].Gia" type="number" step="1" min="0" value="0" class="form-control" />
+                </td>
+                <td>
+                    <input name="BienThe[${index}].SoLuong" type="number" min="0" value="10" class="form-control" />
+                </td>
+                <td>
+                    <select name="BienThe[${index}].TrangThai" class="form-select">
+                        <option value="Còn hàng">Đang bán</option>
+                        <option value="Ẩn">Ẩn biến thể</option>
+                    </select>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeVariantRow(this)" title="Xóa">
+                        &times;
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function removeVariantRow(button) {
+            const tbody = document.getElementById('variantTableBody');
+            const rows = tbody.querySelectorAll('.variant-row');
+
+            if (rows.length <= 1) {
+                alert('Sản phẩm phải có ít nhất 1 biến thể.');
+                return;
+            }
+
+            button.closest('tr').remove();
+            reIndexVariantRows();
+        }
+
+        function reIndexVariantRows() {
+            const rows = document.querySelectorAll('#variantTableBody .variant-row');
+            rows.forEach((row, idx) => {
+                row.querySelectorAll('input, select').forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/BienThe\[\d+\]/, `BienThe[${idx}]`));
+                    }
+                    const id = input.getAttribute('id');
+                    if (id) {
+                        input.setAttribute('id', id.replace(/BienThe_\d+__/, `BienThe_${idx}__`));
+                    }
+                });
+            });
+        }
+    </script>
+}

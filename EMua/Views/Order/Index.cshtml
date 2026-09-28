@@ -5,8 +5,9 @@
     string FixImageUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
-            return "/images/default-product.png";
+            return "/images/no-image.png";
 
+        // Chuyển dấu gạch ngược \ trong Windows path thành /
         url = url.Trim().Replace("\\", "/");
 
         if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -23,7 +24,6 @@
 <link rel="stylesheet" href="~/css/order.css" asp-append-version="true" />
 
 <div class="customer-page">
-    <!-- Header nằm ngang trên cùng -->
     <div class="customer-heading-inline">
         <a asp-controller="Account" asp-action="Profile" class="btn-back-icon" title="Quay lại hồ sơ">
             <i class="bi bi-arrow-left"></i>
@@ -31,7 +31,6 @@
         <h1>Đơn hàng của tôi</h1>
     </div>
 
-    <!-- Nội dung: danh sách đơn hàng -->
     <div class="customer-content-right">
         @if (Model == null || Model.Count == 0)
         {
@@ -46,7 +45,6 @@
         }
         else
         {
-            <!-- Danh sách Card đơn hàng -->
             <div class="order-cards-container" id="orderCardsContainer">
                 @foreach (var order in Model)
                 {
@@ -75,17 +73,19 @@
                                 @foreach (var item in order.Items)
                                 {
                                     <div class="order-product-item">
-                                        <a asp-action="Details" asp-route-id="@order.OrderId" class="product-thumb-link">
+                                        <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="product-thumb-link">
                                             <img src="@FixImageUrl(item.ProductImageUrl)"
                                                  alt="@item.ProductName"
                                                  class="product-thumb-img"
-                                                 onerror="this.onerror=null; this.src='/images/default-product.png';" />
+                                                 onerror="this.onerror=null; this.src='/images/no-image.png';" />
                                         </a>
 
                                         <div class="product-details">
-                                            <a asp-action="Details" asp-route-id="@order.OrderId" class="product-title-link">
+                                            <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="product-title-link">
                                                 @item.ProductName
                                             </a>
+                                            <!-- Sửa lỗi dính chữ làm hỏng Razor synthax -->
+                                            <div class="text-muted small">Số lượng: @item.Quantity</div>
                                         </div>
                                     </div>
                                 }
@@ -93,13 +93,13 @@
                             else
                             {
                                 <div class="order-product-item">
-                                    <a asp-action="Details" asp-route-id="@order.OrderId" class="product-thumb-link">
+                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="product-thumb-link">
                                         <div class="product-thumb-placeholder">
                                             <i class="bi bi-box-seam"></i>
                                         </div>
                                     </a>
                                     <div class="product-details">
-                                        <a asp-action="Details" asp-route-id="@order.OrderId" class="product-title-link">
+                                        <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="product-title-link">
                                             Sản phẩm trong đơn hàng
                                         </a>
                                     </div>
@@ -114,7 +114,7 @@
                             </div>
 
                             <div class="order-actions">
-                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn-detail-link">
+                                <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="btn-detail-link">
                                     Xem chi tiết
                                     <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
@@ -124,7 +124,6 @@
                 }
             </div>
 
-            <!-- Phân trang -->
             <div class="pagination-container" id="paginationControls"></div>
         }
     </div>
@@ -133,8 +132,7 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Số đơn hàng hiển thị mỗi trang.
-            const itemsPerPage = 2;
+            const itemsPerPage = 3;
             const container = document.getElementById("orderCardsContainer");
             if (!container) return;
 
@@ -162,10 +160,8 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
-            // Trả về danh sách số trang cần hiển thị, có dấu "..." khi số trang lớn.
-            // Ví dụ: 1 2 3 4 5 ... 12  hoặc  1 ... 5 6 7 ... 12
             function getPageNumbers() {
-                const delta = 1; // số trang liền kề mỗi bên currentPage
+                const delta = 1;
                 const range = [];
                 const withDots = [];
                 let lastPage = 0;

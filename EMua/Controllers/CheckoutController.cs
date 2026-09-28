@@ -368,28 +368,32 @@ public class CheckoutController : Controller
 
         if (order == null) return NotFound();
 
-        var payment = order.ThanhToans.FirstOrDefault();
+        var payment = order.ThanhToans.OrderByDescending(x => x.NgayTao).FirstOrDefault();
         var transferContent = $"EMUA{order.MaDonHang:D6}";
         var orderTotal = order.TongTien;
 
-        // Cấu hình Chuyển khoản VietQR (MB Bank)
         string mbAccountNo = "0963453170";
         string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
         var bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)orderTotal}&addInfo={transferContent}&accountName={mbAccountName}";
-
-        // Cấu hình Ví Web3 (Địa chỉ ví USDT/ETH nhận tiền của Shop)
-        string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"; // Thay địa chỉ ví thực tế
+        string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
 
         ViewBag.BankQrUrl = bankQrUrl;
         ViewBag.Web3WalletAddress = web3WalletAddress;
         ViewBag.TransferContent = transferContent;
+
+        // QUAN TRỌNG: Lấy trực tiếp trạng thái thực tế từ đơn hàng và thanh toán
+        var realPaymentStatus = payment?.TrangThai ?? "Chờ xác nhận";
+        if (order.TrangThaiDonHang == "Đã hoàn thành" || order.TrangThaiDonHang == "Đã giao")
+        {
+            realPaymentStatus = "Đã thanh toán";
+        }
 
         var viewModel = new CheckoutSuccessViewModel
         {
             OrderId = order.MaDonHang,
             TotalAmount = (decimal)orderTotal,
             PaymentMethod = payment?.PhuongThuc ?? "COD",
-            PaymentStatus = payment?.TrangThai ?? "Chờ xác nhận",
+            PaymentStatus = realPaymentStatus, // Cập nhật trạng thái động
             FullName = order.HoTenNhanHang ?? string.Empty,
             PhoneNumber = order.SoDienThoaiNhanHang ?? string.Empty,
             Address = order.DiaChiNhanHang ?? string.Empty,
