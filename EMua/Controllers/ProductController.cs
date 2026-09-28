@@ -1,5 +1,6 @@
 ﻿using EMua.Data;
 using EMua.Models.Database;
+using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,13 +17,6 @@ namespace EMua.Controllers
 
         // =========================================================
         // DANH SÁCH SẢN PHẨM
-        //
-        // Ví dụ:
-        // /Product
-        // /Product?category=Laptop
-        // /Product?category=DienThoai
-        // /Product?brandId=1
-        // /Product?keyword=iPhone
         // =========================================================
         [HttpGet]
         public async Task<IActionResult> Index(
@@ -33,278 +27,118 @@ namespace EMua.Controllers
         {
             var query = _db.SanPhams
                 .AsNoTracking()
-
                 .Include(x => x.MaDanhMucNavigation)
-
                 .Include(x => x.MaThuongHieuNavigation)
-
                 .Include(x => x.BienTheSanPhams)
-
                 .Include(x => x.SanPhamHinhAnhs)
-
-                // Không hiện sản phẩm bị ẩn
-                .Where(x =>
-                    x.TrangThaiSanPham == null ||
-                    x.TrangThaiSanPham != "Ẩn")
-
+                .Where(x => x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn")
                 .AsQueryable();
 
-
-            // =====================================================
             // TÌM KIẾM
-            // =====================================================
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.Trim();
-
-                query = query.Where(x =>
-                    x.TenSanPham != null &&
-                    x.TenSanPham.Contains(keyword));
+                query = query.Where(x => x.TenSanPham != null && x.TenSanPham.Contains(keyword));
             }
 
-
-            // =====================================================
             // LỌC DANH MỤC TỪ HEADER
-            // =====================================================
             if (!string.IsNullOrWhiteSpace(category))
             {
                 switch (category)
                 {
-                    // -----------------------------
-                    // LAPTOP
-                    // -----------------------------
                     case "Laptop":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc
-                                .ToLower()
-                                .Contains("laptop"));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("laptop"));
                         break;
 
-
-                    // -----------------------------
-                    // ĐIỆN THOẠI
-                    // -----------------------------
                     case "DienThoai":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            (
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("điện thoại")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("smartphone")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("phone")
-                            ));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("điện thoại") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("smartphone") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phone")));
                         break;
 
-
-                    // -----------------------------
-                    // GAMING
-                    // -----------------------------
                     case "Gaming":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            (
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("gaming")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("game")
-                            ));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("gaming") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("game")));
                         break;
 
-
-                    // -----------------------------
-                    // PHỤ KIỆN
-                    // -----------------------------
                     case "PhuKien":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            (
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("phụ kiện")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("accessory")
-                            ));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("accessory")));
                         break;
 
-
-                    // -----------------------------
-                    // ÂM THANH
-                    // -----------------------------
                     case "AmThanh":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            (
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("âm thanh")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("tai nghe")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("loa")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("audio")
-                            ));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("âm thanh") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tai nghe") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("loa") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("audio")));
                         break;
 
-
-                    // -----------------------------
-                    // THIẾT BỊ THÔNG MINH
-                    // -----------------------------
                     case "ThietBiThongMinh":
-
-                        query = query.Where(x =>
-                            x.MaDanhMucNavigation != null &&
-                            x.MaDanhMucNavigation.TenDanhMuc != null &&
-                            (
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("thiết bị thông minh")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("smart")
-                                ||
-                                x.MaDanhMucNavigation.TenDanhMuc
-                                    .ToLower()
-                                    .Contains("đồng hồ")
-                            ));
-
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                                                 x.MaDanhMucNavigation.TenDanhMuc != null &&
+                                                 (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("thiết bị thông minh") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("smart") ||
+                                                  x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("đồng hồ")));
                         break;
                 }
             }
 
-
-            // =====================================================
             // LỌC THEO THƯƠNG HIỆU
-            // =====================================================
             if (brandId.HasValue)
             {
-                query = query.Where(x =>
-                    x.MaThuongHieu == brandId.Value);
+                query = query.Where(x => x.MaThuongHieu == brandId.Value);
             }
 
-
-            // =====================================================
             // SẮP XẾP
-            // =====================================================
             switch (sort)
             {
-                // Giá thấp → cao
                 case "price-asc":
-
-                    query = query
-                        .OrderBy(x =>
-                            x.BienTheSanPhams
-                                .Where(v => v.SoLuong > 0)
-                                .Select(v => (decimal?)v.Gia)
-                                .Min()
-                            ??
-                            x.GiaGoc
-                            ??
-                            0);
-
+                    query = query.OrderBy(x => x.BienTheSanPhams
+                        .Where(v => v.SoLuong > 0)
+                        .Select(v => (decimal?)v.Gia)
+                        .Min() ?? x.GiaGoc ?? 0);
                     break;
 
-
-                // Giá cao → thấp
                 case "price-desc":
-
-                    query = query
-                        .OrderByDescending(x =>
-                            x.BienTheSanPhams
-                                .Where(v => v.SoLuong > 0)
-                                .Select(v => (decimal?)v.Gia)
-                                .Min()
-                            ??
-                            x.GiaGoc
-                            ??
-                            0);
-
+                    query = query.OrderByDescending(x => x.BienTheSanPhams
+                        .Where(v => v.SoLuong > 0)
+                        .Select(v => (decimal?)v.Gia)
+                        .Min() ?? x.GiaGoc ?? 0);
                     break;
 
-
-                // Tên A-Z
                 case "name-asc":
-
-                    query = query
-                        .OrderBy(x => x.TenSanPham);
-
+                    query = query.OrderBy(x => x.TenSanPham);
                     break;
 
-
-                // Tên Z-A
                 case "name-desc":
-
-                    query = query
-                        .OrderByDescending(x => x.TenSanPham);
-
+                    query = query.OrderByDescending(x => x.TenSanPham);
                     break;
 
-
-                // Mới nhất
                 default:
-
-                    query = query
-                        .OrderByDescending(x => x.MaSanPham);
-
+                    query = query.OrderByDescending(x => x.MaSanPham);
                     break;
             }
 
-
-            // =====================================================
-            // DATA DÙNG CHO FILTER Ở VIEW
-            // =====================================================
             ViewBag.Category = category;
-
             ViewBag.Keyword = keyword;
-
             ViewBag.BrandId = brandId;
-
             ViewBag.Sort = sort;
-
 
             ViewBag.Categories = await _db.DanhMucSanPhams
                 .AsNoTracking()
-                .Where(x =>
-                    x.TrangThaiDanhMuc == null ||
-                    x.TrangThaiDanhMuc != "Ẩn")
+                .Where(x => x.TrangThaiDanhMuc == null || x.TrangThaiDanhMuc != "Ẩn")
                 .OrderBy(x => x.TenDanhMuc)
                 .ToListAsync();
-
 
             ViewBag.Brands = await _db.ThuongHieus
                 .AsNoTracking()
@@ -312,35 +146,21 @@ namespace EMua.Controllers
                 .OrderBy(x => x.TenThuongHieu)
                 .ToListAsync();
 
-
             var products = await query.ToListAsync();
-
-
             return View(products);
         }
 
-
         // =========================================================
         // SEARCH TỪ HEADER
-        //
-        // Header hiện tại:
-        // asp-action="Search"
-        // input name="keyword"
         // =========================================================
         [HttpGet]
         public IActionResult Search(string? keyword)
         {
-            return RedirectToAction(
-                nameof(Index),
-                new
-                {
-                    keyword = keyword
-                });
+            return RedirectToAction(nameof(Index), new { keyword = keyword });
         }
 
-
         // =========================================================
-        // CHI TIẾT SẢN PHẨM
+        // CHI TIẾT SẢN PHẨM (ĐÃ ĐƯỢC CHỈNH SỬA CHUẨN MODEL & VIEW)
         // /Product/Details/5
         // =========================================================
         [HttpGet]
@@ -348,154 +168,144 @@ namespace EMua.Controllers
         {
             var product = await _db.SanPhams
                 .AsNoTracking()
+                .Include(x => x.MaDanhMucNavigation)
+                .Include(x => x.MaThuongHieuNavigation)
+                .Include(x => x.BienTheSanPhams)
+                .Include(x => x.SanPhamHinhAnhs)
+                .Include(x => x.DanhGiaSanPhams)
+                    .ThenInclude(r => r.MaNguoiDungNavigation)
+                .FirstOrDefaultAsync(x => x.MaSanPham == id);
 
-                .Include(x =>
-                    x.MaDanhMucNavigation)
-
-                .Include(x =>
-                    x.MaThuongHieuNavigation)
-
-                .Include(x =>
-                    x.BienTheSanPhams)
-
-                .Include(x =>
-                    x.SanPhamHinhAnhs)
-
-                .Include(x =>
-                    x.DanhGiaSanPhams)
-
-                .FirstOrDefaultAsync(x =>
-                    x.MaSanPham == id);
-
-
-            if (product == null)
+            if (product == null || product.TrangThaiSanPham == "Ẩn")
             {
                 return NotFound();
             }
 
+            var defaultVariant = product.BienTheSanPhams.FirstOrDefault();
 
-            // Sản phẩm đang bị ẩn thì khách không xem
-            if (product.TrangThaiSanPham == "Ẩn")
+            // 1. Lấy chuỗi đường dẫn thô
+            var rawImageUrl = defaultVariant?.HinhAnh
+                ?? product.SanPhamHinhAnhs.FirstOrDefault()?.DuongDanAnh;
+
+            // 2. Hàm xử lý đường dẫn tuyệt đối chuẩn ASP.NET Core
+            string FixImage(string? url)
             {
-                return NotFound();
+                if (string.IsNullOrWhiteSpace(url)) return "/images/no-image.png";
+
+                url = url.Trim().Replace("\\", "/");
+
+                if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    return url;
+
+                if (!url.StartsWith("/"))
+                    return "/" + url; // Ghép dấu / vào đầu để thành đường dẫn tuyệt đối tính từ gốc root
+
+                return url;
             }
 
+            // Map dữ liệu từ Entity SanPham sang ProductDetailsViewModel
+            var viewModel = new ProductDetailsViewModel
+            {
+                ProductId = product.MaSanPham,
+                Name = product.TenSanPham ?? string.Empty,
+                Category = product.MaDanhMucNavigation?.TenDanhMuc,
+                Brand = product.MaThuongHieuNavigation?.TenThuongHieu,
+                Price = defaultVariant?.Gia ?? product.GiaGoc ?? 0,
+                Stock = defaultVariant?.SoLuong ?? 0,
 
-            return View(product);
+                // Gán đường dẫn đã được thêm dấu / tuyệt đối ở đầu
+                ImageUrl = FixImage(rawImageUrl),
+
+                DefaultVariantId = defaultVariant?.MaBienThe ?? 0,
+                Description = product.MoTa,
+                Specifications = product.ThongSoKyThuat,
+                Warranty = product.BaoHanh,
+
+                Variants = product.BienTheSanPhams.Select(v => new ProductVariantViewModel
+                {
+                    VariantId = v.MaBienThe,
+                    Label = string.Join(" / ", new[] { v.MauSac, v.PhienBan }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    Price = v.Gia,
+                    Stock = v.SoLuong,
+                    ImageUrl = FixImage(v.HinhAnh)
+                }).ToList(),
+
+                Reviews = product.DanhGiaSanPhams
+                    .Where(r => r.TrangThai == true)
+                    .Select(r => new ProductReviewViewModel
+                    {
+                        CustomerName = r.MaNguoiDungNavigation != null
+                            ? (r.MaNguoiDungNavigation.TenNguoiDung ?? r.MaNguoiDungNavigation.Email ?? "Khách hàng")
+                            : "Khách hàng",
+                        Rating = r.SoLuongSao.GetValueOrDefault(5),
+                        Comment = r.BinhLuan,
+                        CreatedAt = r.NgayDanhGia
+                    }).ToList(),
+
+                AverageRating = product.DanhGiaSanPhams.Any(r => r.TrangThai == true && r.SoLuongSao.HasValue)
+                    ? (decimal)product.DanhGiaSanPhams.Where(r => r.TrangThai == true && r.SoLuongSao.HasValue).Average(r => r.SoLuongSao!.Value)
+                    : 0m
+            };
+
+            return View("~/Views/Product/Details.cshtml", viewModel);
         }
-
 
         // =========================================================
         // LỌC TRỰC TIẾP BẰNG ID DANH MỤC
-        //
-        // Có thể dùng cho card danh mục ở trang chủ:
-        // /Product/Category/3
         // =========================================================
         [HttpGet]
         public async Task<IActionResult> Category(int id)
         {
-            var categoryExists =
-                await _db.DanhMucSanPhams
-                    .AsNoTracking()
-                    .AnyAsync(x =>
-                        x.MaDanhMuc == id);
-
+            var categoryExists = await _db.DanhMucSanPhams
+                .AsNoTracking()
+                .AnyAsync(x => x.MaDanhMuc == id);
 
             if (!categoryExists)
             {
                 return NotFound();
             }
 
-
             var products = await _db.SanPhams
                 .AsNoTracking()
-
-                .Include(x =>
-                    x.MaDanhMucNavigation)
-
-                .Include(x =>
-                    x.MaThuongHieuNavigation)
-
-                .Include(x =>
-                    x.BienTheSanPhams)
-
-                .Include(x =>
-                    x.SanPhamHinhAnhs)
-
-                .Where(x =>
-                    x.MaDanhMuc == id
-                    &&
-                    (
-                        x.TrangThaiSanPham == null ||
-                        x.TrangThaiSanPham != "Ẩn"
-                    ))
-
-                .OrderByDescending(x =>
-                    x.MaSanPham)
-
+                .Include(x => x.MaDanhMucNavigation)
+                .Include(x => x.MaThuongHieuNavigation)
+                .Include(x => x.BienTheSanPhams)
+                .Include(x => x.SanPhamHinhAnhs)
+                .Where(x => x.MaDanhMuc == id && (x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn"))
+                .OrderByDescending(x => x.MaSanPham)
                 .ToListAsync();
 
-
             ViewBag.CategoryId = id;
-
-
             return View("Index", products);
         }
 
-
         // =========================================================
         // LỌC THƯƠNG HIỆU
-        //
-        // /Product/Brand/1
         // =========================================================
         [HttpGet]
         public async Task<IActionResult> Brand(int id)
         {
-            var brandExists =
-                await _db.ThuongHieus
-                    .AsNoTracking()
-                    .AnyAsync(x =>
-                        x.MaThuongHieu == id);
-
+            var brandExists = await _db.ThuongHieus
+                .AsNoTracking()
+                .AnyAsync(x => x.MaThuongHieu == id);
 
             if (!brandExists)
             {
                 return NotFound();
             }
 
-
             var products = await _db.SanPhams
                 .AsNoTracking()
-
-                .Include(x =>
-                    x.MaDanhMucNavigation)
-
-                .Include(x =>
-                    x.MaThuongHieuNavigation)
-
-                .Include(x =>
-                    x.BienTheSanPhams)
-
-                .Include(x =>
-                    x.SanPhamHinhAnhs)
-
-                .Where(x =>
-                    x.MaThuongHieu == id
-                    &&
-                    (
-                        x.TrangThaiSanPham == null ||
-                        x.TrangThaiSanPham != "Ẩn"
-                    ))
-
-                .OrderByDescending(x =>
-                    x.MaSanPham)
-
+                .Include(x => x.MaDanhMucNavigation)
+                .Include(x => x.MaThuongHieuNavigation)
+                .Include(x => x.BienTheSanPhams)
+                .Include(x => x.SanPhamHinhAnhs)
+                .Where(x => x.MaThuongHieu == id && (x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn"))
+                .OrderByDescending(x => x.MaSanPham)
                 .ToListAsync();
 
-
             ViewBag.BrandId = id;
-
-
             return View("Index", products);
         }
     }

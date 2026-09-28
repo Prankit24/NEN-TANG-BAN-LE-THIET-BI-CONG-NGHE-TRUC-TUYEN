@@ -2,19 +2,22 @@
 @{
     ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}";
 
-    // Danh sách trạng thái để vẽ thanh tiến trình - cần Controller truyền ViewBag.Statuses
-    // giống như Index.cshtml đang làm (var statuses = (string[])ViewBag.Statuses;)
     var allStatuses = (ViewBag.Statuses as string[]) ?? Array.Empty<string>();
     var currentStatus = Model.TrangThaiDonHang ?? "Chờ xử lý";
 
-    // Trạng thái "hủy" tách riêng khỏi tiến trình chính (không tính vào các bước)
     var progressStatuses = allStatuses.Where(s => !s.Contains("hủy", StringComparison.OrdinalIgnoreCase)).ToArray();
     var isCancelled = currentStatus.Contains("hủy", StringComparison.OrdinalIgnoreCase);
+    var isReturnRequested = currentStatus == "Yêu cầu đổi trả" || currentStatus == "Đang đổi trả" || currentStatus == "Đã nhận đổi trả";
+
     var currentIndex = Array.IndexOf(progressStatuses, currentStatus);
     if (currentIndex < 0) currentIndex = 0;
 
-    // Icon cho từng bước theo vị trí (bước cuối luôn là "đã giao")
     string[] stepIcons = { "bi-hourglass-split", "bi-box-seam", "bi-truck", "bi-house-check-fill" };
+
+    // Lấy thông tin lịch sử đổi trả gần nhất
+    var returnLog = Model.LichSuVanChuyens
+        .OrderByDescending(x => x.ThoiGian)
+        .FirstOrDefault(x => x.TrangThai == "Yêu cầu đổi trả");
 }
 
 <style>
@@ -154,6 +157,14 @@
         margin-top: 8px;
     }
 
+    .return-request-alert {
+        background-color: #fff5f5;
+        border: 2px solid #fecaca;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
     .staff-delivery-form .form-group {
         margin-bottom: 14px;
     }
@@ -189,12 +200,81 @@
             display: block;
         }
 
-    .staff-checkbox-row {
+    .staff-return-chat {
+        margin-top: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .staff-chat-waiting {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 12px;
+        padding: 15px;
     }
+
+    .staff-chat-wait-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 1.1rem;
+        flex: 0 0 42px;
+    }
+
+    .staff-chat-header {
+        padding: 12px 15px;
+        color: #fff;
+        background: linear-gradient(135deg,#2563eb,#3b82f6);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .staff-chat-messages {
+        min-height: 220px;
+        max-height: 340px;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8fafc;
+    }
+
+    .staff-chat-composer {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+        .staff-chat-composer input {
+            border-radius: 10px;
+        }
+
+        .staff-chat-composer button {
+            border-radius: 10px;
+        }
+
+    @@media(max-width:640px) {
+        .staff-chat-waiting {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+            .staff-chat-waiting .badge {
+                margin-left: 54px !important;
+            }
+
+        .staff-chat-header {
+            align-items: flex-start;
+        }
+    }
+
 </style>
 
 <div class="staff-toolbar">
@@ -209,6 +289,88 @@
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success" role="alert">@TempData["SuccessMessage"]</div>
+}
+
+<!-- KHỐI BÁO CÁO YÊU CẦU ĐỔI TRẢ & KHUNG CHAT TRỰC TIẾP VỚI KHÁCH HÀNG -->
+@if (isReturnRequested)
+{
+    <div class="return-request-alert shadow-sm">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h3 class="text-danger fs-5 mb-0 fw-bold">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> ĐƠN HÀNG CÓ YÊU CẦU ĐỔI TRẢ / HOÀN TIỀN
+            </h3>
+            <span class="badge bg-danger fs-6">@currentStatus</span>
+        </div>
+        <p class="text-muted small mb-3">Khách hàng đã gửi yêu cầu hỗ trợ sự cố cho đơn hàng này. Vui lòng trao đổi với khách hoặc bấm quyết định xử lý:</p>
+
+        @if (returnLog != null)
+        {
+            <div class="p-3 bg-white rounded border mb-3">
+                <div class="small mb-1"><strong>Thời gian gửi:</strong> @returnLog.ThoiGian.ToString("dd/MM/yyyy HH:mm")</div>
+                <div class="small text-dark whitespace-pre-line" style="white-space: pre-line;">@returnLog.MoTa</div>
+            </div>
+        }
+
+        <!-- NÚT DUYỆT / TỪ CHỐI -->
+        <div class="d-flex gap-2 flex-wrap pt-2 border-top mb-3">
+            <form asp-action="ProcessReturnAction" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                <input type="hidden" name="actionType" value="Accept" />
+                <button type="submit" class="btn btn-success fw-bold" onclick="return confirm('Xác nhận ĐỒNG Ý yêu cầu đổi trả của khách hàng?');">
+                    <i class="bi bi-check-circle-fill me-1"></i> Chấp nhận Đổi trả
+                </button>
+            </form>
+
+            <button type="button" class="btn btn-outline-danger fw-bold" data-bs-toggle="collapse" data-bs-target="#rejectReturnBox">
+                <i class="bi bi-x-circle-fill me-1"></i> Từ chối Yêu cầu
+            </button>
+
+            <a href="tel:@Model.SoDienThoaiNhanHang" class="btn btn-primary fw-bold ms-auto">
+                <i class="bi bi-telephone-outbound-fill me-1"></i> Gọi hotline khách
+            </a>
+        </div>
+
+        <div class="collapse mb-3" id="rejectReturnBox">
+            <form asp-action="ProcessReturnAction" method="post" class="p-3 bg-white rounded border border-danger">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                <input type="hidden" name="actionType" value="Reject" />
+                <label class="form-label text-danger fw-bold small">Lý do từ chối yêu cầu đổi trả <span class="text-danger">*</span></label>
+                <textarea name="rejectReason" class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập rõ lý do từ chối để thông báo cho khách hàng..." required></textarea>
+                <button type="submit" class="btn btn-sm btn-danger">Xác nhận Từ chối</button>
+            </form>
+        </div>
+
+        <!-- CHAT ĐỔI TRẢ: chỉ xuất hiện khi khách đã chủ động mở phiên -->
+        <div class="staff-return-chat" id="staffReturnChatCard">
+            <div id="staffChatWaiting" class="staff-chat-waiting">
+                <div class="staff-chat-wait-icon"><i class="bi bi-chat-square-text"></i></div>
+                <div>
+                    <div class="fw-bold">Chưa có phiên trò chuyện</div>
+                    <div class="small text-muted">Khách hàng chưa bấm “Bắt đầu trò chuyện”. Nhân viên không chủ động mở chat.</div>
+                </div>
+                <span class="badge bg-secondary ms-auto" id="staffChatStatusBadge">Chờ khách</span>
+            </div>
+
+            <div id="staffChatActive" class="d-none">
+                <div class="staff-chat-header">
+                    <div>
+                        <div class="fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>Khách đang trao đổi</div>
+                        <div class="small opacity-75">Phiên tạm thời • Không lưu lịch sử</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light text-danger fw-semibold" id="btnEndStaffChat">Kết thúc phiên</button>
+                </div>
+                <div class="staff-chat-messages" id="staffChatMessageList">
+                    <div class="text-center text-muted py-4">Khách chưa gửi tin nhắn.</div>
+                </div>
+                <form id="staffChatForm" class="staff-chat-composer">
+                    <input type="text" id="staffChatInput" class="form-control" placeholder="Phản hồi khách hàng..." autocomplete="off" maxlength="1000" required />
+                    <button type="submit" class="btn btn-primary px-3"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 
 <!-- Thanh tiến trình giao hàng -->
@@ -302,7 +464,7 @@
         <div class="staff-order-total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></div>
     </section>
 
-    <!-- Cập nhật giao nhận: ghi chú ngày dự kiến giao + upload ảnh khi đã giao -->
+    <!-- Cập nhật giao nhận -->
     <section class="staff-card">
         <h2>Cập nhật giao nhận</h2>
         <form asp-action="UpdateDeliveryStatus" method="post" enctype="multipart/form-data" class="staff-delivery-form">
@@ -370,5 +532,76 @@
                 reader.readAsDataURL(file);
             });
         })();
+
+        // CHAT ĐỔI TRẢ PHÍA NHÂN VIÊN: chỉ hiển thị khi khách đã mở phiên.
+        const staffOrderId = @Model.MaDonHang;
+        const staffChatWaiting = document.getElementById('staffChatWaiting');
+        const staffChatActive = document.getElementById('staffChatActive');
+        const staffChatBox = document.getElementById('staffChatMessageList');
+        const staffChatForm = document.getElementById('staffChatForm');
+        const staffChatInput = document.getElementById('staffChatInput');
+        const staffChatBadge = document.getElementById('staffChatStatusBadge');
+        let staffSessionActive = false;
+
+        function escapeStaffHtml(value) {
+            const div = document.createElement('div'); div.textContent = value ?? ''; return div.innerHTML;
+        }
+        function setStaffChatState(active) {
+            staffSessionActive = active;
+            if (staffChatWaiting) staffChatWaiting.classList.toggle('d-none', active);
+            if (staffChatActive) staffChatActive.classList.toggle('d-none', !active);
+            if (staffChatBadge) staffChatBadge.textContent = active ? 'Đang hoạt động' : 'Chờ khách';
+        }
+        function appendStaffMessageUI(msg) {
+            const isMe = msg.isStaff;
+            const wrapper = document.createElement('div');
+            wrapper.className = `d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-3`;
+            wrapper.innerHTML = `<small class="text-muted mb-1">${escapeStaffHtml(msg.senderName)} • ${escapeStaffHtml(msg.time)}</small><div class="p-2 px-3 ${isMe ? 'bg-primary text-white' : 'bg-white border text-dark'} rounded-3 shadow-sm" style="max-width:80%;word-break:break-word;">${escapeStaffHtml(msg.message)}</div>`;
+            staffChatBox.appendChild(wrapper);
+        }
+        async function loadStaffChat() {
+            try {
+                const statusResponse = await fetch(`/Staff/Order/GetOrderChatStatus?orderId=${staffOrderId}`, { cache:'no-store' });
+                if (!statusResponse.ok) return;
+                const status = await statusResponse.json();
+                setStaffChatState(status.active);
+                if (!status.active || !staffChatBox) return;
+
+                const response = await fetch(`/Staff/Order/GetOrderMessages?orderId=${staffOrderId}`, { cache:'no-store' });
+                if (!response.ok) return;
+                const messages = await response.json();
+                staffChatBox.innerHTML = '';
+                if (!messages.length) {
+                    staffChatBox.innerHTML = '<div class="text-center text-muted py-4">Khách đã mở phiên. Đang chờ tin nhắn...</div>';
+                } else {
+                    messages.forEach(appendStaffMessageUI);
+                    staffChatBox.scrollTop = staffChatBox.scrollHeight;
+                }
+            } catch (err) { console.error('Lỗi tải chat Staff:', err); }
+        }
+        if (staffChatForm) {
+            staffChatForm.addEventListener('submit', async function(e){
+                e.preventDefault(); if (!staffSessionActive) return;
+                const text = staffChatInput.value.trim(); if (!text) return;
+                staffChatInput.value = '';
+                try {
+                    const response = await fetch('/Staff/Order/SendOrderMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({orderId:staffOrderId,message:text}) });
+                    const res = await response.json();
+                    if (!res.success) { alert(res.message || 'Phiên chat đã kết thúc.'); await loadStaffChat(); return; }
+                    await loadStaffChat();
+                } catch(err) { console.error(err); }
+            });
+        }
+        const endStaffBtn = document.getElementById('btnEndStaffChat');
+        if (endStaffBtn) endStaffBtn.addEventListener('click', async function(){
+            if (!confirm('Kết thúc phiên trò chuyện này? Toàn bộ nội dung sẽ bị xoá.')) return;
+            await fetch('/Staff/Order/EndOrderChat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({orderId:staffOrderId}) });
+            await loadStaffChat();
+        });
+        document.addEventListener('DOMContentLoaded', function(){
+            loadStaffChat();
+            setInterval(loadStaffChat, 2500);
+        });
+
     </script>
 }

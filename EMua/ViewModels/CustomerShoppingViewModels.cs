@@ -24,14 +24,27 @@ public class ProductCardViewModel
     public string? ImageUrl { get; set; }
 }
 
-public class ProductDetailsViewModel : ProductCardViewModel
+public class ProductDetailsViewModel
 {
+    public int ProductId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Category { get; set; }
+    public string? Brand { get; set; }
+    public decimal Price { get; set; }
+    public int Stock { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+
+    // BỘ SƯU TẬP ẢNH SẢN PHẨM DÀNH CHO TRANG CHI TIẾT
+    public List<string> ImageUrls { get; set; } = [];
+
+    public int DefaultVariantId { get; set; }
     public string? Description { get; set; }
     public string? Specifications { get; set; }
     public string? Warranty { get; set; }
+    public decimal AverageRating { get; set; }
+
     public List<ProductVariantViewModel> Variants { get; set; } = [];
     public List<ProductReviewViewModel> Reviews { get; set; } = [];
-    public decimal AverageRating { get; set; }
 }
 
 public class ProductVariantViewModel
@@ -43,6 +56,14 @@ public class ProductVariantViewModel
     public string? ImageUrl { get; set; }
 }
 
+public class ProductReviewViewModel
+{
+    public string CustomerName { get; set; } = string.Empty;
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public DateTime? CreatedAt { get; set; }
+}
+
 public class CartViewModel
 {
     private const decimal StandardShippingFee = 30000m;
@@ -52,20 +73,13 @@ public class CartViewModel
     public int TotalQuantity => Items.Sum(x => x.Quantity);
     public int ItemCount => Items.Count;
 
-    // Tạm tính (chưa trừ khuyến mãi)
     public decimal Subtotal => Items.Sum(x => x.LineTotal);
-
-    // Phí vận chuyển: miễn phí từ 500.000đ trở lên (đồng bộ với trang Checkout)
     public decimal ShippingFee => Subtotal <= 0 ? 0 : (Subtotal >= FreeShippingThreshold ? 0 : StandardShippingFee);
 
-    // Mã khuyến mãi đang được áp dụng cho giỏ hàng (lưu qua Session)
     public string? CouponCode { get; set; }
     public decimal Discount { get; set; }
-
-    // Tổng cộng = Tạm tính + Phí vận chuyển - Giảm giá
     public decimal FinalTotal => Math.Max(0m, Subtotal + ShippingFee - Discount);
 
-    // Danh sách mã khuyến mãi đang khả dụng để gợi ý cho khách
     public List<CouponOptionViewModel> AvailableCoupons { get; set; } = [];
 }
 
@@ -82,16 +96,18 @@ public class CartItemViewModel
     public int Stock { get; set; }
     public decimal LineTotal => UnitPrice * Quantity;
 }
+
 public class OrderDetailItemViewModel
 {
     public int ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string VariantLabel { get; set; } = string.Empty;
-    public string? ProductImageUrl { get; set; } // Thêm thuộc tính này
+    public string? ProductImageUrl { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal LineTotal => UnitPrice * Quantity;
 }
+
 public class CouponOptionViewModel
 {
     public string Code { get; set; } = string.Empty;
@@ -104,17 +120,17 @@ public class OrderListItemViewModel
 {
     public int OrderId { get; set; }
     public DateTime? OrderedAt { get; set; }
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
     public decimal Total { get; set; }
-    public List<OrderItemSummaryViewModel> Items { get; set; } = new(); // Danh sách sản phẩm
+    public List<OrderItemSummaryViewModel> Items { get; set; } = new();
     public int ItemCount { get; internal set; }
 }
 
 public class OrderItemSummaryViewModel
 {
     public int ProductId { get; set; }
-    public string ProductName { get; set; }
-    public string ProductImageUrl { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string ProductImageUrl { get; set; } = string.Empty;
     public int Quantity { get; set; }
     public decimal Price { get; set; }
 }
@@ -133,11 +149,11 @@ public class OrderDetailsViewModel
     public List<CartItemViewModel> Items { get; set; } = [];
     public List<OrderStatusViewModel> StatusHistory { get; set; } = [];
 
-    // Ngày dự kiến giao hàng - lấy từ order.NgayDuKienGiao (Staff nhập khi cập nhật giao nhận)
     public DateTime? EstimatedDeliveryDate { get; set; }
-
-    // Ảnh xác nhận đã giao hàng - lấy từ order.AnhXacNhanGiao
     public string? DeliveryProofImageUrl { get; set; }
+
+    public bool IsOrderReviewed { get; set; }
+    public List<int> ReviewedProductIds { get; set; } = [];
 }
 
 public class OrderStatusViewModel
@@ -145,14 +161,6 @@ public class OrderStatusViewModel
     public string Status { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateTime Time { get; set; }
-}
-
-public class ProductReviewViewModel
-{
-    public string CustomerName { get; set; } = "Khách hàng";
-    public int Rating { get; set; }
-    public string? Comment { get; set; }
-    public DateTime? CreatedAt { get; set; }
 }
 
 public class ReviewCreateViewModel
@@ -168,7 +176,6 @@ public class ReviewCreateViewModel
     public string Comment { get; set; } = string.Empty;
 }
 
-// --- CẬP NHẬT TRANG THÀNH CÔNG / TIẾP TỤC THANH TOÁN ---
 public class CheckoutSuccessViewModel
 {
     public int OrderId { get; set; }

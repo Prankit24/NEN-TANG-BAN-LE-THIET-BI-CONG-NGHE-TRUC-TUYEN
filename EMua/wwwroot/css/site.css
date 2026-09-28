@@ -1,33 +1,51 @@
 
 
-html {
-    font-size: 16px;
+/* ========================================================== */
+/* BỔ SUNG ĐỒNG BỘ RESPONSIVE MOBILE CHO TOÀN BỘ DỰ ÁN EMUA  */
+/* ========================================================== */
+
+/* Tránh tình trạng lòi ngang (horizontal scroll) trên điện thoại */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    background: #F2F8F9;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #222;
-}
-
-a {
-    text-decoration: none;
-}
-
+/* Tự động căn chỉnh hình ảnh tràn khung không bị vỡ */
 img {
     max-width: 100%;
-    display: block;
+    height: auto;
 }
 
-button,
-input,
-select,
-textarea {
-    font: inherit;
-}
+/* Điểm gãy màn hình di động (< 768px) */
+@media (max-width: 768px) {
+    /* Thu nhỏ padding của khung nội dung chính */
+    .main-content {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
 
+    /* Giỏ hàng nổi: chỉnh lại vị trí để không che khuất nút thao tác */
+    .emua-floating-cart {
+        bottom: 75px !important;
+        right: 15px !important;
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 1.2rem !important;
+    }
+
+    /* Bảng dữ liệu tự động cuộn ngang nếu vượt quá độ rộng màn hình */
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Các Form & Input tự tràn 100% dòng */
+    .form-control, .form-select, .btn {
+        font-size: 0.95rem;
+    }
+}
 
 
 
