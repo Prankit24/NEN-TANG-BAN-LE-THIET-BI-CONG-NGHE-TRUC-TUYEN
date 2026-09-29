@@ -49,6 +49,7 @@
 
                 @if (Model.IsCustomer)
                 {
+                    <!-- Menu dành riêng cho Khách hàng -->
                     <a asp-controller="Order" asp-action="Index">
                         <span class="menu-icon"><i class="bi bi-box-seam"></i></span>
                         <span>Đơn hàng của tôi</span>
@@ -59,8 +60,14 @@
                         <span>Sản phẩm yêu thích</span>
                     </a>
                 }
-                else if (!Model.IsStaff)
+                else
                 {
+                    <!-- Menu hiển thị khi đăng nhập bằng tài khoản Nhân viên hoặc Quản trị viên (Admin) -->
+                    <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+                        <span class="menu-icon"><i class="bi bi-grid-1x2"></i></span>
+                        <span>Khu vực làm việc</span>
+                    </a>
+
                     <a asp-controller="Product" asp-action="Index">
                         <span class="menu-icon"><i class="bi bi-box-seam"></i></span>
                         <span>Quản lý sản phẩm</span>
@@ -69,13 +76,6 @@
                     <a asp-controller="Order" asp-action="Index">
                         <span class="menu-icon"><i class="bi bi-receipt"></i></span>
                         <span>Quản lý đơn hàng</span>
-                    </a>
-                }
-                else
-                {
-                    <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
-                        <span class="menu-icon"><i class="bi bi-grid-1x2"></i></span>
-                        <span>Khu vực nhân viên</span>
                     </a>
                 }
 

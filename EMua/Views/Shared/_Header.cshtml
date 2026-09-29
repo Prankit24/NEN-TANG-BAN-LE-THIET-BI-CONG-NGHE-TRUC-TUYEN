@@ -3,6 +3,9 @@
     var avatarLetter = string.IsNullOrWhiteSpace(displayName)
         ? "U"
         : displayName[..1].ToUpperInvariant();
+
+    // Tách bạch rõ ràng từng vai trò
+    var isAdmin = User.IsInRole("Admin") || User.IsInRole("Quản trị viên");
     var isStaff = User.IsInRole("NhanVien") || User.IsInRole("Nhân viên");
 }
 
@@ -46,7 +49,7 @@
                 <!-- Các nút thao tác Desktop -->
                 <div class="emua-header-actions">
 
-                    <!-- Dropdown Tài khoản (Ẩn trên Mobile nhỏ) -->
+                    <!-- Dropdown Tài khoản -->
                     <div class="dropdown">
                         <button class="header-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -74,11 +77,22 @@
                                     </a>
                                 </li>
 
+                                <!-- Nếu là Nhân viên -> hiển thị Khu vực nhân viên -->
                                 @if (isStaff)
                                 {
                                     <li>
                                         <a class="account-dropdown-staff" asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
                                             <i class="bi bi-grid-1x2"></i> Khu vực nhân viên
+                                        </a>
+                                    </li>
+                                }
+
+                                <!-- Nếu là Admin -> hiển thị Khu vực quản trị -->
+                                @if (isAdmin)
+                                {
+                                    <li>
+                                        <a class="account-dropdown-staff text-primary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                            <i class="bi bi-shield-lock-fill"></i> Khu vực quản trị
                                         </a>
                                     </li>
                                 }
@@ -225,7 +239,7 @@
         </div>
     </nav>
 
-    <!-- MENU XỔ MOBILE (Khi bấm nút 3 gạch trên Điện thoại) -->
+    <!-- MENU XỔ MOBILE -->
     <div class="collapse" id="mobileCategories">
         <div class="mobile-category-menu">
 
@@ -245,6 +259,13 @@
                     {
                         <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index" class="text-danger fw-bold small d-block mb-2">
                             <i class="bi bi-grid-1x2 me-1"></i> Khu vực nhân viên
+                        </a>
+                    }
+
+                    @if (isAdmin)
+                    {
+                        <a asp-area="Admin" asp-controller="User" asp-action="Index" class="text-primary fw-bold small d-block mb-2">
+                            <i class="bi bi-shield-lock-fill me-1"></i> Khu vực quản trị
                         </a>
                     }
 

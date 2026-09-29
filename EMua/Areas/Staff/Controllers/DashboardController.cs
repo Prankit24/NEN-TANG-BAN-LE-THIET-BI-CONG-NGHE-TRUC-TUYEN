@@ -1,10 +1,13 @@
 using EMua.Areas.Staff.Models;
 using EMua.Data;
+using Microsoft.AspNetCore.Authorization; // 👈 Nhớ thêm namespace này
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMua.Areas.Staff.Controllers;
 
+[Area("Staff")]
+[Authorize(Roles = "NhanVien, Nhân viên")] // 🔒 Chỉ cho phép tài khoản thuộc vai trò Nhân viên được truy cập, Admin sẽ bị chặn tuyệt đối
 public class DashboardController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;

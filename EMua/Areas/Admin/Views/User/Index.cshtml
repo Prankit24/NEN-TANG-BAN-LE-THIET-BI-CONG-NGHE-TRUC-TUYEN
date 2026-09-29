@@ -1,0 +1,338 @@
+﻿@model IEnumerable<EMua.Models.Database.NguoiDung>
+@using EMua.Models.Database
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+
+    var roles = (List<PhanQuyen>)ViewBag.DanhSachQuyen;
+    int? currentUserId = ViewBag.CurrentUserId;
+    int adminCount = ViewBag.AdminCount;
+    int page = ViewBag.Page;
+    int totalPages = ViewBag.TotalPages;
+
+    string InitialsOf(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1 ? parts[0][..1].ToUpper() : $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
+    <style>
+        /* Hiệu ứng tinh tế cho nút thêm mới */
+        .btn-add-user {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+            border: none;
+            transition: all 0.25s ease-in-out;
+        }
+
+            .btn-add-user:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.25) !important;
+                background: linear-gradient(135deg, #2b82ff 0%, #0d6efd 100%);
+            }
+    </style>
+}
+
+<div class="users-page container-fluid py-4 px-lg-4">
+
+    <!-- Header & Nút thêm tài khoản (Đã gộp chung 1 hàng chuẩn chỉnh, không bị trùng lặp) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1 text-dark">
+                <i class="bi bi-people-fill me-2 text-primary"></i>Quản lý tài khoản người dùng
+            </h1>
+            <p class="text-muted small mb-0">Quản lý thông tin khách hàng và phân quyền tài khoản quản trị hệ thống.</p>
+        </div>
+
+        <!-- Nút Thêm tài khoản mới -->
+        <a asp-action="Create" class="btn btn-add-user text-white rounded-pill px-4 py-2.5 shadow-sm d-flex align-items-center gap-2 fw-medium">
+            <span class="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                <i class="bi bi-plus-lg fs-xs text-white"></i>
+            </span>
+            Thêm tài khoản mới
+        </a>
+    </div>
+
+    <!-- THỐNG KÊ NHANH -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-primary bg-opacity-10 text-primary p-3 rounded-4 fs-4"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.TotalUsers</div>
+                    <div class="mini-stat-label text-muted small">Tổng tài khoản</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-success bg-opacity-10 text-success p-3 rounded-4 fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.ActiveUsers</div>
+                    <div class="mini-stat-label text-muted small">Đang hoạt động</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-danger bg-opacity-10 text-danger p-3 rounded-4 fs-4"><i class="bi bi-lock-fill"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.LockedUsers</div>
+                    <div class="mini-stat-label text-muted small">Đã khóa</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-warning bg-opacity-10 text-warning p-3 rounded-4 fs-4"><i class="bi bi-shield-fill-check"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@adminCount</div>
+                    <div class="mini-stat-label text-muted small">Quản trị viên</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BỘ LỌC -->
+    <div class="filter-bar bg-white p-3 rounded-4 shadow-sm border-0 mb-4">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center" onsubmit="return false;">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0 rounded-end-pill py-2" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="maQuyen" name="maQuyen" class="form-select bg-light rounded-pill py-2">
+                    <option value="">Tất cả phân quyền</option>
+                    @foreach (var r in roles)
+                    {
+                        <option value="@r.MaQuyen" selected="@(ViewBag.SelectedRole == r.MaQuyen)">@r.TenQuyen</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="trangThai" name="trangThai" class="form-select bg-light rounded-pill py-2">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true" selected="@(ViewBag.SelectedStatus == true)">Đang hoạt động</option>
+                    <option value="false" selected="@(ViewBag.SelectedStatus == false)">Đã khóa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="btnResetFilter" class="btn btn-outline-secondary rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-1">
+                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- KHU VỰC BẢNG DỮ LIỆU (Cập nhật AJAX) -->
+    <div id="userTableContainer">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                        <tr>
+                            <th class="py-3 ps-4">Tài khoản</th>
+                            <th class="py-3">Tên đăng nhập</th>
+                            <th class="py-3">Số điện thoại</th>
+                            <th class="py-3 text-center">Phân quyền</th>
+                            <th class="py-3 text-center">Trạng thái</th>
+                            <th class="py-3 text-end pe-4">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                bool isSelf = currentUserId == item.MaNguoiDung;
+                                bool isAdmin = item.MaQuyenNavigation?.TenQuyen == "Admin";
+                                bool isLastAdmin = isAdmin && item.TrangThai && adminCount <= 1;
+                                bool lockDisabled = isSelf || isLastAdmin;
+
+                                <tr class="@(isSelf ? "table-active" : "")">
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-circle bg-primary bg-opacity-10 text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 40px; height: 40px; min-width: 40px;">
+                                                @InitialsOf(item.TenNguoiDung)
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                                    @(item.TenNguoiDung ?? "Chưa cập nhật")
+                                                    @if (isSelf)
+                                                    {
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-0.5 fs-xs">Bạn</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">@item.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><code class="text-dark bg-light px-2 py-1 rounded-2">@item.TenDangNhap</code></td>
+                                    <td>@(item.SoDienThoai ?? "Không có")</td>
+                                    <td class="text-center">
+                                        <span class="badge role-badge @(isAdmin ? "bg-warning bg-opacity-10 text-warning fw-semibold px-3 py-1.5 rounded-pill" : "bg-light text-secondary px-3 py-1.5 rounded-pill")">
+                                            @(item.MaQuyenNavigation?.TenQuyen ?? "Khách hàng")
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.TrangThai)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-1.5 rounded-pill fw-normal">Hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-1.5 rounded-pill fw-normal">Đã khóa</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-2">
+                                            <a asp-action="Edit" asp-route-id="@item.MaNguoiDung" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 d-flex align-items-center gap-1">
+                                                <i class="bi bi-pencil-square"></i> Sửa
+                                            </a>
+                                            <form asp-action="ToggleStatus" asp-route-id="@item.MaNguoiDung" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Xác nhận đổi trạng thái tài khoản #@item.MaNguoiDung ?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm @(item.TrangThai ? "btn-outline-danger" : "btn-outline-success") rounded-pill px-3 py-1"
+                                                        title="@(lockDisabled ? (isSelf ? "Không thể tự khóa tài khoản đang đăng nhập" : "Đây là quản trị viên cuối cùng") : "Đổi trạng thái")"
+                                                        @(lockDisabled ? "disabled" : "")>
+                                                    @(item.TrangThai ? "Khóa" : "Mở khóa")
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-folder2-open fs-2 d-block mb-2"></i> Không tìm thấy tài khoản người dùng nào.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Phân trang -->
+            @if (totalPages > 1)
+            {
+                <div class="d-flex justify-content-center py-3 bg-white border-top">
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            @for (int p = 1; p <= totalPages; p++)
+                            {
+                                <li class="page-item @(p == page ? "active" : "")">
+                                    <a class="page-link ajax-page-link rounded-circle mx-1 border-0 @(p == page ? "bg-primary text-white" : "text-dark")"
+                                       href="javascript:void(0);"
+                                       data-page="@p" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">@p</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Lưu ý hệ thống -->
+    <div class="alert alert-light border-0 shadow-xs rounded-4 p-3 text-muted small d-flex align-items-center">
+        <i class="bi bi-shield-lock-fill text-primary fs-5 me-2"></i>
+        <span>Để đảm bảo an toàn: một tài khoản không thể tự khóa hoặc tự đổi phân quyền của chính mình, và hệ thống luôn giữ lại ít nhất một tài khoản Admin đang hoạt động.</span>
+    </div>
+</div>
+
+<!-- Modal Dialog Thông báo thành công -->
+<div class="modal fade" id="successDialogModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow text-center p-4">
+            <div class="mb-3 text-success">
+                <i class="bi bi-check-circle-fill display-4"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Thành công!</h5>
+            <p class="text-muted small mb-4" id="successDialogMessage">Thao tác thực hiện thành công.</p>
+            <button type="button" class="btn btn-primary rounded-pill w-100 py-2" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Hiển thị Modal Dialog nếu có TempData["SuccessMessage"]
+            @if (TempData["SuccessMessage"] != null)
+            {
+                    <text>
+                    document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
+                    var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
+                    successModal.show();
+                    </text>
+            }
+
+            const searchInput = document.getElementById("searchString");
+            const roleSelect = document.getElementById("maQuyen");
+            const statusSelect = document.getElementById("trangThai");
+            const btnResetFilter = document.getElementById("btnResetFilter");
+            const tableContainer = document.getElementById("userTableContainer");
+
+            let currentPage = 1;
+
+            function fetchFilteredData(page = 1) {
+                currentPage = page;
+                const search = searchInput.value;
+                const maQuyen = roleSelect.value;
+                const trangThai = statusSelect.value;
+
+                const url = `@Url.Action("Index")?searchString=${encodeURIComponent(search)}&maQuyen=${maQuyen}&trangThai=${trangThai}&page=${page}&isAjax=true`;
+
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newContainer = doc.querySelector('#userTableContainer');
+
+                        if (newContainer && tableContainer) {
+                            tableContainer.innerHTML = newContainer.innerHTML;
+                            attachPaginationEvents();
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi lọc dữ liệu:', error));
+            }
+
+            function attachPaginationEvents() {
+                document.querySelectorAll('.ajax-page-link').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const p = this.getAttribute('data-page');
+                        fetchFilteredData(p);
+                    });
+                });
+            }
+
+            let debounceTimer;
+            searchInput.addEventListener("input", function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => fetchFilteredData(1), 300);
+            });
+
+            roleSelect.addEventListener("change", () => fetchFilteredData(1));
+            statusSelect.addEventListener("change", () => fetchFilteredData(1));
+
+            btnResetFilter.addEventListener("click", function () {
+                searchInput.value = "";
+                roleSelect.value = "";
+                statusSelect.value = "";
+                fetchFilteredData(1);
+            });
+
+            attachPaginationEvents();
+        });
+    </script>
+}
