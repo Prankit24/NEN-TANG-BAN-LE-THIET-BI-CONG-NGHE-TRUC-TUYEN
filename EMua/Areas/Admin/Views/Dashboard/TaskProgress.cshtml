@@ -1,0 +1,153 @@
+﻿@model EMua.Areas.Admin.Models.ViewModels.TaskProgressViewModel
+@{
+    ViewData["Title"] = "Tiến độ chức năng Admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h4 mb-1 text-gray-800 fw-bold">
+                <i class="bi bi-kanban me-2 text-primary"></i>Tiến độ thực hiện chức năng
+            </h1>
+            <p class="text-muted small mb-0">Quản lý checklist các hạng mục phát triển hệ thống Admin.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="bi bi-plus-lg me-1"></i> Thêm hạng mục mới
+        </button>
+    </div>
+
+    <!-- Cột bảng Trello Board Column -->
+    <div class="trello-board-column">
+        @foreach (var task in Model.Tasks)
+        {
+            <div class="trello-card @(task.IsCompleted ? "completed-card" : "")">
+                <div class="card-title-row">
+                    <i class="bi @(task.IsCompleted ? "bi-check-circle-fill text-success" : "bi-circle") card-status-icon"></i>
+                    <span class="card-title-text">@task.Title</span>
+                </div>
+                <div class="card-meta-row">
+                    <i class="bi bi-check2-square"></i>
+                    <span>@task.CompletedCount / @task.TotalCount</span>
+                </div>
+            </div>
+        }
+
+        <!-- Nút Add a card -->
+        <button type="button" class="trello-add-card-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="bi bi-plus-lg"></i> Add a card
+        </button>
+    </div>
+</div>
+
+<!-- Modal thêm task/card mới (Phục vụ mở rộng tương lai) -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold">Thêm thẻ công việc mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tên chức năng / hạng mục</label>
+                        <input type="text" class="form-control" placeholder="Ví dụ: Quản lý mã giảm giá..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Số lượng tiêu chí (Total tasks)</label>
+                        <input type="number" class="form-control" value="5" min="1" required />
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Thêm thẻ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Khung cột chứa các card (Phong cách Trello chuẩn) */
+    .trello-board-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 340px;
+        background-color: #f1f2f4;
+        padding: 14px;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Từng thẻ card */
+    .trello-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+        .trello-card:hover {
+            background-color: #fafbfc;
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .trello-card.completed-card {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+    /* Dòng tiêu đề card */
+    .card-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #172b4d;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .card-status-icon {
+        font-size: 0.95rem;
+        color: #626f84;
+    }
+
+    /* Dòng tiến độ công việc bên dưới */
+    .card-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        color: #626f84;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Nút Add a card ở dưới cùng */
+    .trello-add-card-btn {
+        background: transparent;
+        border: none;
+        color: #626f84;
+        text-align: left;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+        .trello-add-card-btn:hover {
+            background-color: rgba(9, 30, 66, 0.08);
+            color: #172b4d;
+        }
+</style>

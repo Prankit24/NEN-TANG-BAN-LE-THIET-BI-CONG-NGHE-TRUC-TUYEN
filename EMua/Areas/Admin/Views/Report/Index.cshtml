@@ -1,0 +1,378 @@
+﻿@model EMua.Models.ViewModels.BaoCaoDashboardViewModel
+@using EMua.Models.ViewModels
+@{
+    ViewData["Title"] = "Báo cáo tài chính & Thống kê";
+
+    var cur = Model.Current;
+    var prev = Model.Previous;
+
+    decimal profitGrowth = BaoCaoDashboardViewModel.Growth(cur.NetProfit, prev.NetProfit);
+    decimal profitDiff = cur.NetProfit - prev.NetProfit;
+
+    // Trạng thái tổng quát để hiển thị banner
+    string verdictClass = cur.NetProfit < 0 ? "loss" : profitGrowth > 0 ? "up" : profitGrowth < 0 ? "down" : "flat";
+    string verdictIcon = verdictClass switch
+    {
+        "loss" => "bi-exclamation-octagon-fill",
+        "up" => "bi-arrow-up-right-circle-fill",
+        "down" => "bi-arrow-down-right-circle-fill",
+        _ => "bi-dash-circle-fill"
+    };
+    string verdictTitle = verdictClass switch
+    {
+        "loss" => $"{cur.Label}: kinh doanh đang lỗ {Math.Abs(cur.NetProfit).ToString("N0")} đ",
+        "up" => $"Lợi nhuận tăng {Math.Abs(profitGrowth).ToString("0.#")}% so với {prev.Label}",
+        "down" => $"Lợi nhuận giảm {Math.Abs(profitGrowth).ToString("0.#")}% so với {prev.Label}",
+        _ => $"Lợi nhuận không đổi so với {prev.Label}"
+    };
+    string verdictSub = verdictClass == "flat"
+        ? "Chưa có biến động đáng kể giữa hai kỳ."
+        : $"Chênh lệch {(profitDiff >= 0 ? "+" : "−")}{Math.Abs(profitDiff).ToString("N0")} đ · Biên lợi nhuận {cur.Margin.ToString("0.#")}%";
+
+    // Chip hiển thị tăng/giảm. isCost = true thì tăng là xấu (đỏ), giảm là tốt (xanh)
+    void Chip(decimal growth, bool isCost = false)
+    {
+        string dir = growth > 0 ? "up" : growth < 0 ? "down" : "flat";
+        string tone = growth == 0 ? "flat" : ((growth > 0) != isCost) ? "good" : "bad";
+        string icon = growth > 0 ? "bi-caret-up-fill" : growth < 0 ? "bi-caret-down-fill" : "bi-dash";
+        <span class="trend-chip @tone" title="So với @prev.Label">
+            <i class="bi @icon"></i> @Math.Abs(growth).ToString("0.#")%
+        </span>
+    }
+
+    // 1 dòng của bảng so sánh
+    void CompareRow(string name, decimal now, decimal before, bool isCost = false, bool strong = false, string suffix = " đ")
+    {
+        decimal g = BaoCaoDashboardViewModel.Growth(now, before);
+        decimal d = now - before;
+        <tr class="@(strong ? "row-strong" : "")">
+            <td>@name</td>
+            <td class="text-end">@now.ToString("N0")@suffix</td>
+            <td class="text-end text-muted">@before.ToString("N0")@suffix</td>
+            <td class="text-end">@(d > 0 ? "+" : d < 0 ? "−" : "")@Math.Abs(d).ToString("N0")@suffix</td>
+            <td class="text-end">@{
+            Chip(g, isCost);
+        }
+    </td>
+    </tr>
+}
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/admin-report.css" asp-append-version="true" />
+}
+
+<div class="report-page container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Báo cáo tài chính & lợi nhuận</h1>
+            <p class="text-muted small mb-0">Đang xem <strong>@cur.Label</strong>, so sánh với <strong>@prev.Label</strong>.</p>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm no-print" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> In báo cáo
+        </button>
+    </div>
+
+    <!-- BỘ LỌC -->
+    <div class="report-filter-card no-print">
+        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-secondary">Xem theo</label>
+                <select name="filterType" id="filterTypeSelect" class="form-select" onchange="toggleFilterType(this.value)">
+                    <option value="month" selected="@(Model.FilterType == "month")">Tháng</option>
+                    <option value="quarter" selected="@(Model.FilterType == "quarter")">Quý</option>
+                </select>
+            </div>
+
+            <div class="col-md-3" id="monthFilterBox" style="display:@(Model.FilterType == "month" ? "block" : "none")">
+                <label class="form-label small fw-bold text-secondary">Tháng</label>
+                <select name="month" class="form-select">
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        <option value="@i" selected="@(Model.Month == i)">Tháng @i</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3" id="quarterFilterBox" style="display:@(Model.FilterType == "quarter" ? "block" : "none")">
+                <label class="form-label small fw-bold text-secondary">Quý</label>
+                <select name="quarter" class="form-select">
+                    <option value="1" selected="@(Model.Quarter == 1)">Quý 1 (tháng 1 - 3)</option>
+                    <option value="2" selected="@(Model.Quarter == 2)">Quý 2 (tháng 4 - 6)</option>
+                    <option value="3" selected="@(Model.Quarter == 3)">Quý 3 (tháng 7 - 9)</option>
+                    <option value="4" selected="@(Model.Quarter == 4)">Quý 4 (tháng 10 - 12)</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-secondary">Năm</label>
+                <select name="year" class="form-select">
+                    @for (int y = 2024; y <= DateTime.Now.Year; y++)
+                    {
+                        <option value="@y" selected="@(Model.Year == y)">Năm @y</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3 col-lg-2">
+                <button type="submit" class="btn btn-primary fw-semibold w-100">
+                    <i class="bi bi-funnel me-1"></i> Xem báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- KẾT LUẬN NHANH: TĂNG HAY GIẢM -->
+    <div class="verdict-banner @verdictClass">
+        <div class="verdict-icon"><i class="bi @verdictIcon"></i></div>
+        <div>
+            <div class="verdict-title">@verdictTitle</div>
+            <div class="verdict-sub">@verdictSub</div>
+        </div>
+    </div>
+
+    <!-- 4 CHỈ SỐ CHÍNH -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card revenue">
+                <div class="kpi-label"><i class="bi bi-cash-stack"></i> Doanh thu</div>
+                <div class="kpi-value">@cur.Revenue.ToString("N0") đ</div>
+                <div class="kpi-foot">
+                    @{
+                        Chip(BaoCaoDashboardViewModel.Growth(cur.Revenue, prev.Revenue));
+                    }
+                    <span>kỳ trước: @prev.Revenue.ToString("N0") đ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card profit @(cur.NetProfit < 0 ? "is-loss" : "")">
+                <div class="kpi-label"><i class="bi bi-graph-up-arrow"></i> Lợi nhuận ròng</div>
+                <div class="kpi-value">@cur.NetProfit.ToString("N0") đ</div>
+                <div class="kpi-foot">
+                    @{
+                        Chip(profitGrowth);
+                    }
+                    <span>biên lợi nhuận @cur.Margin.ToString("0.#")%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card expense">
+                <div class="kpi-label"><i class="bi bi-receipt-cutoff"></i> Tổng chi phí & khấu trừ</div>
+                <div class="kpi-value">@cur.TotalCost.ToString("N0") đ</div>
+                <div class="kpi-foot">
+                    @{
+                        Chip(BaoCaoDashboardViewModel.Growth(cur.TotalCost, prev.TotalCost), isCost: true);
+                    }
+                    <span>kỳ trước: @prev.TotalCost.ToString("N0") đ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card orders">
+                <div class="kpi-label"><i class="bi bi-bag-check-fill"></i> Đơn hàng thành công</div>
+                <div class="kpi-value">@cur.Orders.ToString("N0") đơn</div>
+                <div class="kpi-foot">
+                    @{
+                        Chip(BaoCaoDashboardViewModel.Growth(cur.Orders, prev.Orders));
+                    }
+                    <span>@Model.TotalUsers.ToString("N0") người dùng</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIỂU ĐỒ -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <h5>Xu hướng doanh thu và lợi nhuận năm @Model.Year</h5>
+                </div>
+                <div class="panel-body chart-box">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <h5>Mỗi 100 đ doanh thu đi về đâu</h5>
+                </div>
+                <div class="panel-body chart-box">
+                    @if (cur.Revenue > 0)
+                    {
+                        <canvas id="structureChart"></canvas>
+                    }
+                    else
+                    {
+                        <div class="empty-note">Kỳ này chưa có doanh thu.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG SO SÁNH + LƯU TRỮ -->
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <h5>So sánh @cur.Label với @prev.Label</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-financial align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Khoản mục</th>
+                                <th class="text-end">Kỳ này</th>
+                                <th class="text-end">Kỳ trước</th>
+                                <th class="text-end">Chênh lệch</th>
+                                <th class="text-end">Thay đổi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                CompareRow("Doanh thu bán hàng", cur.Revenue, prev.Revenue, strong: true);
+                                CompareRow("Số đơn thành công", cur.Orders, prev.Orders, suffix: " đơn");
+                                CompareRow("Giá trị đơn trung bình", cur.AvgOrderValue, prev.AvgOrderValue);
+                                CompareRow("Thuế VAT (ước tính 5%)", cur.Tax, prev.Tax, isCost: true);
+                                CompareRow("Lương nhân viên", cur.Salary, prev.Salary, isCost: true);
+                                CompareRow("Giá vốn & vận hành (ước tính 40%)", cur.Operating, prev.Operating, isCost: true);
+                                CompareRow("Lợi nhuận ròng", cur.NetProfit, prev.NetProfit, strong: true);
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <h5>Báo cáo đã lưu</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-financial align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Loại</th>
+                                <th class="text-end">Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.BaoCaoLuuTru.Any())
+                            {
+                                foreach (var bc in Model.BaoCaoLuuTru)
+                                {
+                                    <tr>
+                                        <td>#@bc.MaBaoCao</td>
+                                        <td>@(bc.LoaiBaoCao ?? "Báo cáo chung")</td>
+                                        <td class="text-end text-muted">@(bc.NgayBaoCao?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">Chưa có báo cáo nào được lưu.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        function toggleFilterType(val) {
+            document.getElementById('monthFilterBox').style.display = val === 'month' ? 'block' : 'none';
+            document.getElementById('quarterFilterBox').style.display = val === 'quarter' ? 'block' : 'none';
+        }
+
+        (function () {
+            const fmt = v => new Intl.NumberFormat('vi-VN').format(v) + ' đ';
+            const compact = v => {
+                const a = Math.abs(v);
+                if (a >= 1e9) return (v / 1e9).toFixed(1) + ' tỷ';
+                if (a >= 1e6) return (v / 1e6).toFixed(0) + ' tr';
+                if (a >= 1e3) return (v / 1e3).toFixed(0) + ' k';
+                return v;
+            };
+
+            // --- Xu hướng 12 tháng ---
+            const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendLabels));
+            const revenue = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendRevenue));
+            const profit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendProfit));
+
+            // Tô đậm cột của tháng / quý đang xem
+            const isMonth = '@Model.FilterType' === 'month';
+            const first = isMonth ? @(Model.Month - 1) : @((Model.Quarter - 1) * 3);
+            const last = isMonth ? first : first + 2;
+            const barColors = labels.map((_, i) => (i >= first && i <= last) ? '#1f6feb' : '#b6c8e6');
+
+            new Chart(document.getElementById('trendChart'), {
+                data: {
+                    labels,
+                    datasets: [
+                        { type: 'bar', label: 'Doanh thu', data: revenue, backgroundColor: barColors, borderRadius: 4, order: 2 },
+                        { type: 'line', label: 'Lợi nhuận ròng', data: profit, borderColor: '#0f9d6e', backgroundColor: '#0f9d6e',
+                          tension: .3, borderWidth: 2.5, pointRadius: 3, order: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmt(c.parsed.y) } }
+                    },
+                    scales: {
+                        y: { ticks: { callback: compact }, grid: { color: '#eef1f5' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // --- Cơ cấu doanh thu ---
+            const el = document.getElementById('structureChart');
+            if (el) {
+                const rev = @cur.Revenue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                const parts = [
+                    { name: 'Thuế VAT', v: @cur.Tax.ToString(System.Globalization.CultureInfo.InvariantCulture), c: '#f5a524' },
+                    { name: 'Lương nhân viên', v: @cur.Salary.ToString(System.Globalization.CultureInfo.InvariantCulture), c: '#7c8db5' },
+                    { name: 'Giá vốn & vận hành', v: @cur.Operating.ToString(System.Globalization.CultureInfo.InvariantCulture), c: '#e5484d' },
+                    { name: 'Lợi nhuận', v: Math.max(@cur.NetProfit.ToString(System.Globalization.CultureInfo.InvariantCulture), 0), c: '#0f9d6e' }
+                ];
+                new Chart(el, {
+                    type: 'doughnut',
+                    data: {
+                        labels: parts.map(p => p.name),
+                        datasets: [{ data: parts.map(p => p.v), backgroundColor: parts.map(p => p.c), borderWidth: 2, borderColor: '#fff' }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '62%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+                            tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + fmt(c.parsed) + ' (' + (c.parsed / rev * 100).toFixed(1) + '%)' } }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+}

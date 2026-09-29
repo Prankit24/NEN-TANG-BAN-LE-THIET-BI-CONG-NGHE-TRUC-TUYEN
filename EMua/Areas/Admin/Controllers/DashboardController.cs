@@ -1,3 +1,4 @@
+using EMua.Areas.Admin.Models.ViewModels;
 using EMua.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -164,7 +165,22 @@ public class DashboardController : Controller
 
         return View();
     }
+    [HttpGet]
+    public IActionResult TaskProgress()
+    {
+        var model = new TaskProgressViewModel
+        {
+            Tasks = new List<AdminTaskItem>
+        {
+            new AdminTaskItem { Id = 1, Title = "Quản lý người dùng", CompletedCount = 0, TotalCount = 5 },
+            new AdminTaskItem { Id = 2, Title = "Quản lý phân quyền", CompletedCount = 0, TotalCount = 6 },
+            new AdminTaskItem { Id = 3, Title = "QL từ cấm", CompletedCount = 0, TotalCount = 4 },
+            new AdminTaskItem { Id = 4, Title = "Quản lý báo cáo thống kê", CompletedCount = 0, TotalCount = 5 }
+        }
+        };
 
+        return View(model);
+    }
     private static decimal CalculateGrowth(
         decimal currentValue,
         decimal previousValue)

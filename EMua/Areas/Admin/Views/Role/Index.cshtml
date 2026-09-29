@@ -1,0 +1,186 @@
+﻿@model IEnumerable<EMua.Models.Database.PhanQuyen>
+@{
+    ViewData["Title"] = "Quản lý phân quyền";
+    string adminRoleName = ViewBag.AdminRoleName ?? "Admin";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
+}
+
+<div class="users-page container-fluid py-4 px-lg-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1 text-dark">
+                <i class="bi bi-shield-lock-fill me-2 text-primary"></i>Phân quyền hệ thống
+            </h1>
+            <p class="text-muted small mb-0">Quản lý các nhóm quyền truy cập tính năng quản trị hệ thống.</p>
+        </div>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+            <i class="bi bi-plus-lg"></i> Thêm nhóm quyền
+        </button>
+    </div>
+
+    <!-- Thống kê nhanh phân quyền -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-primary bg-opacity-10 text-primary p-3 rounded-4 fs-4"><i class="bi bi-diagram-3-fill"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.TotalRoles</div>
+                    <div class="mini-stat-label text-muted small">Nhóm quyền</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="mini-stat bg-white p-3 rounded-4 shadow-sm border-0 d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-success bg-opacity-10 text-success p-3 rounded-4 fs-4"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.TotalUsers</div>
+                    <div class="mini-stat-label text-muted small">Tài khoản đã phân quyền</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách thẻ quyền -->
+    <div class="row g-4">
+        @foreach (var role in Model)
+        {
+            int userCount = role.NguoiDungs?.Count ?? 0;
+            bool isProtected = role.TenQuyen == adminRoleName;
+
+            <div class="col-md-4">
+                <!-- Thẻ card có gắn class isProtected -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 position-relative overflow-hidden role-card bg-white transition-all @(isProtected ? "is-protected" : "")">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-4 me-3 fs-4 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi @(isProtected ? "bi-shield-fill-exclamation" : "bi-shield-fill-check")"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                                @role.TenQuyen
+                                @if (isProtected)
+                                {
+                                    <span class="badge bg-warning bg-opacity-25 text-warning-emphasis rounded-pill fs-xs px-2 py-0.5">Hệ thống</span>
+                                }
+                        </h5>
+                        <small class="text-muted">Mã định danh: #@role.MaQuyen</small>
+                    </div>
+                </div>
+                <p class="text-muted small mb-4">
+                    @(isProtected
+                                        ? "Quyền quản trị cao nhất. Không thể đổi tên hoặc xóa để tránh mất quyền quản lý hệ thống."
+                                        : "Nhóm phân quyền cấp độ hệ thống dành cho vận hành cửa hàng trực tuyến EMUA.")
+                </p>
+                <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-dark border-0 px-3 py-2 rounded-pill fw-normal">
+                        <i class="bi bi-people-fill me-1 text-primary"></i> @userCount tài khoản
+                    </span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                data-bs-toggle="modal" data-bs-target="#editRoleModal-@role.MaQuyen"
+                                disabled="@isProtected" title="@(isProtected ? "Quyền hệ thống, không thể sửa" : "Sửa")">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <form asp-action="Delete" method="post" class="d-inline"
+                              onsubmit="return confirm('Xác nhận xóa nhóm quyền \'@role.TenQuyen\'?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="maQuyen" value="@role.MaQuyen" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                    disabled="@(isProtected || userCount > 0)"
+                                    title="@(isProtected ? "Quyền hệ thống, không thể xóa" : userCount > 0 ? "Còn tài khoản đang dùng quyền này" : "Xóa")">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Modal sửa -->
+            <div class="modal fade" id="editRoleModal-@role.MaQuyen" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <form asp-action="Edit" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="maQuyen" value="@role.MaQuyen" />
+                            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                                <h5 class="modal-title fw-bold">Sửa nhóm quyền</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body px-4">
+                                <label class="form-label small fw-bold text-secondary">Tên nhóm quyền</label>
+                                <input name="tenQuyen" class="form-control bg-light rounded-3 py-2 border-0" value="@role.TenQuyen" required />
+                            </div>
+                            <div class="modal-footer border-0 px-4 pb-4">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">Lưu thay đổi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+                }
+    </div>
+
+    <!-- Note dưới cùng -->
+    <div class="alert alert-light border-0 shadow-xs mt-4 rounded-4 p-3 text-muted small d-flex align-items-center">
+        <i class="bi bi-shield-lock-fill text-primary fs-5 me-2"></i>
+        <span>Nhóm quyền <strong>@adminRoleName</strong> được hệ thống bảo vệ: không thể đổi tên, xóa, hoặc để hệ thống rơi vào tình trạng không còn quản trị viên.</span>
+    </div>
+</div>
+
+<!-- Modal thêm nhóm quyền -->
+<div class="modal fade" id="createRoleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold">Thêm nhóm quyền mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <label class="form-label small fw-bold text-secondary">Tên nhóm quyền</label>
+                    <input name="tenQuyen" class="form-control bg-light rounded-3 py-2 border-0" placeholder="Vd: Nhân viên bán hàng" required />
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Thêm mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dialog Thông báo thành công -->
+<div class="modal fade" id="successDialogModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow text-center p-4">
+            <div class="mb-3 text-success">
+                <i class="bi bi-check-circle-fill display-4"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Thành công!</h5>
+            <p class="text-muted small mb-4" id="successDialogMessage">Thao tác thực hiện thành công.</p>
+            <button type="button" class="btn btn-primary rounded-pill w-100 py-2" data-bs-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                    <text>
+                    document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
+                    var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
+                    successModal.show();
+                    </text>
+            }
+        });
+    </script>
+}
