@@ -1,52 +1,688 @@
 @{
-    var name = User.Identity?.Name ?? "Nhân viên";
-    var letter = name[..1].ToUpperInvariant();
-    var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var displayName = User.Identity?.Name ?? "Nhân viên";
+    var avatarLetter = string.IsNullOrWhiteSpace(displayName)
+        ? "N"
+        : displayName[..1].ToUpperInvariant();
+
+    var currentController =
+        ViewContext.RouteData.Values["Controller"]?.ToString();
+
+    var currentStatusFilter =
+        Context.Request.Query["status"].ToString();
+
+    var isReturnPage =
+        currentController == "Order" &&
+        currentStatusFilter == "Yêu cầu đổi trả";
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - EMUA Nhân viên</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/admin/admin-layout.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/staff/staff.css" asp-append-version="true" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/admin/admin-layout.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/staff/staff.css"
+          asp-append-version="true" />
+
+    <style>
+        /* =========================================
+                            EMUA STAFF - EMERGENCY SIDEBAR
+                   ========================================= */
+
+        .staff-sidebar .staff-emergency {
+            margin: 12px 12px 20px;
+            padding: 10px;
+            border: 1px solid rgba(239, 68, 68, .24);
+            border-radius: 12px;
+            background: rgba(239, 68, 68, .075);
+        }
+
+        .staff-emergency-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 5px 10px;
+            color: #f87171;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .8px;
+        }
+
+            .staff-emergency-heading i {
+                font-size: 15px;
+            }
+
+        .staff-emergency-link {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 9px 10px !important;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            color: #b91c1c !important;
+            background: rgba(255, 255, 255, .75);
+            text-decoration: none;
+            transition: background .2s ease, border-color .2s ease, transform .2s ease;
+        }
+
+            .staff-emergency-link > i {
+                flex-shrink: 0;
+                font-size: 19px;
+                color: #dc2626;
+            }
+
+            .staff-emergency-link:hover {
+                background: #fff;
+                border-color: #fecaca;
+                transform: translateY(-1px);
+            }
+
+            .staff-emergency-link.active {
+                background: #fee2e2 !important;
+                border-color: #fca5a5;
+                color: #991b1b !important;
+                box-shadow: inset 3px 0 #dc2626;
+            }
+
+        .staff-emergency-text {
+            display: flex;
+            flex: 1;
+            min-width: 0;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden; /* Đã fix lỗi tràn chữ đè lên nhau */
+        }
+
+            .staff-emergency-text strong {
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1.3;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .staff-emergency-text small {
+                color: #a16262;
+                font-size: 10px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+        .staff-emergency-link .return-badge-pulse {
+            flex-shrink: 0;
+            min-width: 23px;
+            padding: 3px 7px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 20px;
+            color: #fff;
+            background: #dc2626;
+            animation: none;
+        }
+
+        /* =========================================
+                            HEADER NOTIFICATION
+                   ========================================= */
+
+        .staff-notification {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 11px;
+            color: #475569;
+            background: #fff;
+            text-decoration: none;
+            transition: background .2s ease, color .2s ease, border-color .2s ease;
+        }
+
+            .staff-notification > i {
+                font-size: 19px;
+            }
+
+            .staff-notification:hover {
+                color: #dc2626;
+                border-color: #fecaca;
+                background: #fff5f5;
+            }
+
+        .staff-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            border-radius: 20px;
+            background: #dc2626;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        /* =========================================
+                            COLLAPSED SIDEBAR
+                   ========================================= */
+
+        body.admin-sidebar-collapsed
+        .staff-emergency {
+            margin-left: 10px;
+            margin-right: 10px;
+            padding: 6px;
+        }
+
+        body.admin-sidebar-collapsed
+        .staff-emergency-heading,
+        body.admin-sidebar-collapsed
+        .staff-emergency-text {
+            display: none;
+        }
+
+        body.admin-sidebar-collapsed
+        .staff-emergency-link {
+            justify-content: center;
+            padding: 10px 4px !important;
+        }
+
+            body.admin-sidebar-collapsed
+            .staff-emergency-link .return-badge-pulse {
+                position: absolute;
+                transform: translate(12px, -12px);
+            }
+
+        @@media (max-width: 850px) {
+            .staff-sidebar .staff-emergency {
+                margin-top: 12px;
+            }
+
+            .staff-emergency-link {
+                min-height: 50px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .staff-emergency-link {
+                transition: none;
+            }
+        }
+    </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body>
-<div class="admin-shell">
-    <div class="admin-sidebar-backdrop" id="staffSidebarBackdrop"></div>
-    <aside class="admin-sidebar staff-sidebar" id="staffSidebar">
-        <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index" class="admin-logo">
-            <span class="admin-logo-text"><strong>EMUA</strong><small>Nhân viên</small></span><span class="admin-logo-mini">EM</span>
-        </a>
-        <nav class="admin-nav">
-            <span class="admin-nav-label">Công việc</span>
-            <a class="@(controller == "Dashboard" ? "active" : "")" asp-area="Staff" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
-            <span class="admin-nav-label">Quản lý bán hàng</span>
-            <a class="@(controller == "Product" ? "active" : "")" asp-area="Staff" asp-controller="Product" asp-action="Index"><i class="bi bi-box-seam"></i><span>Sản phẩm</span></a>
-            <a class="@(controller == "Order" ? "active" : "")" asp-area="Staff" asp-controller="Order" asp-action="Index"><i class="bi bi-receipt"></i><span>Đơn hàng</span></a>
-            <a class="@(controller == "Promotion" ? "active" : "")" asp-area="Staff" asp-controller="Promotion" asp-action="Index"><i class="bi bi-ticket-perforated"></i><span>Khuyến mãi</span></a>
-            <a class="@(controller == "Invoice" ? "active" : "")" asp-area="Staff" asp-controller="Invoice" asp-action="Index"><i class="bi bi-file-earmark-text"></i><span>Hóa đơn</span></a>
-            <a class="@(controller == "Report" ? "active" : "")" asp-area="Staff" asp-controller="Report" asp-action="Index"><i class="bi bi-bar-chart"></i><span>Báo cáo thống kê</span></a>
-            <span class="admin-nav-label">Tài khoản</span>
-            <a class="@(controller == "Profile" ? "active" : "")" asp-area="Staff" asp-controller="Profile" asp-action="Index"><i class="bi bi-gear"></i><span>Cài đặt</span></a>
-        </nav>
-        <div class="admin-sidebar-bottom">
-            <a asp-area="" asp-controller="Home" asp-action="Index" class="admin-bottom-link" title="Trang chủ"><i class="bi bi-house-door"></i><span>Trang chủ</span></a>
-            <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit" class="admin-bottom-link logout"><i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span></button></form>
-        </div>
-    </aside>
-    <main class="admin-main"><header class="admin-header"><div class="admin-header-left"><button type="button" class="admin-menu-toggle" id="staffMenuToggle" aria-label="Mở menu"><i class="bi bi-list"></i></button><div><h1>@ViewData["Title"]</h1><p>EMUA Nhân viên — @DateTime.Now.ToString("dd/MM/yyyy")</p></div></div><div class="admin-user" title="@name"><div class="admin-avatar">@letter</div><span class="staff-user-name">@name</span></div></header>
-        <section class="admin-content">@if (TempData["Success"] is string message) { <div class="alert alert-success staff-alert">@message</div> } @RenderBody()</section>
-    </main>
-</div>
-<script>
-const side=document.getElementById('staffSidebar'), back=document.getElementById('staffSidebarBackdrop');
-document.getElementById('staffMenuToggle')?.addEventListener('click',()=>{side.classList.toggle('is-open');back.classList.toggle('is-visible')});
-back?.addEventListener('click',()=>{side.classList.remove('is-open');back.classList.remove('is-visible')});
-</script>
-@await RenderSectionAsync("Scripts", required: false)
-</body></html>
+    <div class="admin-shell staff-shell">
+
+        <!-- BACKDROP -->
+        <div class="admin-sidebar-backdrop"
+             id="staffSidebarBackdrop"></div>
+
+        <!-- =====================================
+             SIDEBAR
+        ====================================== -->
+        <aside class="admin-sidebar staff-sidebar"
+               id="staffSidebar">
+
+            <!-- LOGO -->
+            <a asp-area="Staff"
+               asp-controller="Dashboard"
+               asp-action="Index"
+               class="admin-logo"
+               title="EMUA Nhân viên">
+
+                <span class="admin-logo-text">
+                    <strong>EMUA</strong>
+                    <small>Nhân viên</small>
+                </span>
+
+                <span class="admin-logo-mini">EM</span>
+            </a>
+
+            <nav class="admin-nav">
+
+                <!-- TỔNG QUAN -->
+                <span class="admin-nav-label">Tổng quan</span>
+
+                <a class="@(currentController == "Dashboard" ? "active" : "")"
+                   data-tooltip="Tổng quan"
+                   asp-area="Staff"
+                   asp-controller="Dashboard"
+                   asp-action="Index">
+
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Tổng quan</span>
+                </a>
+
+                     <!-- QUẢN LÝ BÁN HÀNG -->
+                <span class="admin-nav-label">
+                    Quản lý bán hàng
+                </span>
+
+                <a class="@(currentController == "Product" ? "active" : "")"
+                   data-tooltip="Sản phẩm"
+                   asp-area="Staff"
+                   asp-controller="Product"
+                   asp-action="Index">
+
+                    <i class="bi bi-box-seam"></i>
+                    <span>Sản phẩm</span>
+                </a>
+
+                <a class="@(currentController == "Order" && !isReturnPage ? "active" : "")"
+                   data-tooltip="Đơn hàng"
+                   asp-area="Staff"
+                   asp-controller="Order"
+                   asp-action="Index">
+
+                    <i class="bi bi-receipt"></i>
+                    <span>Tất cả đơn hàng</span>
+                </a>
+
+                <a class="@(currentController == "Promotion" ? "active" : "")"
+                   data-tooltip="Khuyến mãi"
+                   asp-area="Staff"
+                   asp-controller="Promotion"
+                   asp-action="Index">
+
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Khuyến mãi</span>
+                </a>
+
+                <a class="@(currentController == "Invoice" ? "active" : "")"
+                   data-tooltip="Hóa đơn"
+                   asp-area="Staff"
+                   asp-controller="Invoice"
+                   asp-action="Index">
+
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Hóa đơn</span>
+                </a>
+
+                <a class="@(currentController == "Report" ? "active" : "")"
+                   data-tooltip="Báo cáo"
+                   asp-area="Staff"
+                   asp-controller="Report"
+                   asp-action="Index">
+
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Báo cáo thống kê</span>
+                </a>
+
+                <!-- TÀI KHOẢN -->
+                <span class="admin-nav-label">Tài khoản</span>
+
+                <a class="@(currentController == "Profile" ? "active" : "")"
+                   data-tooltip="Cài đặt"
+                   asp-area="Staff"
+                   asp-controller="Profile"
+                   asp-action="Index">
+
+                    <i class="bi bi-gear"></i>
+                    <span>Cài đặt</span>
+                </a>
+            </nav>
+
+            <!-- SIDEBAR BOTTOM -->
+            <div class="admin-sidebar-bottom">
+
+                <a asp-area=""
+                   asp-controller="Home"
+                   asp-action="Index"
+                   class="admin-bottom-link"
+                   data-tooltip="Xem website">
+
+                    <i class="bi bi-eye"></i>
+                    <span>Xem website</span>
+                </a>
+
+                <form asp-area=""
+                      asp-controller="Auth"
+                      asp-action="Logout"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="admin-bottom-link logout"
+                            data-tooltip="Đăng xuất">
+
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- =====================================
+             MAIN CONTENT
+        ====================================== -->
+        <main class="admin-main">
+
+            <!-- HEADER -->
+            <header class="admin-header">
+
+                <div class="admin-header-left">
+
+                    <button type="button"
+                            class="admin-menu-toggle"
+                            id="staffMenuToggle"
+                            aria-label="Thu gọn menu"
+                            aria-controls="staffSidebar"
+                            aria-expanded="true">
+
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <div>
+                        <h1>@ViewData["Title"]</h1>
+                        <p>
+                            EMUA Nhân viên —
+                            @DateTime.Now.ToString("dd/MM/yyyy")
+                        </p>
+                    </div>
+                </div>
+
+                <!-- HEADER ACTIONS -->
+                <div class="admin-header-actions staff-header-actions">
+
+                    <a asp-area=""
+                       asp-controller="Home"
+                       asp-action="Index"
+                       class="admin-header-link"
+                       title="Xem website">
+
+                        <i class="bi bi-house-door"></i>
+                        <span>Trang chủ</span>
+                    </a>
+
+                    <!-- THÔNG BÁO ĐỔI TRẢ -->
+                    <a asp-area="Staff"
+                       asp-controller="Order"
+                       asp-action="Index"
+                       asp-route-status="Yêu cầu đổi trả"
+                       class="staff-notification"
+                       title="Yêu cầu đổi trả đang chờ xử lý"
+                       aria-label="Thông báo đổi trả">
+
+                        <i class="bi bi-bell"></i>
+
+                        <span class="staff-notification-badge"
+                              id="headerReturnBadge"
+                              style="display:none;">0</span>
+                    </a>
+
+                    <!-- TÀI KHOẢN NHÂN VIÊN -->
+                    <div class="admin-user" title="@displayName">
+                        <div class="admin-avatar">
+                            @avatarLetter
+                        </div>
+
+                        <span class="staff-user-name">
+                            @displayName
+                        </span>
+
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <section class="admin-content staff-content">
+
+                @if (TempData["Success"] is string successMessage)
+                {
+                    <div class="alert alert-success staff-alert">
+                        @successMessage
+                    </div>
+                }
+
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <!-- =========================================
+         SCRIPTS
+    ========================================= -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* =====================================
+           SIDEBAR TOGGLE
+        ===================================== */
+
+        const sidebar = document.getElementById("staffSidebar");
+        const backdrop = document.getElementById("staffSidebarBackdrop");
+        const menuToggle = document.getElementById("staffMenuToggle");
+
+        const desktopBreakpoint = 850;
+        const sidebarStorageKey = "emua_staff_sidebar_collapsed";
+
+        function isMobile() {
+            return window.innerWidth <= desktopBreakpoint;
+        }
+
+        function closeMobileSidebar() {
+            sidebar?.classList.remove("is-open");
+            backdrop?.classList.remove("is-visible");
+            menuToggle?.setAttribute("aria-expanded", "false");
+        }
+
+        function updateDesktopSidebar() {
+            if (isMobile()) {
+                document.body.classList.remove(
+                    "admin-sidebar-collapsed"
+                );
+
+                closeMobileSidebar();
+                return;
+            }
+
+            const isCollapsed =
+                localStorage.getItem(sidebarStorageKey) === "true";
+
+            document.body.classList.toggle(
+                "admin-sidebar-collapsed",
+                isCollapsed
+            );
+
+            menuToggle?.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle?.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        }
+
+        menuToggle?.addEventListener("click", function () {
+            if (isMobile()) {
+                const isOpen = sidebar?.classList.toggle("is-open");
+
+                backdrop?.classList.toggle(
+                    "is-visible",
+                    !!isOpen
+                );
+
+                menuToggle.setAttribute(
+                    "aria-expanded",
+                    (!!isOpen).toString()
+                );
+
+                return;
+            }
+
+            const isCollapsed =
+                !document.body.classList.contains(
+                    "admin-sidebar-collapsed"
+                );
+
+            document.body.classList.toggle(
+                "admin-sidebar-collapsed",
+                isCollapsed
+            );
+
+            localStorage.setItem(
+                sidebarStorageKey,
+                isCollapsed.toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-expanded",
+                (!isCollapsed).toString()
+            );
+
+            menuToggle.setAttribute(
+                "aria-label",
+                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
+            );
+        });
+
+        backdrop?.addEventListener(
+            "click",
+            closeMobileSidebar
+        );
+
+        // Đóng menu khi chọn liên kết trên điện thoại
+        sidebar?.querySelectorAll("nav a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (isMobile()) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+
+        window.addEventListener("resize", updateDesktopSidebar);
+
+        updateDesktopSidebar();
+
+        /* =====================================
+           ĐẾM ĐƠN ĐỔI TRẢ
+        ===================================== */
+
+        async function fetchReturnCount() {
+            try {
+                const response = await fetch(
+                    '/Staff/Order/GetPendingReturnCount',
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        cache: 'no-store'
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Không thể lấy số lượng đơn đổi trả: " +
+                        response.status
+                    );
+                }
+
+                const data = await response.json();
+
+                const rawCount = Number(data.count);
+
+                if (!Number.isFinite(rawCount)) {
+                    throw new Error("Số lượng đơn trả về không hợp lệ");
+                }
+
+                const count = Math.max(
+                    0,
+                    Math.floor(rawCount)
+                );
+
+                const emergencySection =
+                    document.getElementById(
+                        'staffEmergencySection'
+                    );
+
+                const sidebarBadge =
+                    document.getElementById(
+                        'sidebarReturnCount'
+                    );
+
+                const headerBadge =
+                    document.getElementById(
+                        'headerReturnBadge'
+                    );
+
+                // Ẩn toàn bộ mục khẩn cấp nếu không có đơn
+                if (emergencySection) {
+                    emergencySection.style.display =
+                        count > 0 ? '' : 'none';
+                }
+
+                // Cập nhật badge Sidebar
+                if (sidebarBadge) {
+                    sidebarBadge.textContent =
+                        count > 99 ? '99+' : count.toString();
+
+                    sidebarBadge.style.display =
+                        count > 0 ? 'inline-block' : 'none';
+                }
+
+                // Cập nhật badge Header
+                if (headerBadge) {
+                    headerBadge.textContent =
+                        count > 99 ? '99+' : count.toString();
+
+                    headerBadge.style.display =
+                        count > 0 ? 'flex' : 'none';
+                }
+
+            } catch (err) {
+                console.error(
+                    "Lỗi lấy số lượng đơn đổi trả:",
+                    err
+                );
+            }
+        }
+
+        // Kiểm tra ngay khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchReturnCount();
+
+            // Cập nhật mỗi 10 giây
+            setInterval(fetchReturnCount, 10000);
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

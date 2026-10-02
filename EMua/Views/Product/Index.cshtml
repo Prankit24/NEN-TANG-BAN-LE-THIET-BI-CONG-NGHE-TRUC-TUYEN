@@ -1,57 +1,289 @@
-@model EMua.ViewModels.ProductListViewModel
+﻿@model IEnumerable<EMua.Models.Database.SanPham>
+
 @{
     ViewData["Title"] = "Sản phẩm";
-}
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4">
-    <div class="customer-heading">
-        <div><span class="eyebrow">EMUA STORE</span>
-            <h1>Sản phẩm công nghệ</h1>
-            <p>Tìm kiếm thiết bị phù hợp cho công việc và giải trí.</p>
-        </div>
-        <form method="get" class="catalog-tools"><input name="keyword" value="@Model.Keyword"
-                                                            placeholder="Tìm sản phẩm..." /><select name="sort" onchange="this.form.submit()">
-            <option value="">Mới nhất</option>
-            <option value="price-asc" selected="@(Model.Sort == "price-asc")">Giá thấp đến cao</option>
-            <option value="price-desc" selected="@(Model.Sort == "price-desc")">Giá cao đến thấp</option>
-            <option value="name" selected="@(Model.Sort == "name")">Tên A-Z</option>
-        </select><select name="favoritesOnly" onchange="this.form.submit()"><option value="false">Tất cả sản phẩm</option><option value="true" selected="@Model.FavoritesOnly">Yêu thích</option></select><button class="customer-button" type="submit"><i class="bi bi-search"></i></button></form>
-    </div>
-    @if (TempData["Success"] != null) { <div class="customer-alert success">@TempData["Success"]</div> }
-    @if (Model.FavoritesOnly && !User.Identity!.IsAuthenticated) { <div class="customer-alert error">Vui lòng đăng nhập để xem sản phẩm yêu thích.</div> }
-    <div class="product-grid">
-        @foreach (var product in Model.Products)
-        {
-            <article class="product-card"><a asp-action="Details" asp-route-id="@product.ProductId"
-                                             class="product-image">@if (!string.IsNullOrWhiteSpace(product.ImageUrl)) {
-                <img src="@product.ImageUrl" alt="@product.Name" />
-            } else
-            {
 
-                <i class="bi bi-image"></i>
-            }
-        </a>
-        <div class="product-card-body"><small>@product.Brand</small>
-            <h2><a asp-action="Details" asp-route-id="@product.ProductId">@product.Name</a></h2>
-            <strong>@product.Price.ToString("N0") đ</strong><span class="stock">@(product.Stock > 0 ? $"Còn         {product.Stock} sản phẩm" : "Tạm hết hàng")</span>
-            <div class="product-card-actions">
-                <form asp-controller="Cart" asp-action="Add" method="post">@Html.AntiForgeryToken()<input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><input
-                    type="hidden" name="variantId" value="@product.DefaultVariantId" /><input type="hidden"
-                                                                                              name="productId" value="@product.ProductId" /><button class="customer-button" type="submit"
-                                                                          disabled="@(product.Stock == 0)"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button></form>
-                    <form asp-controller="Product" asp-action="Favorite" method="post">@Html.AntiForgeryToken()<input
-                        type="hidden" name="productId" value="@product.ProductId" /><button class="icon-button"
-                                                                                            type="submit" title="Yêu thích"><i class="bi @(product.IsFavorite ? "bi-heart-fill" : "bi-heart")"></i></button></form>
-                          </div>
+    string? currentCategory = ViewBag.Category as string;
+    string? currentKeyword = ViewBag.Keyword as string;
+    string? currentSort = ViewBag.Sort as string;
+}
+
+<link rel="stylesheet" href="~/css/customer/product-index.css" asp-append-version="true" />
+
+@Html.AntiForgeryToken()
+
+<section class="emua-product-page">
+    <div class="emua-product-container">
+
+        <!-- =========================
+             HEADING
+        ========================== -->
+        <div class="emua-product-heading">
+            <div>
+                <span class="emua-product-label">EMUA STORE</span>
+                <h1>Sản phẩm</h1>
+
+                @if (!string.IsNullOrWhiteSpace(currentKeyword))
+                {
+                    <p>Kết quả tìm kiếm cho: <strong>@currentKeyword</strong></p>
+                }
+                else if (!string.IsNullOrWhiteSpace(currentCategory))
+                {
+                    <p>Danh mục: <strong>@currentCategory</strong></p>
+                }
+                else
+                {
+                    <p>Khám phá các sản phẩm công nghệ tại EMUA.</p>
+                }
+            </div>
+
+            <div class="emua-product-count">
+                <i class="bi bi-box-seam"></i>
+                @Model.Count() sản phẩm
+            </div>
+        </div>
+
+        <!-- =========================
+             FILTER
+        ========================== -->
+        <div class="emua-filter-bar">
+            <!-- SEARCH -->
+            <form asp-controller="Product" asp-action="Index" method="get" class="emua-product-search">
+                @if (!string.IsNullOrWhiteSpace(currentCategory))
+                {
+                    <input type="hidden" name="category" value="@currentCategory" />
+                }
+                @if (!string.IsNullOrWhiteSpace(currentSort))
+                {
+                    <input type="hidden" name="sort" value="@currentSort" />
+                }
+
+                <div class="emua-search-input">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="keyword" value="@currentKeyword" placeholder="Tìm iPhone, laptop, tai nghe..." />
                 </div>
-            </article>
+
+                <button type="submit">Tìm kiếm</button>
+            </form>
+
+            <!-- SORT -->
+            <form asp-controller="Product" asp-action="Index" method="get" class="emua-sort-form">
+                @if (!string.IsNullOrWhiteSpace(currentCategory))
+                {
+                    <input type="hidden" name="category" value="@currentCategory" />
+                }
+                @if (!string.IsNullOrWhiteSpace(currentKeyword))
+                {
+                    <input type="hidden" name="keyword" value="@currentKeyword" />
+                }
+
+                <select name="sort" onchange="this.form.submit()">
+                    <option value="" selected="@(string.IsNullOrWhiteSpace(currentSort))">Mới nhất</option>
+                    <option value="price-asc" selected="@(currentSort == "price-asc")">Giá thấp → cao</option>
+                    <option value="price-desc" selected="@(currentSort == "price-desc")">Giá cao → thấp</option>
+                    <option value="name-asc" selected="@(currentSort == "name-asc")">Tên A → Z</option>
+                    <option value="name-desc" selected="@(currentSort == "name-desc")">Tên Z → A</option>
+                </select>
+            </form>
+        </div>
+
+        <!-- =========================
+             EMPTY
+        ========================== -->
+        @if (!Model.Any())
+        {
+            <div class="emua-empty-product">
+                <div class="emua-empty-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h3>Không tìm thấy sản phẩm</h3>
+                <p>Hãy thử đổi từ khóa hoặc chọn một danh mục khác.</p>
+                <a asp-controller="Product" asp-action="Index">
+                    <i class="bi bi-arrow-left"></i>
+                    Xem tất cả sản phẩm
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- =========================
+                 PRODUCT GRID
+            ========================== -->
+            <div class="emua-product-grid">
+                @foreach (var item in Model)
+                {
+                    var variant = item.BienTheSanPhams
+                    .Where(x => x.SoLuong > 0 && (string.IsNullOrEmpty(x.TrangThai) || x.TrangThai == "Còn hàng"))
+                    .OrderBy(x => x.Gia)
+                    .FirstOrDefault();
+
+                    variant ??= item.BienTheSanPhams
+                    .Where(x => x.SoLuong > 0)
+                    .OrderBy(x => x.Gia)
+                    .FirstOrDefault();
+
+                    var mainImage = item.SanPhamHinhAnhs
+                    .OrderByDescending(x => x.LaAnhChinh)
+                    .ThenBy(x => x.ThuTu)
+                    .FirstOrDefault();
+
+                    var image = mainImage?.DuongDanAnh ?? variant?.HinhAnh ?? "/images/no-image.png";
+                    var price = variant?.Gia ?? item.GiaGoc ?? 0;
+
+                    <article class="emua-product-card">
+                        <!-- IMAGE -->
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-product-image">
+                            <img src="@image" alt="@item.TenSanPham" loading="lazy" />
+                        </a>
+
+                        <!-- BODY -->
+                        <div class="emua-product-body">
+                            <!-- BRAND -->
+                            <div class="emua-product-brand">
+                                @(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")
+                            </div>
+
+                            <!-- NAME -->
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-product-name">
+                                @item.TenSanPham
+                            </a>
+
+                            <!-- VARIANT -->
+                            <div class="emua-product-variant">
+                                @if (variant != null)
+                                {
+                                    @if (!string.IsNullOrWhiteSpace(variant.PhienBan))
+                                    {
+                                        <span>@variant.PhienBan</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(variant.MauSac))
+                                    {
+                                        <span>@variant.MauSac</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>Mặc định</span>
+                                }
+                            </div>
+
+                            <!-- PRICE (CHỮ đ RÕ RÀNG VÀ BẰNG KÍCH THƯỚC CHỮ SỐ) -->
+                            <div class="emua-product-price">
+                                @price.ToString("N0") <span class="emua-currency">đ</span>
+                            </div>
+
+                            <!-- STOCK -->
+                            @if (variant != null && variant.SoLuong > 0)
+                            {
+                                <div class="emua-stock in-stock">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Còn hàng
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="emua-stock out-stock">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    Hết hàng
+                                </div>
+                            }
+
+                            <!-- ACTION -->
+                            <div class="emua-product-actions">
+                                <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-detail-btn">
+                                    Xem chi tiết
+                                </a>
+
+                                @if (variant != null && variant.SoLuong > 0)
+                                {
+                                    <button type="button" class="emua-cart-btn" onclick="addProductToCart(this, @variant.MaBienThe)" title="Thêm vào giỏ hàng">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="emua-cart-btn disabled" disabled>
+                                        <i class="bi bi-cart-x"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
         }
     </div>
-    @if (Model.Products.Count == 0)
-    {
-        <div class="empty-state"><i class="bi bi-search"></i>
-            <h2>Không tìm thấy sản phẩm</h2>
-            <p>Thử một từ khóa hoặc bộ lọc khác.</p>
-        </div>
-    }
-</div>
+</section>
+
+@section Scripts {
+    <script>
+        async function addProductToCart(button, variantId) {
+            if (!window.EMUA_IS_AUTHENTICATED) {
+                window.addToGuestCart(variantId, 1);
+                if (typeof showCartAddedFeedback === 'function') showCartAddedFeedback();
+                return;
+            }
+
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+
+            if (!tokenInput) {
+                console.error('Không tìm thấy AntiForgeryToken.');
+                alert('Không tìm thấy mã bảo mật của trang.');
+                return;
+            }
+
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const response = await fetch('/Cart/Add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': tokenInput.value
+                    },
+                    body: JSON.stringify({
+                        variantId: variantId,
+                        quantity: 1
+                    })
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+                    return;
+                }
+
+                let result = null;
+                const contentType = response.headers.get('content-type');
+
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                }
+
+                if (!response.ok) {
+                    console.error('Cart Add Error:', result);
+                    alert(result?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+                    return;
+                }
+
+                if (typeof showCartAddedFeedback === 'function') {
+                    showCartAddedFeedback();
+                }
+
+                const newCount = result?.count ?? result?.cartCount ?? result?.totalQuantity;
+                if (newCount !== undefined && typeof setGlobalCartCount === 'function') {
+                    setGlobalCartCount(newCount, false);
+                }
+            }
+            catch (error) {
+                console.error('Add cart exception:', error);
+                alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.');
+            }
+            finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+    </script>
+}

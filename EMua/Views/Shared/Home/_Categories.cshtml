@@ -1,130 +1,221 @@
-<section class="home-categories">
-
-    <div class="emua-container">
-
-        
-
-        <a href="#" class="sale-banner">
-
-            <img src="~/images/banner/super-sale.jpg"
-                 alt="EMUA Siêu Sale" />
-
-        </a>
+﻿@model IEnumerable<EMua.Models.Database.DanhMucSanPham>
 
 
-        
+<section class="emua-category-section"
+         id="categories">
 
-        <div class="deal-header">
+    <div class="emua-category-container">
 
-            <h2>Khám phá deal hời</h2>
+        <div class="emua-category-heading">
 
-            <a href="#">
-                Xem tất cả
-                <i class="bi bi-arrow-right"></i>
-            </a>
+            <span>
+                DANH MỤC
+            </span>
+
+            <h2>
+                Bạn đang tìm gì?
+            </h2>
+
+            <p>
+                Khám phá các nhóm sản phẩm công nghệ tại EMUA.
+            </p>
 
         </div>
 
 
-        <div class="deal-categories">
+        <div class="emua-category-grid">
 
-            
-            <a href="#" class="deal-category-item">
+            @foreach (var item in Model)
+            {
+                var icon = "bi-grid";
 
-                <div class="deal-category-circle deal-hot">
-                    <i class="bi bi-fire"></i>
-                </div>
-
-                <span>Deal hot</span>
-
-            </a>
+                var name =
+                item.TenDanhMuc?.ToLower()
+                ?? "";
 
 
-            
-            <a href="#" class="deal-category-item">
-
-                <div class="deal-category-circle">
-                    <i class="bi bi-apple"></i>
-                </div>
-
-                <span>Apple</span>
-
-            </a>
-
-
-            
-            <a href="#" class="deal-category-item">
-
-                <div class="deal-category-circle">
-                    <i class="bi bi-mortarboard"></i>
-                </div>
-
-                <span>Deal sinh viên</span>
-
-            </a>
-
-
-            
-            <a href="#" class="deal-category-item">
-
-                <div class="deal-category-circle">
-                    <i class="bi bi-laptop"></i>
-                </div>
-
-                <span>Laptop</span>
-
-            </a>
+                if (name.Contains("điện thoại"))
+                {
+                    icon = "bi-phone";
+                }
+                else if (name.Contains("laptop"))
+                {
+                    icon = "bi-laptop";
+                }
+                else if (name.Contains("gaming"))
+                {
+                    icon = "bi-controller";
+                }
+                else if (name.Contains("tai nghe") ||
+                name.Contains("âm thanh"))
+                {
+                    icon = "bi-headphones";
+                }
+                else if (name.Contains("phụ kiện"))
+                {
+                    icon = "bi-usb-plug";
+                }
+                else if (name.Contains("tablet"))
+                {
+                    icon = "bi-tablet";
+                }
+                else if (name.Contains("màn hình"))
+                {
+                    icon = "bi-display";
+                }
 
 
-            
-            <a href="#" class="deal-category-item">
+                <a href="#"
+                   class="emua-category-card">
 
-                <div class="deal-category-circle">
-                    <i class="bi bi-phone"></i>
-                </div>
+                    <div class="emua-category-icon">
 
-                <span>Điện thoại</span>
+                        <i class="bi @icon"></i>
 
-            </a>
+                    </div>
 
+                    <strong>
+                        @item.TenDanhMuc
+                    </strong>
 
-            
-            <a href="#" class="deal-category-item">
+                    @if (!string.IsNullOrWhiteSpace(item.MoTa))
+                    {
+                        <small>
+                            @item.MoTa
+                        </small>
+                    }
 
-                <div class="deal-category-circle">
-                    <i class="bi bi-controller"></i>
-                </div>
-
-                <span>Gaming</span>
-
-            </a>
-
-
-            
-            <a href="#" class="deal-category-item">
-
-                <div class="deal-category-circle">
-                    <i class="bi bi-headphones"></i>
-                </div>
-
-                <span>Âm thanh</span>
-
-            </a>
-
-
-            
-            <a href="#" class="deal-category-item">
-
-                <div class="deal-category-circle">
-                    <i class="bi bi-smartwatch"></i>
-                </div>
-
-                <span>Thiết bị thông minh</span>
-
-            </a>
+                </a>
+            }
 
         </div>
 
     </div>
 
 </section>
+
+
+<style>
+
+    .emua-category-section {
+        padding: 70px 0;
+        background: linear-gradient( 180deg, #f8f8fc, #f0f0f8 );
+    }
+
+
+    .emua-category-container {
+        width: min(1400px,92%);
+        margin: auto;
+    }
+
+
+    .emua-category-heading {
+        margin-bottom: 28px;
+    }
+
+
+        .emua-category-heading > span {
+            display: block;
+            margin-bottom: 7px;
+            color: #5d59ad;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+
+        .emua-category-heading h2 {
+            margin: 0;
+            color: #17172a;
+            font-size: 30px;
+            font-weight: 730;
+        }
+
+
+        .emua-category-heading p {
+            margin: 8px 0 0;
+            color: #77788d;
+            font-size: 14px;
+        }
+
+
+    .emua-category-grid {
+        display: grid;
+        grid-template-columns: repeat(6,1fr);
+        gap: 15px;
+    }
+
+
+    .emua-category-card {
+        min-height: 160px;
+        padding: 20px 13px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        text-decoration: none;
+        color: #202030;
+        border-radius: 19px;
+        border: 1px solid rgba(77,74,141,.09);
+        background: rgba(255,255,255,.9);
+        box-shadow: 0 5px 18px rgba(50,47,100,.035);
+        transition: .3s;
+    }
+
+
+        .emua-category-card:hover {
+            color: #202030;
+            transform: translateY(-6px);
+            border-color: rgba(91,140,255,.3);
+            box-shadow: 0 17px 40px rgba(76,71,140,.12);
+        }
+
+
+    .emua-category-icon {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 14px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5752a4;
+        font-size: 27px;
+        background: linear-gradient( 135deg, #eeedff, #e4ecff );
+    }
+
+
+    .emua-category-card strong {
+        font-size: 14px;
+    }
+
+
+    .emua-category-card small {
+        display: -webkit-box;
+        margin-top: 5px;
+        overflow: hidden;
+        color: #9696a6;
+        font-size: 10px;
+        line-height: 1.4;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+
+    @@media(max-width:1000px) {
+
+        .emua-category-grid {
+            grid-template-columns: repeat(3,1fr);
+        }
+    }
+
+
+    @@media(max-width:600px) {
+
+        .emua-category-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+</style>

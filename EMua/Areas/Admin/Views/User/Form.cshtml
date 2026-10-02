@@ -1,0 +1,106 @@
+﻿@model EMua.Models.Database.NguoiDung
+@{
+    bool isEdit = ViewBag.IsEdit;
+    bool isSelf = ViewBag.IsSelf ?? false;
+    ViewData["Title"] = isEdit ? "Sửa tài khoản người dùng" : "Thêm tài khoản người dùng";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
+}
+
+<div class="users-page container-fluid py-4 px-lg-4">
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"><i class="bi bi-arrow-left"></i></a>
+        <h1 class="h5 fw-bold mb-0 text-dark">@(isEdit ? "Sửa tài khoản người dùng" : "Thêm tài khoản người dùng")</h1>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
+            <ul class="mb-0 ps-3">
+                @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@err.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (isSelf)
+    {
+        <div class="alert alert-warning rounded-4 border-0 shadow-sm mb-4 d-flex align-items-center">
+            <i class="bi bi-info-circle-fill fs-5 me-2"></i>
+            <div>Đây là tài khoản đang đăng nhập của bạn. Bạn không thể tự đổi phân quyền hoặc tự khóa tài khoản này.</div>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-lg-5 bg-white" style="max-width: 680px;">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            @if (isEdit)
+            {
+                <input type="hidden" asp-for="MaNguoiDung" />
+            }
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary">Họ và tên</label>
+                <input asp-for="TenNguoiDung" class="form-control bg-light rounded-3 py-2 border-0" placeholder="Nguyễn Văn A" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary">Email <span class="text-danger">*</span></label>
+                    <input asp-for="Email" type="email" class="form-control bg-light rounded-3 py-2 border-0" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary">Số điện thoại</label>
+                    <input asp-for="SoDienThoai" class="form-control bg-light rounded-3 py-2 border-0" placeholder="0912345678" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary">Tên đăng nhập <span class="text-danger">*</span></label>
+                    <input asp-for="TenDangNhap" class="form-control bg-light rounded-3 py-2 border-0" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary">
+                        Mật khẩu @(isEdit ? "(để trống nếu không đổi)" : "")
+                    </label>
+                    <input name="passwordPlain" type="password" class="form-control bg-light rounded-3 py-2 border-0" placeholder="••••••••" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary">Phân quyền</label>
+                    <select asp-for="MaQuyen" asp-items="ViewBag.DanhSachQuyen" class="form-select bg-light rounded-3 py-2 border-0" disabled="@isSelf"></select>
+                    @if (isSelf)
+                    {
+                        <input type="hidden" asp-for="MaQuyen" />
+                        <div class="form-text text-warning small mt-1"><i class="bi bi-lock-fill"></i> Không thể tự đổi quyền của chính mình.</div>
+                    }
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-secondary d-block">Trạng thái tài khoản</label>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" role="switch" asp-for="TrangThai" disabled="@isSelf" style="width: 2.5em; height: 1.25em;" />
+                        <label class="form-check-label small fw-medium ms-1">Đang hoạt động</label>
+                        @if (isSelf)
+                        {
+                            <input type="hidden" asp-for="TrangThai" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Hủy</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 d-flex align-items-center gap-1">
+                    <i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo tài khoản")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

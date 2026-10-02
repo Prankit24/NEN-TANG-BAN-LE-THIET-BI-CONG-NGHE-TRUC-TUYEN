@@ -24,14 +24,27 @@ public class ProductCardViewModel
     public string? ImageUrl { get; set; }
 }
 
-public class ProductDetailsViewModel : ProductCardViewModel
+public class ProductDetailsViewModel
 {
+    public int ProductId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Category { get; set; }
+    public string? Brand { get; set; }
+    public decimal Price { get; set; }
+    public int Stock { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+
+    // BỘ SƯU TẬP ẢNH SẢN PHẨM DÀNH CHO TRANG CHI TIẾT
+    public List<string> ImageUrls { get; set; } = [];
+
+    public int DefaultVariantId { get; set; }
     public string? Description { get; set; }
     public string? Specifications { get; set; }
     public string? Warranty { get; set; }
+    public decimal AverageRating { get; set; }
+
     public List<ProductVariantViewModel> Variants { get; set; } = [];
     public List<ProductReviewViewModel> Reviews { get; set; } = [];
-    public decimal AverageRating { get; set; }
 }
 
 public class ProductVariantViewModel
@@ -43,11 +56,31 @@ public class ProductVariantViewModel
     public string? ImageUrl { get; set; }
 }
 
+public class ProductReviewViewModel
+{
+    public string CustomerName { get; set; } = string.Empty;
+    public int Rating { get; set; }
+    public string? Comment { get; set; }
+    public DateTime? CreatedAt { get; set; }
+}
+
 public class CartViewModel
 {
+    private const decimal StandardShippingFee = 30000m;
+    private const decimal FreeShippingThreshold = 500000m;
+
     public List<CartItemViewModel> Items { get; set; } = [];
     public int TotalQuantity => Items.Sum(x => x.Quantity);
-    public decimal Total => Items.Sum(x => x.LineTotal);
+    public int ItemCount => Items.Count;
+
+    public decimal Subtotal => Items.Sum(x => x.LineTotal);
+    public decimal ShippingFee => Subtotal <= 0 ? 0 : (Subtotal >= FreeShippingThreshold ? 0 : StandardShippingFee);
+
+    public string? CouponCode { get; set; }
+    public decimal Discount { get; set; }
+    public decimal FinalTotal => Math.Max(0m, Subtotal + ShippingFee - Discount);
+
+    public List<CouponOptionViewModel> AvailableCoupons { get; set; } = [];
 }
 
 public class CartItemViewModel
@@ -64,36 +97,15 @@ public class CartItemViewModel
     public decimal LineTotal => UnitPrice * Quantity;
 }
 
-public class CheckoutViewModel
+public class OrderDetailItemViewModel
 {
-    public List<CartItemViewModel> Items { get; set; } = [];
-    public List<CouponOptionViewModel> AvailableCoupons { get; set; } = [];
-    public decimal Subtotal => Items.Sum(x => x.LineTotal);
-    public decimal Discount { get; set; }
-    public string ShippingMethod { get; set; } = "STANDARD";
-    public decimal ShippingFee => ShippingMethod == "EXPRESS" ? 25000 : 0;
-    public decimal Total => Math.Max(0, Subtotal - Discount + ShippingFee);
-    public string? CouponCode { get; set; }
-
-    [Required(ErrorMessage = "Vui lòng nhập họ tên người nhận.")]
-    [StringLength(100)]
-    public string RecipientName { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [StringLength(15)]
-    public string RecipientPhone { get; set; } = string.Empty;
-
-    [Required(ErrorMessage = "Vui lòng nhập địa chỉ giao hàng.")]
-    [StringLength(255)]
-    public string ShippingAddress { get; set; } = string.Empty;
-
-    [StringLength(255)]
-    public string? Note { get; set; }
-
-    [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
-    public string PaymentMethod { get; set; } = "COD";
-
-    public string? PaymentProvider { get; set; }
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string VariantLabel { get; set; } = string.Empty;
+    public string? ProductImageUrl { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal LineTotal => UnitPrice * Quantity;
 }
 
 public class CouponOptionViewModel
@@ -108,9 +120,19 @@ public class OrderListItemViewModel
 {
     public int OrderId { get; set; }
     public DateTime? OrderedAt { get; set; }
-    public decimal Total { get; set; }
     public string Status { get; set; } = string.Empty;
-    public int ItemCount { get; set; }
+    public decimal Total { get; set; }
+    public List<OrderItemSummaryViewModel> Items { get; set; } = new();
+    public int ItemCount { get; internal set; }
+}
+
+public class OrderItemSummaryViewModel
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string ProductImageUrl { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal Price { get; set; }
 }
 
 public class OrderDetailsViewModel
@@ -126,6 +148,12 @@ public class OrderDetailsViewModel
     public string PaymentStatus { get; set; } = string.Empty;
     public List<CartItemViewModel> Items { get; set; } = [];
     public List<OrderStatusViewModel> StatusHistory { get; set; } = [];
+
+    public DateTime? EstimatedDeliveryDate { get; set; }
+    public string? DeliveryProofImageUrl { get; set; }
+
+    public bool IsOrderReviewed { get; set; }
+    public List<int> ReviewedProductIds { get; set; } = [];
 }
 
 public class OrderStatusViewModel
@@ -133,14 +161,6 @@ public class OrderStatusViewModel
     public string Status { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateTime Time { get; set; }
-}
-
-public class ProductReviewViewModel
-{
-    public string CustomerName { get; set; } = "Khách hàng";
-    public int Rating { get; set; }
-    public string? Comment { get; set; }
-    public DateTime? CreatedAt { get; set; }
 }
 
 public class ReviewCreateViewModel
@@ -159,6 +179,19 @@ public class ReviewCreateViewModel
 public class CheckoutSuccessViewModel
 {
     public int OrderId { get; set; }
-    public decimal Total { get; set; }
-    public bool IsPaid { get; set; }
+    public decimal TotalAmount { get; set; }
+    public decimal Total { get => TotalAmount; set => TotalAmount = value; }
+    public bool IsPaid => PaymentStatus == "Đã thanh toán";
+    public string PaymentMethod { get; set; } = "COD";
+    public string PaymentStatus { get; set; } = "Chưa thanh toán";
+
+    public string FullName { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+
+    public string? BankQrUrl { get; set; }
+    public string? MomoQrUrl { get; set; }
+    public string TransferContent { get; set; } = string.Empty;
+
+    public List<CheckoutItemViewModel> Items { get; set; } = [];
 }

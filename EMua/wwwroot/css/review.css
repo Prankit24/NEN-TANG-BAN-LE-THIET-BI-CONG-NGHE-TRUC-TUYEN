@@ -1,0 +1,29 @@
+﻿/* Star Rating Component */
+.star-rating-input {
+    direction: rtl;
+    display: inline-flex;
+    gap: 0.3rem;
+    padding: 4px 0;
+}
+
+    .star-rating-input input[type="radio"] {
+        display: none;
+    }
+
+    .star-rating-input label {
+        color: #d1d5db;
+        font-size: 1.8rem;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s ease, transform 0.15s ease;
+    }
+
+        .star-rating-input label:hover {
+            transform: scale(1.15);
+        }
+
+            .star-rating-input input[type="radio"]:checked ~ label,
+            .star-rating-input label:hover,
+            .star-rating-input label:hover ~ label {
+                color: #ffc107;
+            }

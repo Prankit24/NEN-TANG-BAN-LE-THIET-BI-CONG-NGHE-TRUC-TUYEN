@@ -1,0 +1,964 @@
+﻿
+/* =========================================================
+   EMUA - PAYMENT / CHECKOUT
+   File: wwwroot/css/payment.css
+
+   Dùng cho:
+   1. Checkout/Index.cshtml          - Bước 1
+   2. Checkout/Review.cshtml         - Bước 2
+   3. Checkout/Payment.cshtml        - Bước 3
+   4. Checkout/Success.cshtml        - Hoàn tất đơn hàng
+   5. Shared/_CheckoutSteps.cshtml   - Thanh tiến trình
+   ========================================================= */
+/* =========================================================
+   01. CHECKOUT PAGE
+   ========================================================= */
+.customer-page {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.customer-heading.compact {
+    margin-bottom: 28px;
+}
+
+.customer-heading .eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.customer-heading h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.customer-heading p {
+    margin: 7px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   02. CHECKOUT STEPS
+   Dùng cho _CheckoutSteps.cshtml
+   ========================================================= */
+
+.checkout-steps {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+/* Từng bước */
+
+.checkout-step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+    /* Số bước */
+
+    .checkout-step span {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        color: #9ca3af;
+        font-size: 14px;
+        font-weight: 700;
+        transition: all .2s ease;
+    }
+
+    /* Tên bước */
+
+    .checkout-step strong {
+        color: #9ca3af;
+        font-size: 14px;
+        font-weight: 600;
+        transition: color .2s ease;
+    }
+
+    /* Bước active */
+
+    .checkout-step.active span {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, .20);
+    }
+
+    .checkout-step.active strong {
+        color: #2563eb;
+    }
+
+/* Mũi tên */
+
+.checkout-steps > i {
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   03. MAIN CHECKOUT LAYOUT
+   ========================================================= */
+
+.checkout-review-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 25px;
+    align-items: start;
+}
+
+
+/* =========================================================
+   04. FORM PANEL
+   ========================================================= */
+
+.form-panel {
+    padding: 28px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, .04);
+}
+
+    .form-panel h2 {
+        margin: 0 0 18px;
+        color: #111827;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+        .form-panel h2:not(:first-child) {
+            margin-top: 30px;
+        }
+
+
+/* =========================================================
+   05. SUMMARY CARD
+   ========================================================= */
+
+.summary-card {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, .04);
+    position: sticky;
+    top: 20px;
+}
+
+    .summary-card h2 {
+        margin: 0 0 18px;
+        color: #111827;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+
+/* =========================================================
+   06. FORM INPUT
+   ========================================================= */
+
+.form-group {
+    width: 100%;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+    .form-label span {
+        color: #dc2626;
+    }
+
+.form-control {
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #111827;
+    background: #fff;
+    font-size: 14px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+        outline: none;
+    }
+
+textarea.form-control {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.text-danger {
+    display: block;
+    margin-top: 5px;
+    color: #dc2626 !important;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   07. RADIO BUTTON
+   ========================================================= */
+
+.form-check {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    margin-bottom: 8px;
+    padding: 10px 14px;
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+    .form-check:hover {
+        background: #f8fafc;
+        border-color: #bfdbfe;
+    }
+
+.form-check-input {
+    width: 17px;
+    height: 17px;
+    margin-top: 0;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+    .form-check-input:checked {
+        accent-color: #2563eb;
+    }
+
+.form-check-label {
+    width: 100%;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+    .form-check-label strong {
+        color: #111827;
+    }
+
+
+/* =========================================================
+   08. SUMMARY LINES
+   ========================================================= */
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 8px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+    .summary-line span {
+        flex: 1;
+    }
+
+    .summary-line strong {
+        color: #111827;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .summary-line.discount {
+        color: #16a34a;
+    }
+
+        .summary-line.discount strong {
+            color: #16a34a;
+        }
+
+.summary-card hr {
+    margin: 15px 0;
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+
+/* =========================================================
+   09. TOTAL
+   ========================================================= */
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+    .summary-total strong {
+        color: #dc2626;
+        font-size: 21px;
+        font-weight: 750;
+    }
+
+
+/* =========================================================
+   10. CONFIRMATION INFORMATION
+   ========================================================= */
+
+.confirmation-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 13px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+    .confirmation-line:last-child {
+        border-bottom: 0;
+    }
+
+    .confirmation-line > span {
+        flex: 0 0 150px;
+        color: #6b7280;
+    }
+
+    .confirmation-line > strong {
+        flex: 1;
+        color: #111827;
+        font-weight: 600;
+        text-align: right;
+        word-break: break-word;
+    }
+
+
+/* =========================================================
+   11. BUTTONS
+   ========================================================= */
+
+.customer-button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+    .customer-button:hover {
+        background: #1d4ed8;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, .18);
+    }
+
+    .customer-button:active {
+        transform: translateY(0);
+    }
+
+.customer-button-light {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+    .customer-button-light:hover {
+        background: #f9fafb;
+        color: #111827;
+        border-color: #9ca3af;
+        box-shadow: none;
+    }
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+}
+
+    .review-actions .customer-button {
+        flex: 1;
+    }
+
+.customer-button.w-100 {
+    width: 100%;
+}
+
+
+/* =========================================================
+   12. EMPTY CART
+   ========================================================= */
+
+.checkout-empty {
+    padding: 60px 25px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, .04);
+    text-align: center;
+}
+
+    .checkout-empty i {
+        color: #9ca3af !important;
+    }
+
+    .checkout-empty h3 {
+        margin-top: 15px;
+        color: #111827;
+        font-weight: 700;
+    }
+
+    .checkout-empty p {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+
+/* =========================================================
+   13. PAYMENT NOTICE
+   ========================================================= */
+
+.payment-notice {
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+    .payment-notice.alert-info {
+        background: #eff6ff;
+        color: #1e40af;
+    }
+
+    .payment-notice.alert-warning {
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+
+/* =========================================================
+   14. STEP 2 - PRODUCT LIST
+   ========================================================= */
+
+.form-panel .summary-line {
+    padding: 11px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+    .form-panel .summary-line:last-child {
+        border-bottom: 0;
+    }
+
+    .form-panel .summary-line span {
+        color: #4b5563;
+    }
+
+
+/* =========================================================
+   15. COUPON
+   ========================================================= */
+
+.summary-card input[name="CouponCode"] {
+    width: 100%;
+    min-height: 44px;
+}
+
+
+/* =========================================================
+   16. SUCCESS PAGE
+   ========================================================= */
+
+.checkout-success-container {
+    min-height: 70vh;
+    padding-bottom: 50px;
+}
+
+    .checkout-success-container > .d-flex {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .checkout-success-container .card {
+        overflow: hidden;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, .06) !important;
+    }
+
+    .checkout-success-container .card-header {
+        background: #fff;
+        border: 0;
+    }
+
+    .checkout-success-container .card-body {
+        background: #fff;
+    }
+
+    .checkout-success-container .card-header h3 {
+        margin-bottom: 8px;
+        color: #111827;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+   17. SUCCESS ORDER INFO
+   ========================================================= */
+
+    .checkout-success-container .bg-light {
+        background: #f8fafc !important;
+    }
+
+    .checkout-success-container .text-danger {
+        color: #dc2626 !important;
+    }
+
+    .checkout-success-container .text-success {
+        color: #16a34a !important;
+    }
+
+    .checkout-success-container .text-primary {
+        color: #2563eb !important;
+    }
+
+    .checkout-success-container .text-dark {
+        color: #111827 !important;
+    }
+
+    .checkout-success-container .text-muted {
+        color: #6b7280 !important;
+    }
+
+
+    /* =========================================================
+   18. COD SUCCESS
+   ========================================================= */
+
+    .checkout-success-container .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0 !important;
+        border-radius: 10px;
+    }
+
+        .checkout-success-container .alert-success h6 {
+            color: #166534;
+        }
+
+        .checkout-success-container .alert-success small {
+            color: #4b5563 !important;
+        }
+
+
+/* =========================================================
+   19. QR PAYMENT
+   ========================================================= */
+
+.qr-box {
+    padding: 24px;
+    background: #f8fafc !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 12px;
+}
+
+    .qr-box > h5 {
+        margin-bottom: 18px;
+        color: #111827;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .qr-box img {
+        display: block;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
+        object-fit: contain;
+    }
+
+    .qr-box .badge {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .qr-box .border {
+        border-color: #e5e7eb !important;
+    }
+
+    .qr-box .text-primary {
+        color: #2563eb !important;
+        font-weight: 700;
+    }
+
+    .qr-box .badge.bg-warning {
+        color: #92400e !important;
+    }
+
+
+/* =========================================================
+   20. SUCCESS BUTTONS
+   ========================================================= */
+
+.checkout-success-container .btn {
+    border-radius: 9px;
+    font-weight: 600;
+    transition: transform .2s ease, background .2s ease;
+}
+
+.checkout-success-container .btn-dark {
+    background: #111827;
+    border-color: #111827;
+}
+
+    .checkout-success-container .btn-dark:hover {
+        background: #000;
+        border-color: #000;
+        transform: translateY(-1px);
+    }
+
+.checkout-success-container .btn-outline-secondary:hover {
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   21. BADGES
+   ========================================================= */
+
+.checkout-success-container .badge.rounded-circle {
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkout-success-container .bg-success-subtle {
+    background: #dcfce7 !important;
+}
+
+.checkout-success-container .bg-primary-subtle {
+    background: #dbeafe !important;
+}
+
+
+/* =========================================================
+   22. RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .checkout-review-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        position: static;
+    }
+
+    .customer-heading h1 {
+        font-size: 27px;
+    }
+
+    .checkout-review-layout .summary-card {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
+   23. RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .customer-page {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    .customer-heading.compact {
+        margin-bottom: 20px;
+    }
+
+    .customer-heading h1 {
+        font-size: 23px;
+    }
+
+    .customer-heading p {
+        font-size: 13px;
+    }
+
+    .form-panel,
+    .summary-card {
+        padding: 18px;
+        border-radius: 11px;
+    }
+
+        .form-panel h2,
+        .summary-card h2 {
+            font-size: 17px;
+        }
+
+
+    /* Checkout steps */
+
+    .checkout-steps {
+        gap: 8px;
+        margin-bottom: 25px;
+    }
+
+    .checkout-step {
+        gap: 6px;
+    }
+
+        .checkout-step span {
+            width: 32px;
+            height: 32px;
+            font-size: 13px;
+        }
+
+        .checkout-step strong {
+            font-size: 12px;
+        }
+
+    .checkout-steps > i {
+        font-size: 12px;
+    }
+
+
+    /* Confirmation */
+
+    .confirmation-line {
+        display: block;
+    }
+
+        .confirmation-line > span {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .confirmation-line > strong {
+            display: block;
+            text-align: left;
+        }
+
+
+    /* Buttons */
+
+    .review-actions {
+        flex-direction: column;
+    }
+
+        .review-actions .customer-button {
+            width: 100%;
+        }
+
+
+    /* Summary */
+
+    .summary-total strong {
+        font-size: 18px;
+    }
+
+
+    /* Success page */
+
+    .checkout-success-container {
+        margin-top: 25px !important;
+    }
+
+        .checkout-success-container .card-header h3 {
+            font-size: 21px;
+        }
+
+        .checkout-success-container .card-body {
+            padding: 18px !important;
+        }
+
+        .checkout-success-container .bg-light .row {
+            gap: 12px;
+        }
+
+        .checkout-success-container .bg-light .col-6 {
+            width: 100%;
+            text-align: left !important;
+        }
+
+
+    /* QR */
+
+    .qr-box {
+        padding: 18px !important;
+    }
+
+        .qr-box img {
+            width: 200px;
+            height: 200px;
+        }
+
+        .qr-box .d-flex {
+            display: block !important;
+        }
+
+            .qr-box .d-flex > span:last-child {
+                display: block;
+                margin-top: 5px;
+            }
+}
+
+
+/* =========================================================
+   24. RESPONSIVE - SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .customer-heading h1 {
+        font-size: 21px;
+    }
+
+    .customer-heading p {
+        font-size: 12px;
+    }
+
+    .form-panel,
+    .summary-card {
+        padding: 15px;
+    }
+
+
+    /* Steps */
+
+    .checkout-steps {
+        gap: 5px;
+    }
+
+    .checkout-step {
+        gap: 0;
+    }
+
+        .checkout-step span {
+            width: 30px;
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .checkout-step strong {
+            display: none;
+        }
+
+    .checkout-steps > i {
+        margin: 0 2px;
+        font-size: 11px;
+    }
+
+
+    /* Form */
+
+    .form-check {
+        padding: 10px;
+    }
+
+
+    /* Summary */
+
+    .summary-line {
+        font-size: 13px;
+    }
+
+    .summary-total {
+        font-size: 14px;
+    }
+
+        .summary-total strong {
+            font-size: 17px;
+        }
+
+
+    /* Success */
+
+    .checkout-success-container .card-header {
+        padding-right: 15px !important;
+        padding-left: 15px !important;
+    }
+
+    .checkout-success-container .card-body {
+        padding: 15px !important;
+    }
+
+    .qr-box img {
+        width: 180px;
+        height: 180px;
+    }
+}
+
+
+/* =========================================================
+   25. PRINT
+   ========================================================= */
+
+@media print {
+
+    .checkout-steps,
+    .review-actions,
+    .customer-button,
+    .checkout-success-container .btn {
+        display: none !important;
+    }
+
+    .form-panel,
+    .summary-card,
+    .checkout-success-container .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .summary-card {
+        position: static;
+    }
+}
+

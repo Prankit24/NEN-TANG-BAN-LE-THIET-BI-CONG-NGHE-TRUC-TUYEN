@@ -1,0 +1,752 @@
+﻿@{
+    ViewData["Title"] = "Hệ Thống Cửa Hàng EMUA Toàn Quốc";
+}
+
+<link rel="stylesheet"
+      href="~/css/store.css"
+      asp-append-version="true" />
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<section class="store-page">
+
+    <div class="container">
+
+        <!-- =========================
+             HERO
+        ========================== -->
+
+        <div class="store-hero">
+
+            <div class="store-hero-content">
+
+                <div class="store-eyebrow">
+                    <i class="bi bi-shop-window"></i>
+                    HỆ THỐNG CỬA HÀNG EMUA
+                </div>
+
+                <h1>
+                    Hệ Thống Cửa Hàng
+                    <span>EMUA</span>
+                </h1>
+
+                <p>
+                    Khám phá hệ thống cửa hàng EMUA trên toàn quốc.
+                    Tìm cửa hàng gần bạn và trải nghiệm sản phẩm công nghệ
+                    trực tiếp tại showroom.
+                </p>
+
+                <div class="store-hero-stats">
+
+                    <div class="hero-stat">
+                        <strong>05</strong>
+                        <span>Cửa hàng</span>
+                    </div>
+
+                    <div class="hero-stat">
+                        <strong>02</strong>
+                        <span>Thành phố</span>
+                    </div>
+
+                    <div class="hero-stat">
+                        <strong>24/7</strong>
+                        <span>Hỗ trợ khách hàng</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="store-hero-decoration">
+
+                <div class="hero-circle circle-1"></div>
+                <div class="hero-circle circle-2"></div>
+
+                <i class="bi bi-geo-alt-fill hero-location-icon"></i>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             FILTER
+        ========================== -->
+
+        <div class="store-toolbar">
+
+            <div class="store-toolbar-title">
+
+                <span class="toolbar-icon">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </span>
+
+                <div>
+                    <strong>Tìm cửa hàng</strong>
+                    <small>Chọn khu vực bạn muốn tìm</small>
+                </div>
+
+            </div>
+
+
+            <div class="store-filter">
+
+                <button type="button"
+                        class="store-filter-btn active"
+                        onclick="filterCity('all', this)">
+
+                    <i class="bi bi-grid-fill"></i>
+
+                    <span>Tất cả</span>
+
+                    <b>05</b>
+
+                </button>
+
+
+                <button type="button"
+                        class="store-filter-btn"
+                        onclick="filterCity('danang', this)">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>Đà Nẵng</span>
+
+                    <b>04</b>
+
+                </button>
+
+
+                <button type="button"
+                        class="store-filter-btn"
+                        onclick="filterCity('hanoi', this)">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>Hà Nội</span>
+
+                    <b>01</b>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             MAIN
+        ========================== -->
+
+        <div class="store-layout">
+
+
+            <!-- =========================
+                 STORE LIST
+            ========================== -->
+
+            <div class="store-list-wrapper">
+
+                <div class="store-list-header">
+
+                    <div>
+
+                        <h3>
+                            Địa điểm cửa hàng
+                        </h3>
+
+                        <span>
+                            <i class="bi bi-check-circle-fill"></i>
+                            05 cửa hàng đang hoạt động
+                        </span>
+
+                    </div>
+
+                    <i class="bi bi-shop store-list-header-icon"></i>
+
+                </div>
+
+
+                <div class="store-list">
+
+
+                    <!-- STORE 01 -->
+
+                    <div class="store-item danang"
+                         onclick="focusStore(
+                            16.0601,
+                            108.2098,
+                            'EMUA - Nguyễn Văn Linh',
+                            '1020 Nguyễn Văn Linh, Q. Thanh Khê, Đà Nẵng'
+                         )">
+
+                        <div class="store-number">
+                            01
+                        </div>
+
+                        <div class="store-content">
+
+                            <div class="store-top">
+
+                                <span class="store-city danang-badge">
+                                    ĐÀ NẴNG
+                                </span>
+
+                                <span class="store-open">
+                                    <i></i>
+                                    Đang mở cửa
+                                </span>
+
+                            </div>
+
+                            <h4>
+                                EMUA - Nguyễn Văn Linh
+                            </h4>
+
+                            <div class="store-info">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+                                    1020 Nguyễn Văn Linh,
+                                    Q. Thanh Khê, Đà Nẵng
+                                </span>
+
+                            </div>
+
+                            <div class="store-bottom">
+
+                                <span>
+                                    <i class="bi bi-telephone-fill"></i>
+                                    1800 2005 (101)
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock-fill"></i>
+                                    08:00 - 22:00
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="store-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORE 02 -->
+
+                    <div class="store-item danang"
+                         onclick="focusStore(
+                            16.0752,
+                            108.1531,
+                            'EMUA - Nguyễn Lương Bằng',
+                            '540 Nguyễn Lương Bằng, Q. Liên Chiểu, Đà Nẵng'
+                         )">
+
+                        <div class="store-number">
+                            02
+                        </div>
+
+                        <div class="store-content">
+
+                            <div class="store-top">
+
+                                <span class="store-city danang-badge">
+                                    ĐÀ NẴNG
+                                </span>
+
+                                <span class="store-open">
+                                    <i></i>
+                                    Đang mở cửa
+                                </span>
+
+                            </div>
+
+                            <h4>
+                                EMUA - Nguyễn Lương Bằng
+                            </h4>
+
+                            <div class="store-info">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+                                    540 Nguyễn Lương Bằng,
+                                    Q. Liên Chiểu, Đà Nẵng
+                                </span>
+
+                            </div>
+
+                            <div class="store-bottom">
+
+                                <span>
+                                    <i class="bi bi-telephone-fill"></i>
+                                    1800 2005 (102)
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock-fill"></i>
+                                    08:00 - 22:00
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="store-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORE 03 -->
+
+                    <div class="store-item danang"
+                         onclick="focusStore(
+                            16.0689,
+                            108.2145,
+                            'EMUA - Tôn Thất Đạm',
+                            '65 Tôn Thất Đạm, Q. Thanh Khê, Đà Nẵng'
+                         )">
+
+                        <div class="store-number">
+                            03
+                        </div>
+
+                        <div class="store-content">
+
+                            <div class="store-top">
+
+                                <span class="store-city danang-badge">
+                                    ĐÀ NẴNG
+                                </span>
+
+                                <span class="store-open">
+                                    <i></i>
+                                    Đang mở cửa
+                                </span>
+
+                            </div>
+
+                            <h4>
+                                EMUA - Tôn Thất Đạm
+                            </h4>
+
+                            <div class="store-info">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+                                    65 Tôn Thất Đạm,
+                                    Q. Thanh Khê, Đà Nẵng
+                                </span>
+
+                            </div>
+
+                            <div class="store-bottom">
+
+                                <span>
+                                    <i class="bi bi-telephone-fill"></i>
+                                    1800 2005 (103)
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock-fill"></i>
+                                    08:00 - 22:00
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="store-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORE 04 -->
+
+                    <div class="store-item danang"
+                         onclick="focusStore(
+                            16.0825,
+                            108.1402,
+                            'EMUA - Ngô Xuân Thu',
+                            '76 Ngô Xuân Thu, Q. Liên Chiểu, Đà Nẵng'
+                         )">
+
+                        <div class="store-number">
+                            04
+                        </div>
+
+                        <div class="store-content">
+
+                            <div class="store-top">
+
+                                <span class="store-city danang-badge">
+                                    ĐÀ NẴNG
+                                </span>
+
+                                <span class="store-open">
+                                    <i></i>
+                                    Đang mở cửa
+                                </span>
+
+                            </div>
+
+                            <h4>
+                                EMUA - Ngô Xuân Thu
+                            </h4>
+
+                            <div class="store-info">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+                                    76 Ngô Xuân Thu,
+                                    Q. Liên Chiểu, Đà Nẵng
+                                </span>
+
+                            </div>
+
+                            <div class="store-bottom">
+
+                                <span>
+                                    <i class="bi bi-telephone-fill"></i>
+                                    1800 2005 (104)
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock-fill"></i>
+                                    08:00 - 22:00
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="store-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+
+                    </div>
+
+
+                    <!-- STORE 05 -->
+
+                    <div class="store-item hanoi"
+                         onclick="focusStore(
+                            21.0338,
+                            105.8342,
+                            'EMUA - Ba Đình',
+                            '13 Ba Đình, Q. Ba Đình, Hà Nội'
+                         )">
+
+                        <div class="store-number">
+                            05
+                        </div>
+
+                        <div class="store-content">
+
+                            <div class="store-top">
+
+                                <span class="store-city hanoi-badge">
+                                    HÀ NỘI
+                                </span>
+
+                                <span class="store-open">
+                                    <i></i>
+                                    Đang mở cửa
+                                </span>
+
+                            </div>
+
+                            <h4>
+                                EMUA - Ba Đình
+                            </h4>
+
+                            <div class="store-info">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <span>
+                                    13 Ba Đình,
+                                    Q. Ba Đình, Hà Nội
+                                </span>
+
+                            </div>
+
+                            <div class="store-bottom">
+
+                                <span>
+                                    <i class="bi bi-telephone-fill"></i>
+                                    1800 2005 (201)
+                                </span>
+
+                                <span>
+                                    <i class="bi bi-clock-fill"></i>
+                                    08:00 - 22:00
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="store-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 MAP
+            ========================== -->
+
+            <div class="store-map-card">
+
+                <div class="map-header">
+
+                    <div>
+
+                        <span class="map-label">
+
+                            <i class="bi bi-map-fill"></i>
+
+                            BẢN ĐỒ
+
+                        </span>
+
+                        <h3>
+                            Vị trí cửa hàng
+                        </h3>
+
+                    </div>
+
+                    <div class="map-status">
+
+                        <span></span>
+
+                        Live
+
+                    </div>
+
+                </div>
+
+
+                <div id="storeMap"></div>
+
+
+                <div class="map-footer">
+
+                    <div>
+
+                        <i class="bi bi-info-circle-fill"></i>
+
+                        Chọn cửa hàng để xem vị trí trên bản đồ
+
+                    </div>
+
+                    <span>
+
+                        <i class="bi bi-globe2"></i>
+
+                        OpenStreetMap
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<script>
+    // =====================================================
+    // DỮ LIỆU CỬA HÀNG
+    // =====================================================
+    var stores = [
+        {
+            lat: 21.0338,
+            lng: 105.8342,
+            title: "EMUA - Ba Đình",
+            address: "13 Ba Đình, Q. Ba Đình, Hà Nội",
+            city: "hanoi"
+        },
+        {
+            lat: 16.0825,
+            lng: 108.1402,
+            title: "EMUA - Ngô Xuân Thu",
+            address: "76 Ngô Xuân Thu, Q. Liên Chiểu, Đà Nẵng",
+            city: "danang"
+        },
+        {
+            lat: 16.0752,
+            lng: 108.1531,
+            title: "EMUA - Nguyễn Lương Bằng",
+            address: "540 Nguyễn Lương Bằng, Q. Liên Chiểu, Đà Nẵng",
+            city: "danang"
+        },
+        {
+            lat: 16.0689,
+            lng: 108.2145,
+            title: "EMUA - Tôn Thất Đạm",
+            address: "65 Tôn Thất Đạm, Q. Thanh Khê, Đà Nẵng",
+            city: "danang"
+        },
+        {
+            lat: 16.0601,
+            lng: 108.2098,
+            title: "EMUA - Nguyễn Văn Linh",
+            address: "1020 Nguyễn Văn Linh, Q. Thanh Khê, Đà Nẵng",
+            city: "danang"
+        }
+    ];
+
+    // Mảng lưu danh sách tọa độ nối liền dọc Việt Nam
+    var routeCoordinates = stores.map(function(s) { return [s.lat, s.lng]; });
+
+    // =====================================================
+    // KHỞI TẠO MAP
+    // =====================================================
+    var map = L.map('storeMap', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    });
+
+    // Fit bản đồ tự động ôm trọn tất cả các điểm cửa hàng trên bản đồ Việt Nam
+    map.fitBounds(routeCoordinates, { padding: [40, 40] });
+
+    // =====================================================
+    // MAP TILE
+    // =====================================================
+        L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            attribution: '&copy; OpenStreetMap contributors',
+            subdomains: 'abc',
+            maxZoom: 19,
+            minZoom: 3
+        }
+    ).addTo(map);
+
+    // =====================================================
+    // VẼ ĐƯỜNG NỐI HỆ THỐNG CỬA HÀNG (POLYLINE)
+    // =====================================================
+    var storePolyline = L.polyline(routeCoordinates, {
+        color: '#2563eb',       // Màu xanh đặc trưng EMUA
+        weight: 3,              // Độ dầy nét vẽ
+        opacity: 0.8,
+        dashArray: '6, 8',      // Nét đứt quãng hiện đại
+        lineJoin: 'round'
+    }).addTo(map);
+
+    // =====================================================
+    // TẠO MARKER & POPUP
+    // =====================================================
+    stores.forEach(function (store) {
+        var popupContent = `
+            <div class="emua-popup">
+                <div class="popup-title">${store.title}</div>
+                <div class="popup-address">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    ${store.address}
+                </div>
+                <div class="popup-time">
+                    <i class="bi bi-clock-fill"></i>
+                    08:00 - 22:00
+                </div>
+            </div>
+        `;
+
+        L.marker([store.lat, store.lng])
+            .addTo(map)
+            .bindPopup(popupContent);
+    });
+
+    // =====================================================
+    // CLICK STORE
+    // =====================================================
+    function focusStore(lat, lng, title, address) {
+        map.flyTo([lat, lng], 16, {
+            animate: true,
+            duration: 1
+        });
+
+        var popupContent = `
+            <div class="emua-popup">
+                <div class="popup-title">${title}</div>
+                <div class="popup-address">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    ${address}
+                </div>
+                <div class="popup-time">
+                    <i class="bi bi-clock-fill"></i>
+                    08:00 - 22:00
+                </div>
+            </div>
+        `;
+
+        L.popup({ closeButton: true, autoClose: true })
+            .setLatLng([lat, lng])
+            .setContent(popupContent)
+            .openOn(map);
+    }
+
+    // =====================================================
+    // FILTER CITY
+    // =====================================================
+    function filterCity(city, btn) {
+        document.querySelectorAll('.store-filter-btn').forEach(function (button) {
+            button.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        var items = document.querySelectorAll('.store-item');
+        items.forEach(function (item) {
+            if (city === 'all' || item.classList.contains(city)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (city === 'all') {
+            map.fitBounds(routeCoordinates, { padding: [40, 40] });
+        } else if (city === 'danang') {
+            map.flyTo([16.0601, 108.2098], 12, { duration: 1 });
+        } else if (city === 'hanoi') {
+            map.flyTo([21.0338, 105.8342], 13, { duration: 1 });
+        }
+    }
+
+    // =====================================================
+    // FIX MAP SIZE
+    // =====================================================
+    setTimeout(function () {
+        map.invalidateSize();
+    }, 300);
+
+    window.addEventListener('resize', function () {
+        map.invalidateSize();
+    });
+</script>

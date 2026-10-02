@@ -2,27 +2,58 @@
 @{
     ViewData["Title"] = "Đánh giá sản phẩm";
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+
+<link rel="stylesheet" href="~/css/review.css" asp-append-version="true" />
+
 <div class="customer-page container py-4">
-    <div class="form-panel narrow-panel"><span class="eyebrow">YOUR EXPERIENCE</span>
+    <div class="form-panel narrow-panel mx-auto" style="max-width: 560px;">
+        <span class="eyebrow">YOUR EXPERIENCE</span>
         <h1>Đánh giá sản phẩm</h1>
         <p>Chia sẻ trải nghiệm để giúp khách hàng khác lựa chọn tốt hơn.</p>
-        <form asp-action="Create" method="post">@Html.AntiForgeryToken()<input asp-for="ProductId"
-                                                                                   type="hidden" /><input asp-for="OrderId" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="field-error"></div><label>Mức đánh giá<select
-            asp-for="Rating">
-            <option value="5">5 sao - Tuyệt vời</option>
-            <option value="4">4 sao - Tốt</option>
-            <option value="3">3 sao - Ổn</option>
-            <option value="2">2 sao - Chưa tốt</option>
-            <option value="1">1 sao - Không hài lòng</option>
-        </select></label><label>Nhận xét<textarea asp-for="Comment" rows="5"
-                                                  placeholder="Bạn cảm nhận thế nào về sản phẩm?"></textarea></label><span
-        asp-validation-for="Comment" class="field-error"></span><button class="customer-button"
-                                                                        type="submit">Gửi đánh giá <i class="bi bi-send"></i></button>
-    </form>
+
+        <form asp-action="Create" method="post" class="mt-3">
+            @Html.AntiForgeryToken()
+            <input asp-for="ProductId" type="hidden" />
+            <input asp-for="OrderId" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="field-error"></div>
+
+            <!-- Mức đánh giá dạng Sao -->
+            <div class="form-group mb-3">
+                <label class="d-block mb-2">Mức đánh giá</label>
+                <div class="star-rating-input">
+                    <input type="radio" id="star5" asp-for="Rating" value="5" />
+                    <label for="star5" title="5 sao - Tuyệt vời"><i class="bi bi-star-fill"></i></label>
+
+                    <input type="radio" id="star4" asp-for="Rating" value="4" />
+                    <label for="star4" title="4 sao - Tốt"><i class="bi bi-star-fill"></i></label>
+
+                    <input type="radio" id="star3" asp-for="Rating" value="3" />
+                    <label for="star3" title="3 sao - Ổn"><i class="bi bi-star-fill"></i></label>
+
+                    <input type="radio" id="star2" asp-for="Rating" value="2" />
+                    <label for="star2" title="2 sao - Chưa tốt"><i class="bi bi-star-fill"></i></label>
+
+                    <input type="radio" id="star1" asp-for="Rating" value="1" />
+                    <label for="star1" title="1 sao - Không hài lòng"><i class="bi bi-star-fill"></i></label>
+                </div>
+                <span asp-validation-for="Rating" class="field-error"></span>
+            </div>
+
+            <!-- Ô nhập Nhận xét -->
+            <div class="form-group mb-3">
+                <label asp-for="Comment">Nhận xét</label>
+                <textarea asp-for="Comment" rows="4" class="form-control" placeholder="Bạn cảm nhận thế nào về sản phẩm?"></textarea>
+                <span asp-validation-for="Comment" class="field-error"></span>
+            </div>
+
+            <button class="customer-button w-100" type="submit">
+                Gửi đánh giá <i class="bi bi-send ms-1"></i>
+            </button>
+        </form>
+    </div>
 </div>
-</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

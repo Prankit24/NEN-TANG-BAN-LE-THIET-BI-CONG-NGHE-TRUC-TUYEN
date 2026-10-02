@@ -1,66 +1,168 @@
 @model EMua.ViewModels.CheckoutViewModel
+
 @{
-    ViewData["Title"] = "Đặt hàng";
+    ViewData["Title"] = "Thanh toán - Thông tin giao hàng";
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4"><a class="back-link" asp-controller="Cart" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại giỏ hàng</a>
-    <div class="customer-heading compact"><div><span class="eyebrow">BƯỚC 1 / 3</span><h1>Thông tin đặt hàng</h1><p>Nhập thông tin nhận hàng và chọn mã giảm giá.</p></div></div>
+
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
+
+<div class="customer-page container py-4">
     <partial name="_CheckoutSteps" model="1" />
-    @if (TempData["Success"] != null)
+
+    <div class="customer-heading compact">
+        <div>
+            <span class="eyebrow">BƯỚC 1 / 3</span>
+            <h1>Thông tin giao hàng</h1>
+            <p>Vui lòng điền thông tin người nhận và địa chỉ giao hàng.</p>
+        </div>
+    </div>
+
+    @if (Model.Items == null || !Model.Items.Any())
     {
-        <div class="customer-alert success">@TempData["Success"]</div>
+        <div class="checkout-empty text-center py-5">
+            <i class="bi bi-cart-x display-1 text-muted"></i>
+            <h3 class="mt-3">Giỏ hàng đang trống</h3>
+            <p class="text-muted">Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
+            <a asp-controller="Home" asp-action="Index" class="customer-button mt-2">Tiếp tục mua sắm</a>
+        </div>
     }
-    <div asp-validation-summary="ModelOnly" class="customer-alert error"></div>
-    <div class="checkout-layout">
-        <form asp-action="Review" method="post" class="form-panel">@Html.AntiForgeryToken()<h2>Thông tin giao hàng</h2>
-            <label>Họ tên người nhận<input asp-for="RecipientName" /></label><span asp-validation-for="RecipientName" class="field-error"></span>
-            <label>Số điện thoại<input asp-for="RecipientPhone" /></label><span asp-validation-for="RecipientPhone" class="field-error"></span>
-            <label>Địa chỉ giao hàng<textarea asp-for="ShippingAddress" rows="3"></textarea></label><span asp-validation-for="ShippingAddress" class="field-error"></span>
-            <label>Ghi chú<textarea asp-for="Note" rows="2" placeholder="Không bắt buộc"></textarea></label>
-            <section class="checkout-section"><h2><i class="bi bi-truck"></i> Phương thức giao hàng</h2><div class="choice-grid"><label class="choice-card"><input asp-for="ShippingMethod" value="STANDARD" type="radio" /><span class="choice-icon"><i class="bi bi-truck"></i></span><span class="choice-copy"><strong>Giao tiêu chuẩn</strong><small>Nhận hàng trong 2–4 ngày</small></span><strong class="choice-price free">Miễn phí</strong></label><label class="choice-card"><input asp-for="ShippingMethod" value="EXPRESS" type="radio" /><span class="choice-icon"><i class="bi bi-clock"></i></span><span class="choice-copy"><strong>Giao nhanh 2 giờ</strong><small>Áp dụng tại HCM &amp; HN</small></span><strong class="choice-price">25.000 đ</strong></label></div></section>
-            <section class="checkout-section"><h2><i class="bi bi-credit-card"></i> Phương thức thanh toán</h2><div class="choice-grid payment-grid"><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="COD" type="radio" /><i class="bi bi-cash-stack"></i><strong>COD</strong></label><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="MOMO" type="radio" /><i class="bi bi-wallet2"></i><strong>Ví điện tử</strong></label><label class="choice-card payment-card"><input asp-for="PaymentMethod" value="BANK" type="radio" /><i class="bi bi-credit-card"></i><strong>Ngân hàng</strong></label></div><div class="provider-panel" data-provider-group="MOMO"><strong>Chọn ví điện tử liên kết</strong><div class="provider-list"><label><input asp-for="PaymentProvider" value="MOMO" type="radio" /> MoMo</label><label><input asp-for="PaymentProvider" value="ZALOPAY" type="radio" /> ZaloPay</label><label><input asp-for="PaymentProvider" value="APPLEPAY" type="radio" /> Apple Pay</label></div></div><div class="provider-panel" data-provider-group="BANK"><strong>Chọn ngân hàng liên kết</strong><div class="provider-list"><label><input asp-for="PaymentProvider" value="VIETCOMBANK" type="radio" /> Vietcombank</label><label><input asp-for="PaymentProvider" value="VIETINBANK" type="radio" /> VietinBank</label><label><input asp-for="PaymentProvider" value="MB" type="radio" /> MB Bank</label><label><input asp-for="PaymentProvider" value="TPBANK" type="radio" /> TPBank</label></div></div><span asp-validation-for="PaymentProvider" class="field-error"></span></section>
-            <input type="hidden" asp-for="CouponCode" />
-            <button class="customer-button" type="submit">Tiếp tục xác nhận <i class="bi bi-arrow-right"></i></button>
+    else
+    {
+        <form asp-action="Index" method="post" class="checkout-review-layout">
+            @Html.AntiForgeryToken()
+
+            <section class="form-panel">
+                <h2>Thông tin nhận hàng</h2>
+
+                <div class="form-group mb-3">
+                    <label asp-for="RecipientName" class="form-label">Họ và tên <span>*</span></label>
+                    <input asp-for="RecipientName" class="form-control" placeholder="Nhập họ và tên người nhận" />
+                    <span asp-validation-for="RecipientName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="RecipientPhone" class="form-label">Số điện thoại <span>*</span></label>
+                    <input asp-for="RecipientPhone" class="form-control" placeholder="Nhập số điện thoại (VD: 0905123456)" />
+                    <span asp-validation-for="RecipientPhone" class="text-danger"></span>
+                </div>
+
+                <!-- Khung nhập địa chỉ tích hợp Định vị GPS -->
+                <div class="form-group mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="ShippingAddress" class="form-label mb-0">Địa chỉ nhận hàng <span>*</span></label>
+                        <button type="button" id="btnGetLocation" onclick="getCurrentLocation()" class="btn btn-sm btn-outline-primary border-0 p-0 text-decoration-underline" style="font-size: 13px;">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại
+                        </button>
+                    </div>
+
+                    <div class="input-group">
+                        <input asp-for="ShippingAddress" id="shippingAddressInput" class="form-control" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." />
+                    </div>
+                    <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Note" class="form-label">Ghi chú đơn hàng</label>
+                    <textarea asp-for="Note" class="form-control" rows="3" placeholder="Ghi chú thêm về địa chỉ hoặc thời gian giao hàng (nếu có)..."></textarea>
+                </div>
+
+                <h2>Phương thức giao hàng</h2>
+                <div class="form-check mb-2">
+                    <input type="radio" asp-for="ShippingMethod" value="STANDARD" id="shipStandard" class="form-check-input" checked />
+                    <label for="shipStandard" class="form-check-label">
+                        <strong>Giao tiêu chuẩn</strong> - Miễn phí
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="radio" asp-for="ShippingMethod" value="EXPRESS" id="shipExpress" class="form-check-input" />
+                    <label for="shipExpress" class="form-check-label">
+                        <strong>Giao nhanh 2 giờ</strong> - 25.000 đ
+                    </label>
+                </div>
+            </section>
+
+            <aside class="summary-card">
+                <h2>Tóm tắt đơn hàng</h2>
+                <div class="summary-line">
+                    <span>Số lượng</span>
+                    <strong>@Model.Items.Sum(x => x.Quantity) sản phẩm</strong>
+                </div>
+                <div class="summary-line">
+                    <span>Tạm tính</span>
+                    <strong>@Model.Subtotal.ToString("N0") đ</strong>
+                </div>
+                <div class="summary-line discount">
+                    <span>Giảm giá</span>
+                    <strong>-@Model.Discount.ToString("N0") đ</strong>
+                </div>
+                <div class="summary-line">
+                    <span>Vận chuyển</span>
+                    <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
+                </div>
+                <hr />
+                <div class="summary-total">
+                    <span>Tổng tạm tính</span>
+                    <strong>@Model.Total.ToString("N0") đ</strong>
+                </div>
+
+                <div class="review-actions mt-3">
+                    <button class="customer-button w-100" type="submit">
+                        Tiếp tục: Chọn PTTT <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </aside>
         </form>
-    <aside class="summary-card">
-        <h2>Mã giảm giá</h2>
-        <form asp-action="ApplyCoupon" method="post" class="coupon-form">@Html.AntiForgeryToken()<input type="hidden" name="ShippingMethod" id="coupon-shipping-method" value="@Model.ShippingMethod" /><input type="hidden" name="PaymentMethod" id="coupon-payment-method" value="@Model.PaymentMethod" /><input type="hidden" name="PaymentProvider" id="coupon-payment-provider" value="@Model.PaymentProvider" /><select
-            asp-for="CouponCode">
-            <option value="">Chọn mã giảm giá</option>@foreach (var coupon in Model.AvailableCoupons)
-            {
-                var fullCouponText = $"{coupon.Code} - {coupon.DiscountText}{(coupon.MinimumOrder.HasValue ? $" (đơn từ {coupon.MinimumOrder.Value:N0} đ)" : "")}";
-                var displayCouponText = fullCouponText.Length > 34 ? $"{fullCouponText[..31]}..." : fullCouponText;
-                <option value="@coupon.Code" title="@fullCouponText">@displayCouponText</option>
-            }
-        </select><button class="customer-button" type="submit">Áp dụng</button></form>
-        <hr />@foreach (var item in Model.Items) {
-        <div class="summary-line"><span>@item.ProductName x
-            @item.Quantity</span><strong>@item.LineTotal.ToString("N0") đ</strong></div>
-        }
-        <div class="summary-line"><span>Tạm tính</span><span>@Model.Subtotal.ToString("N0") đ</span></div>
-        <div class="summary-line discount"><span>Giảm giá</span><span>-@Model.Discount.ToString("N0") đ</span></div>
-        <div class="summary-line"><span>Vận chuyển</span><span>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</span></div>
-        <hr />
-        <div class="summary-total"><span>Cần thanh toán</span><strong>@Model.Total.ToString("N0") đ</strong></div>
-    </aside>
+    }
 </div>
-</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
-        var paymentInputs = document.querySelectorAll('input[name="PaymentMethod"]');
-        var providerPanels = document.querySelectorAll('[data-provider-group]');
-        function updatePaymentOptions() {
-            var method = document.querySelector('input[name="PaymentMethod"]:checked')?.value || 'COD';
-            var shipping = document.querySelector('input[name="ShippingMethod"]:checked')?.value || 'STANDARD';
-            document.getElementById('coupon-payment-method').value = method;
-            document.getElementById('coupon-shipping-method').value = shipping;
-            providerPanels.forEach(function (panel) { var visible = panel.dataset.providerGroup === method; panel.hidden = !visible; panel.querySelectorAll('input').forEach(function (input) { input.disabled = !visible; }); });
-            var provider = document.querySelector('input[name="PaymentProvider"]:checked');
-            document.getElementById('coupon-payment-provider').value = provider ? provider.value : '';
+               function getCurrentLocation() {
+            const btn = document.getElementById('btnGetLocation');
+            const addressInput = document.getElementById('shippingAddressInput');
+
+            if (!navigator.geolocation) {
+                alert("Trình duyệt của bạn không hỗ trợ định vị GPS.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lấy vị trí...';
+
+            navigator.geolocation.getCurrentPosition(async function (position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                try {
+                    // Sử dụng API BigDataCloud ổn định hơn trên Client JS
+                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=vi`);
+                    const data = await response.json();
+
+                    if (data) {
+                        const addressParts = [
+                            data.locality,
+                            data.city || data.principalSubdivision,
+                            data.countryName
+                        ].filter(Boolean);
+
+                        addressInput.value = addressParts.join(', ');
+                    } else {
+                        alert("Không thể giải mã địa chỉ từ tọa độ. Vui lòng nhập thủ công.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Có lỗi xảy ra khi kết nối máy chủ định vị.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại';
+                }
+            }, function (error) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại';
+                alert("Không thể lấy vị trí. Hãy chắc chắn bạn đã bật GPS và cấp quyền vị trí cho trình duyệt.");
+            });
         }
-        paymentInputs.forEach(function (input) { input.addEventListener('change', updatePaymentOptions); });
-        document.querySelectorAll('input[name="ShippingMethod"], input[name="PaymentProvider"]').forEach(function (input) { input.addEventListener('change', updatePaymentOptions); });
-        updatePaymentOptions();
     </script>
 }

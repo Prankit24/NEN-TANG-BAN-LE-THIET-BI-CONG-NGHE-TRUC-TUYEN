@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace EMua.Areas.Staff.Models;
 
@@ -88,6 +89,7 @@ public class ProductCreateViewModel
 
     [Range(0, double.MaxValue, ErrorMessage = "Giá gốc không hợp lệ.")]
     [Display(Name = "Giá gốc")]
+    [DisplayFormat(DataFormatString = "{0:0.#}", ApplyFormatInEditMode = true)]
     public decimal? GiaGoc { get; set; }
 
     [StringLength(50)]
@@ -105,6 +107,22 @@ public class ProductCreateViewModel
 
     public string? CurrentImageUrl { get; set; }
 
+    // Giữ tương thích với form upload 1 file đơn
+    [Display(Name = "Ảnh sản phẩm chính")]
+    public IFormFile? ImageFile { get; set; }
+
+    // Hỗ trợ chọn/upload nhiều ảnh cùng lúc
+    [Display(Name = "Bộ sưu tập ảnh sản phẩm")]
+    public List<IFormFile>? ImageFiles { get; set; } = [];
+
+    public string? CurrentImageUrl { get; set; }
+
+    // THUỘC TÍNH MỚI BỔ SUNG: Đường dẫn ảnh chính được chọn từ giao diện Edit
+    public string? SelectedMainImageUrl { get; set; }
+
+    // Danh sách đường dẫn tất cả ảnh hiện có (khi Edit)
+    public List<string> CurrentImageUrls { get; set; } = [];
+
     public List<ProductVariantQuantityViewModel> BienThe { get; set; } = [];
 }
 
@@ -117,9 +135,15 @@ public class ProductVariantQuantityViewModel
     [Display(Name = "Giá bán")]
     public decimal Gia { get; set; }
 
+    [Range(0.01, double.MaxValue, ErrorMessage = "Giá biến thể phải lớn hơn 0.")]
+    [Display(Name = "Giá bán")]
+    [DisplayFormat(DataFormatString = "{0:0.#}", ApplyFormatInEditMode = true)]
+    public decimal Gia { get; set; }
+
     [Range(0, int.MaxValue, ErrorMessage = "Số lượng không được âm.")]
     [Display(Name = "Số lượng")]
     public int SoLuong { get; set; }
+    public string? TrangThai { get; set; } = "Còn hàng";
 }
 
 public class PromotionCreateViewModel
@@ -143,4 +167,49 @@ public class PromotionCreateViewModel
     public DateTime? NgayBatDau { get; set; }
     public DateTime? NgayKetThuc { get; set; }
     public string? MoTa { get; set; }
+}
+
+public class DeliveryUpdateViewModel
+{
+    public int OrderId { get; set; }
+    public string? OrderCode { get; set; }
+    public string CurrentStatus { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng chọn trạng thái mới.")]
+    public string NewStatus { get; set; } = string.Empty;
+
+    public string? ShippingProvider { get; set; }
+    public string? TrackingNumber { get; set; }
+    public string? Note { get; set; }
+
+    [Display(Name = "Ngày dự kiến giao hàng")]
+    public DateTime? EstimatedDeliveryDate { get; set; }
+
+    [Display(Name = "Ảnh xác nhận đã giao")]
+    public IFormFile? DeliveryProofImage { get; set; }
+}
+
+public class ShippingHistoryViewModel
+{
+    public int HistoryId { get; set; }
+    public int OrderId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string LocationOrNote { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+    public string? ImageUrl { get; set; }
+}
+
+public class OrderTrackingViewModel
+{
+    public int OrderId { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
+    public string ShippingAddress { get; set; } = string.Empty;
+    public string CurrentStatus { get; set; } = string.Empty;
+    public decimal TotalAmount { get; set; }
+    public DateTime OrderDate { get; set; }
+    public DateTime? EstimatedDeliveryDate { get; set; }
+    public string? DeliveryProofImageUrl { get; set; }
+    public List<ShippingHistoryViewModel> TrackingLogs { get; set; } = new();
 }

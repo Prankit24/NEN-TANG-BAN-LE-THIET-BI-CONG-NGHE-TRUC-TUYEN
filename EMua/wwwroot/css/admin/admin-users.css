@@ -1,0 +1,651 @@
+﻿/* ==========================================================
+   Quản lý người dùng & phân quyền  -  bản "premium"
+   Đặt tại: wwwroot/css/admin/admin-users.css
+   Palette: Ink #0f172a · Indigo #4f46e5 · Gold #b7791f · Mist #f4f5f9
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.users-page {
+    --c-ink: #0f172a;
+    --c-ink-2: #334155;
+    --c-muted: #64748b;
+    --c-line: #e8eaf1;
+    --c-line-soft: #f0f2f7;
+    --c-surface: #ffffff;
+    --c-bg: #f4f5f9;
+    --c-brand: #4f46e5;
+    --c-brand-2: #7c3aed;
+    --c-brand-soft: #eef0ff;
+    --c-gold: #b7791f;
+    --c-gold-soft: #fdf3dc;
+    --c-gold-line: #f2dca4;
+    --c-ok: #0f9d6e;
+    --c-ok-soft: #e4f7ef;
+    --c-bad: #d64545;
+    --c-bad-soft: #fdeaea;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 14px rgba(15, 23, 42, .05);
+    --shadow-md: 0 2px 4px rgba(15, 23, 42, .04), 0 12px 32px rgba(79, 70, 229, .10);
+    --ease: cubic-bezier(.2, .7, .2, 1);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--c-ink);
+    -webkit-font-smoothing: antialiased;
+}
+
+body:has(.users-page) {
+    background: radial-gradient(900px 340px at 100% -60px, rgba(124, 58, 237, .07), transparent 70%), radial-gradient(700px 300px at 0 -40px, rgba(79, 70, 229, .06), transparent 70%), var(--c-bg);
+}
+
+.users-page .fs-xs {
+    font-size: .68rem;
+}
+
+/* ---------- Nút ---------- */
+.users-page .btn {
+    font-weight: 600;
+    font-size: .86rem;
+    transition: transform .18s var(--ease), box-shadow .18s var(--ease), background-color .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease);
+}
+
+    .users-page .btn:focus-visible,
+    .users-page .form-control:focus-visible,
+    .users-page .form-select:focus-visible {
+        outline: 2px solid var(--c-brand);
+        outline-offset: 2px;
+    }
+
+.users-page .btn-primary {
+    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-2));
+    border: 0;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .28) !important;
+}
+
+    .users-page .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(79, 70, 229, .36) !important;
+        filter: brightness(1.05);
+    }
+
+    .users-page .btn-primary:active {
+        transform: translateY(0);
+    }
+
+.users-page .btn-outline-primary {
+    color: var(--c-brand);
+    border-color: #cfd3fb;
+    background: #fff;
+}
+
+    .users-page .btn-outline-primary:hover {
+        background: var(--c-brand);
+        border-color: var(--c-brand);
+        color: #fff;
+    }
+
+.users-page .btn-outline-secondary {
+    color: var(--c-ink-2);
+    border-color: var(--c-line);
+    background: #fff;
+}
+
+    .users-page .btn-outline-secondary:hover:not(:disabled) {
+        background: var(--c-ink);
+        border-color: var(--c-ink);
+        color: #fff;
+    }
+
+.users-page .btn-outline-danger {
+    color: var(--c-bad);
+    border-color: #f3c6c6;
+    background: #fff;
+}
+
+    .users-page .btn-outline-danger:hover:not(:disabled) {
+        background: var(--c-bad);
+        border-color: var(--c-bad);
+        color: #fff;
+    }
+
+.users-page .btn-outline-success {
+    color: var(--c-ok);
+    border-color: #b9e6d3;
+    background: #fff;
+}
+
+    .users-page .btn-outline-success:hover:not(:disabled) {
+        background: var(--c-ok);
+        border-color: var(--c-ok);
+        color: #fff;
+    }
+
+.users-page .btn:disabled,
+.users-page .btn[disabled] {
+    opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ---------- Thông báo ---------- */
+.users-page .alert {
+    font-size: .88rem;
+    font-weight: 500;
+    border: 1px solid transparent !important;
+}
+
+.users-page .alert-success {
+    background: var(--c-ok-soft);
+    color: #0a6b4a;
+    border-color: #bfe9d6 !important;
+}
+
+.users-page .alert-danger {
+    background: var(--c-bad-soft);
+    color: #9b2c2c;
+    border-color: #f5c9c9 !important;
+}
+
+.users-page .alert-warning {
+    background: var(--c-gold-soft);
+    color: #7a4f0d;
+    border-color: var(--c-gold-line) !important;
+}
+
+.users-page .alert-light {
+    background: linear-gradient(90deg, var(--c-brand-soft), #fff 70%);
+    border: 1px solid #e0e3fb !important;
+    color: var(--c-ink-2) !important;
+}
+
+/* ---------- Ô thống kê ---------- */
+.users-page .mini-stat {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 100%;
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: 18px !important;
+    padding: 18px !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+
+    .users-page .mini-stat::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--accent, var(--c-brand));
+    }
+
+    .users-page .mini-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md) !important;
+        border-color: #dfe2f5 !important;
+    }
+
+.users-page .row > div:nth-child(1) .mini-stat {
+    --accent: var(--c-brand);
+    --tile: var(--c-brand-soft);
+}
+
+.users-page .row > div:nth-child(2) .mini-stat {
+    --accent: var(--c-ok);
+    --tile: var(--c-ok-soft);
+}
+
+.users-page .row > div:nth-child(3) .mini-stat {
+    --accent: var(--c-bad);
+    --tile: var(--c-bad-soft);
+}
+
+.users-page .row > div:nth-child(4) .mini-stat {
+    --accent: var(--c-gold);
+    --tile: var(--c-gold-soft);
+}
+
+.users-page .mini-stat-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border-radius: 14px !important;
+    font-size: 1.15rem !important;
+    background: var(--tile, var(--c-brand-soft)) !important;
+    color: var(--accent, var(--c-brand)) !important;
+}
+
+.users-page .mini-stat-value {
+    font-size: 1.6rem !important;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.05;
+    color: var(--c-ink) !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.users-page .mini-stat-label {
+    font-size: .78rem !important;
+    font-weight: 500;
+    color: var(--c-muted) !important;
+    margin-top: 2px;
+}
+
+/* ---------- Thanh lọc ---------- */
+.users-page .filter-bar {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-line) !important;
+    border-radius: 18px !important;
+    padding: 14px 16px !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+    .users-page .filter-bar .form-control,
+    .users-page .filter-bar .form-select,
+    .users-page .filter-bar .input-group-text {
+        background-color: #f7f8fb !important;
+        border: 1px solid transparent;
+        font-size: .88rem;
+        color: var(--c-ink);
+        transition: background-color .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease);
+    }
+
+    .users-page .filter-bar .input-group-text {
+        color: var(--c-muted);
+    }
+
+    .users-page .filter-bar .form-control::placeholder {
+        color: #9aa4b5;
+    }
+
+    .users-page .filter-bar .form-control:focus,
+    .users-page .filter-bar .form-select:focus {
+        background-color: #fff !important;
+        border-color: #c9ccf7;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+
+    .users-page .filter-bar .input-group:focus-within .input-group-text {
+        background-color: #fff !important;
+        border-color: #c9ccf7;
+        color: var(--c-brand);
+    }
+
+/* ---------- Card & bảng ---------- */
+.users-page .card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-line) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.users-page .table {
+    --bs-table-bg: transparent;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .users-page .table > thead > tr > th {
+        background: #fafbfd !important;
+        color: var(--c-muted) !important;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+        text-transform: none !important;
+        border-bottom: 1px solid var(--c-line);
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+    }
+
+    .users-page .table > tbody > tr > td {
+        border-bottom: 1px solid var(--c-line-soft);
+        font-size: .9rem;
+        color: var(--c-ink-2);
+        transition: background-color .15s var(--ease);
+    }
+
+    .users-page .table > tbody > tr:last-child > td {
+        border-bottom: 0;
+    }
+
+    .users-page .table > tbody > tr:hover > td {
+        background: #fafaff;
+    }
+
+    /* dòng tài khoản đang đăng nhập */
+    .users-page .table > tbody > tr.table-active > td,
+    .users-page .table > tbody > tr.row-self > td {
+        background: linear-gradient(90deg, #f3f4ff, #fbfbff) !important;
+        --bs-table-bg-state: transparent;
+        --bs-table-active-bg: transparent;
+    }
+
+        .users-page .table > tbody > tr.table-active > td:first-child,
+        .users-page .table > tbody > tr.row-self > td:first-child {
+            box-shadow: inset 3px 0 0 var(--c-brand);
+        }
+
+    .users-page .table .fw-bold.text-dark {
+        color: var(--c-ink) !important;
+        letter-spacing: -.005em;
+    }
+
+    .users-page .table small.text-muted {
+        color: var(--c-muted) !important;
+        font-size: .78rem;
+    }
+
+.users-page .avatar-circle {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex-shrink: 0;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-2)) !important;
+    color: #fff !important;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 4px #dcdffb, 0 4px 10px rgba(79, 70, 229, .25);
+}
+
+.users-page .table code {
+    background: #f3f4f9 !important;
+    color: var(--c-ink-2) !important;
+    border: 1px solid var(--c-line);
+    border-radius: 8px !important;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: .8rem;
+}
+
+.users-page .table .btn-sm {
+    font-size: .78rem;
+    padding: 6px 14px !important;
+}
+
+/* ---------- Badge ---------- */
+.users-page .badge {
+    font-family: inherit;
+    font-weight: 600 !important;
+    font-size: .74rem;
+    letter-spacing: .01em;
+    padding: 6px 12px !important;
+    border-radius: 999px !important;
+}
+
+/* Trạng thái: có chấm màu phía trước */
+.users-page td .badge.text-success,
+.users-page td .badge.text-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+    .users-page td .badge.text-success::before,
+    .users-page td .badge.text-danger::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+.users-page td .badge.text-success {
+    background: var(--c-ok-soft) !important;
+    color: var(--c-ok) !important;
+}
+
+.users-page td .badge.text-danger {
+    background: var(--c-bad-soft) !important;
+    color: var(--c-bad) !important;
+}
+
+.users-page td .badge.text-success::before {
+    box-shadow: 0 0 0 3px rgba(15, 157, 110, .18);
+}
+
+/* Phân quyền: Admin = huy hiệu vàng */
+.users-page .role-badge {
+    background: #f1f3f8 !important;
+    color: var(--c-ink-2) !important;
+    border: 1px solid var(--c-line);
+}
+
+    .users-page .role-badge.text-warning,
+    .users-page .role-badge.is-admin {
+        background: linear-gradient(135deg, #fff6df, #fbe7b0) !important;
+        color: #7a4f0d !important;
+        border: 1px solid var(--c-gold-line);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+    }
+
+/* Nhãn "Bạn" */
+.users-page .badge.bg-primary {
+    background: var(--c-brand-soft) !important;
+    color: var(--c-brand) !important;
+    padding: 3px 9px !important;
+    font-size: .68rem;
+}
+
+/* ---------- Phân trang ---------- */
+.users-page .pagination .page-link {
+    font-weight: 600;
+    font-size: .8rem;
+    color: var(--c-ink-2);
+    background: transparent;
+    transition: background-color .15s var(--ease), color .15s var(--ease);
+}
+
+    .users-page .pagination .page-link:hover {
+        background: var(--c-brand-soft);
+        color: var(--c-brand);
+    }
+
+.users-page .pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-2)) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, .35);
+}
+
+/* ---------- Thẻ nhóm quyền ---------- */
+.users-page .role-card {
+    position: relative;
+    background: var(--c-surface) !important;
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
+}
+
+    .users-page .role-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md) !important;
+        border-color: #dcdffb !important;
+    }
+
+    .users-page .role-card h5 {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -.01em;
+        color: var(--c-ink) !important;
+    }
+
+    .users-page .role-card p {
+        line-height: 1.6;
+        color: var(--c-muted) !important;
+    }
+
+    .users-page .role-card > .d-flex:first-child > div:first-child {
+        background: var(--c-brand-soft) !important;
+        color: var(--c-brand) !important;
+        border-radius: 14px !important;
+    }
+
+    .users-page .role-card .badge.bg-light {
+        background: #f4f5f9 !important;
+        color: var(--c-ink-2) !important;
+        border: 1px solid var(--c-line);
+    }
+
+    /* Nhóm quyền hệ thống (thêm class is-protected trong view) */
+    .users-page .role-card.is-protected {
+        border: 1px solid var(--c-gold-line) !important;
+        background: linear-gradient(180deg, #fffaf0, #ffffff 55%) !important;
+    }
+
+        .users-page .role-card.is-protected::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e9b949, #b7791f);
+        }
+
+        .users-page .role-card.is-protected > .d-flex:first-child > div:first-child {
+            background: var(--c-gold-soft) !important;
+            color: var(--c-gold) !important;
+        }
+
+    .users-page .role-card .badge.bg-warning {
+        background: var(--c-gold-soft) !important;
+        color: #7a4f0d !important;
+        border: 1px solid var(--c-gold-line);
+        padding: 3px 9px !important;
+        font-size: .68rem;
+    }
+
+/* ---------- Modal ---------- */
+.modal .modal-content {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    border: 1px solid var(--c-line) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, .22) !important;
+}
+
+.modal-backdrop.show {
+    opacity: .45;
+    backdrop-filter: blur(3px);
+}
+
+.modal .modal-title {
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--c-ink);
+}
+
+.modal .btn {
+    font-weight: 600;
+    font-size: .86rem;
+}
+
+.modal .form-control {
+    background: #f7f8fb !important;
+    border: 1px solid transparent !important;
+    transition: background-color .18s, box-shadow .18s, border-color .18s;
+}
+
+    .modal .form-control:focus {
+        background: #fff !important;
+        border-color: #c9ccf7 !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, .12);
+    }
+
+.modal .btn-primary {
+    background: linear-gradient(135deg, var(--c-brand), var(--c-brand-2));
+    border: 0;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .28);
+}
+
+/* ---------- Form tạo / sửa ---------- */
+.users-page h1.h5 {
+    font-size: 1.25rem !important;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.users-page .form-label {
+    color: var(--c-ink-2) !important;
+    font-size: .78rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.users-page .card .form-control,
+.users-page .card .form-select {
+    background: #f7f8fb !important;
+    border: 1px solid transparent !important;
+    font-size: .92rem;
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
+    transition: background-color .18s, box-shadow .18s, border-color .18s;
+}
+
+    .users-page .card .form-control:focus,
+    .users-page .card .form-select:focus {
+        background: #fff !important;
+        border-color: #c9ccf7 !important;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+
+    .users-page .card .form-control:disabled,
+    .users-page .card .form-select:disabled {
+        background: #eef0f5 !important;
+        color: var(--c-muted);
+        cursor: not-allowed;
+    }
+
+.users-page .form-check-input:checked {
+    background-color: var(--c-brand);
+    border-color: var(--c-brand);
+}
+
+.users-page .form-check-input:focus {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, .15);
+    border-color: var(--c-brand);
+}
+
+/* ---------- Ghi chú (tương thích bản cũ) ---------- */
+.users-page .info-note {
+    font-size: .85rem;
+    color: var(--c-muted);
+    background: var(--c-brand-soft);
+    border: 1px solid #dfe2fb;
+    border-radius: 14px;
+    padding: 12px 16px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 575.98px) {
+    .users-page .mini-stat {
+        padding: 14px !important;
+    }
+
+    .users-page .mini-stat-value {
+        font-size: 1.3rem !important;
+    }
+
+    .users-page .mini-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem !important;
+    }
+}
+
+/* ---------- Giảm chuyển động ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .users-page *,
+    .modal * {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .users-page .mini-stat:hover,
+    .users-page .role-card:hover,
+    .users-page .btn-primary:hover {
+        transform: none;
+    }
+}

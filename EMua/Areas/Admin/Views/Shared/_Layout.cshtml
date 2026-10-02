@@ -72,12 +72,7 @@
 
                 <span class="admin-nav-label">Quản lý cửa hàng</span>
 
-                <a href="#"
-                   data-tooltip="Sản phẩm">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Sản phẩm</span>
-                </a>
-
+             
                 <a class="@(currentController == "Category" ? "active" : "")"
                    data-tooltip="Danh mục"
                    asp-area="Admin"
@@ -98,22 +93,37 @@
                     <span>Thương hiệu</span>
                 </a>
 
-                <a href="#"
-                   data-tooltip="Đơn hàng">
-                    <i class="bi bi-receipt"></i>
-                    <span>Đơn hàng</span>
-                </a>
+                <!-- Khách hàng (User Controller) -->
+                <a class="@(currentController == "User" ? "active" : "")"
+                   data-tooltip="Khách hàng"
+                   asp-area="Admin"
+                   asp-controller="User"
+                   asp-action="Index">
 
-                <a href="#"
-                   data-tooltip="Khách hàng">
                     <i class="bi bi-people"></i>
                     <span>Khách hàng</span>
                 </a>
 
                 <span class="admin-nav-label">Hệ thống</span>
 
-                <a href="#"
-                   data-tooltip="Báo cáo">
+                <!-- Phân quyền (Role Controller) -->
+                <a class="@(currentController == "Role" ? "active" : "")"
+                   data-tooltip="Phân quyền"
+                   asp-area="Admin"
+                   asp-controller="Role"
+                   asp-action="Index">
+
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Phân quyền</span>
+                </a>
+
+                <!-- Báo cáo (Report Controller) -->
+                <a class="@(currentController == "Report" || currentController == "BaoCao" ? "active" : "")"
+                   data-tooltip="Báo cáo"
+                   asp-area="Admin"
+                   asp-controller="Report"
+                   asp-action="Index">
+
                     <i class="bi bi-bar-chart"></i>
                     <span>Báo cáo</span>
                 </a>

@@ -1,0 +1,436 @@
+﻿<section class="emua-hero">
+
+    <div class="emua-hero-light light-one"></div>
+    <div class="emua-hero-light light-two"></div>
+
+    <div class="emua-hero-container">
+
+        <div class="emua-hero-content">
+
+            <span class="emua-hero-label">
+                EMUA TECHNOLOGY
+            </span>
+
+            <h1>
+                Công nghệ mới.
+                <br />
+                Trải nghiệm mới.
+            </h1>
+
+            <p>
+                Khám phá điện thoại, laptop, tai nghe và
+                những thiết bị công nghệ mới nhất tại EMUA.
+            </p>
+
+            <div class="emua-hero-actions">
+
+                <a href="#new-products"
+                   class="emua-hero-primary">
+
+                    Khám phá ngay
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </a>
+
+                <a href="#categories"
+                   class="emua-hero-secondary">
+
+                    Xem danh mục
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="emua-hero-visual">
+
+            <div class="emua-phone">
+
+                <div class="emua-phone-screen">
+
+                    <small>
+                        E M U A
+                    </small>
+
+                    <strong>
+                        Technology
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="hero-chip hero-chip-a">
+
+                <i class="bi bi-headphones"></i>
+
+                Audio
+
+            </div>
+
+
+            <div class="hero-chip hero-chip-b">
+
+                <i class="bi bi-laptop"></i>
+
+                Laptop
+
+            </div>
+
+
+            <div class="hero-chip hero-chip-c">
+
+                <i class="bi bi-phone"></i>
+
+                Smartphone
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<style>
+
+    .emua-hero {
+        position: relative;
+        min-height: 620px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        color: #fff;
+        background: radial-gradient( circle at 75% 42%, rgba(91,140,255,.23), transparent 30% ), radial-gradient( circle at 48% 105%, rgba(139,124,246,.23), transparent 38% ), linear-gradient( 135deg, #0f1129, #151733 50%, #0b0d20 );
+    }
+
+
+    .emua-hero-container {
+        width: min(1400px, 92%);
+        margin: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 50px;
+        position: relative;
+        z-index: 3;
+    }
+
+
+    .emua-hero-label {
+        display: inline-block;
+        margin-bottom: 18px;
+        color: #69b0ff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 4px;
+        animation: heroLabelGlow 2s ease-in-out infinite alternate;
+    }
+
+
+    .emua-hero-content h1 {
+        margin: 0;
+        font-size: clamp(52px, 6vw, 82px);
+        line-height: 1;
+        font-weight: 760;
+        letter-spacing: -4px;
+        background: linear-gradient( 100deg, #ffffff, #cbd9ff, #ffffff, #d8cfff );
+        background-size: 250%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: heroTextShine 7s linear infinite;
+    }
+
+
+    .emua-hero-content p {
+        max-width: 540px;
+        margin-top: 28px;
+        color: #b8bbcb;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+
+
+    .emua-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 30px;
+    }
+
+
+    .emua-hero-primary,
+    .emua-hero-secondary {
+        min-height: 49px;
+        padding: 0 25px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        text-decoration: none;
+        transition: .3s;
+    }
+
+
+    .emua-hero-primary {
+        color: #fff;
+        background: linear-gradient( 135deg, #5b8cff, #6d68e8 );
+        box-shadow: 0 12px 35px rgba(91,140,255,.28);
+    }
+
+
+        .emua-hero-primary:hover {
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 17px 42px rgba(91,140,255,.42);
+        }
+
+
+    .emua-hero-secondary {
+        color: #fff;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(255,255,255,.05);
+        backdrop-filter: blur(15px);
+    }
+
+
+        .emua-hero-secondary:hover {
+            color: #17172a;
+            background: #fff;
+            transform: translateY(-3px);
+        }
+
+
+    .emua-hero-visual {
+        position: relative;
+        height: 520px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    .emua-phone {
+        width: 235px;
+        height: 470px;
+        padding: 8px;
+        border-radius: 45px;
+        border: 5px solid #333747;
+        background: #060609;
+        box-shadow: 0 45px 100px rgba(0,0,0,.55);
+        animation: heroPhoneFloat 5s ease-in-out infinite;
+    }
+
+
+    .emua-phone-screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 34px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient( circle at 35% 25%, #177ee8, transparent 40% ), radial-gradient( circle at 70% 75%, #7d2df4, transparent 42% ), #05060d;
+    }
+
+
+        .emua-phone-screen small {
+            color: rgba(255,255,255,.75);
+            letter-spacing: 6px;
+            font-size: 11px;
+        }
+
+
+        .emua-phone-screen strong {
+            margin-top: 11px;
+            font-size: 30px;
+        }
+
+
+    .hero-chip {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 17px;
+        border-radius: 15px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.07);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 15px 40px rgba(0,0,0,.25);
+        font-size: 13px;
+    }
+
+
+        .hero-chip i {
+            color: #69b0ff;
+            font-size: 18px;
+        }
+
+
+    .hero-chip-a {
+        left: 25px;
+        top: 90px;
+        animation: chipFloatA 4s ease-in-out infinite;
+    }
+
+
+    .hero-chip-b {
+        right: 15px;
+        top: 220px;
+        animation: chipFloatB 5s ease-in-out infinite;
+    }
+
+
+    .hero-chip-c {
+        left: 65px;
+        bottom: 65px;
+        animation: chipFloatA 5.5s ease-in-out infinite;
+    }
+
+
+    .emua-hero-light {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: .24;
+    }
+
+
+    .light-one {
+        width: 420px;
+        height: 420px;
+        right: 8%;
+        top: 80px;
+        background: #5b8cff;
+    }
+
+
+    .light-two {
+        width: 320px;
+        height: 320px;
+        right: 35%;
+        bottom: -120px;
+        background: #8b7cf6;
+    }
+
+
+    @@keyframes heroTextShine {
+
+        from {
+            background-position: 250% center;
+        }
+
+        to {
+            background-position: -250% center;
+        }
+    }
+
+
+    @@keyframes heroLabelGlow {
+
+        from {
+            text-shadow: 0 0 3px #5b8cff;
+        }
+
+        to {
+            text-shadow: 0 0 18px #5b8cff;
+        }
+    }
+
+
+    @@keyframes heroPhoneFloat {
+
+        0%,
+        100% {
+            transform: rotate(8deg) translateY(0);
+        }
+
+        50% {
+            transform: rotate(5deg) translateY(-18px);
+        }
+    }
+
+
+    @@keyframes chipFloatA {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-13px);
+        }
+    }
+
+
+    @@keyframes chipFloatB {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(15px);
+        }
+    }
+
+
+    @@media(max-width:900px) {
+
+        .emua-hero {
+            padding: 70px 0 30px;
+        }
+
+
+        .emua-hero-container {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+
+        .emua-hero-content p {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .emua-hero-actions {
+            justify-content: center;
+        }
+
+
+        .emua-hero-visual {
+            height: 430px;
+        }
+    }
+
+
+    @@media(max-width:550px) {
+
+        .emua-hero-content h1 {
+            font-size: 48px;
+            letter-spacing: -2px;
+        }
+
+
+        .emua-hero-actions {
+            flex-direction: column;
+        }
+
+
+        .emua-phone {
+            width: 190px;
+            height: 385px;
+        }
+    }
+
+</style>

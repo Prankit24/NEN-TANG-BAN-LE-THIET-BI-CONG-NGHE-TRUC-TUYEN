@@ -33,8 +33,7 @@
                 </button>
             </header>
 
-            <div asp-validation-summary="All"
-                 class="editor-validation"></div>
+            <div asp-validation-summary="All" class="editor-validation"></div>
 
             <div class="profile-editor-content">
                 <aside class="editor-avatar-side">
@@ -57,14 +56,12 @@
                         }
                         else
                         {
-                            <div id="avatarPreview"
-                                 class="editor-avatar-placeholder">
+                            <div id="avatarPreview" class="editor-avatar-placeholder">
                                 <i class="bi bi-person"></i>
                             </div>
                         }
 
-                        <label for="AvatarFile" class="editor-upload-circle"
-                               title="Tải ảnh từ máy">
+                        <label for="AvatarFile" class="editor-upload-circle" title="Tải ảnh từ máy">
                             <i class="bi bi-camera-fill"></i>
                         </label>
 
@@ -82,8 +79,7 @@
                         JPG, PNG hoặc WEBP · Tối đa 2 MB
                     </small>
 
-                    <span asp-validation-for="AvatarFile"
-                          class="editor-field-error"></span>
+                    <span asp-validation-for="AvatarFile" class="editor-field-error"></span>
 
                     <div class="editor-avatar-divider">
                         <span>hoặc chọn ảnh có sẵn</span>
@@ -95,8 +91,7 @@
                                    name="SelectedAvatar"
                                    value="/images/avatar/conbo.jpg"
                                    @(Model.SelectedAvatar == "/images/avatar/conbo.jpg" ? "checked" : "") />
-                            <img src="~/images/avatar/conbo.jpg"
-                                 alt="Avatar bò" />
+                            <img src="~/images/avatar/conbo.jpg" alt="Avatar bò" />
                             <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
@@ -105,8 +100,7 @@
                                    name="SelectedAvatar"
                                    value="/images/avatar/conchoo.jpg"
                                    @(Model.SelectedAvatar == "/images/avatar/conchoo.jpg" ? "checked" : "") />
-                            <img src="~/images/avatar/conchoo.jpg"
-                                 alt="Avatar chó" />
+                            <img src="~/images/avatar/conchoo.jpg" alt="Avatar chó" />
                             <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
@@ -115,8 +109,7 @@
                                    name="SelectedAvatar"
                                    value="/images/avatar/conkhi.jpg"
                                    @(Model.SelectedAvatar == "/images/avatar/conkhi.jpg" ? "checked" : "") />
-                            <img src="~/images/avatar/conkhi.jpg"
-                                 alt="Avatar khỉ" />
+                            <img src="~/images/avatar/conkhi.jpg" alt="Avatar khỉ" />
                             <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
@@ -125,8 +118,7 @@
                                    name="SelectedAvatar"
                                    value="/images/avatar/convit.jpg"
                                    @(Model.SelectedAvatar == "/images/avatar/convit.jpg" ? "checked" : "") />
-                            <img src="~/images/avatar/convit.jpg"
-                                 alt="Avatar vịt" />
+                            <img src="~/images/avatar/convit.jpg" alt="Avatar vịt" />
                             <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
 
@@ -135,14 +127,12 @@
                                    name="SelectedAvatar"
                                    value="/images/avatar/conhuu.jpg"
                                    @(Model.SelectedAvatar == "/images/avatar/conhuu.jpg" ? "checked" : "") />
-                            <img src="~/images/avatar/conhuu.jpg"
-                                 alt="Avatar hươu" />
+                            <img src="~/images/avatar/conhuu.jpg" alt="Avatar hươu" />
                             <i class="bi bi-check-circle-fill editor-avatar-check"></i>
                         </label>
                     </div>
 
-                    <span asp-validation-for="SelectedAvatar"
-                          class="editor-field-error"></span>
+                    <span asp-validation-for="SelectedAvatar" class="editor-field-error"></span>
                 </aside>
 
                 <main class="editor-info-side">
@@ -157,16 +147,11 @@
                     <div class="editor-fields-grid">
                         <div class="editor-input-group editor-input-wide">
                             <label asp-for="FullName">Họ và tên</label>
-
                             <div class="editor-field-shell">
                                 <i class="bi bi-person"></i>
-                                <input asp-for="FullName"
-                                       autocomplete="name"
-                                       placeholder="Nhập họ và tên đầy đủ" />
+                                <input asp-for="FullName" autocomplete="name" placeholder="Nhập họ và tên đầy đủ" />
                             </div>
-
-                            <span asp-validation-for="FullName"
-                                  class="editor-field-error"></span>
+                            <span asp-validation-for="FullName" class="editor-field-error"></span>
                         </div>
 
                         <div class="editor-input-group">
@@ -174,7 +159,6 @@
                                 Email
                                 <small>Không thể đổi</small>
                             </label>
-
                             <div class="editor-field-shell editor-field-locked">
                                 <i class="bi bi-envelope"></i>
                                 <input value="@Model.Email" readonly />
@@ -184,30 +168,20 @@
 
                         <div class="editor-input-group">
                             <label asp-for="PhoneNumber">Số điện thoại</label>
-
                             <div class="editor-field-shell">
                                 <i class="bi bi-telephone"></i>
-                                <input asp-for="PhoneNumber"
-                                       autocomplete="tel"
-                                       placeholder="0901234567" />
+                                <input asp-for="PhoneNumber" autocomplete="tel" placeholder="0901234567" />
                             </div>
-
-                            <span asp-validation-for="PhoneNumber"
-                                  class="editor-field-error"></span>
+                            <span asp-validation-for="PhoneNumber" class="editor-field-error"></span>
                         </div>
 
                         <div class="editor-input-group editor-input-wide">
                             <label asp-for="Address">Địa chỉ nhận hàng mặc định</label>
-
                             <div class="editor-field-shell editor-field-shell-textarea">
                                 <i class="bi bi-geo-alt"></i>
-                                <textarea asp-for="Address"
-                                          rows="3"
-                                          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+                                <textarea asp-for="Address" rows="3" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
                             </div>
-
-                            <span asp-validation-for="Address"
-                                  class="editor-field-error"></span>
+                            <span asp-validation-for="Address" class="editor-field-error"></span>
                         </div>
                     </div>
 
@@ -226,26 +200,23 @@
 
     <script>
         const avatarFile = document.getElementById("AvatarFile");
-
-        const avatarRadios = document.querySelectorAll(
-            'input[name="SelectedAvatar"]'
-        );
+        const avatarRadios = document.querySelectorAll('input[name="SelectedAvatar"]');
 
         function setAvatarPreview(imageSource) {
             const oldPreview = document.getElementById("avatarPreview");
-
             const image = document.createElement("img");
             image.id = "avatarPreview";
             image.className = "editor-avatar-preview";
             image.alt = "Ảnh đại diện";
             image.src = imageSource;
 
-            oldPreview.replaceWith(image);
+            if (oldPreview) {
+                oldPreview.replaceWith(image);
+            }
         }
 
         avatarFile?.addEventListener("change", function (event) {
             const file = event.target.files?.[0];
-
             if (!file) return;
 
             avatarRadios.forEach(function (radio) {
@@ -253,96 +224,104 @@
             });
 
             const reader = new FileReader();
-
             reader.onload = function (result) {
                 setAvatarPreview(result.target.result);
             };
-
             reader.readAsDataURL(file);
         });
 
         avatarRadios.forEach(function (radio) {
             radio.addEventListener("change", function () {
                 if (!radio.checked) return;
-
-                avatarFile.value = "";
+                if (avatarFile) avatarFile.value = "";
                 setAvatarPreview(radio.value);
             });
         });
 
-        function showProfileDialog(title, message, isError = false) {
+        // Hàm tạo Dialog thông báo có màu sắc chuẩn UI
+        function showProfileDialog(title, message, isError = false, onSuccessRedirect = false) {
             const dialog = document.createElement("div");
-
             dialog.className = "profile-ajax-dialog-backdrop";
-            dialog.innerHTML = `
-                <div class="profile-ajax-dialog" role="dialog" aria-modal="true">
-                    <div class="profile-ajax-dialog-icon ${isError ? "error" : ""}">
-                        <i class="bi ${isError ? "bi-exclamation-lg" : "bi-check-lg"}"></i>
-                    </div>
-                    <h3></h3>
-                    <p></p>
-                    <button type="button">Đã hiểu</button>
-                </div>`;
+            dialog.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; transition: opacity 0.25s ease;";
 
-            dialog.querySelector("h3").textContent = title;
-            dialog.querySelector("p").textContent = message;
-            dialog.querySelector("button").addEventListener("click", function () {
-                dialog.remove();
-            });
+            const iconBg = isError ? "#fee2e2" : "#dcfce7";
+            const iconColor = isError ? "#dc2626" : "#16a34a";
+            const iconClass = isError ? "bi-exclamation-lg" : "bi-check-lg";
+
+            dialog.innerHTML =
+                '<div style="background: #ffffff; padding: 28px 24px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">' +
+                    '<div style="width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 50%; background: ' + iconBg + '; color: ' + iconColor + '; display: flex; align-items: center; justify-content: center; font-size: 30px;">' +
+                        '<i class="bi ' + iconClass + '"></i>' +
+                    '</div>' +
+                    '<h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #0f172a;">' + title + '</h3>' +
+                    '<p style="margin: 0 0 20px; font-size: 14px; color: #64748b; line-height: 1.5;">' + message + '</p>' +
+                    '<button type="button" id="btnDialogClose" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: #4f46e5; color: #ffffff; font-weight: 600; font-size: 14px; cursor: pointer;">Ok</button>' +
+                '</div>';
 
             document.body.appendChild(dialog);
+
+            dialog.querySelector("#btnDialogClose").addEventListener("click", function () {
+                dialog.remove();
+                if (onSuccessRedirect) {
+                    window.location.href = '@Url.Action("Profile", "Account")';
+                }
+            });
+
             requestAnimationFrame(function () {
-                dialog.classList.add("is-visible");
+                dialog.style.opacity = "1";
             });
         }
 
-        document.getElementById("profileEditForm")
-            ?.addEventListener("submit", async function (event) {
-                event.preventDefault();
+        document.getElementById("profileEditForm")?.addEventListener("submit", async function (event) {
+            event.preventDefault();
 
-                const form = event.currentTarget;
-                const submitButton = form.querySelector('button[type="submit"]');
-                const originalHtml = submitButton.innerHTML;
+            const form = event.currentTarget;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalHtml = submitButton.innerHTML;
 
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu';
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu';
 
-                try {
-                    const response = await fetch(form.action, {
-                        method: "POST",
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
-                        },
-                        body: new FormData(form)
-                    });
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: new FormData(form)
+                });
 
-                    const result = await response.json();
+                const result = await response.json();
 
-                    if (!response.ok || !result.success) {
-                        showProfileDialog(
-                            "Không thể lưu thay đổi",
-                            result.message ?? "Vui lòng kiểm tra lại thông tin.",
-                            true
-                        );
-                        return;
-                    }
-
+                if (!response.ok || !result.success) {
                     showProfileDialog(
-                        "Đã lưu thay đổi",
-                        result.message ?? "Hồ sơ của bạn đã được cập nhật."
+                        "Không thể lưu thay đổi",
+                        result.message ?? "Vui lòng kiểm tra lại thông tin.",
+                        true,
+                        false
                     );
+                    return;
                 }
-                catch {
-                    showProfileDialog(
-                        "Lỗi kết nối",
-                        "Không thể lưu dữ liệu. Vui lòng thử lại.",
-                        true
-                    );
-                }
-                finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalHtml;
-                }
-            });
+
+                showProfileDialog(
+                    "Đã lưu thay đổi",
+                    result.message ?? "Hồ sơ của bạn đã được cập nhật thành công.",
+                    false,
+                    true
+                );
+            }
+            catch {
+                showProfileDialog(
+                    "Lỗi kết nối",
+                    "Không thể kết nối đến máy chủ. Vui lòng thử lại.",
+                    true,
+                    false
+                );
+            }
+            finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalHtml;
+            }
+        });
     </script>
 }

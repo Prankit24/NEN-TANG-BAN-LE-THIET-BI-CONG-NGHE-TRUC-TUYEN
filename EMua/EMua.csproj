@@ -8,11 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\Data\" />
-    <Folder Include="Areas\Staff\Controllers\" />
-    <Folder Include="Areas\Staff\Data\" />
+    <Compile Remove="Areas\Admin\Data\**" />
+    <Compile Remove="Areas\Staff\Data\**" />
+    <Content Remove="Areas\Admin\Data\**" />
+    <Content Remove="Areas\Staff\Data\**" />
+    <EmbeddedResource Remove="Areas\Admin\Data\**" />
+    <EmbeddedResource Remove="Areas\Staff\Data\**" />
+    <None Remove="Areas\Admin\Data\**" />
+    <None Remove="Areas\Staff\Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Areas\Staff\Models\" />
     <Folder Include="MLModels\" />
+    <Folder Include="Views\Shared\Components\CartSummary\" />
     <Folder Include="wwwroot\images\banner\" />
     <Folder Include="wwwroot\images\branchs\" />
   </ItemGroup>

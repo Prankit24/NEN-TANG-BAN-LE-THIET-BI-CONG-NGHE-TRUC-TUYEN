@@ -1,18 +1,158 @@
 @model EMua.ViewModels.CheckoutSuccessViewModel
+
 @{
-    ViewData["Title"] = "Đặt hàng thành công";
+    ViewData["Title"] = "Hoàn tất đơn hàng";
+
+    string mbAccountNo = "0963453170";
+    string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
+
+    string transferContent = Model.TransferContent ?? $"EMUA{Model.OrderId:D6}";
+    string bankQrUrl = Model.BankQrUrl ?? $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
+    string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+
+    bool isPaid = Model.PaymentStatus == "Đã thanh toán" || Model.PaymentMethod.Contains("COD");
 }
-<link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
-<div class="customer-page container py-4">    <partial name="_CheckoutSteps" model="4" />
-    <section class="checkout-success"><i class="bi bi-check-circle-fill"></i><span class="eyebrow">HOÀN TẤT</span>
-        <h1>Đặt hàng thành công</h1>
-        <p>Mã đơn hàng: <strong>#DH-@Model.OrderId.ToString("D5")</strong></p><strong
-        class="success-total">@Model.Total.ToString("N0") đ</strong>@if (Model.IsPaid) {
-        <small>Đã thanh
-            toán</small>
-        }
-        <div><a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId"
-                    class="customer-button">Xem chi tiết đơn hàng</a><a asp-controller="Home" asp-action="Index"
-                                                                class="back-link">Tiếp tục mua sắm</a></div>
-        </section>
+
+<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
+
+<div class="customer-page container py-4">
+
+    <!-- Custom CSS Stepper -->
+    <div class="checkout-steps">
+        <div class="checkout-step active">
+            <span>1</span>
+            <strong>Thông tin</strong>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+
+        <div class="checkout-step active">
+            <span>2</span>
+            <strong>Thanh toán</strong>
+        </div>
+        <i class="bi bi-chevron-right"></i>
+
+        <div class="checkout-step active">
+            <span>3</span>
+            <strong>Hoàn tất</strong>
+        </div>
     </div>
+
+    <div class="card border-0 shadow-sm mx-auto overflow-hidden mt-4" style="max-width: 680px; border-radius: 16px;">
+
+        @if (isPaid)
+        {
+            <div class="card-header bg-white border-0 text-center pt-4 pb-2">
+                <div class="mb-3">
+                    <span class="badge rounded-circle bg-success-subtle text-success p-3 fs-1">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold text-success">
+                    @(Model.PaymentMethod.Contains("COD") ? "Đặt hàng thành công!" : "Đơn hàng đã được thanh toán / xác nhận!")
+                </h3>
+                <p class="text-muted mb-0">Cảm ơn bạn đã mua sắm tại EMUA.</p>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="bg-light p-3 rounded-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <span class="text-muted d-block small">Mã đơn hàng</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted d-block small">Tổng tiền</span>
+                            <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="customer-button text-center">
+                        <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="customer-button customer-button-light text-center">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card-header bg-white border-0 text-center pt-4 pb-2">
+                <div class="mb-3">
+                    <span class="badge rounded-circle bg-primary-subtle text-primary p-3 fs-2">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold text-primary">Vui lòng thanh toán đơn hàng</h3>
+                <p class="text-muted mb-0">Mã QR đã được tạo tự động kèm đúng số tiền và nội dung chuyển khoản.</p>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="bg-light p-3 rounded-3 mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <span class="text-muted d-block small">Mã đơn hàng</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="text-muted d-block small">Tổng tiền</span>
+                            <span class="fw-bold text-danger fs-4">@Model.TotalAmount.ToString("N0") đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.PaymentMethod.Contains("WEB3"))
+                {
+                    <div class="qr-box text-center p-4 border rounded bg-light mb-4">
+                        <span class="badge bg-warning text-dark mb-2">Thanh toán Ví Web3</span>
+                        <p class="small text-muted mb-2">Chuyển đúng số tiền vào địa chỉ ví bên dưới:</p>
+                        <code class="d-block p-2 bg-dark text-warning rounded text-break mb-2 fs-6">@web3WalletAddress</code>
+                    </div>
+                }
+                else
+                {
+                    <div class="qr-box text-center p-4 border border-primary-subtle rounded bg-light mb-4">
+                        <span class="badge bg-primary mb-2">Chuyển khoản MB Bank</span>
+                        <h5 class="fw-bold mb-3">Quét mã QR để thanh toán tự động</h5>
+
+                        <div class="d-inline-block p-2 bg-white rounded shadow-sm mb-3">
+                            <img src="@bankQrUrl" alt="VietQR MB Bank" class="img-fluid" style="max-width: 220px;" />
+                        </div>
+
+                        <div class="text-start bg-white p-3 rounded border">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Số tài khoản:</span>
+                                <strong class="text-dark">@mbAccountNo (MB Bank)</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Chủ tài khoản:</span>
+                                <strong class="text-dark">PHAN DANG PHUONG ANH</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Nội dung chuyển khoản:</span>
+                                <strong class="text-danger fs-6">@transferContent</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Trạng thái:</span>
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>@Model.PaymentStatus</span>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống đối soát chính xác.</small>
+                    </div>
+                }
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="customer-button text-center">
+                        <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="customer-button customer-button-light text-center">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

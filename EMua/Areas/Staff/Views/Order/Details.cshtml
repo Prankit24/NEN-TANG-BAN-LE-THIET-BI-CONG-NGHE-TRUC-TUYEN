@@ -1,4 +1,607 @@
 @model DonHang
-@{ ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}"; }
-<div class="staff-toolbar"><a class="btn btn-light" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại</a><form asp-action="CreateInvoice" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.MaDonHang"/><button class="btn btn-primary"><i class="bi bi-printer"></i> Xuất hóa đơn</button></form></div>
-<div class="staff-order-detail"><section class="staff-card"><h2>Thông tin đơn hàng</h2><div class="staff-info-grid"><div><span>Khách hàng</span><strong>@(Model.HoTenNhanHang ?? Model.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</strong></div><div><span>Số điện thoại</span><strong>@(Model.SoDienThoaiNhanHang ?? "—")</strong></div><div><span>Địa chỉ nhận</span><strong>@(Model.DiaChiNhanHang ?? "—")</strong></div><div><span>Phương thức giao</span><strong>@(Model.PhuongThucVanChuyen ?? "—")</strong></div><div><span>Ghi chú</span><strong>@(Model.GhiChu ?? "Không có")</strong></div><div><span>Trạng thái</span><strong><span class="staff-badge">@(Model.TrangThaiDonHang ?? "Chờ xử lý")</span></strong></div></div></section><section class="staff-card"><h2>Sản phẩm trong đơn</h2><div class="table-responsive"><table class="staff-table"><thead><tr><th>Sản phẩm</th><th>Biến thể</th><th>Đơn giá</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>@foreach(var detail in Model.ChiTietDonHangs){<tr><td>@detail.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td><td>@detail.MaBienTheNavigation.MauSac @detail.MaBienTheNavigation.PhienBan</td><td>@detail.DonGia.ToString("N0") đ</td><td>@detail.SoLuong</td><td>@detail.ThanhTien.ToString("N0") đ</td></tr>}</tbody></table></div><div class="staff-order-total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></div></section></div>
+@{
+    ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}";
+
+    var allStatuses = (ViewBag.Statuses as string[]) ?? Array.Empty<string>();
+    var currentStatus = Model.TrangThaiDonHang ?? "Chờ xử lý";
+
+    var progressStatuses = allStatuses.Where(s => !s.Contains("hủy", StringComparison.OrdinalIgnoreCase)).ToArray();
+    var isCancelled = currentStatus.Contains("hủy", StringComparison.OrdinalIgnoreCase);
+    var isReturnRequested = currentStatus == "Yêu cầu đổi trả" || currentStatus == "Đang đổi trả" || currentStatus == "Đã nhận đổi trả";
+
+    var currentIndex = Array.IndexOf(progressStatuses, currentStatus);
+    if (currentIndex < 0) currentIndex = 0;
+
+    string[] stepIcons = { "bi-hourglass-split", "bi-box-seam", "bi-truck", "bi-house-check-fill" };
+
+    // Lấy thông tin lịch sử đổi trả gần nhất
+    var returnLog = Model.LichSuVanChuyens
+        .OrderByDescending(x => x.ThoiGian)
+        .FirstOrDefault(x => x.TrangThai == "Yêu cầu đổi trả");
+}
+
+<style>
+    .staff-tracker {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0 32px;
+    }
+
+        .staff-tracker::before {
+            content: "";
+            position: absolute;
+            top: 22px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+    .staff-tracker-progress {
+        position: absolute;
+        top: 22px;
+        left: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4f46e5, #38bdf8);
+        border-radius: 2px;
+        z-index: 1;
+        transition: width .6s ease;
+    }
+
+    .staff-tracker-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        text-align: center;
+    }
+
+        .staff-tracker-step .icon-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #adb5bd;
+            transition: all .3s ease;
+        }
+
+        .staff-tracker-step.done .icon-circle {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: #fff;
+        }
+
+        .staff-tracker-step.active .icon-circle {
+            background: #fff;
+            border-color: #4f46e5;
+            color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79,70,229,.15);
+            animation: staff-pulse 1.6s infinite;
+        }
+
+    @@keyframes staff-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(79,70,229,.35);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(79,70,229,0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(79,70,229,0);
+        }
+    }
+
+    .staff-tracker-step .step-label {
+        margin-top: 8px;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .staff-tracker-step.done .step-label,
+    .staff-tracker-step.active .step-label {
+        color: #1f2937;
+    }
+
+    .staff-truck-runner {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        font-size: 1.3rem;
+        color: #4f46e5;
+        transition: left .6s ease;
+        animation: staff-bounce 1.2s infinite;
+    }
+
+    @@keyframes staff-bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    .staff-eta-banner {
+        background: #eef2ff;
+        border: 1px dashed #4f46e5;
+        border-radius: .5rem;
+        padding: .65rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #3730a3;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .staff-proof-photo {
+        max-width: 260px;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: .5rem;
+        border: 1px solid #dee2e6;
+        margin-top: 8px;
+    }
+
+    .return-request-alert {
+        background-color: #fff5f5;
+        border: 2px solid #fecaca;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .staff-delivery-form .form-group {
+        margin-bottom: 14px;
+    }
+
+    .staff-delivery-form label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+        font-size: .9rem;
+    }
+
+    .staff-delivery-form input[type="text"],
+    .staff-delivery-form input[type="datetime-local"],
+    .staff-delivery-form input[type="file"],
+    .staff-delivery-form textarea,
+    .staff-delivery-form select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: .4rem;
+        font-size: .9rem;
+    }
+
+    .staff-delivery-form .proof-box {
+        border: 1px solid #d1fae5;
+        background: #ecfdf5;
+        border-radius: .5rem;
+        padding: 12px;
+        display: none;
+    }
+
+        .staff-delivery-form .proof-box.show {
+            display: block;
+        }
+
+    .staff-return-chat {
+        margin-top: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .staff-chat-waiting {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+    }
+
+    .staff-chat-wait-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 1.1rem;
+        flex: 0 0 42px;
+    }
+
+    .staff-chat-header {
+        padding: 12px 15px;
+        color: #fff;
+        background: linear-gradient(135deg,#2563eb,#3b82f6);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .staff-chat-messages {
+        min-height: 220px;
+        max-height: 340px;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8fafc;
+    }
+
+    .staff-chat-composer {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+        .staff-chat-composer input {
+            border-radius: 10px;
+        }
+
+        .staff-chat-composer button {
+            border-radius: 10px;
+        }
+
+    @@media(max-width:640px) {
+        .staff-chat-waiting {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+            .staff-chat-waiting .badge {
+                margin-left: 54px !important;
+            }
+
+        .staff-chat-header {
+            align-items: flex-start;
+        }
+    }
+
+</style>
+
+<div class="staff-toolbar">
+    <a class="btn btn-light" asp-action="Index"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    <form asp-action="CreateInvoice" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.MaDonHang" />
+        <button class="btn btn-primary"><i class="bi bi-printer"></i> Xuất hóa đơn</button>
+    </form>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@TempData["SuccessMessage"]</div>
+}
+
+<!-- KHỐI BÁO CÁO YÊU CẦU ĐỔI TRẢ & KHUNG CHAT TRỰC TIẾP VỚI KHÁCH HÀNG -->
+@if (isReturnRequested)
+{
+    <div class="return-request-alert shadow-sm">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h3 class="text-danger fs-5 mb-0 fw-bold">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> ĐƠN HÀNG CÓ YÊU CẦU ĐỔI TRẢ / HOÀN TIỀN
+            </h3>
+            <span class="badge bg-danger fs-6">@currentStatus</span>
+        </div>
+        <p class="text-muted small mb-3">Khách hàng đã gửi yêu cầu hỗ trợ sự cố cho đơn hàng này. Vui lòng trao đổi với khách hoặc bấm quyết định xử lý:</p>
+
+        @if (returnLog != null)
+        {
+            <div class="p-3 bg-white rounded border mb-3">
+                <div class="small mb-1"><strong>Thời gian gửi:</strong> @returnLog.ThoiGian.ToString("dd/MM/yyyy HH:mm")</div>
+                <div class="small text-dark whitespace-pre-line" style="white-space: pre-line;">@returnLog.MoTa</div>
+            </div>
+        }
+
+        <!-- NÚT DUYỆT / TỪ CHỐI -->
+        <div class="d-flex gap-2 flex-wrap pt-2 border-top mb-3">
+            <form asp-action="ProcessReturnAction" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                <input type="hidden" name="actionType" value="Accept" />
+                <button type="submit" class="btn btn-success fw-bold" onclick="return confirm('Xác nhận ĐỒNG Ý yêu cầu đổi trả của khách hàng?');">
+                    <i class="bi bi-check-circle-fill me-1"></i> Chấp nhận Đổi trả
+                </button>
+            </form>
+
+            <button type="button" class="btn btn-outline-danger fw-bold" data-bs-toggle="collapse" data-bs-target="#rejectReturnBox">
+                <i class="bi bi-x-circle-fill me-1"></i> Từ chối Yêu cầu
+            </button>
+
+            <a href="tel:@Model.SoDienThoaiNhanHang" class="btn btn-primary fw-bold ms-auto">
+                <i class="bi bi-telephone-outbound-fill me-1"></i> Gọi hotline khách
+            </a>
+        </div>
+
+        <div class="collapse mb-3" id="rejectReturnBox">
+            <form asp-action="ProcessReturnAction" method="post" class="p-3 bg-white rounded border border-danger">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaDonHang" />
+                <input type="hidden" name="actionType" value="Reject" />
+                <label class="form-label text-danger fw-bold small">Lý do từ chối yêu cầu đổi trả <span class="text-danger">*</span></label>
+                <textarea name="rejectReason" class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập rõ lý do từ chối để thông báo cho khách hàng..." required></textarea>
+                <button type="submit" class="btn btn-sm btn-danger">Xác nhận Từ chối</button>
+            </form>
+        </div>
+
+        <!-- CHAT ĐỔI TRẢ: chỉ xuất hiện khi khách đã chủ động mở phiên -->
+        <div class="staff-return-chat" id="staffReturnChatCard">
+            <div id="staffChatWaiting" class="staff-chat-waiting">
+                <div class="staff-chat-wait-icon"><i class="bi bi-chat-square-text"></i></div>
+                <div>
+                    <div class="fw-bold">Chưa có phiên trò chuyện</div>
+                    <div class="small text-muted">Khách hàng chưa bấm “Bắt đầu trò chuyện”. Nhân viên không chủ động mở chat.</div>
+                </div>
+                <span class="badge bg-secondary ms-auto" id="staffChatStatusBadge">Chờ khách</span>
+            </div>
+
+            <div id="staffChatActive" class="d-none">
+                <div class="staff-chat-header">
+                    <div>
+                        <div class="fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>Khách đang trao đổi</div>
+                        <div class="small opacity-75">Phiên tạm thời • Không lưu lịch sử</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light text-danger fw-semibold" id="btnEndStaffChat">Kết thúc phiên</button>
+                </div>
+                <div class="staff-chat-messages" id="staffChatMessageList">
+                    <div class="text-center text-muted py-4">Khách chưa gửi tin nhắn.</div>
+                </div>
+                <form id="staffChatForm" class="staff-chat-composer">
+                    <input type="text" id="staffChatInput" class="form-control" placeholder="Phản hồi khách hàng..." autocomplete="off" maxlength="1000" required />
+                    <button type="submit" class="btn btn-primary px-3"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Thanh tiến trình giao hàng -->
+<section class="staff-card">
+    <h2>Tiến trình giao hàng</h2>
+
+    @if (isCancelled)
+    {
+        <div class="alert alert-danger mb-0">
+            <i class="bi bi-x-octagon-fill me-1"></i> Đơn hàng đã bị hủy. Trạng thái: <strong>@currentStatus</strong>
+        </div>
+    }
+    else if (progressStatuses.Length > 0)
+    {
+        var pct = progressStatuses.Length > 1 ? (currentIndex * 100.0 / (progressStatuses.Length - 1)) : 0;
+        <div class="staff-tracker" style="margin-top:26px;">
+            <div class="staff-tracker-progress" style="width:@pct.ToString("0.##")%"></div>
+            @if (currentIndex < progressStatuses.Length - 1)
+            {
+                <div class="staff-truck-runner" style="left:@pct.ToString("0.##")%"><i class="bi bi-truck"></i></div>
+            }
+            @for (int i = 0; i < progressStatuses.Length; i++)
+            {
+                var cls = i < currentIndex ? "done" : (i == currentIndex ? "active" : "");
+                var icon = stepIcons[Math.Min(i, stepIcons.Length - 1)];
+                <div class="staff-tracker-step @cls">
+                    <div class="icon-circle"><i class="bi @icon"></i></div>
+                    <div class="step-label">@progressStatuses[i]</div>
+                </div>
+            }
+        </div>
+
+        @if (Model.NgayDuKienGiao.HasValue && currentIndex < progressStatuses.Length - 1)
+        {
+            <div class="staff-eta-banner">
+                <i class="bi bi-calendar-check"></i>
+                <span>Dự kiến giao hàng: @Model.NgayDuKienGiao.Value.ToString("HH:mm, dd/MM/yyyy")</span>
+            </div>
+        }
+    }
+</section>
+
+<div class="staff-order-detail">
+    <section class="staff-card">
+        <h2>Thông tin đơn hàng</h2>
+        <div class="staff-info-grid">
+            <div><span>Khách hàng</span><strong>@(Model.HoTenNhanHang ?? Model.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</strong></div>
+            <div><span>Số điện thoại</span><strong>@(Model.SoDienThoaiNhanHang ?? "—")</strong></div>
+            <div><span>Địa chỉ nhận</span><strong>@(Model.DiaChiNhanHang ?? "—")</strong></div>
+            <div><span>Phương thức giao</span><strong>@(Model.PhuongThucVanChuyen ?? "—")</strong></div>
+            <div><span>Ghi chú</span><strong>@(Model.GhiChu ?? "Không có")</strong></div>
+            <div><span>Trạng thái</span><strong><span class="staff-badge">@currentStatus</span></strong></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.AnhXacNhanGiao))
+        {
+            <div style="margin-top:14px;">
+                <span><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao:</span><br />
+                <img src="@Model.AnhXacNhanGiao" alt="Ảnh xác nhận giao hàng" class="staff-proof-photo" />
+            </div>
+        }
+    </section>
+
+    <section class="staff-card">
+        <h2>Sản phẩm trong đơn</h2>
+        <div class="table-responsive">
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Biến thể</th>
+                        <th>Đơn giá</th>
+                        <th>SL</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detail in Model.ChiTietDonHangs)
+                    {
+                        <tr>
+                            <td>@detail.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td>
+                            <td>@detail.MaBienTheNavigation.MauSac @detail.MaBienTheNavigation.PhienBan</td>
+                            <td>@detail.DonGia.ToString("N0") đ</td>
+                            <td>@detail.SoLuong</td>
+                            <td>@detail.ThanhTien.ToString("N0") đ</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="staff-order-total">Tổng thanh toán: <strong>@((Model.TongTien ?? 0).ToString("N0")) đ</strong></div>
+    </section>
+
+    <!-- Cập nhật giao nhận -->
+    <section class="staff-card">
+        <h2>Cập nhật giao nhận</h2>
+        <form asp-action="UpdateDeliveryStatus" method="post" enctype="multipart/form-data" class="staff-delivery-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.MaDonHang" />
+
+            <div class="form-group">
+                <label>Trạng thái đơn hàng</label>
+                <select name="status" id="statusSelect">
+                    @foreach (var status in allStatuses)
+                    {
+                        <option value="@status" selected="@(currentStatus == status)">@status</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><i class="bi bi-calendar-event me-1"></i>Ngày dự kiến giao hàng</label>
+                <input type="datetime-local" name="ngayDuKienGiao" id="etaInput"
+                       value="@((Model.NgayDuKienGiao ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+
+            <div class="proof-box" id="proofBox">
+                <label><i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao <span style="color:#dc2626">*</span></label>
+                <input type="file" name="anhXacNhanGiao" id="proofInput" accept="image/*" />
+                <div style="font-size:.8rem;color:#6b7280;margin-top:4px;">Chụp ảnh kiện hàng/sản phẩm tại nơi giao để xác nhận hoàn tất.</div>
+                <img id="proofPreview" class="staff-proof-photo" style="display:none;" alt="Xem trước ảnh" />
+            </div>
+
+            <div class="form-group">
+                <label>Ghi chú giao hàng</label>
+                <textarea name="ghiChuGiaoHang" rows="3" placeholder="Nhập ghi chú (lý do hủy, ghi chú thời gian, v.v...)"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Lưu cập nhật</button>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var statusSelect = document.getElementById('statusSelect');
+            var proofBox = document.getElementById('proofBox');
+            var proofInput = document.getElementById('proofInput');
+            var proofPreview = document.getElementById('proofPreview');
+
+            function toggleProofBox() {
+                var show = statusSelect.value === 'Đã hoàn thành';
+                proofBox.classList.toggle('show', show);
+                proofInput.required = show;
+            }
+
+            statusSelect.addEventListener('change', toggleProofBox);
+            toggleProofBox();
+
+            proofInput.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) { proofPreview.style.display = 'none'; return; }
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    proofPreview.src = e.target.result;
+                    proofPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        })();
+
+        // CHAT ĐỔI TRẢ PHÍA NHÂN VIÊN: chỉ hiển thị khi khách đã mở phiên.
+        const staffOrderId = @Model.MaDonHang;
+        const staffChatWaiting = document.getElementById('staffChatWaiting');
+        const staffChatActive = document.getElementById('staffChatActive');
+        const staffChatBox = document.getElementById('staffChatMessageList');
+        const staffChatForm = document.getElementById('staffChatForm');
+        const staffChatInput = document.getElementById('staffChatInput');
+        const staffChatBadge = document.getElementById('staffChatStatusBadge');
+        let staffSessionActive = false;
+
+        function escapeStaffHtml(value) {
+            const div = document.createElement('div'); div.textContent = value ?? ''; return div.innerHTML;
+        }
+        function setStaffChatState(active) {
+            staffSessionActive = active;
+            if (staffChatWaiting) staffChatWaiting.classList.toggle('d-none', active);
+            if (staffChatActive) staffChatActive.classList.toggle('d-none', !active);
+            if (staffChatBadge) staffChatBadge.textContent = active ? 'Đang hoạt động' : 'Chờ khách';
+        }
+        function appendStaffMessageUI(msg) {
+            const isMe = msg.isStaff;
+            const wrapper = document.createElement('div');
+            wrapper.className = `d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-3`;
+            wrapper.innerHTML = `<small class="text-muted mb-1">${escapeStaffHtml(msg.senderName)} • ${escapeStaffHtml(msg.time)}</small><div class="p-2 px-3 ${isMe ? 'bg-primary text-white' : 'bg-white border text-dark'} rounded-3 shadow-sm" style="max-width:80%;word-break:break-word;">${escapeStaffHtml(msg.message)}</div>`;
+            staffChatBox.appendChild(wrapper);
+        }
+        async function loadStaffChat() {
+            try {
+                const statusResponse = await fetch(`/Staff/Order/GetOrderChatStatus?orderId=${staffOrderId}`, { cache:'no-store' });
+                if (!statusResponse.ok) return;
+                const status = await statusResponse.json();
+                setStaffChatState(status.active);
+                if (!status.active || !staffChatBox) return;
+
+                const response = await fetch(`/Staff/Order/GetOrderMessages?orderId=${staffOrderId}`, { cache:'no-store' });
+                if (!response.ok) return;
+                const messages = await response.json();
+                staffChatBox.innerHTML = '';
+                if (!messages.length) {
+                    staffChatBox.innerHTML = '<div class="text-center text-muted py-4">Khách đã mở phiên. Đang chờ tin nhắn...</div>';
+                } else {
+                    messages.forEach(appendStaffMessageUI);
+                    staffChatBox.scrollTop = staffChatBox.scrollHeight;
+                }
+            } catch (err) { console.error('Lỗi tải chat Staff:', err); }
+        }
+        if (staffChatForm) {
+            staffChatForm.addEventListener('submit', async function(e){
+                e.preventDefault(); if (!staffSessionActive) return;
+                const text = staffChatInput.value.trim(); if (!text) return;
+                staffChatInput.value = '';
+                try {
+                    const response = await fetch('/Staff/Order/SendOrderMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({orderId:staffOrderId,message:text}) });
+                    const res = await response.json();
+                    if (!res.success) { alert(res.message || 'Phiên chat đã kết thúc.'); await loadStaffChat(); return; }
+                    await loadStaffChat();
+                } catch(err) { console.error(err); }
+            });
+        }
+        const endStaffBtn = document.getElementById('btnEndStaffChat');
+        if (endStaffBtn) endStaffBtn.addEventListener('click', async function(){
+            if (!confirm('Kết thúc phiên trò chuyện này? Toàn bộ nội dung sẽ bị xoá.')) return;
+            await fetch('/Staff/Order/EndOrderChat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({orderId:staffOrderId}) });
+            await loadStaffChat();
+        });
+        document.addEventListener('DOMContentLoaded', function(){
+            loadStaffChat();
+            setInterval(loadStaffChat, 2500);
+        });
+
+    </script>
+}
