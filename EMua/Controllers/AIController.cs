@@ -7,13 +7,16 @@ namespace EMua.Controllers
     {
         private readonly DomainClassifier _domainClassifier;
         private readonly GeminiService _geminiService;
+        private readonly RecommendationService _recommendationService;
 
         public AIController(
             DomainClassifier domainClassifier,
-            GeminiService geminiService)
+            GeminiService geminiService,
+            RecommendationService recommendationService)
         {
             _domainClassifier = domainClassifier;
             _geminiService = geminiService;
+            _recommendationService = recommendationService;
         }
 
         [HttpPost]
@@ -29,6 +32,7 @@ namespace EMua.Controllers
                 });
             }
 
+            // 1. Kiểm tra domain xem có phải câu hỏi công nghệ hay không
             var prediction =
                 _domainClassifier.Predict(request.Message);
             if (!prediction.IsTechnology)
@@ -45,8 +49,14 @@ namespace EMua.Controllers
 
             try
             {
+                // 2. Lấy dữ liệu sản phẩm thực tế từ Database để làm ngữ cảnh tư vấn
+                var productContext = await _recommendationService.GetProductContextAsync(request.Message);
+
+                // 3. Ghép ngữ cảnh cửa hàng vào câu hỏi của khách để Gemini tổng hợp câu trả lời chính xác
+                var promptWithContext = $"{productContext}\n\nYêu cầu của khách hàng: {request.Message}\nHãy tư vấn sản phẩm phù hợp dựa vào danh sách sản phẩm thực tế của cửa hàng ở trên.";
+
                 var answer =
-                    await _geminiService.AskAsync(request.Message);
+                    await _geminiService.AskAsync(promptWithContext);
 
                 return Json(new
                 {
@@ -57,20 +67,9 @@ namespace EMua.Controllers
             }
             catch (HttpRequestException ex)
                 when (ex.StatusCode ==
-                    System.Net.HttpStatusCode.TooManyRequests)
-            {
-                return Json(new
-                {
-                    domain = "Technology",
-                    message =
-                        "EMUA AI đang bận. Bạn vui lòng chờ ít phút, " +
-                        "chuyên viên tư vấn sẽ hỗ trợ bạn sớm.",
-                    isLimitReached = true
-                });
-            }
-            catch (HttpRequestException ex)
-     when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
-           ex.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                    System.Net.HttpStatusCode.TooManyRequests ||
+                      ex.StatusCode ==
+                    System.Net.HttpStatusCode.ServiceUnavailable)
             {
                 return Json(new
                 {

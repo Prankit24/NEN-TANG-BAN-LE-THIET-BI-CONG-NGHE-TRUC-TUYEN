@@ -141,7 +141,7 @@ public class CheckoutController : Controller
     }
 
     // =========================================================
-    // STEP 3: REVIEW ĐƠN HÀNG TRƯỚC KHIN ĐẶT HÀNG
+    // STEP 3: REVIEW ĐƠN HÀNG TRƯỚC KHI ĐẶT HÀNG
     // =========================================================
 
     [HttpGet]
@@ -300,6 +300,20 @@ public class CheckoutController : Controller
                     };
 
                     _db.ThanhToans.Add(payment);
+
+                    // =========================================================
+                    // 9. BỔ SUNG TỰ ĐỘNG TẠO HÓA ĐƠN ĐỂ HIỂN THỊ BÊN TRANG NHÂN VIÊN
+                    // =========================================================
+                    var hoaDonMoi = new HoaDon
+                    {
+                        MaDonHang = order.MaDonHang,
+                        NgayLapHoaDon = DateTime.Now,
+                        TongTien = total,
+                        TrangThaiHoaDon = paymentMethod == "COD" ? "Đã lập" : "Chờ thanh toán"
+                    };
+                    _db.HoaDons.Add(hoaDonMoi);
+                    // =========================================================
+
                     await _db.SaveChangesAsync();
 
                     await transaction.CommitAsync();
@@ -381,7 +395,6 @@ public class CheckoutController : Controller
         ViewBag.Web3WalletAddress = web3WalletAddress;
         ViewBag.TransferContent = transferContent;
 
-        // QUAN TRỌNG: Lấy trực tiếp trạng thái thực tế từ đơn hàng và thanh toán
         var realPaymentStatus = payment?.TrangThai ?? "Chờ xác nhận";
         if (order.TrangThaiDonHang == "Đã hoàn thành" || order.TrangThaiDonHang == "Đã giao")
         {
@@ -393,7 +406,7 @@ public class CheckoutController : Controller
             OrderId = order.MaDonHang,
             TotalAmount = (decimal)orderTotal,
             PaymentMethod = payment?.PhuongThuc ?? "COD",
-            PaymentStatus = realPaymentStatus, // Cập nhật trạng thái động
+            PaymentStatus = realPaymentStatus,
             FullName = order.HoTenNhanHang ?? string.Empty,
             PhoneNumber = order.SoDienThoaiNhanHang ?? string.Empty,
             Address = order.DiaChiNhanHang ?? string.Empty,
