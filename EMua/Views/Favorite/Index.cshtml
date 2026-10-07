@@ -1,0 +1,95 @@
+@using EMua.Models.Database
+@model IEnumerable<YeuThich>
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích";
+}
+
+<link rel="stylesheet" href="~/css/customer/product-index.css" asp-append-version="true" />
+
+<section class="emua-product-page">
+    <div class="emua-product-container">
+        <div class="emua-product-heading">
+            <div>
+                <span class="emua-product-label">TÀI KHOẢN CỦA TÔI</span>
+                <h1>Sản phẩm yêu thích</h1>
+                <p>@Model.Count() sản phẩm đã lưu</p>
+            </div>
+            <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Hồ sơ của tôi
+            </a>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="emua-empty-product">
+                <div class="emua-empty-icon"><i class="bi bi-heart"></i></div>
+                <h3>Chưa có sản phẩm yêu thích</h3>
+                <p>Các sản phẩm bạn đánh dấu sẽ xuất hiện tại đây.</p>
+                <a asp-controller="Product" asp-action="Index">
+                    <i class="bi bi-bag"></i> Khám phá sản phẩm
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="emua-product-grid">
+                @foreach (var favorite in Model)
+                {
+                    var product = favorite.MaSanPhamNavigation;
+                    var variant = product.BienTheSanPhams
+                        .Where(x => x.SoLuong > 0 && (string.IsNullOrEmpty(x.TrangThai) || x.TrangThai == "Còn hàng"))
+                        .OrderBy(x => x.Gia)
+                        .FirstOrDefault();
+                    var image = product.SanPhamHinhAnhs
+                        .OrderByDescending(x => x.LaAnhChinh)
+                        .ThenBy(x => x.ThuTu)
+                        .Select(x => x.DuongDanAnh)
+                        .FirstOrDefault()
+                        ?? variant?.HinhAnh
+                        ?? "/images/no-image.png";
+                    var price = variant?.Gia ?? product.GiaGoc ?? 0m;
+
+                    <article class="emua-product-card">
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@product.MaSanPham"
+                           class="emua-product-image">
+                            <img src="@image" alt="@product.TenSanPham" loading="lazy" />
+                        </a>
+                        <div class="emua-product-body">
+                            <div class="emua-product-brand">@(product.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</div>
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@product.MaSanPham"
+                               class="emua-product-name">
+                                @product.TenSanPham
+                            </a>
+                            <div class="emua-product-variant">
+                                @if (variant != null)
+                                {
+                                    <span>@variant.PhienBan</span>
+                                    <span>@variant.MauSac</span>
+                                }
+                                else
+                                {
+                                    <span>Hiện không còn hàng</span>
+                                }
+                            </div>
+                            <div class="emua-product-price">@price.ToString("N0") <span class="emua-currency">đ</span></div>
+                            <div class="d-flex gap-2 mt-auto pt-2">
+                                <a asp-controller="Product" asp-action="Details" asp-route-id="@product.MaSanPham"
+                                   class="emua-detail-btn flex-grow-1 text-center">
+                                    Xem sản phẩm
+                                </a>
+                                <form asp-action="Remove" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@favorite.MaYeuThich" />
+                                    <button type="submit" class="btn btn-outline-danger" title="Bỏ yêu thích"
+                                            aria-label="Bỏ yêu thích">
+                                        <i class="bi bi-heartbreak"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>

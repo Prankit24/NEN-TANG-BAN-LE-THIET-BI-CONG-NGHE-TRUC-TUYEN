@@ -11,33 +11,69 @@
 
 <partial name="Home/_IPhoneDuo" />
 
-<partial name="Home/_Categories"
-         model="Model.DanhMucs" />
+<partial name="Home/_Categories" model="Model.DanhMucs" />
 
-<partial name="Home/_FlashSale"
-         model="Model.FlashSale" />
+<partial name="Home/_FlashSale" model="Model.FlashSale" />
 
-<partial name="Home/_FeaturedProducts"
-         model="Model.SanPhamNoiBat" />
+<partial name="Home/_FeaturedProducts" model="Model.SanPhamNoiBat" />
 
-<partial name="Home/_BestChoice"
-         model="Model.BestChoice" />
+<partial name="Home/_BestChoice" model="Model.BestChoice" />
 
-<partial name="Home/_NewProducts"
-         model="Model.SanPhamMoi" />
+<partial name="Home/_NewProducts" model="Model.SanPhamMoi" />
 
-<partial name="Home/_Brands"
-         model="Model.ThuongHieus" />
+<partial name="Home/_Brands" model="Model.ThuongHieus" />
 
+<style>
+    :is(.featured-image, .new-product-image, .best-image, .emua-flash-image) {
+        position: relative;
+    }
+
+    .product-favorite-form {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 3;
+        margin: 0;
+    }
+
+    .product-favorite-button {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        aspect-ratio: 1;
+        padding: 0;
+        border: 1px solid #d9dee7;
+        border-radius: 50%;
+        background: #fff;
+        color: #343a40;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+        cursor: pointer;
+    }
+
+    .product-favorite-button:hover {
+        color: #d6336c;
+        border-color: #d6336c;
+    }
+
+    .product-favorite-button.is-favorite {
+        color: #d6336c;
+        border-color: #d6336c;
+    }
+
+    .product-favorite-button i {
+        font-size: 1.1rem;
+    }
+</style>
 
 <script>
 
-    async function homeAddCart(variantId) {
+    async function homeAddCart(variantId, buyNow = false) {
 
         // Khách chưa đăng nhập vẫn được thêm vào giỏ tạm trên trình duyệt.
         if (!window.EMUA_IS_AUTHENTICATED) {
-            window.addToGuestCart(variantId, 1);
+            if (!window.addToGuestCart(variantId, 1)) return;
             if (typeof showCartAddedFeedback === 'function') showCartAddedFeedback();
+            if (buyNow) window.location.href = '/Checkout/Index';
             return;
         }
 
@@ -79,6 +115,9 @@
                         headers: {
 
                             'Content-Type':
+                                'application/x-www-form-urlencoded; charset=UTF-8',
+
+                            'Accept':
                                 'application/json',
 
                             'RequestVerificationToken':
@@ -87,14 +126,10 @@
 
 
                         body:
-                            JSON.stringify({
-
-                                variantId:
-                                    variantId,
-
-                                quantity:
-                                    1
-
+                            new URLSearchParams({
+                                VariantId: variantId,
+                                Quantity: 1,
+                                buyNow: buyNow
                             })
 
                     }
@@ -120,32 +155,11 @@
                 return;
             }
 
-
-            /*
-             * Không gọi response.json() bừa nữa.
-             * Kiểm tra content-type trước.
-             */
             let result = null;
-
-
-            const contentType =
-                response.headers.get(
-                    'content-type'
-                );
-
-
-            if (
-                contentType &&
-                contentType.includes(
-                    'application/json'
-                )
-            ) {
-
-                result =
-                    await response.json();
-
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
             }
-
 
             /*
              * Nếu lỗi.
@@ -168,6 +182,15 @@
                 return;
             }
 
+            if (buyNow) {
+                window.location.href = result.redirectUrl || '/Checkout/Index';
+                return;
+            }
+
+            if (result.count !== undefined && typeof setGlobalCartCount === 'function') {
+                setGlobalCartCount(result.count, false);
+            }
+
 
             /*
              * Thành công: không hiện toast.
@@ -177,16 +200,6 @@
                 showCartAddedFeedback();
             }
 
-
-            const newCount =
-                result?.count
-                ?? result?.cartCount
-                ?? result?.totalQuantity;
-
-            if (newCount !== undefined &&
-                typeof setGlobalCartCount === 'function') {
-                setGlobalCartCount(newCount, false);
-            }
 
         }
         catch (error) {

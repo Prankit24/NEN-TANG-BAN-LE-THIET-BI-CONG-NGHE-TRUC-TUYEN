@@ -96,7 +96,7 @@ public class OrderController : StaffControllerBase
         {
             var order = await _db.DonHangs.FindAsync(id);
             if (order == null) return NotFound();
-            invoice = new EMua.Models.Database.HoaDon { MaDonHang = id, NgayLapHoaDon = DateTime.Now, TongTien = order.TongTien, TrangThaiHoaDon = "Đã lập" };
+            invoice = new EMua.Models.Database.HoaDon { MaDonHang = id, NgayLapHoaDon = DateTime.Now, TongTien = order.TongTien, TrangThaiHoaDon = "Chờ thanh toán" };
             _db.HoaDons.Add(invoice);
             await _db.SaveChangesAsync();
         }
@@ -109,6 +109,9 @@ public class OrderController : StaffControllerBase
         var invoice = await _db.HoaDons.AsNoTracking()
             .Include(x => x.MaDonHangNavigation).ThenInclude(x => x.ChiTietDonHangs)
                 .ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
+            .Include(x => x.MaDonHangNavigation).ThenInclude(x => x.MaNguoiDungNavigation)
+            .Include(x => x.MaDonHangNavigation).ThenInclude(x => x.MaKhuyenMaiNavigation)
+            .Include(x => x.MaDonHangNavigation).ThenInclude(x => x.ThanhToans)
             .FirstOrDefaultAsync(x => x.MaHoaDon == id);
         return invoice == null ? NotFound() : View(invoice);
     }
@@ -173,6 +176,12 @@ public class OrderController : StaffControllerBase
             {
                 payment.TrangThai = "Đã thanh toán";
                 payment.NgayThanhToan = DateTime.Now;
+            }
+
+            var invoice = await _db.HoaDons.FirstOrDefaultAsync(x => x.MaDonHang == id);
+            if (invoice != null)
+            {
+                invoice.TrangThaiHoaDon = "Đã thanh toán";
             }
         }
 

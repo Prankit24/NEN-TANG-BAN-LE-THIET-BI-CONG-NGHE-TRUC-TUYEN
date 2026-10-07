@@ -101,15 +101,24 @@
             const existing = items.find(x => Number.parseInt(x.variantId) === variantId);
 
             if (existing) {
-                existing.quantity = (Number.parseInt(existing.quantity) || 0) + quantity;
+                const nextQuantity = (Number.parseInt(existing.quantity) || 0) + quantity;
+                if (nextQuantity > 5) {
+                    alert('Mỗi mặt hàng chỉ được đặt tối đa 5 sản phẩm.');
+                    return false;
+                }
+                existing.quantity = nextQuantity;
             } else {
+                if (quantity > 5) {
+                    alert('Mỗi mặt hàng chỉ được đặt tối đa 5 sản phẩm.');
+                    return false;
+                }
                 items.push({ variantId: variantId, quantity: quantity });
             }
 
             window.saveGuestCart(items);
             const count = window.getGuestCartCount();
             window.setGlobalCartCount(count, true);
-            return count;
+            return true;
         };
 
         window.getLoginUrl = function (returnUrl) {
@@ -195,7 +204,7 @@
 
         window.emuaBuyNow = function (variantId, quantity = 1) {
             if (!window.EMUA_IS_AUTHENTICATED) {
-                window.addToGuestCart(variantId, quantity);
+                if (!window.addToGuestCart(variantId, quantity)) return;
                 window.location.href = window.getLoginUrl('/Cart');
                 return;
             }
@@ -206,15 +215,20 @@
                 return;
             }
 
+            const formData = new URLSearchParams({
+                variantId: String(variantId),
+                quantity: String(quantity),
+                buyNow: 'true'
+            });
+
             fetch('/Cart/Add', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'RequestVerificationToken': tokenInput.value
                 },
-                body: JSON.stringify({ variantId: variantId, quantity: quantity })
+                body: formData
             }).then(r => {
-                if (r.ok) window.location.href = '/Cart';
+                if (r.ok) window.location.href = '/Checkout';
             });
         };
 
@@ -227,6 +241,40 @@
                 }
             }
             await syncCartCountFromServer();
+        });
+
+        document.addEventListener('submit', async function (event) {
+            const form = event.target.closest('.product-favorite-form');
+            if (!form) return;
+            event.preventDefault();
+
+            const returnUrl = form.querySelector('[name="returnUrl"]')?.value || '/';
+            if (!window.EMUA_IS_AUTHENTICATED) {
+                window.location.href = window.getLoginUrl(returnUrl);
+                return;
+            }
+
+            const button = form.querySelector('.product-favorite-button');
+            button.disabled = true;
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: new FormData(form)
+                });
+                if (!response.ok) throw new Error('Không thể cập nhật danh sách yêu thích.');
+
+                const result = await response.json();
+                button.classList.toggle('is-favorite', result.isFavorite);
+                button.setAttribute('aria-pressed', String(result.isFavorite));
+                button.setAttribute('aria-label', result.isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích');
+                button.title = result.isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích';
+                button.querySelector('i').className = result.isFavorite ? 'bi bi-heart-fill' : 'bi bi-heart';
+            } catch (error) {
+                alert(error.message || 'Không thể cập nhật danh sách yêu thích.');
+            } finally {
+                button.disabled = false;
+            }
         });
     </script>
 </body>

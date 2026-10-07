@@ -42,9 +42,9 @@
                     <span>Hồ sơ của tôi</span>
                 </a>
 
-                <a asp-controller="Account" asp-action="Edit">
-                    <span class="menu-icon"><i class="bi bi-pencil-square"></i></span>
-                    <span>Chỉnh sửa hồ sơ</span>
+                <a asp-controller="Account" asp-action="ChangePassword">
+                    <span class="menu-icon"><i class="bi bi-shield-lock"></i></span>
+                    <span>Thay đổi mật khẩu</span>
                 </a>
 
                 @if (Model.IsCustomer)
@@ -63,16 +63,6 @@
                 else
                 {
                     <!-- Menu hiển thị khi đăng nhập bằng tài khoản Nhân viên hoặc Quản trị viên (Admin) -->
-                    <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
-                        <span class="menu-icon"><i class="bi bi-grid-1x2"></i></span>
-                        <span>Khu vực làm việc</span>
-                    </a>
-
-                    <a asp-controller="Product" asp-action="Index">
-                        <span class="menu-icon"><i class="bi bi-box-seam"></i></span>
-                        <span>Quản lý sản phẩm</span>
-                    </a>
-
                     <a asp-controller="Order" asp-action="Index">
                         <span class="menu-icon"><i class="bi bi-receipt"></i></span>
                         <span>Quản lý đơn hàng</span>

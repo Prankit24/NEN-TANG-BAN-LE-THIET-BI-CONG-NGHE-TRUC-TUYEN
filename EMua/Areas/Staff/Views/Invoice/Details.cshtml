@@ -1,83 +1,164 @@
-﻿@model EMua.Models.Database.HoaDon
+@model HoaDon
 @{
-    ViewData["Title"] = $"Chi tiết hóa đơn #HD-{Model.MaHoaDon:D5}";
     var order = Model.MaDonHangNavigation;
+    var payment = order.ThanhToans.OrderByDescending(x => x.NgayTao).FirstOrDefault();
+    var itemsSubtotal = order.ChiTietDonHangs.Sum(x => x.ThanhTien);
+    ViewData["Title"] = $"Chi tiết hóa đơn #HD-{Model.MaHoaDon:D5}";
 }
 
-<div class="container-fluid px-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2>Chi tiết hóa đơn #HD-@Model.MaHoaDon.ToString("D5")</h2>
-            <span class="text-muted">Thuộc đơn hàng: <strong>#DH-@Model.MaDonHang.ToString("D5")</strong></span>
-        </div>
-        <a asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Hóa đơn #HD-@Model.MaHoaDon.ToString("D5")</h1>
+        <span class="text-muted">Đơn hàng #DH-@Model.MaDonHang.ToString("D5")</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <a asp-controller="Order" asp-action="PrintInvoice" asp-route-id="@Model.MaHoaDon" class="btn btn-primary">
+            <i class="bi bi-printer"></i> In hóa đơn
         </a>
     </div>
+</div>
 
-    <div class="row">
-        <!-- Thông tin hóa đơn & thanh toán -->
+<section class="staff-card mb-3">
+    <div class="staff-card-title">
+        <h2>Thông tin hóa đơn</h2>
+        <span class="staff-badge">@(Model.TrangThaiHoaDon ?? "Đã lập")</span>
+    </div>
+    <div class="row g-3">
         <div class="col-md-4">
-            <div class="staff-card mb-4 p-4 shadow-sm bg-white rounded">
-                <h4 class="mb-3">Thông tin hóa đơn</h4>
-                <p><strong>Ngày lập:</strong> @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</p>
-                <p><strong>Trạng thái hóa đơn:</strong> <span class="badge bg-success">@(Model.TrangThaiHoaDon ?? "Đã lập")</span></p>
-                <p><strong>Trạng thái đơn hàng:</strong> <span class="badge bg-info">@(order?.TrangThaiDonHang ?? "Chờ xử lý")</span></p>
-                <hr />
-                <h5 class="text-danger fw-bold">Tổng tiền: @((Model.TongTien ?? 0).ToString("N0")) đ</h5>
-            </div>
-
-            <div class="staff-card p-4 shadow-sm bg-white rounded">
-                <h4 class="mb-3">Thông tin nhận hàng</h4>
-                <p><strong>Họ tên:</strong> @order?.HoTenNhanHang</p>
-                <p><strong>Điện thoại:</strong> @order?.SoDienThoaiNhanHang</p>
-                <p><strong>Địa chỉ:</strong> @order?.DiaChiNhanHang</p>
-                <p><strong>Ghi chú:</strong> @(string.IsNullOrEmpty(order?.GhiChu) ? "Không có" : order.GhiChu)</p>
-            </div>
+            <div class="text-muted small">Ngày lập</div>
+            <strong>@(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
         </div>
-
-        <!-- Danh sách sản phẩm trong hóa đơn -->
-        <div class="col-md-8">
-            <div class="staff-card p-4 shadow-sm bg-white rounded">
-                <h4 class="mb-3">Sản phẩm mua</h4>
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>Đơn giá</th>
-                                <th>Số lượng</th>
-                                <th class="text-end">Thành tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (order?.ChiTietDonHangs != null)
-                            {
-                                @foreach (var item in order.ChiTietDonHangs)
-                                {
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if (!string.IsNullOrEmpty(item.MaBienTheNavigation?.HinhAnh))
-                                                {
-                                                    <img src="@item.MaBienTheNavigation.HinhAnh" alt="img" style="width: 50px; height: 50px; object-fit: cover;" class="rounded me-2" />
-                                                }
-                                                <div>
-                                                    <h6 class="mb-0">@(item.MaBienTheNavigation?.MaSanPhamNavigation?.TenSanPham ?? "Sản phẩm")</h6>
-                                                    <small class="text-muted">@item.MaBienTheNavigation?.MauSac - @item.MaBienTheNavigation?.PhienBan</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>@(item.DonGia.ToString("N0")) đ</td>
-                                        <td>@item.SoLuong</td>
-                                        <td class="text-end fw-bold">@((item.ThanhTien).ToString("N0")) đ</td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Ngày đặt hàng</div>
+            <strong>@(order.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Trạng thái đơn hàng</div>
+            <strong>@(order.TrangThaiDonHang ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Phương thức giao hàng</div>
+            <strong>@(order.PhuongThucVanChuyen ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Tổng tiền</div>
+            <strong>@((order.TongTien ?? Model.TongTien ?? 0).ToString("N0")) đ</strong>
         </div>
     </div>
-</div>
+</section>
+
+<section class="staff-card mb-3">
+    <div class="staff-card-title">
+        <h2>Thông tin người nhận</h2>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="text-muted small">Họ tên</div>
+            <strong>@(order.HoTenNhanHang ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Số điện thoại</div>
+            <strong>@(order.SoDienThoaiNhanHang ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Địa chỉ</div>
+            <strong>@(order.DiaChiNhanHang ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Email tài khoản</div>
+            <strong>@(order.MaNguoiDungNavigation?.Email ?? "—")</strong>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small">Khuyến mãi</div>
+            <strong>@(order.MaKhuyenMaiNavigation == null ? "Không áp dụng" : $"{order.MaKhuyenMaiNavigation.MaCode} -      {order.MaKhuyenMaiNavigation.TenKhuyenMai}")</strong>
+        </div>
+        <div class="col-12">
+            <div class="text-muted small">Ghi chú đơn hàng</div>
+            <strong>@(order.GhiChu ?? "Không có")</strong>
+        </div>
+    </div>
+</section>
+
+<section class="staff-card mb-3">
+    <div class="staff-card-title">
+        <h2>Chi tiết sản phẩm</h2>
+        <span>@order.ChiTietDonHangs.Count sản phẩm</span>
+    </div>
+    <div class="table-responsive">
+        <table class="staff-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Biến thể</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in order.ChiTietDonHangs)
+                {
+                    <tr>
+                        <td>@item.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham</td>
+                        <td>@(string.Join(" / ", new[] { item.MaBienTheNavigation.MauSac, item.MaBienTheNavigation.PhienBan
+                        }.Where(x => !string.IsNullOrWhiteSpace(x))) is { Length: > 0 } variant ? variant : "—")</td>
+                            <td class="text-end">@item.DonGia.ToString("N0") đ</td>
+                            <td class="text-end">@item.SoLuong</td>
+                            <td class="text-end">@item.ThanhTien.ToString("N0") đ</td>
+                        </tr>
+                    }
+                    @if (!order.ChiTietDonHangs.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">Đơn hàng không có chi tiết sản phẩm.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-1 mt-3">
+            <div>Tạm tính sản phẩm: <strong>@itemsSubtotal.ToString("N0") đ</strong></div>
+            <div class="fs-5">Tổng thanh toán đơn hàng: <strong>@((order.TongTien ?? Model.TongTien ?? 0).ToString("N0"))
+                đ</strong></div>
+                <small class="text-muted">Tổng thanh toán lấy theo đơn hàng, bao gồm phí giao hàng và khuyến mãi (nếu
+                    có).</small>
+                </div>
+            </section>
+
+            <section class="staff-card">
+                <div class="staff-card-title">
+                    <h2>Thanh toán</h2>
+                </div>
+                @if (payment == null)
+                {
+                    <p class="mb-0 text-muted">Chưa có thông tin thanh toán.</p>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="text-muted small">Phương thức</div>
+                            <strong>@payment.PhuongThuc</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Trạng thái</div>
+                            <strong>@payment.TrangThai</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Mã giao dịch</div>
+                            <strong>@(payment.MaGiaoDich ?? "—")</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Ngày thanh toán</div>
+                            <strong>@(payment.NgayThanhToan?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Số tiền thanh toán</div>
+                            <strong>@payment.SoTien.ToString("N0") đ</strong>
+                        </div>
+                    </div>
+                }
+            </section>

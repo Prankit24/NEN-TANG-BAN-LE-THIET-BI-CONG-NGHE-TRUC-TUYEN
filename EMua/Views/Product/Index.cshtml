@@ -57,10 +57,10 @@
                 {
                     <input type="hidden" name="sort" value="@currentSort" />
                 }
-
                 <div class="emua-search-input">
                     <i class="bi bi-search"></i>
-                    <input type="text" name="keyword" value="@currentKeyword" placeholder="Tìm iPhone, laptop, tai nghe..." />
+                    <input type="text" name="keyword" value="@currentKeyword"
+                           placeholder="Tìm iPhone, laptop, tai nghe..." />
                 </div>
 
                 <button type="submit">Tìm kiếm</button>
@@ -76,13 +76,13 @@
                 {
                     <input type="hidden" name="keyword" value="@currentKeyword" />
                 }
-
                 <select name="sort" onchange="this.form.submit()">
                     <option value="" selected="@(string.IsNullOrWhiteSpace(currentSort))">Mới nhất</option>
                     <option value="price-asc" selected="@(currentSort == "price-asc")">Giá thấp → cao</option>
                     <option value="price-desc" selected="@(currentSort == "price-desc")">Giá cao → thấp</option>
                     <option value="name-asc" selected="@(currentSort == "name-asc")">Tên A → Z</option>
                     <option value="name-desc" selected="@(currentSort == "name-desc")">Tên Z → A</option>
+                    <option value="favorites" selected="@(currentSort == "favorites")">Yêu thích</option>
                 </select>
             </form>
         </div>
@@ -132,9 +132,13 @@
 
                     <article class="emua-product-card">
                         <!-- IMAGE -->
-                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-product-image">
-                            <img src="@image" alt="@item.TenSanPham" loading="lazy" />
-                        </a>
+                        <div class="emua-product-image-wrap">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"
+                               class="emua-product-image">
+                                <img src="@image" alt="@item.TenSanPham" loading="lazy" />
+                            </a>
+                            <partial name="~/Views/Shared/_FavoriteButton.cshtml" model="@item.MaSanPham" />
+                        </div>
 
                         <!-- BODY -->
                         <div class="emua-product-body">
@@ -144,7 +148,8 @@
                             </div>
 
                             <!-- NAME -->
-                            <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-product-name">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"
+                               class="emua-product-name">
                                 @item.TenSanPham
                             </a>
 
@@ -190,18 +195,20 @@
 
                             <!-- ACTION -->
                             <div class="emua-product-actions">
-                                <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="emua-detail-btn">
-                                    Xem chi tiết
-                                </a>
-
                                 @if (variant != null && variant.SoLuong > 0)
                                 {
-                                    <button type="button" class="emua-cart-btn" onclick="addProductToCart(this, @variant.MaBienThe)" title="Thêm vào giỏ hàng">
+                                    <button type="button" class="emua-detail-btn"
+                                            onclick="addProductToCart(this, @variant.MaBienThe, true)">
+                                        Mua ngay
+                                    </button>
+                                    <button type="button" class="emua-cart-btn" onclick="addProductToCart(this, @variant.MaBienThe)"
+                                            title="Thêm vào giỏ hàng">
                                         <i class="bi bi-cart-plus"></i>
                                     </button>
                                 }
                                 else
                                 {
+                                    <button type="button" class="emua-detail-btn" disabled>Hết hàng</button>
                                     <button type="button" class="emua-cart-btn disabled" disabled>
                                         <i class="bi bi-cart-x"></i>
                                     </button>
@@ -217,10 +224,11 @@
 
 @section Scripts {
     <script>
-        async function addProductToCart(button, variantId) {
+        async function addProductToCart(button, variantId, buyNow = false) {
             if (!window.EMUA_IS_AUTHENTICATED) {
-                window.addToGuestCart(variantId, 1);
+                if (!window.addToGuestCart(variantId, 1)) return;
                 if (typeof showCartAddedFeedback === 'function') showCartAddedFeedback();
+                if (buyNow) window.location.href = '/Checkout/Index';
                 return;
             }
 
@@ -240,12 +248,14 @@
                 const response = await fetch('/Cart/Add', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Accept': 'application/json',
                         'RequestVerificationToken': tokenInput.value
                     },
-                    body: JSON.stringify({
-                        variantId: variantId,
-                        quantity: 1
+                    body: new URLSearchParams({
+                        VariantId: variantId,
+                        Quantity: 1,
+                        buyNow: buyNow
                     })
                 });
 
@@ -254,16 +264,16 @@
                     return;
                 }
 
-                let result = null;
-                const contentType = response.headers.get('content-type');
-
-                if (contentType && contentType.includes('application/json')) {
-                    result = await response.json();
-                }
+                const result = await response.json();
 
                 if (!response.ok) {
                     console.error('Cart Add Error:', result);
                     alert(result?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+                    return;
+                }
+
+                if (buyNow) {
+                    window.location.href = result.redirectUrl || '/Checkout/Index';
                     return;
                 }
 

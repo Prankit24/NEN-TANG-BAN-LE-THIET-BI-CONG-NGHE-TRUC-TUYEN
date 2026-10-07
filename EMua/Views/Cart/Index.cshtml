@@ -1,6 +1,7 @@
 @model EMua.ViewModels.CartViewModel
 @{
     ViewData["Title"] = "Giỏ hàng";
+    var selectedCoupon = Model.AvailableCoupons.FirstOrDefault(x => x.Code == Model.CouponCode);
 }
 <link rel="stylesheet" href="~/css/shopping-cart.css" asp-append-version="true" />
 
@@ -50,7 +51,8 @@
                 <div class="cart-table-body">
                     @foreach (var item in Model.Items)
                     {
-                        <article class="cart-row" data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                        <article class="cart-row"
+                                 data-unit-price="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                             <!-- Thông tin sản phẩm -->
                             <div class="col-info product-meta">
                                 <div class="product-thumb">
@@ -60,11 +62,17 @@
                                     }
                                     else
                                     {
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a0aec0"
+                                             stroke-width="1.5">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <path d="M21 15l-5-5L5 21" />
+                                        </svg>
                                     }
                                 </div>
                                 <div class="product-details">
-                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-title">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId"
+                                       class="product-title">
                                         @item.ProductName
                                     </a>
                                     @if (!string.IsNullOrEmpty(item.VariantLabel))
@@ -85,7 +93,8 @@
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@item.CartItemId" />
                                     <button type="button" class="qty-btn qty-minus">−</button>
-                                    <input name="quantity" type="number" min="0" max="@item.Stock" value="@item.Quantity" readonly />
+                                    <input name="quantity" type="number" min="0" max="@Math.Min(item.Stock, 5)"
+                                           value="@item.Quantity" readonly />
                                     <button type="button" class="qty-btn qty-plus">+</button>
                                 </form>
                             </div>
@@ -101,7 +110,11 @@
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@item.CartItemId" />
                                     <button type="submit" class="btn-delete" title="Xóa">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="1.8">
+                                            <path
+                                            d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                        </svg>
                                     </button>
                                 </form>
                             </div>
@@ -114,13 +127,42 @@
             <aside class="cart-card summary-card">
                 <h2>Tổng tiền</h2>
 
-                <!-- KHỐI CHỌN / NHẬP VOUCHER -->
+                <!-- KHỐI CHỌN VOUCHER -->
                 <div class="voucher-box">
-                    <form asp-action="ApplyVoucher" method="post" class="voucher-form">
+                    <form asp-action="ApplyCoupon" method="post" class="voucher-form">
                         @Html.AntiForgeryToken()
-                        <input type="text" name="voucherCode" class="voucher-input" placeholder="Nhập mã giảm giá..." value="@ViewBag.VoucherCode" />
+                        <div class="voucher-picker coupon-picker" id="cartCouponPicker">
+                            <div class="coupon-picker-control">
+                                <input type="text" name="code" id="cartCouponCode" class="voucher-input form-control"
+                                       value="@selectedCoupon?.Code" placeholder="Nhập hoặc chọn mã giảm giá"
+                                       autocomplete="off" autocapitalize="characters" aria-haspopup="listbox"
+                                       aria-expanded="false" />
+                                <button type="button" id="cartCouponToggle" class="coupon-picker-toggle"
+                                        aria-label="Chọn mã giảm giá" aria-expanded="false">
+                                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="coupon-options" id="cartCouponOptions" role="listbox"
+                                 aria-label="Mã giảm giá đủ điều kiện">
+                                <button type="button" class="coupon-option" role="option" data-code="">
+                                    <span class="coupon-option-code">Bỏ mã giảm giá</span>
+                                </button>
+                                @foreach (var coupon in Model.AvailableCoupons)
+                                {
+                                    <button type="button" class="coupon-option" role="option" data-code="@coupon.Code">
+                                        <span class="coupon-option-code">@coupon.Code</span>
+                                        <span class="coupon-option-name">@coupon.Name</span>
+                                        <span class="coupon-option-discount">@coupon.DiscountText</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
                         <button type="submit" class="btn-apply-voucher">Áp dụng</button>
                     </form>
+                    @if (!Model.AvailableCoupons.Any())
+                    {
+                        <small class="text-muted d-block mt-2">Chưa có mã nào đủ điều kiện cho đơn hàng này.</small>
+                    }
                 </div>
 
                 <div class="summary-row">
@@ -130,7 +172,7 @@
 
                 <div class="summary-row">
                     <span>Phí vận chuyển</span>
-                    <span>30.000đ</span>
+                    <span data-cart-shipping>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0}đ")</span>
                 </div>
 
                 <div class="summary-row" id="discount-row" style="@(Model.Discount > 0 ? "" : "display:none;")">
@@ -164,6 +206,53 @@
     <script>
         const cartDiscount = @Html.Raw(Model.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
+        const cartCouponPicker = document.getElementById('cartCouponPicker');
+        const cartCouponToggle = document.getElementById('cartCouponToggle');
+        const cartCouponOptions = document.getElementById('cartCouponOptions');
+        const cartCouponCode = document.getElementById('cartCouponCode');
+        if (cartCouponPicker && cartCouponToggle && cartCouponOptions && cartCouponCode) {
+            const setCouponOptionsOpen = function (isOpen) {
+                cartCouponOptions.classList.toggle('is-open', isOpen);
+                cartCouponToggle.setAttribute('aria-expanded', String(isOpen));
+                cartCouponCode.setAttribute('aria-expanded', String(isOpen));
+            };
+
+            cartCouponToggle.addEventListener('click', function () {
+                setCouponOptionsOpen(!cartCouponOptions.classList.contains('is-open'));
+            });
+            cartCouponCode.addEventListener('focus', function () {
+                setCouponOptionsOpen(true);
+            });
+            cartCouponCode.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    setCouponOptionsOpen(true);
+                } else if (event.key === 'Escape') {
+                    setCouponOptionsOpen(false);
+                }
+            });
+            cartCouponCode.addEventListener('input', function () {
+                const search = cartCouponCode.value.trim().toLowerCase();
+                setCouponOptionsOpen(true);
+                cartCouponOptions.querySelectorAll('.coupon-option').forEach(function (option) {
+                    const searchable = `${option.dataset.code || ''} ${option.textContent || ''}`.toLowerCase();
+                    option.hidden = Boolean(search) && !searchable.includes(search);
+                });
+            });
+            cartCouponOptions.addEventListener('click', function (event) {
+                const option = event.target.closest('.coupon-option');
+                if (!option) return;
+                cartCouponCode.value = option.dataset.code || '';
+                cartCouponOptions.querySelectorAll('.coupon-option').forEach(function (item) {
+                    item.hidden = false;
+                });
+                setCouponOptionsOpen(false);
+            });
+            document.addEventListener('click', function (event) {
+                if (!cartCouponPicker.contains(event.target)) setCouponOptionsOpen(false);
+            });
+        }
+
         document.querySelectorAll('.cart-row').forEach(function (item) {
             const input = item.querySelector('input[name="quantity"]');
             const price = Number(item.dataset.unitPrice || 0);
@@ -184,8 +273,12 @@
                 });
 
                 document.querySelectorAll('[data-cart-subtotal]').forEach(e => e.textContent = subtotal.toLocaleString('vi-VN') + 'đ');
+                const shipping = subtotal <= 0 || subtotal >= 500000 ? 0 : 30000;
+                document.querySelectorAll('[data-cart-shipping]').forEach(e => {
+                    e.textContent = shipping === 0 ? 'Miễn phí' : shipping.toLocaleString('vi-VN') + 'đ';
+                });
                 document.querySelectorAll('[data-cart-finaltotal]').forEach(e => {
-                    const finalTotal = Math.max(0, subtotal - cartDiscount + 30000);
+                    const finalTotal = Math.max(0, subtotal - cartDiscount + shipping);
                     e.textContent = finalTotal.toLocaleString('vi-VN') + 'đ';
                 });
             }

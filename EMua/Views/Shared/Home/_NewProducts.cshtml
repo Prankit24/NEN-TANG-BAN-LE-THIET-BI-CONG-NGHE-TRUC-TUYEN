@@ -1,8 +1,7 @@
 ﻿@model IEnumerable<EMua.Models.Database.SanPham>
 
 
-<section class="new-product-section"
-         id="new-products">
+<section class="new-product-section" id="new-products">
 
     <div class="new-product-container">
 
@@ -55,12 +54,13 @@
 
                     <div class="new-product-image">
 
+                        <partial name="~/Views/Shared/_FavoriteButton.cshtml" model="@item.MaSanPham" />
+
                         <span class="new-product-badge">
                             NEW
                         </span>
 
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
+                        <img src="@image" alt="@item.TenSanPham" />
 
                     </div>
 
@@ -102,13 +102,9 @@
 
                         @if (variant != null)
                         {
-                            <button type="button"
-                                    class="new-product-cart"
-                                    onclick="homeAddCart(@variant.MaBienThe)">
+                            <button type="button" class="new-product-cart" onclick="homeAddCart(@variant.MaBienThe, true)">
 
-                                <i class="bi bi-cart-plus"></i>
-
-                                Thêm vào giỏ
+                                Mua ngay
 
                             </button>
                         }
@@ -126,15 +122,14 @@
 
 
 <style>
-
     .new-product-section {
         padding: 75px 0;
-        background: linear-gradient( 180deg, #f8f8fc, #f1f1f8 );
+        background: linear-gradient(180deg, #f8f8fc, #f1f1f8);
     }
 
 
     .new-product-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
@@ -144,32 +139,32 @@
     }
 
 
-        .new-product-heading > span {
-            display: block;
-            color: #625db1;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
+    .new-product-heading>span {
+        display: block;
+        color: #625db1;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
 
 
-        .new-product-heading h2 {
-            margin: 7px 0 5px;
-            color: #17172a;
-            font-size: 30px;
-        }
+    .new-product-heading h2 {
+        margin: 7px 0 5px;
+        color: #17172a;
+        font-size: 30px;
+    }
 
 
-        .new-product-heading p {
-            margin: 0;
-            color: #77788c;
-            font-size: 14px;
-        }
+    .new-product-heading p {
+        margin: 0;
+        color: #77788c;
+        font-size: 14px;
+    }
 
 
     .new-product-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
     }
 
@@ -178,17 +173,17 @@
         min-width: 0;
         overflow: hidden;
         border-radius: 19px;
-        border: 1px solid rgba(77,74,141,.09);
+        border: 1px solid rgba(77, 74, 141, .09);
         background: #fff;
-        box-shadow: 0 5px 18px rgba(55,51,105,.04);
+        box-shadow: 0 5px 18px rgba(55, 51, 105, .04);
         transition: .3s;
     }
 
 
-        .new-product-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 18px 45px rgba(72,67,137,.13);
-        }
+    .new-product-card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 18px 45px rgba(72, 67, 137, .13);
+    }
 
 
     .new-product-image {
@@ -197,22 +192,21 @@
         height: 235px;
         padding: 20px;
         overflow: hidden;
-        background: linear-gradient( 145deg, #ffffff, #f0f0f7 );
+        background: linear-gradient(145deg, #ffffff, #f0f0f7);
     }
 
 
-        .new-product-image img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .new-product-card:hover
     .new-product-image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+        transition: .35s;
+    }
+
+
+    .new-product-card:hover .new-product-image img {
         transform: scale(1.06);
     }
 
@@ -225,7 +219,7 @@
         padding: 6px 10px;
         border-radius: 7px;
         color: #fff;
-        background: linear-gradient( 135deg, #5b8cff, #7567e8 );
+        background: linear-gradient(135deg, #5b8cff, #7567e8);
         font-size: 10px;
         font-weight: 800;
     }
@@ -281,21 +275,21 @@
         border-radius: 9px;
         color: #fff;
         cursor: pointer;
-        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+        background: linear-gradient(135deg, #4d4a8d, #625db1);
         transition: .25s;
     }
 
 
-        .new-product-cart:hover {
-            transform: translateY(-2px);
-            background: linear-gradient( 135deg, #5d58a6, #716ad0 );
-        }
+    .new-product-cart:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #5d58a6, #716ad0);
+    }
 
 
     @@media(max-width:1050px) {
 
         .new-product-grid {
-            grid-template-columns: repeat(3,1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 
@@ -303,7 +297,7 @@
     @@media(max-width:750px) {
 
         .new-product-grid {
-            grid-template-columns: repeat(2,1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
@@ -326,5 +320,4 @@
             padding: 12px;
         }
     }
-
 </style>

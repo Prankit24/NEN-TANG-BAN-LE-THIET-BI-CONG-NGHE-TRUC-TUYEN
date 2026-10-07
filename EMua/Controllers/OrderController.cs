@@ -83,6 +83,8 @@ public class OrderController : Controller
             RecipientName = order.HoTenNhanHang ?? string.Empty,
             RecipientPhone = order.SoDienThoaiNhanHang ?? string.Empty,
             ShippingAddress = order.DiaChiNhanHang ?? string.Empty,
+            ShippingMethod = order.PhuongThucVanChuyen ?? "Giao hàng tiêu chuẩn",
+            ShippingFee = order.PhuongThucVanChuyen == "Giao nhanh 2 giờ" ? 25000m : 0m,
             PaymentMethod = payment?.PhuongThuc ?? "COD",
             PaymentStatus = payment?.TrangThai ?? "Chưa thanh toán",
             Items = order.ChiTietDonHangs.Select(x => new CartItemViewModel
@@ -141,6 +143,13 @@ public class OrderController : Controller
             payment.TrangThai = "Đã thanh toán";
             payment.MaGiaoDich = $"LOCAL-{Guid.NewGuid():N}"[..20];
             payment.NgayThanhToan = DateTime.Now;
+
+            var invoice = await _db.HoaDons.FirstOrDefaultAsync(x => x.MaDonHang == id);
+            if (invoice != null)
+            {
+                invoice.TrangThaiHoaDon = "Đã thanh toán";
+            }
+
             await _db.SaveChangesAsync();
             TempData["Success"] = "Thanh toán đã được ghi nhận.";
         }

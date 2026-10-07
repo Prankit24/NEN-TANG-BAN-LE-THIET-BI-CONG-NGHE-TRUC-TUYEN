@@ -37,7 +37,8 @@
     bool canEdit = Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán";
     bool canActionAfterDelivery = Model.Status == "Đã hoàn thành" || Model.Status == "Đã giao";
 
-    bool isReturnProcess = Model.Status == "Yêu cầu đổi trả" || Model.Status == "Đang đổi trả" || Model.Status == "Đã nhận đổi trả" || Model.Status == "Đã hoàn tiền" || Model.Status == "Từ chối đổi trả";
+    var normalizedStatus = Model.Status.Trim();
+    bool isReturnProcess = normalizedStatus == "Yêu cầu đổi trả" || normalizedStatus == "Đang đổi trả" || normalizedStatus == "Đã nhận đổi trả" || normalizedStatus == "Đã hoàn tiền" || normalizedStatus == "Từ chối đổi trả";
 
     string[] progressSteps;
     string[] stepIcons;
@@ -56,9 +57,20 @@
         stepLabels = new[] { "Đã đặt hàng", "Đang giao hàng", "Đã giao hàng" };
     }
 
-    var isCancelled = Model.Status == "Đã hủy";
-    var currentStepIndex = Array.IndexOf(progressSteps, Model.Status);
-    if (currentStepIndex < 0) currentStepIndex = 0;
+    var isCancelled = normalizedStatus == "Đã hủy";
+    var currentStepIndex = isReturnProcess
+        ? normalizedStatus switch
+        {
+            "Đang đổi trả" or "Đã nhận đổi trả" or "Từ chối đổi trả" => 1,
+            "Đã hoàn tiền" => 2,
+            _ => 0
+        }
+        : normalizedStatus switch
+        {
+            "Đang xử lý" or "Đang giao" => 1,
+            "Đã hoàn thành" or "Đã giao" => 2,
+            _ => 0
+        };
 }
 
 <link rel="stylesheet" href="~/css/order.css" asp-append-version="true" />
@@ -864,6 +876,7 @@
                     <strong class="recipient-name">@Model.RecipientName</strong>
                     <p class="info-text"><i class="bi bi-telephone me-1"></i>@Model.RecipientPhone</p>
                     <p class="info-text">@Model.ShippingAddress</p>
+                    <p class="info-text"><i class="bi bi-truck me-1"></i>@Model.ShippingMethod · @(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</p>
                 </div>
 
                 <div class="card-divider"></div>

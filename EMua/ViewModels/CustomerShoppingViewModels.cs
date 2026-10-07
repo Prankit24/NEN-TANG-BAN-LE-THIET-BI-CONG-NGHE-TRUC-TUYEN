@@ -114,6 +114,7 @@ public class CouponOptionViewModel
     public string Name { get; set; } = string.Empty;
     public string DiscountText { get; set; } = string.Empty;
     public decimal? MinimumOrder { get; set; }
+    public decimal DiscountAmount { get; set; }
 }
 
 public class OrderListItemViewModel
@@ -144,6 +145,8 @@ public class OrderDetailsViewModel
     public string RecipientName { get; set; } = string.Empty;
     public string RecipientPhone { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
+    public string ShippingMethod { get; set; } = "Giao hàng tiêu chuẩn";
+    public decimal ShippingFee { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public string PaymentStatus { get; set; } = string.Empty;
     public List<CartItemViewModel> Items { get; set; } = [];

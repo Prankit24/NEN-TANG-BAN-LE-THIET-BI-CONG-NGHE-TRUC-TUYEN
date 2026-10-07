@@ -24,17 +24,20 @@ public class AuthController : Controller
     private readonly IPasswordHasher<NguoiDung> _passwordHasher;
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         EMuaDbContext db,
         IPasswordHasher<NguoiDung> passwordHasher,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        ILogger<AuthController> logger)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     // =====================================================
@@ -535,6 +538,14 @@ public class AuthController : Controller
 
         if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaKey))
         {
+            _logger.LogError("GeeTest {Action} is missing its CAPTCHA ID or key.", action);
+            return false;
+        }
+
+        if (captchaId.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase) ||
+            captchaKey.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogError("GeeTest {Action} is configured with placeholder credentials.", action);
             return false;
         }
 
@@ -559,12 +570,22 @@ public class AuthController : Controller
                 new FormUrlEncodedContent(data));
 
             var result = await response.Content.ReadFromJsonAsync<GeeTestValidationResult>();
+            if (!response.IsSuccessStatusCode ||
+                !string.Equals(result?.Result, "success", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "GeeTest {Action} validation failed. HTTP {StatusCode}; reason: {Reason}.",
+                    action,
+                    (int)response.StatusCode,
+                    result?.Reason ?? "No reason returned");
+                return false;
+            }
 
-            return response.IsSuccessStatusCode &&
-                   string.Equals(result?.Result, "success", StringComparison.OrdinalIgnoreCase);
+            return true;
         }
-        catch
+        catch (Exception exception)
         {
+            _logger.LogError(exception, "GeeTest {Action} validation request failed.", action);
             return false;
         }
     }
@@ -597,5 +618,8 @@ public class AuthController : Controller
     {
         [JsonPropertyName("result")]
         public string? Result { get; set; }
+
+        [JsonPropertyName("reason")]
+        public string? Reason { get; set; }
     }
 }

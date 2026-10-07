@@ -67,6 +67,8 @@ public class CheckoutViewModel
 
     public string? CouponCode { get; set; }
 
+    public List<CouponOptionViewModel> AvailableCoupons { get; set; } = new();
+
 
     // =========================================================
     // TỔNG TIỀN

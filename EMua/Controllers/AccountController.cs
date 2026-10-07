@@ -4,6 +4,7 @@ using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ public class AccountController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _environment;
+    private readonly IPasswordHasher<NguoiDung> _passwordHasher;
 
     private static readonly string[] BuiltInAvatars =
     {
@@ -26,10 +28,12 @@ public class AccountController : Controller
 
     public AccountController(
         EMuaDbContext db,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IPasswordHasher<NguoiDung> passwordHasher)
     {
         _db = db;
         _environment = environment;
+        _passwordHasher = passwordHasher;
     }
 
     [HttpGet]
@@ -211,6 +215,61 @@ public class AccountController : Controller
         TempData["SuccessMessage"] = "Cập nhật hồ sơ thành công.";
 
         return RedirectToAction(nameof(Profile));
+    }
+
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View(new ChangePasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        var user = await GetCurrentUserAsync();
+
+        if (user == null)
+            return RedirectToAction("Login", "Auth");
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var currentPasswordIsValid = false;
+
+        try
+        {
+            currentPasswordIsValid = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.MatKhau ?? string.Empty,
+                model.CurrentPassword) != PasswordVerificationResult.Failed;
+        }
+        catch (FormatException)
+        {
+            currentPasswordIsValid = user.MatKhau == model.CurrentPassword;
+        }
+
+        if (!currentPasswordIsValid)
+        {
+            ModelState.AddModelError(
+                nameof(model.CurrentPassword),
+                "Mật khẩu hiện tại không chính xác.");
+            return View(model);
+        }
+
+        if (model.CurrentPassword == model.NewPassword)
+        {
+            ModelState.AddModelError(
+                nameof(model.NewPassword),
+                "Mật khẩu mới phải khác mật khẩu hiện tại.");
+            return View(model);
+        }
+
+        user.MatKhau = _passwordHasher.HashPassword(user, model.NewPassword);
+        await _db.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Đổi mật khẩu thành công.";
+        return RedirectToAction(nameof(ChangePassword));
     }
 
     private async Task<NguoiDung?> GetCurrentUserAsync()

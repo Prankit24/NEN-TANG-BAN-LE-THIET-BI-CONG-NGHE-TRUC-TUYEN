@@ -28,11 +28,11 @@
             </thead>
             <tbody>@foreach(var item in Model){
                 <tr>
-                    <td><strong>@item.MaCode</strong></td>
+                    <td><a asp-action="Details" asp-route-id="@item.MaKhuyenMai"><strong>@item.MaCode</strong></a></td>
                     <td>@item.TenKhuyenMai<small>@item.MoTa</small></td>
                     <td>@item.GiaTriGiam.ToString("N0") @(item.LoaiGiamGia == "Phần trăm" ? "%" : "đ")</td>
                     <td>@(item.NgayBatDau?.ToString("dd/MM/yyyy") ?? "—") – @(item.NgayKetThuc?.ToString("dd/MM/yyyy")
-                                                                            ?? "—")</td>
+                                                                                                    ?? "—")</td>
                         <td>@(item.SoLuong?.ToString() ?? "Không giới hạn")</td>
                         <td><span class="staff-badge @(item.TrangThai ? "" : "muted")">@(item.TrangThai ? "Đang bật" : "Đã tắt")</span></td>
                         <td class="staff-row-actions">

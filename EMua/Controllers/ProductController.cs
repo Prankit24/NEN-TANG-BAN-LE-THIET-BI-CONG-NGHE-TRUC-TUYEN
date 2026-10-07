@@ -1,6 +1,7 @@
 ﻿using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,8 +24,10 @@ namespace EMua.Controllers
             string? category,
             int? brandId,
             string? keyword,
-            string? sort)
+            string? sort,
+            bool favoritesOnly = false)
         {
+            var userId = GetUserId();
             var query = _db.SanPhams
                 .AsNoTracking()
                 .Include(x => x.MaDanhMucNavigation)
@@ -33,6 +36,17 @@ namespace EMua.Controllers
                 .Include(x => x.SanPhamHinhAnhs)
                 .Where(x => x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn")
                 .AsQueryable();
+
+            var filterFavorites = favoritesOnly || sort == "favorites";
+            if (filterFavorites)
+            {
+                if (userId == null)
+                {
+                    return RedirectToAction("Login", "Auth", new { returnUrl = Request.Path + Request.QueryString });
+                }
+
+                query = query.Where(x => _db.YeuThiches.Any(f => f.MaSanPham == x.MaSanPham && f.MaNguoiDung == userId));
+            }
 
             // TÌM KIẾM
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -102,6 +116,10 @@ namespace EMua.Controllers
             // SẮP XẾP
             switch (sort)
             {
+                case "favorites":
+                    query = query.OrderByDescending(x => x.MaSanPham);
+                    break;
+
                 case "price-asc":
                     query = query.OrderBy(x => x.BienTheSanPhams
                         .Where(v => v.SoLuong > 0)
@@ -133,6 +151,13 @@ namespace EMua.Controllers
             ViewBag.Keyword = keyword;
             ViewBag.BrandId = brandId;
             ViewBag.Sort = sort;
+            ViewBag.FavoritesOnly = filterFavorites;
+            ViewBag.FavoriteProductIds = userId.HasValue
+                ? new HashSet<int>(await _db.YeuThiches.AsNoTracking()
+                    .Where(x => x.MaNguoiDung == userId)
+                    .Select(x => x.MaSanPham)
+                    .ToListAsync())
+                : new HashSet<int>();
 
             ViewBag.Categories = await _db.DanhMucSanPhams
                 .AsNoTracking()
@@ -157,6 +182,65 @@ namespace EMua.Controllers
         public IActionResult Search(string? keyword)
         {
             return RedirectToAction(nameof(Index), new { keyword = keyword });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Favorite(int productId, string? returnUrl = null)
+        {
+            var wantsJson = Request.Headers.Accept.ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase);
+            var userId = GetUserId();
+
+            if (userId == null)
+            {
+                if (wantsJson) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập để lưu sản phẩm yêu thích." });
+                var loginReturnUrl = Url.IsLocalUrl(returnUrl)
+                    ? returnUrl
+                    : Url.Action(nameof(Details), new { id = productId });
+                return RedirectToAction("Login", "Auth", new { returnUrl = loginReturnUrl });
+            }
+
+            if (productId <= 0)
+            {
+                return NotFound();
+            }
+
+            var favorite = await _db.YeuThiches
+                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId && x.MaSanPham == productId);
+
+            var isFavorite = favorite == null;
+            if (isFavorite)
+            {
+                var productExists = await _db.SanPhams
+                    .AnyAsync(x => x.MaSanPham == productId && (x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn"));
+
+                if (!productExists)
+                {
+                    return NotFound();
+                }
+
+                _db.YeuThiches.Add(new YeuThich
+                {
+                    MaNguoiDung = userId.Value,
+                    MaSanPham = productId,
+                    NgayThem = DateTime.Now
+                });
+
+                await _db.SaveChangesAsync();
+                TempData["Success"] = "Đã thêm sản phẩm vào danh sách yêu thích.";
+            }
+            else
+            {
+                _db.YeuThiches.Remove(favorite!);
+                await _db.SaveChangesAsync();
+                TempData["Success"] = "Đã xóa sản phẩm khỏi danh sách yêu thích.";
+            }
+
+            if (wantsJson) return Json(new { success = true, isFavorite, productId });
+
+            return Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl!)
+                : RedirectToAction(nameof(Details), new { id = productId });
         }
 
         // =========================================================
@@ -307,6 +391,12 @@ namespace EMua.Controllers
 
             ViewBag.BrandId = id;
             return View("Index", products);
+        }
+
+        private int? GetUserId()
+        {
+            var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(userIdText, out var userId) ? userId : null;
         }
     }
 }

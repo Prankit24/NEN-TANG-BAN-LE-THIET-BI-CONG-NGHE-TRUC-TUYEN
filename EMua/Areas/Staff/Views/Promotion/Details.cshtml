@@ -1,0 +1,102 @@
+@model PromotionCreateViewModel
+@{
+    var promotionId = (int)ViewBag.PromotionId;
+    var isEditing = ViewBag.IsEditing is true;
+    ViewData["Title"] = $"Chi tiết khuyến mãi {Model.MaCode}";
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Khuyến mãi @Model.MaCode</h1>
+        <span class="staff-badge @(Model.TrangThai ? "" : "muted")">@(Model.TrangThai ? "Đang bật" : "Đã tắt")</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        <button type="button" id="editPromotionButton" class="btn btn-primary" hidden="@(isEditing ? "hidden" : null)">
+            <i class="bi bi-pencil"></i> Sửa
+        </button>
+    </div>
+</div>
+
+<section class="staff-card staff-form-card">
+    <form asp-action="Edit" asp-route-id="@promotionId" method="post" id="promotionForm">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="MaCode" class="form-label">Mã khuyến mãi</label>
+                <input asp-for="MaCode" class="form-control promotion-field" disabled="@(!isEditing)" />
+                <span asp-validation-for="MaCode" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="TenKhuyenMai" class="form-label">Tên chương trình</label>
+                <input asp-for="TenKhuyenMai" class="form-control promotion-field" disabled="@(!isEditing)" />
+                <span asp-validation-for="TenKhuyenMai" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="LoaiGiamGia" class="form-label">Loại giảm</label>
+                <select asp-for="LoaiGiamGia" class="form-select promotion-field" disabled="@(!isEditing)">
+                    <option>Phần trăm</option>
+                    <option>Số tiền</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="GiaTriGiam" class="form-label">Giá trị giảm</label>
+                <input asp-for="GiaTriGiam" type="number" min="0.01" step="0.01" class="form-control promotion-field"
+                       disabled="@(!isEditing)" />
+                <span asp-validation-for="GiaTriGiam" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="SoLuong" class="form-label">Số lượng mã</label>
+                <input asp-for="SoLuong" type="number" min="0" class="form-control promotion-field"
+                       placeholder="Không giới hạn" disabled="@(!isEditing)" />
+                <span asp-validation-for="SoLuong" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="GiaTriDonHangToiThieu" class="form-label">Đơn hàng tối thiểu</label>
+                <input asp-for="GiaTriDonHangToiThieu" type="number" min="0" step="0.01"
+                       class="form-control promotion-field" disabled="@(!isEditing)" />
+                <span asp-validation-for="GiaTriDonHangToiThieu" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="NgayBatDau" class="form-label">Ngày bắt đầu</label>
+                <input asp-for="NgayBatDau" type="datetime-local" class="form-control promotion-field"
+                       disabled="@(!isEditing)" />
+                <span asp-validation-for="NgayBatDau" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="NgayKetThuc" class="form-label">Ngày kết thúc</label>
+                <input asp-for="NgayKetThuc" type="datetime-local" class="form-control promotion-field"
+                       disabled="@(!isEditing)" />
+                <span asp-validation-for="NgayKetThuc" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="MoTa" class="form-label">Mô tả</label>
+                <textarea asp-for="MoTa" rows="3" class="form-control promotion-field"
+                          disabled="@(!isEditing)"></textarea>
+                <span asp-validation-for="MoTa" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    <input asp-for="TrangThai" class="form-check-input promotion-field" disabled="@(!isEditing)" />
+                    <label asp-for="TrangThai" class="form-check-label">Đang áp dụng</label>
+                </div>
+            </div>
+        </div>
+
+        <div id="promotionEditActions" class="d-flex justify-content-end gap-2 mt-4 @(isEditing ? "" : "d-none")">
+            <a asp-action="Details" asp-route-id="@promotionId" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script>
+        document.getElementById('editPromotionButton')?.addEventListener('click', function () {
+            document.querySelectorAll('.promotion-field').forEach(field => field.disabled = false);
+            this.hidden = true;
+            document.getElementById('promotionEditActions').classList.remove('d-none');
+        });
+    </script>
+}

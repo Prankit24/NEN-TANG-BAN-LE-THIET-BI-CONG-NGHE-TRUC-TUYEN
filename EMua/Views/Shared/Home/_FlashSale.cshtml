@@ -79,12 +79,13 @@
 
                     <div class="emua-flash-image">
 
+                        <partial name="~/Views/Shared/_FavoriteButton.cshtml" model="@item.MaSanPham" />
+
                         <span class="flash-badge">
                             SALE
                         </span>
 
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
+                        <img src="@image" alt="@item.TenSanPham" />
 
                     </div>
 
@@ -96,7 +97,7 @@
                             @(item.MaThuongHieuNavigation?.TenThuongHieu
                                                     ?? "EMUA")
 
-                    </div>
+                        </div>
 
 
                         <h3>
@@ -106,7 +107,7 @@
 
                         <div class="flash-variant">
 
-                        @if (!string.IsNullOrWhiteSpace(variant?.PhienBan))
+                            @if (!string.IsNullOrWhiteSpace(variant?.PhienBan))
                             {
                                 <span>
                                     @variant.PhienBan
@@ -132,13 +133,9 @@
 
                         @if (variant != null)
                         {
-                            <button type="button"
-                                    class="flash-cart"
-                                    onclick="homeAddCart(@variant.MaBienThe)">
+                            <button type="button" class="flash-cart" onclick="homeAddCart(@variant.MaBienThe, true)">
 
-                                <i class="bi bi-cart-plus"></i>
-
-                                Thêm vào giỏ
+                                Mua ngay
 
                             </button>
                         }
@@ -156,15 +153,14 @@
 
 
 <style>
-
     .emua-flash-section {
         padding: 70px 0;
-        background: radial-gradient( circle at 90% 15%, rgba(229,72,93,.06), transparent 25% ), linear-gradient( 180deg, #faf9fe, #f5f4fa );
+        background: radial-gradient(circle at 90% 15%, rgba(229, 72, 93, .06), transparent 25%), linear-gradient(180deg, #faf9fe, #f5f4fa);
     }
 
 
     .emua-flash-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
@@ -178,22 +174,22 @@
     }
 
 
-        .emua-flash-header > div:first-child > span {
-            display: block;
-            margin-bottom: 7px;
-            color: #e5485d;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
+    .emua-flash-header>div:first-child>span {
+        display: block;
+        margin-bottom: 7px;
+        color: #e5485d;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
 
 
-        .emua-flash-header h2 {
-            margin: 0;
-            color: #17172a;
-            font-size: 30px;
-            font-weight: 730;
-        }
+    .emua-flash-header h2 {
+        margin: 0;
+        color: #17172a;
+        font-size: 30px;
+        font-weight: 730;
+    }
 
 
     .emua-flash-time {
@@ -203,25 +199,25 @@
     }
 
 
-        .emua-flash-time small {
-            margin-right: 4px;
-            color: #747487;
-        }
+    .emua-flash-time small {
+        margin-right: 4px;
+        color: #747487;
+    }
 
 
-        .emua-flash-time strong {
-            min-width: 40px;
-            padding: 9px 8px;
-            border-radius: 9px;
-            text-align: center;
-            color: #fff;
-            background: linear-gradient( 135deg, #4d4a8d, #625db1 );
-        }
+    .emua-flash-time strong {
+        min-width: 40px;
+        padding: 9px 8px;
+        border-radius: 9px;
+        text-align: center;
+        color: #fff;
+        background: linear-gradient(135deg, #4d4a8d, #625db1);
+    }
 
 
     .emua-flash-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
     }
 
@@ -230,17 +226,17 @@
         min-width: 0;
         overflow: hidden;
         border-radius: 19px;
-        border: 1px solid rgba(77,74,141,.09);
+        border: 1px solid rgba(77, 74, 141, .09);
         background: #fff;
-        box-shadow: 0 5px 20px rgba(45,42,93,.045);
+        box-shadow: 0 5px 20px rgba(45, 42, 93, .045);
         transition: .3s;
     }
 
 
-        .emua-flash-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 18px 45px rgba(68,63,133,.14);
-        }
+    .emua-flash-card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 18px 45px rgba(68, 63, 133, .14);
+    }
 
 
     .emua-flash-image {
@@ -248,21 +244,20 @@
         height: 235px;
         padding: 22px;
         overflow: hidden;
-        background: linear-gradient( 145deg, #fbfbfd, #f1f1f6 );
+        background: linear-gradient(145deg, #fbfbfd, #f1f1f6);
     }
 
 
-        .emua-flash-image img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .emua-flash-card:hover
     .emua-flash-image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: .35s;
+    }
+
+
+    .emua-flash-card:hover .emua-flash-image img {
         transform: scale(1.06);
     }
 
@@ -275,7 +270,7 @@
         padding: 6px 10px;
         border-radius: 7px;
         color: #fff;
-        background: linear-gradient( 135deg, #e5485d, #f06474 );
+        background: linear-gradient(135deg, #e5485d, #f06474);
         font-size: 10px;
         font-weight: 800;
     }
@@ -314,13 +309,13 @@
     }
 
 
-        .flash-variant span {
-            padding: 4px 7px;
-            border-radius: 6px;
-            color: #6f7080;
-            background: #f1f1f6;
-            font-size: 10px;
-        }
+    .flash-variant span {
+        padding: 4px 7px;
+        border-radius: 6px;
+        color: #6f7080;
+        background: #f1f1f6;
+        font-size: 10px;
+    }
 
 
     .flash-price {
@@ -338,21 +333,21 @@
         border-radius: 9px;
         color: white;
         cursor: pointer;
-        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+        background: linear-gradient(135deg, #4d4a8d, #625db1);
         transition: .25s;
     }
 
 
-        .flash-cart:hover {
-            transform: translateY(-2px);
-            background: linear-gradient( 135deg, #5d58a6, #716ad0 );
-        }
+    .flash-cart:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #5d58a6, #716ad0);
+    }
 
 
     @@media(max-width:1050px) {
 
         .emua-flash-grid {
-            grid-template-columns: repeat(3,1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 
@@ -366,7 +361,7 @@
 
 
         .emua-flash-grid {
-            grid-template-columns: repeat(2,1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
 
 
@@ -374,7 +369,6 @@
             height: 180px;
         }
     }
-
 </style>
 
 
@@ -425,17 +419,17 @@
 
 
             hour.textContent =
-                String(h).padStart(2,'0');
+                String(h).padStart(2, '0');
 
 
             minute.textContent =
-                String(m).padStart(2,'0');
+                String(m).padStart(2, '0');
 
 
             second.textContent =
-                String(s).padStart(2,'0');
+                String(s).padStart(2, '0');
 
-        },1000);
+        }, 1000);
 
     })();
 

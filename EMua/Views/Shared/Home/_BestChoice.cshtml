@@ -54,12 +54,13 @@
 
                     <div class="best-image">
 
+                        <partial name="~/Views/Shared/_FavoriteButton.cshtml" model="@item.MaSanPham" />
+
                         <span class="best-badge">
                             BEST
                         </span>
 
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
+                        <img src="@image" alt="@item.TenSanPham" />
 
                     </div>
 
@@ -89,13 +90,9 @@
 
                         @if (variant != null)
                         {
-                            <button type="button"
-                                    onclick="homeAddCart(@variant.MaBienThe)"
-                                    class="best-cart">
+                            <button type="button" onclick="homeAddCart(@variant.MaBienThe, true)" class="best-cart">
 
-                                <i class="bi bi-cart-plus"></i>
-
-                                Thêm vào giỏ
+                                Mua ngay
 
                             </button>
                         }
@@ -113,18 +110,17 @@
 
 
 <style>
-
     .best-choice-section {
         position: relative;
         padding: 80px 0;
         overflow: hidden;
         color: #fff;
-        background: radial-gradient( circle at 85% 25%, rgba(139,124,246,.17), transparent 30% ), radial-gradient( circle at 20% 100%, rgba(91,140,255,.12), transparent 28% ), linear-gradient( 135deg, #15172f, #0d0f25 );
+        background: radial-gradient(circle at 85% 25%, rgba(139, 124, 246, .17), transparent 30%), radial-gradient(circle at 20% 100%, rgba(91, 140, 255, .12), transparent 28%), linear-gradient(135deg, #15172f, #0d0f25);
     }
 
 
     .best-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
@@ -134,30 +130,30 @@
     }
 
 
-        .best-heading span {
-            color: #e5c75f;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
+    .best-heading span {
+        color: #e5c75f;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
 
 
-        .best-heading h2 {
-            margin: 7px 0 7px;
-            color: #fff;
-            font-size: 31px;
-        }
+    .best-heading h2 {
+        margin: 7px 0 7px;
+        color: #fff;
+        font-size: 31px;
+    }
 
 
-        .best-heading p {
-            color: #9e9fb3;
-            margin: 0;
-        }
+    .best-heading p {
+        color: #9e9fb3;
+        margin: 0;
+    }
 
 
     .best-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
     }
 
@@ -165,38 +161,37 @@
     .best-card {
         overflow: hidden;
         border-radius: 19px;
-        border: 1px solid rgba(255,255,255,.10);
-        background: rgba(255,255,255,.055);
+        border: 1px solid rgba(255, 255, 255, .10);
+        background: rgba(255, 255, 255, .055);
         backdrop-filter: blur(14px);
         transition: .3s;
     }
 
 
-        .best-card:hover {
-            transform: translateY(-7px);
-            border-color: rgba(229,199,95,.28);
-            box-shadow: 0 20px 45px rgba(0,0,0,.25);
-        }
+    .best-card:hover {
+        transform: translateY(-7px);
+        border-color: rgba(229, 199, 95, .28);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, .25);
+    }
 
 
     .best-image {
         position: relative;
         height: 235px;
         padding: 20px;
-        background: linear-gradient( 145deg, #fbfbfd, #eeeef4 );
+        background: linear-gradient(145deg, #fbfbfd, #eeeef4);
     }
 
 
-        .best-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .best-card:hover
     .best-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: .35s;
+    }
+
+
+    .best-card:hover .best-image img {
         transform: scale(1.06);
     }
 
@@ -211,7 +206,7 @@
         color: #201b08;
         font-size: 10px;
         font-weight: 850;
-        background: linear-gradient( 100deg, #a97c13, #edcd66, #fff0a7, #c59219 );
+        background: linear-gradient(100deg, #a97c13, #edcd66, #fff0a7, #c59219);
         background-size: 250%;
         animation: bestBadgeShine 4s linear infinite;
     }
@@ -222,20 +217,20 @@
     }
 
 
-        .best-body small {
-            color: #a7a8ba;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+    .best-body small {
+        color: #a7a8ba;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
 
 
-        .best-body h3 {
-            min-height: 44px;
-            margin: 6px 0 8px;
-            color: #fff;
-            font-size: 15px;
-            line-height: 1.45;
-        }
+    .best-body h3 {
+        min-height: 44px;
+        margin: 6px 0 8px;
+        color: #fff;
+        font-size: 15px;
+        line-height: 1.45;
+    }
 
 
     .best-variant {
@@ -261,15 +256,15 @@
         border-radius: 9px;
         color: #17172a;
         cursor: pointer;
-        background: linear-gradient( 135deg, #e5c45a, #f3dc87 );
+        background: linear-gradient(135deg, #e5c45a, #f3dc87);
         transition: .25s;
     }
 
 
-        .best-cart:hover {
-            transform: translateY(-2px);
-            background: #fff;
-        }
+    .best-cart:hover {
+        transform: translateY(-2px);
+        background: #fff;
+    }
 
 
     @@keyframes bestBadgeShine {
@@ -287,7 +282,7 @@
     @@media(max-width:1050px) {
 
         .best-grid {
-            grid-template-columns: repeat(3,1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 
@@ -295,7 +290,7 @@
     @@media(max-width:750px) {
 
         .best-grid {
-            grid-template-columns: repeat(2,1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
 
 
@@ -303,5 +298,4 @@
             height: 180px;
         }
     }
-
 </style>

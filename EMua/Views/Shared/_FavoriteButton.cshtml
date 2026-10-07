@@ -1,0 +1,16 @@
+@model int
+@{
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var favoriteProductIds = ViewBag.FavoriteProductIds as HashSet<int>;
+    var isFavorite = favoriteProductIds?.Contains(Model) == true;
+}
+<form asp-controller="Product" asp-action="Favorite" method="post" class="product-favorite-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="productId" value="@Model" />
+    <input type="hidden" name="returnUrl" value="@returnUrl" />
+    <button type="submit" class="product-favorite-button @(isFavorite ? "is-favorite" : "")"
+            aria-label="@(isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích")" aria-pressed="@isFavorite"
+            title="@(isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích")">
+        <i class="bi @(isFavorite ? "bi-heart-fill" : "bi-heart")" aria-hidden="true"></i>
+    </button>
+</form>

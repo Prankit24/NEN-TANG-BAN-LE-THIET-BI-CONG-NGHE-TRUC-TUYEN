@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using EMua.Data;
 using EMua.Models.ViewModels;
 using EMua.ViewModels;
@@ -86,6 +87,14 @@ namespace EMua.Controllers
                     .Where(x => x.TrangThai)
                     .ToListAsync()
             };
+
+            var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.FavoriteProductIds = int.TryParse(userIdText, out var userId)
+                ? new HashSet<int>(await _db.YeuThiches.AsNoTracking()
+                    .Where(x => x.MaNguoiDung == userId)
+                    .Select(x => x.MaSanPham)
+                    .ToListAsync())
+                : new HashSet<int>();
 
             return View(model);
         }

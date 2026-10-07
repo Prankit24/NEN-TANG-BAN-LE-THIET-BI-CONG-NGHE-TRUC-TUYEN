@@ -42,7 +42,8 @@
 
                 <div class="form-group mb-3">
                     <label asp-for="RecipientPhone" class="form-label">Số điện thoại <span>*</span></label>
-                    <input asp-for="RecipientPhone" class="form-control" placeholder="Nhập số điện thoại (VD: 0905123456)" />
+                    <input asp-for="RecipientPhone" class="form-control"
+                           placeholder="Nhập số điện thoại (VD: 0905123456)" />
                     <span asp-validation-for="RecipientPhone" class="text-danger"></span>
                 </div>
 
@@ -50,31 +51,37 @@
                 <div class="form-group mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label asp-for="ShippingAddress" class="form-label mb-0">Địa chỉ nhận hàng <span>*</span></label>
-                        <button type="button" id="btnGetLocation" onclick="getCurrentLocation()" class="btn btn-sm btn-outline-primary border-0 p-0 text-decoration-underline" style="font-size: 13px;">
+                        <button type="button" id="btnGetLocation" onclick="getCurrentLocation()"
+                                class="btn btn-sm btn-outline-primary border-0 p-0 text-decoration-underline"
+                                style="font-size: 13px;">
                             <i class="bi bi-geo-alt-fill me-1"></i>Định vị vị trí hiện tại
                         </button>
                     </div>
 
                     <div class="input-group">
-                        <input asp-for="ShippingAddress" id="shippingAddressInput" class="form-control" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." />
+                        <input asp-for="ShippingAddress" id="shippingAddressInput" class="form-control"
+                               placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." />
                     </div>
                     <span asp-validation-for="ShippingAddress" class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
                     <label asp-for="Note" class="form-label">Ghi chú đơn hàng</label>
-                    <textarea asp-for="Note" class="form-control" rows="3" placeholder="Ghi chú thêm về địa chỉ hoặc thời gian giao hàng (nếu có)..."></textarea>
+                    <textarea asp-for="Note" class="form-control" rows="3"
+                              placeholder="Ghi chú thêm về địa chỉ hoặc thời gian giao hàng (nếu có)..."></textarea>
                 </div>
 
                 <h2>Phương thức giao hàng</h2>
                 <div class="form-check mb-2">
-                    <input type="radio" asp-for="ShippingMethod" value="STANDARD" id="shipStandard" class="form-check-input" checked />
+                    <input type="radio" asp-for="ShippingMethod" value="STANDARD" id="shipStandard"
+                           class="form-check-input" />
                     <label for="shipStandard" class="form-check-label">
                         <strong>Giao tiêu chuẩn</strong> - Miễn phí
                     </label>
                 </div>
                 <div class="form-check mb-3">
-                    <input type="radio" asp-for="ShippingMethod" value="EXPRESS" id="shipExpress" class="form-check-input" />
+                    <input type="radio" asp-for="ShippingMethod" value="EXPRESS" id="shipExpress"
+                           class="form-check-input" />
                     <label for="shipExpress" class="form-check-label">
                         <strong>Giao nhanh 2 giờ</strong> - 25.000 đ
                     </label>
@@ -96,13 +103,13 @@
                     <strong>-@Model.Discount.ToString("N0") đ</strong>
                 </div>
                 <div class="summary-line">
-                    <span>Vận chuyển</span>
-                    <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
+                    <span id="shippingMethodSummary">@(Model.ShippingMethod == "EXPRESS" ? "Giao nhanh 2 giờ" : "Giao tiêu chuẩn")</span>
+                    <strong id="shippingFeeSummary">@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
                 </div>
                 <hr />
                 <div class="summary-total">
                     <span>Tổng tạm tính</span>
-                    <strong>@Model.Total.ToString("N0") đ</strong>
+                    <strong id="checkoutTotalSummary">@Model.Total.ToString("N0") đ</strong>
                 </div>
 
                 <div class="review-actions mt-3">
@@ -119,7 +126,33 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-               function getCurrentLocation() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const standardRadio = document.getElementById('shipStandard');
+            const expressRadio = document.getElementById('shipExpress');
+            const methodSummary = document.getElementById('shippingMethodSummary');
+            const feeSummary = document.getElementById('shippingFeeSummary');
+            const totalSummary = document.getElementById('checkoutTotalSummary');
+            if (!standardRadio || !expressRadio || !methodSummary || !feeSummary || !totalSummary) return;
+
+            const subtotal = @Model.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const discount = @Model.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const formatMoney = value => new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+            const updateShippingSummary = function () {
+                const isExpress = expressRadio.checked;
+                const fee = isExpress ? 25000 : 0;
+                methodSummary.textContent = isExpress ? 'Giao nhanh 2 giờ' : 'Giao tiêu chuẩn';
+                feeSummary.textContent = fee === 0 ? 'Miễn phí' : formatMoney(fee);
+                totalSummary.textContent = formatMoney(Math.max(0, subtotal + fee - discount));
+            };
+
+            standardRadio.addEventListener('change', updateShippingSummary);
+            expressRadio.addEventListener('change', updateShippingSummary);
+            updateShippingSummary();
+        });
+    </script>
+
+    <script>
+        function getCurrentLocation() {
             const btn = document.getElementById('btnGetLocation');
             const addressInput = document.getElementById('shippingAddressInput');
 

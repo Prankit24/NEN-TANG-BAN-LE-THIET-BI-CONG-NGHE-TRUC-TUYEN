@@ -102,10 +102,6 @@ public class ProductCreateViewModel
 
     [Display(Name = "Thông số kỹ thuật")]
     public string? ThongSoKyThuat { get; set; }
-    [Display(Name = "Ảnh sản phẩm")]
-    public IFormFile? ImageFile { get; set; }
-
-    public string? CurrentImageUrl { get; set; }
 
     // Giữ tương thích với form upload 1 file đơn
     [Display(Name = "Ảnh sản phẩm chính")]
@@ -131,9 +127,6 @@ public class ProductVariantQuantityViewModel
     public int MaBienThe { get; set; }
     public string? MauSac { get; set; }
     public string? PhienBan { get; set; }
-    [Range(0.01, double.MaxValue, ErrorMessage = "Giá biến thể phải lớn hơn 0.")]
-    [Display(Name = "Giá bán")]
-    public decimal Gia { get; set; }
 
     [Range(0.01, double.MaxValue, ErrorMessage = "Giá biến thể phải lớn hơn 0.")]
     [Display(Name = "Giá bán")]
@@ -167,6 +160,7 @@ public class PromotionCreateViewModel
     public DateTime? NgayBatDau { get; set; }
     public DateTime? NgayKetThuc { get; set; }
     public string? MoTa { get; set; }
+    public bool TrangThai { get; set; } = true;
 }
 
 public class DeliveryUpdateViewModel

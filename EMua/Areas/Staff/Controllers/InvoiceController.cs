@@ -84,6 +84,10 @@ public class InvoiceController : StaffControllerBase
                         .ThenInclude(bt => bt.MaSanPhamNavigation)
             .Include(x => x.MaDonHangNavigation)
                 .ThenInclude(d => d.ThanhToans)
+            .Include(x => x.MaDonHangNavigation)
+                .ThenInclude(d => d.MaNguoiDungNavigation)
+            .Include(x => x.MaDonHangNavigation)
+                .ThenInclude(d => d.MaKhuyenMaiNavigation)
             .FirstOrDefaultAsync(x => x.MaHoaDon == id);
 
         if (invoice == null)

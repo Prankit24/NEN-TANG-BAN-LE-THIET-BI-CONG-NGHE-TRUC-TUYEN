@@ -50,8 +50,9 @@
 
                     <div class="featured-image">
 
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
+                        <partial name="~/Views/Shared/_FavoriteButton.cshtml" model="@item.MaSanPham" />
+
+                        <img src="@image" alt="@item.TenSanPham" />
 
                     </div>
 
@@ -88,13 +89,9 @@
 
                         @if (variant != null)
                         {
-                            <button type="button"
-                                    onclick="homeAddCart(@variant.MaBienThe)"
-                                    class="featured-cart">
+                            <button type="button" onclick="homeAddCart(@variant.MaBienThe, true)" class="featured-cart">
 
-                                <i class="bi bi-cart-plus"></i>
-
-                                Thêm vào giỏ
+                                Mua ngay
 
                             </button>
                         }
@@ -112,15 +109,14 @@
 
 
 <style>
-
     .featured-section {
         padding: 70px 0;
-        background: linear-gradient( 180deg, #f0f0f9, #f7f7fc );
+        background: linear-gradient(180deg, #f0f0f9, #f7f7fc);
     }
 
 
     .featured-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
@@ -130,24 +126,24 @@
     }
 
 
-        .featured-heading span {
-            color: #5b67c8;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
+    .featured-heading span {
+        color: #5b67c8;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 3px;
+    }
 
 
-        .featured-heading h2 {
-            margin: 7px 0 0;
-            color: #17172a;
-            font-size: 30px;
-        }
+    .featured-heading h2 {
+        margin: 7px 0 0;
+        color: #17172a;
+        font-size: 30px;
+    }
 
 
     .featured-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
     }
 
@@ -155,35 +151,34 @@
     .featured-card {
         overflow: hidden;
         border-radius: 19px;
-        border: 1px solid rgba(77,74,141,.09);
+        border: 1px solid rgba(77, 74, 141, .09);
         background: #fff;
         transition: .3s;
     }
 
 
-        .featured-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 18px 42px rgba(69,65,133,.13);
-        }
+    .featured-card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 18px 42px rgba(69, 65, 133, .13);
+    }
 
 
     .featured-image {
         height: 235px;
         padding: 20px;
-        background: linear-gradient( 145deg, #fafafd, #f0f0f7 );
+        background: linear-gradient(145deg, #fafafd, #f0f0f7);
     }
 
 
-        .featured-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .featured-card:hover
     .featured-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: .35s;
+    }
+
+
+    .featured-card:hover .featured-image img {
         transform: scale(1.06);
     }
 
@@ -193,20 +188,20 @@
     }
 
 
-        .featured-body small {
-            color: #9696a7;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+    .featured-body small {
+        color: #9696a7;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
 
 
-        .featured-body h3 {
-            min-height: 44px;
-            margin: 6px 0 8px;
-            color: #202030;
-            font-size: 15px;
-            line-height: 1.45;
-        }
+    .featured-body h3 {
+        min-height: 44px;
+        margin: 6px 0 8px;
+        color: #202030;
+        font-size: 15px;
+        line-height: 1.45;
+    }
 
 
     .featured-variant {
@@ -231,21 +226,21 @@
         border: 0;
         border-radius: 9px;
         color: white;
-        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
+        background: linear-gradient(135deg, #4d4a8d, #625db1);
         transition: .25s;
     }
 
 
-        .featured-cart:hover {
-            transform: translateY(-2px);
-            background: linear-gradient( 135deg, #5e59aa, #716ad0 );
-        }
+    .featured-cart:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #5e59aa, #716ad0);
+    }
 
 
     @@media(max-width:1050px) {
 
         .featured-grid {
-            grid-template-columns: repeat(3,1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 
@@ -253,7 +248,7 @@
     @@media(max-width:750px) {
 
         .featured-grid {
-            grid-template-columns: repeat(2,1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
 
 
@@ -261,5 +256,4 @@
             height: 180px;
         }
     }
-
 </style>
