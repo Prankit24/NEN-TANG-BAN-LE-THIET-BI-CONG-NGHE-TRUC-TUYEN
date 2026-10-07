@@ -1,3 +1,4 @@
+
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -25,7 +26,8 @@ namespace EMua.Services.AI
         {
             if (string.IsNullOrWhiteSpace(message))
             {
-                throw new ArgumentException("Câu hỏi không được để trống.");
+                throw new ArgumentException(
+                    "Câu hỏi không được để trống.");
             }
 
             var apiKey = _configuration["Gemini:ApiKey"];
@@ -43,10 +45,16 @@ namespace EMua.Services.AI
                     "Chưa cấu hình Gemini:Model.");
             }
 
+            // Chuẩn hóa tên model
+            model = model.Trim();
+            if (model.StartsWith("models/",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                model = model.Substring("models/".Length);
+            }
+
             var url =
-                "https://generativelanguage.googleapis.com/v1beta/models/" +
-                Uri.EscapeDataString(model) +
-                ":generateContent";
+                $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(model)}:generateContent";
 
             var body = new
             {
@@ -75,39 +83,50 @@ namespace EMua.Services.AI
                             new { text = message }
                         }
                     }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.7,
+                    maxOutputTokens = 2048
                 }
             };
 
             using var httpRequest =
                 new HttpRequestMessage(HttpMethod.Post, url);
 
+            // Gửi API Key qua header, không đưa vào URL
             httpRequest.Headers.Add("x-goog-api-key", apiKey);
             httpRequest.Content = JsonContent.Create(body);
 
             using var response =
                 await _httpClient.SendAsync(httpRequest);
 
+            var json = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
                 var reason = (int)response.StatusCode switch
                 {
-                    400 => "Yêu cầu hoặc cấu hình không hợp lệ.",
-                    401 or 403 => "Kiểm tra API key và quyền truy cập.",
-                    404 => "Không tìm thấy model đã cấu hình.",
-                    429 => "Đã chạm giới hạn lượt gọi hoặc hạn mức.",
+                    400 => "Yêu cầu không hợp lệ. Kiểm tra nội dung gửi lên.",
+                    401 => "API Key không hợp lệ.",
+                    403 => "API Key không có quyền truy cập.",
+                    404 => $"Không tìm thấy model '{model}'. " +
+                           "Hãy kiểm tra tên model và quyền truy cập.",
+                    429 => "Đã vượt quá giới hạn sử dụng Gemini.",
                     _ => "Dịch vụ Gemini đang gặp lỗi."
                 };
 
+                // Không đưa API Key vào thông báo lỗi
                 throw new HttpRequestException(
                     $"Gemini HTTP {(int)response.StatusCode}: {reason}");
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
 
-            if (!root.TryGetProperty("candidates", out var candidates) ||
+            if (!root.TryGetProperty("candidates",
+                    out var candidates) ||
+                candidates.ValueKind != JsonValueKind.Array ||
                 candidates.GetArrayLength() == 0)
             {
                 throw new InvalidOperationException(
@@ -116,8 +135,18 @@ namespace EMua.Services.AI
 
             var candidate = candidates[0];
 
-            if (!candidate.TryGetProperty("content", out var content) ||
-                !content.TryGetProperty("parts", out var parts))
+            if (candidate.TryGetProperty("finishReason",
+                    out var finishReason) &&
+                finishReason.GetString() == "SAFETY")
+            {
+                throw new InvalidOperationException(
+                    "Câu hỏi không thể được trả lời do giới hạn an toàn.");
+            }
+
+            if (!candidate.TryGetProperty("content",
+                    out var content) ||
+                !content.TryGetProperty("parts",
+                    out var parts))
             {
                 throw new InvalidOperationException(
                     "Phản hồi Gemini không chứa nội dung văn bản.");

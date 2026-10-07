@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // =====================================================
@@ -32,6 +33,15 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+
+// =====================================================
+// AI SERVICES
+// =====================================================
+builder.Services.AddSingleton<DomainClassifier>();
+builder.Services.AddHttpClient<GeminiService>();
+// THÊM DÒNG NÀY ĐỂ ĐĂNG KÝ RECOMMENDATION SERVICE
+builder.Services.AddScoped<RecommendationService>();
 
 // =====================================================
 // MVC
