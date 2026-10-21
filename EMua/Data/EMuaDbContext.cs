@@ -268,7 +268,27 @@ public partial class EMuaDbContext : DbContext
                 .HasConstraintName("FK_YeuThich_SanPham");
         });
 
+        // DBeaver SQL Server -> PostgreSQL migration uses lowercase identifiers.
+        // This mapping assumes PostgreSQL tables AND columns were created in lowercase.
+        // Verify against information_schema before using in production.
         OnModelCreatingPartial(modelBuilder);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var tableName = entityType.GetTableName();
+            if (tableName is null) continue;
+
+            entityType.SetTableName(tableName.ToLowerInvariant());
+            entityType.SetSchema("public");
+
+            foreach (var property in entityType.GetProperties())
+            {
+                // Preserve any existing explicit column mapping, changing only casing.
+                var columnName = property.GetColumnName();
+                if (columnName is not null)
+                    property.SetColumnName(columnName.ToLowerInvariant());
+            }
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

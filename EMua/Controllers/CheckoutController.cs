@@ -12,6 +12,10 @@ namespace EMua.Controllers;
 public class CheckoutController : Controller
 {
     private const decimal StandardShippingFee = 30000m;
+    private const string BuyNowUserKey = "Checkout_BuyNowUserId";
+    private const string BuyNowVariantKey = "Checkout_BuyNowVariantId";
+    private const string BuyNowQuantityKey = "Checkout_BuyNowQuantity";
+    private const string BuyNowExpectedKey = "Checkout_BuyNowExpected";
     private readonly EMuaDbContext _db;
 
     public CheckoutController(EMuaDbContext db) => _db = db;
@@ -24,13 +28,30 @@ public class CheckoutController : Controller
     // =========================================================
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(bool fromCart = false)
     {
+        // Bấm Thanh toán từ giỏ hàng => thanh toán tất cả món trong giỏ.
+        if (fromCart) { ClearBuyNowSession(); TempData.Remove(BuyNowExpectedKey); }
+
         var user = await GetCurrentUserAsync();
         if (user == null) return RedirectToAction("Login", "Auth");
 
+        // Ghi lại chế độ thanh toán để tránh âm thầm chuyển sang giỏ hàng nếu session hết hạn.
+        if (!TempData.ContainsKey(BuyNowExpectedKey))
+            TempData[BuyNowExpectedKey] = IsBuyNowCheckout(user.MaNguoiDung);
+        if (IsExpectedBuyNowLost(user.MaNguoiDung))
+        {
+            TempData["Error"] = "Phiên Mua ngay đã hết hạn. Vui lòng chọn mua lại sản phẩm.";
+            TempData.Remove(BuyNowExpectedKey);
+            return RedirectToAction("Index", "Cart");
+        }
+
         var model = await BuildCheckoutAsync(user);
-        if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
+        if (!model.Items.Any())
+        {
+            TempData["Error"] = "Không có sản phẩm hợp lệ để thanh toán hoặc sản phẩm đã hết hàng.";
+            return RedirectToAction("Index", "Cart");
+        }
 
         if (TempData["Checkout_FullName"] != null)
         {
@@ -48,6 +69,14 @@ public class CheckoutController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(CheckoutViewModel model)
     {
+        var submittingUser = await GetCurrentUserAsync();
+        if (submittingUser == null) return RedirectToAction("Login", "Auth");
+        if (IsExpectedBuyNowLost(submittingUser.MaNguoiDung))
+        {
+            TempData["Error"] = "Phiên Mua ngay đã hết hạn. Vui lòng chọn mua lại sản phẩm.";
+            return RedirectToAction("Index", "Cart");
+        }
+
         if (string.IsNullOrWhiteSpace(model.FullName) ||
             string.IsNullOrWhiteSpace(model.PhoneNumber) ||
             string.IsNullOrWhiteSpace(model.Address))
@@ -85,6 +114,12 @@ public class CheckoutController : Controller
 
         var user = await GetCurrentUserAsync();
         if (user == null) return RedirectToAction("Login", "Auth");
+
+        if (IsExpectedBuyNowLost(user.MaNguoiDung))
+        {
+            TempData["Error"] = "Phiên Mua ngay đã hết hạn. Vui lòng chọn mua lại sản phẩm.";
+            return RedirectToAction("Index", "Cart");
+        }
 
         var model = await BuildCheckoutAsync(user);
         if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
@@ -153,6 +188,12 @@ public class CheckoutController : Controller
         var user = await GetCurrentUserAsync();
         if (user == null) return RedirectToAction("Login", "Auth");
 
+        if (IsExpectedBuyNowLost(user.MaNguoiDung))
+        {
+            TempData["Error"] = "Phiên Mua ngay đã hết hạn. Vui lòng chọn mua lại sản phẩm.";
+            return RedirectToAction("Index", "Cart");
+        }
+
         var model = await BuildCheckoutAsync(user);
         if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
 
@@ -206,6 +247,11 @@ public class CheckoutController : Controller
             return BadRequest(new { success = false, message = "Phương thức thanh toán không hợp lệ." });
         }
 
+        // Xác định chế độ trước khi tạo đơn, tránh xóa giỏ hàng khi người dùng chọn Mua ngay.
+        bool isBuyNow = IsBuyNowCheckout(user.MaNguoiDung);
+        if (IsExpectedBuyNowLost(user.MaNguoiDung))
+            return BadRequest(new { success = false, message = "Phiên Mua ngay đã hết hạn. Vui lòng chọn lại sản phẩm." });
+
         var strategy = _db.Database.CreateExecutionStrategy();
 
         try
@@ -216,15 +262,17 @@ public class CheckoutController : Controller
 
                 try
                 {
-                    // 1. Lấy giỏ hàng
-                    var cartItems = await GetCartItemsAsync(user.MaNguoiDung);
+                    // 1. Lấy danh sách thanh toán (Mua ngay hoặc giỏ hàng).
+                    var cartItems = await GetCheckoutItemsAsync(user.MaNguoiDung);
                     if (cartItems.Count == 0)
                     {
-                        return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Giỏ hàng đang trống." } };
+                        return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Không có sản phẩm hợp lệ để đặt hàng." } };
                     }
 
                     // 2. Kiểm tra tồn kho
-                    if (cartItems.Any(x => x.SoLuong > x.MaBienTheNavigation.SoLuong))
+                    if (cartItems.Any(x => x.SoLuong <= 0 ||
+                        x.SoLuong > x.MaBienTheNavigation.SoLuong ||
+                        x.MaBienTheNavigation.TrangThai != "Còn hàng"))
                     {
                         return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Một số sản phẩm không còn đủ số lượng trong kho." } };
                     }
@@ -278,8 +326,9 @@ public class CheckoutController : Controller
                         coupon.SoLuong--;
                     }
 
-                    // 7. Xóa giỏ hàng
-                    _db.ChiTietGioHangs.RemoveRange(cartItems);
+                    // 7. Chỉ xóa giỏ sau khi đặt hàng từ giỏ. "Mua ngay" không thay đổi giỏ.
+                    if (!isBuyNow)
+                        _db.ChiTietGioHangs.RemoveRange(cartItems);
 
                     // 8. Đặt tên phương thức hiển thị chuẩn
                     var paymentName = paymentMethod switch
@@ -348,6 +397,8 @@ public class CheckoutController : Controller
             TempData.Remove("Checkout_Note");
             TempData.Remove("Checkout_PaymentMethod");
             TempData.Remove("Checkout_CouponCode");
+            TempData.Remove(BuyNowExpectedKey);
+            if (isBuyNow) ClearBuyNowSession();
 
             return Json(result.Data);
         }
@@ -464,7 +515,7 @@ public class CheckoutController : Controller
 
     private async Task<CheckoutViewModel> BuildCheckoutAsync(NguoiDung user)
     {
-        var cartItems = await GetCartItemsAsync(user.MaNguoiDung);
+        var cartItems = await GetCheckoutItemsAsync(user.MaNguoiDung);
         var model = new CheckoutViewModel
         {
             FullName = user.TenNguoiDung ?? string.Empty,
@@ -483,6 +534,60 @@ public class CheckoutController : Controller
         model.Subtotal = model.Items.Sum(x => x.LineTotal);
         model.ShippingFee = model.Subtotal >= 500000m ? 0m : StandardShippingFee;
         return model;
+    }
+
+    private bool IsExpectedBuyNowLost(int userId) =>
+        string.Equals(TempData.Peek(BuyNowExpectedKey)?.ToString(), "True", StringComparison.OrdinalIgnoreCase) &&
+        !IsBuyNowCheckout(userId);
+
+    private bool IsBuyNowCheckout(int userId) =>
+        HttpContext.Session.GetInt32(BuyNowUserKey) == userId &&
+        HttpContext.Session.GetInt32(BuyNowVariantKey) is > 0 &&
+        HttpContext.Session.GetInt32(BuyNowQuantityKey) is > 0;
+
+    private void ClearBuyNowSession()
+    {
+        HttpContext.Session.Remove(BuyNowUserKey);
+        HttpContext.Session.Remove(BuyNowVariantKey);
+        HttpContext.Session.Remove(BuyNowQuantityKey);
+    }
+
+    // Giữ giỏ hàng nguyên trạng khi Mua ngay; sử dụng sản phẩm ảo chỉ để tính và tạo đơn.
+    private async Task<List<ChiTietGioHang>> GetCheckoutItemsAsync(int userId)
+    {
+        if (IsBuyNowCheckout(userId))
+        {
+            var variantId = HttpContext.Session.GetInt32(BuyNowVariantKey)!.Value;
+            var quantity = HttpContext.Session.GetInt32(BuyNowQuantityKey)!.Value;
+
+            var variant = await _db.BienTheSanPhams
+                .Include(x => x.MaSanPhamNavigation)
+                .FirstOrDefaultAsync(x => x.MaBienThe == variantId);
+
+            if (variant == null || variant.TrangThai != "Còn hàng" ||
+                variant.MaSanPhamNavigation.TrangThaiSanPham == "Ẩn" ||
+                variant.SoLuong < quantity)
+            {
+                return new List<ChiTietGioHang>();
+            }
+
+            return new List<ChiTietGioHang>
+            {
+                new ChiTietGioHang
+                {
+                    MaNguoiDung = userId,
+                    MaBienThe = variantId,
+                    SoLuong = quantity,
+                    MaBienTheNavigation = variant
+                }
+            };
+        }
+
+        // Nếu session mua ngay không khớp tài khoản đang dùng thì hủy session cũ.
+        if (HttpContext.Session.GetInt32(BuyNowVariantKey).HasValue)
+            ClearBuyNowSession();
+
+        return await GetCartItemsAsync(userId);
     }
 
     private Task<List<ChiTietGioHang>> GetCartItemsAsync(int userId) => _db.ChiTietGioHangs

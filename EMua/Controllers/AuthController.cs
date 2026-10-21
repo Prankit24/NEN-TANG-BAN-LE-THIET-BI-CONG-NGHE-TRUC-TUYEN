@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EMua.Controllers;
 
@@ -24,17 +25,20 @@ public class AuthController : Controller
     private readonly IPasswordHasher<NguoiDung> _passwordHasher;
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         EMuaDbContext db,
         IPasswordHasher<NguoiDung> passwordHasher,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        ILogger<AuthController> logger)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
     }
 
     // =====================================================
@@ -246,8 +250,11 @@ public class AuthController : Controller
         {
             if (user.MatKhau == model.Password)
             {
+                // Chuyển mật khẩu cũ dạng plain-text sang hash một cách an toàn.
                 user.MatKhau = _passwordHasher.HashPassword(user, model.Password);
-                await _db.SaveChangesAsync();
+                if (!await TrySavePasswordHashAsync(user))
+                    return View(model);
+
                 verifyResult = PasswordVerificationResult.Success;
             }
             else
@@ -272,7 +279,8 @@ public class AuthController : Controller
         if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
         {
             user.MatKhau = _passwordHasher.HashPassword(user, model.Password);
-            await _db.SaveChangesAsync();
+            if (!await TrySavePasswordHashAsync(user))
+                return View(model);
         }
 
         // 5. ĐĂNG NHẬP THÀNH CÔNG -> CLEAR SESSION
@@ -452,6 +460,35 @@ public class AuthController : Controller
     // =====================================================
     // HELPER METHODS
     // =====================================================
+    // Tránh lỗi HTTP 500 khi hash mật khẩu không lưu được.
+    // Lưu ý: cần xem log Render/PostgreSQL để tìm nguyên nhân gốc.
+    private async Task<bool> TrySavePasswordHashAsync(NguoiDung user)
+    {
+        try
+        {
+            await _db.SaveChangesAsync();
+            return true;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex,
+                "Password hash update affected no rows. UserId={UserId}",
+                user.MaNguoiDung);
+            ModelState.AddModelError("",
+                "Không thể cập nhật thông tin tài khoản. Vui lòng thử lại hoặc liên hệ hỗ trợ.");
+            return false;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex,
+                "Database error while updating password hash. UserId={UserId}",
+                user.MaNguoiDung);
+            ModelState.AddModelError("",
+                "Có lỗi lưu thông tin tài khoản. Vui lòng thử lại sau.");
+            return false;
+        }
+    }
+
     private void HandleFailedLogin()
     {
         int failedAttempts = HttpContext.Session.GetInt32("FailedPasswordCount") ?? 0;
