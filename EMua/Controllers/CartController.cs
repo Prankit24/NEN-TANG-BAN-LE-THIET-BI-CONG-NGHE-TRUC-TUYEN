@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
@@ -131,6 +131,85 @@ public class CartController : Controller
             subtotal = items.Sum(x =>
                 x.SoLuong * x.MaBienTheNavigation.Gia)
         });
+    }
+
+    // Form chi tiết sản phẩm: xử lý "Thêm vào giỏ" và "Mua ngay" (khác endpoint AJAX Add).
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddFromProduct(
+        int productId, int variantId, int quantity, bool buyNow = false, string? returnUrl = null)
+    {
+        string backUrl = Url.IsLocalUrl(returnUrl)
+            ? returnUrl!
+            : Url.Action("Details", "Product", new { id = productId }) ?? "/Product";
+
+        // Nếu chưa đăng nhập, đưa khách về trang sản phẩm để thao tác lại sau khi đăng nhập.
+        var userId = GetUserId();
+        if (userId == null)
+            return RedirectToAction("Login", "Auth", new { returnUrl = backUrl });
+
+        if (productId <= 0 || variantId <= 0 || quantity <= 0)
+        {
+            TempData["Error"] = "Vui lòng chọn phiên bản và số lượng hợp lệ.";
+            return LocalRedirect(backUrl);
+        }
+
+        var variant = await _db.BienTheSanPhams
+            .Include(x => x.MaSanPhamNavigation)
+            .FirstOrDefaultAsync(x => x.MaBienThe == variantId && x.MaSanPham == productId);
+
+        if (variant == null || variant.TrangThai != "Còn hàng" ||
+            variant.MaSanPhamNavigation.TrangThaiSanPham == "Ẩn" ||
+            variant.SoLuong < quantity)
+        {
+            TempData["Error"] = "Phiên bản đã chọn không còn đủ hàng. Vui lòng chọn lại.";
+            return LocalRedirect(backUrl);
+        }
+
+        if (buyNow)
+        {
+            // Không ghi vào bảng giỏ hàng: thanh toán riêng đúng phiên bản và số lượng đã chọn.
+            HttpContext.Session.SetInt32("Checkout_BuyNowUserId", userId.Value);
+            HttpContext.Session.SetInt32("Checkout_BuyNowVariantId", variantId);
+            HttpContext.Session.SetInt32("Checkout_BuyNowQuantity", quantity);
+
+            // Một lần mua mới không được kế thừa dữ liệu tạm từ lần thanh toán trước.
+            foreach (var key in new[] { "Checkout_FullName", "Checkout_PhoneNumber", "Checkout_Address",
+                                        "Checkout_Note", "Checkout_PaymentMethod", "Checkout_CouponCode" })
+                TempData.Remove(key);
+
+            return RedirectToAction("Index", "Checkout");
+        }
+
+        var cartItem = await _db.ChiTietGioHangs.FirstOrDefaultAsync(x =>
+            x.MaNguoiDung == userId.Value && x.MaBienThe == variantId);
+
+        var combinedQuantity = (cartItem?.SoLuong ?? 0) + quantity;
+        if (combinedQuantity > variant.SoLuong)
+        {
+            TempData["Error"] = "Số lượng trong giỏ hàng cộng với số lượng mới vượt quá tồn kho.";
+            return LocalRedirect(backUrl);
+        }
+
+        if (cartItem == null)
+        {
+            _db.ChiTietGioHangs.Add(new ChiTietGioHang
+            {
+                MaNguoiDung = userId.Value,
+                MaBienThe = variantId,
+                SoLuong = quantity,
+                NgayThem = DateTime.Now
+            });
+        }
+        else
+        {
+            cartItem.SoLuong = combinedQuantity;
+        }
+
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "Đã thêm sản phẩm vào giỏ hàng.";
+        return LocalRedirect(backUrl);
     }
 
     // Thêm sản phẩm vào giỏ hàng bằng AJAX.
