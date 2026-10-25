@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EMua.Models.Database.ThuongHieu>
+@model IEnumerable<EMua.Models.Database.ThuongHieu>
 
 
 <section class="emua-brands-section">
@@ -6,19 +6,9 @@
     <div class="emua-brands-container">
 
         <div class="emua-brands-heading">
-
-            <span>
-                THƯƠNG HIỆU
-            </span>
-
-            <h2>
-                Thương hiệu nổi bật
-            </h2>
-
-            <p>
-                Những thương hiệu công nghệ được yêu thích tại EMUA.
-            </p>
-
+            <div class="brands-tag">THƯƠNG HIỆU</div>
+            <h2 class="brands-title">Thương hiệu nổi bật</h2>
+            <p class="brands-sub">Những thương hiệu công nghệ hàng đầu tại EMUA.</p>
         </div>
 
 
@@ -26,21 +16,19 @@
 
             @foreach (var item in Model)
             {
-                <div class="emua-brand-card">
+                <a asp-controller="Product" asp-action="Index" asp-route-brand="@item.TenThuongHieu"
+                   class="emua-brand-card">
 
                     @if (!string.IsNullOrWhiteSpace(item.Logo))
                     {
-                        <img src="@item.Logo"
-                             alt="@item.TenThuongHieu" />
+                        <img src="@item.Logo" alt="@item.TenThuongHieu" loading="lazy" />
                     }
                     else
                     {
-                        <strong>
-                            @item.TenThuongHieu
-                        </strong>
+                        <strong>@item.TenThuongHieu</strong>
                     }
 
-                </div>
+                </a>
             }
 
         </div>
@@ -53,99 +41,102 @@
 <style>
 
     .emua-brands-section {
-        padding: 70px 0 90px;
+        padding: 80px 0 100px;
         background: #fff;
     }
 
-
     .emua-brands-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
+    .emua-brands-heading { margin-bottom: 36px; }
 
-    .emua-brands-heading {
-        margin-bottom: 28px;
+    .brands-tag {
+        display: inline-flex;
+        padding: 4px 14px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.07);
+        color: #2563eb;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
     }
 
+    .brands-title {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+        font-weight: 900;
+        color: #0f172a;
+        letter-spacing: -0.8px;
+    }
 
-        .emua-brands-heading span {
-            display: block;
-            color: #625db1;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
-
-
-        .emua-brands-heading h2 {
-            margin: 7px 0 5px;
-            color: #17172a;
-            font-size: 30px;
-        }
-
-
-        .emua-brands-heading p {
-            margin: 0;
-            color: #77788d;
-            font-size: 14px;
-        }
-
+    .brands-sub {
+        margin: 8px 0 0;
+        color: #94a3b8;
+        font-size: 14px;
+    }
 
     .emua-brands-grid {
         display: grid;
-        grid-template-columns: repeat(6,1fr);
-        gap: 15px;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 16px;
     }
 
-
     .emua-brand-card {
-        min-height: 105px;
-        padding: 18px;
+        min-height: 110px;
+        padding: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 18px;
-        border: 1px solid rgba(77,74,141,.09);
-        background: #fafafd;
-        transition: .3s;
+        border: 1.5px solid rgba(0,0,0,0.05);
+        background: #fafbff;
+        text-decoration: none;
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+                    box-shadow 0.3s ease,
+                    border-color 0.25s ease;
+        filter: grayscale(30%);
+    }
+
+    .emua-brand-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(37,99,235,.22);
+        box-shadow: 0 16px 40px rgba(37,99,235,0.1);
+        background: #fff;
+        filter: grayscale(0%);
+    }
+
+    .emua-brand-card img {
+        display: block;
+        max-width: 100%;
+        max-height: 56px;
+        object-fit: contain;
+        transition: transform 0.25s ease;
+    }
+
+    .emua-brand-card:hover img {
+        transform: scale(1.06);
+    }
+
+    .emua-brand-card strong {
+        color: #1e293b;
+        font-size: 17px;
+        font-weight: 800;
     }
 
 
-        .emua-brand-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(91,140,255,.30);
-            box-shadow: 0 15px 35px rgba(72,67,137,.10);
-        }
-
-
-        .emua-brand-card img {
-            display: block;
-            max-width: 100%;
-            max-height: 60px;
-            object-fit: contain;
-        }
-
-
-        .emua-brand-card strong {
-            color: #252538;
-            font-size: 17px;
-        }
-
-
-    @@media(max-width:950px) {
-
-        .emua-brands-grid {
-            grid-template-columns: repeat(3,1fr);
-        }
+    @@media (max-width: 1000px) {
+        .emua-brands-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
+    @@media (max-width: 700px) {
+        .emua-brands-grid { grid-template-columns: repeat(3, 1fr); }
+    }
 
-    @@media(max-width:550px) {
-
-        .emua-brands-grid {
-            grid-template-columns: repeat(2,1fr);
-        }
+    @@media (max-width: 480px) {
+        .emua-brands-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
 </style>

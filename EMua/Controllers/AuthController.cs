@@ -1,5 +1,9 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Globalization;
+using System.Text.Encodings.Web;
+using EMua.Services;
+using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -26,19 +30,22 @@ public class AuthController : Controller
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AuthController> _logger;
+    private readonly IAppEmailSender _emailSender;
 
     public AuthController(
         EMuaDbContext db,
         IPasswordHasher<NguoiDung> passwordHasher,
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IAppEmailSender emailSender)
     {
         _db = db;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _emailSender = emailSender;
     }
 
     // =====================================================
@@ -311,6 +318,223 @@ public class AuthController : Controller
 
         // 4. Mặc định là Khách hàng -> Về trang chủ
         return RedirectToAction("Index", "Home");
+    }
+
+    // =====================================================
+    // FORGOT PASSWORD - GET
+    // =====================================================
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View(new ForgotPasswordViewModel());
+    }
+
+    // =====================================================
+    // FORGOT PASSWORD - POST
+    // Dùng GeeTest của trang Login để hạn chế spam email.
+    // =====================================================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(
+        ForgotPasswordViewModel model,
+        string? lotNumber,
+        string? captchaOutput,
+        string? passToken,
+        string? genTime)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        if (!await VerifyGeeTestAsync(
+                "Login", lotNumber, captchaOutput, passToken, genTime))
+        {
+            ModelState.AddModelError("",
+                "Xác minh bảo mật không thành công. Vui lòng thử lại.");
+            return View(model);
+        }
+
+        var email = model.Email.Trim().ToLowerInvariant();
+        var user = await _db.NguoiDungs.AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.Email != null && x.Email.ToLower() == email);
+
+        // Không tiết lộ email nào đã đăng ký hoặc tài khoản nào đang bị khóa.
+        if (user != null && user.TrangThai && !string.IsNullOrWhiteSpace(user.MatKhau))
+        {
+            try
+            {
+                var token = CreatePasswordResetToken(user);
+                var path = Url.Action(
+                    nameof(ResetPassword), "Auth",
+                    new { email, token });
+
+                var baseUrl = _configuration["App:BaseUrl"];
+                if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) ||
+                    (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+                    throw new InvalidOperationException("Thiếu App:BaseUrl hợp lệ trong cấu hình.");
+
+                if (string.IsNullOrWhiteSpace(path))
+                    throw new InvalidOperationException("Không tạo được đường dẫn đặt lại mật khẩu.");
+
+                var resetUrl = new Uri(uri, path).AbsoluteUri;
+                var safeUrl = HtmlEncoder.Default.Encode(resetUrl);
+
+                var htmlBody =
+                    "<h2>Đặt lại mật khẩu EMUA</h2>" +
+                    "<p>Chúng tôi nhận được yêu cầu khôi phục mật khẩu.</p>" +
+                    $"<p><a href=\"{safeUrl}\">Nhấn vào đây để đặt mật khẩu mới</a></p>" +
+                    "<p>Liên kết có hiệu lực trong 30 phút.</p>" +
+                    "<p>Nếu không yêu cầu, bạn có thể bỏ qua email này.</p>";
+
+                await _emailSender.SendAsync(email, "EMUA - Đặt lại mật khẩu", htmlBody);
+            }
+            catch (Exception ex)
+            {
+                // Không lộ tình trạng email hoặc chi tiết cấu hình cho người ngoài.
+                _logger.LogError(ex, "Không gửi được email đặt lại mật khẩu EMUA.");
+            }
+        }
+
+        ViewBag.Notice = "Nếu email đã đăng ký và đủ điều kiện, " +
+                         "hệ thống sẽ gửi một liên kết khôi phục mật khẩu.";
+        return View(model);
+    }
+
+    // =====================================================
+    // RESET PASSWORD - GET
+    // =====================================================
+    [HttpGet]
+    public async Task<IActionResult> ResetPassword(string? email, string? token)
+    {
+        var normalizedEmail = email?.Trim().ToLowerInvariant();
+        var user = string.IsNullOrWhiteSpace(normalizedEmail)
+            ? null
+            : await _db.NguoiDungs.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Email != null &&
+                                          x.Email.ToLower() == normalizedEmail);
+
+        if (user == null || !user.TrangThai ||
+            !IsValidPasswordResetToken(user, token))
+        {
+            TempData["ErrorMessage"] = "Liên kết không hợp lệ hoặc đã hết hạn.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        return View(new ResetPasswordViewModel
+        {
+            Email = normalizedEmail!,
+            Token = token!
+        });
+    }
+
+    // =====================================================
+    // RESET PASSWORD - POST
+    // =====================================================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var email = model.Email.Trim().ToLowerInvariant();
+        var user = await _db.NguoiDungs.FirstOrDefaultAsync(x =>
+            x.Email != null && x.Email.ToLower() == email);
+
+        if (user == null || !user.TrangThai ||
+            !IsValidPasswordResetToken(user, model.Token))
+        {
+            ModelState.AddModelError("", "Liên kết không hợp lệ hoặc đã hết hạn.");
+            return View(model);
+        }
+
+        // Thay đổi hash mật khẩu cũng vô hiệu hóa các liên kết cũ.
+        user.MatKhau = _passwordHasher.HashPassword(user, model.NewPassword);
+
+        if (!await TrySavePasswordHashAsync(user))
+            return View(model);
+
+        TempData["SuccessMessage"] =
+            "Đặt lại mật khẩu thành công. Vui lòng đăng nhập.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    // =====================================================
+    // PASSWORD RESET TOKEN HELPERS
+    // Token HMAC gắn với user ID, email, hash mật khẩu và hạn dùng.
+    // Không lưu token trong database và không để lộ password hash trong URL.
+    // =====================================================
+    private string CreatePasswordResetToken(NguoiDung user)
+    {
+        long expiresAt = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
+        byte[] signature = ComputePasswordResetSignature(user, expiresAt);
+        return $"{expiresAt}.{WebEncoders.Base64UrlEncode(signature)}";
+    }
+
+    private bool IsValidPasswordResetToken(NguoiDung user, string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token) ||
+            string.IsNullOrWhiteSpace(user.MatKhau))
+            return false;
+
+        var pieces = token.Split('.', 2);
+        if (pieces.Length != 2 ||
+            !long.TryParse(pieces[0], NumberStyles.None,
+                           CultureInfo.InvariantCulture, out var expiresAt))
+            return false;
+
+        long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        if (expiresAt <= now || expiresAt > now + 30 * 60)
+            return false;
+
+        byte[] provided;
+        try
+        {
+            provided = WebEncoders.Base64UrlDecode(pieces[1]);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+
+        byte[] expected = ComputePasswordResetSignature(user, expiresAt);
+        return CryptographicOperations.FixedTimeEquals(provided, expected);
+    }
+
+    private byte[] ComputePasswordResetSignature(NguoiDung user, long expiresAt)
+    {
+        var keyText = _configuration["PasswordReset:SigningKey"]
+                   ?? _configuration["GeeTest:PasswordReset:SigningKey"];
+        if (string.IsNullOrWhiteSpace(keyText))
+            throw new InvalidOperationException(
+                "Thiếu PasswordReset:SigningKey trong cấu hình.");
+
+        byte[] key;
+        try
+        {
+            key = Convert.FromBase64String(keyText);
+        }
+        catch (FormatException ex)
+        {
+            throw new InvalidOperationException(
+                "PasswordReset:SigningKey phải ở dạng Base64.", ex);
+        }
+
+        if (key.Length < 32)
+            throw new InvalidOperationException(
+                "PasswordReset:SigningKey phải dài tối thiểu 32 byte.");
+
+        // Chuỗi được ký chứa password hash, nhưng token gửi email
+        // chỉ chứa expiry và chữ ký HMAC, không chứa hash.
+        var payload = $"{user.MaNguoiDung}\n" +
+                      $"{user.Email?.Trim().ToLowerInvariant()}\n" +
+                      $"{expiresAt}\n{user.MatKhau}";
+
+        return HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(payload));
     }
 
     // =====================================================

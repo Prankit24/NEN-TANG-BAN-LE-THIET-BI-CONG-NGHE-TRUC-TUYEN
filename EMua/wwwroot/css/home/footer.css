@@ -1,41 +1,56 @@
-
+/* ================================================================
+   EMUA FOOTER 2026 — Premium Dark
+   ================================================================ */
 
 .emua-footer {
-    background: #202044;
-    color: white;
+    background: #070a14;
+    color: rgba(255,255,255,0.88);
+    font-family: 'Inter', sans-serif;
 }
 
 
-
-
+/* ── SERVICES STRIP ─────────────────────────────────────────────── */
 .footer-services {
-    background: #11102e;
-    padding: 26px 0;
+    padding: 32px 0;
+    background: linear-gradient(135deg, #0c1024, #111629);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .service-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
+    gap: 24px;
 }
 
 .service-item {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
+    transition: all 0.25s ease;
+}
+
+.service-item:hover {
+    background: rgba(37,99,235,0.08);
+    border-color: rgba(37,99,235,0.2);
+    transform: translateY(-2px);
 }
 
 .service-icon {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     flex-shrink: 0;
-    border-radius: 50%;
-    background: #48478a;
-    color: white;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(124,58,237,0.15));
+    color: #60a5fa;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 22px;
+    border: 1px solid rgba(37,99,235,0.2);
 }
 
 .service-content {
@@ -44,200 +59,255 @@
     gap: 3px;
 }
 
-    .service-content strong {
-        font-size: 16px;
-        font-weight: 700;
-    }
+.service-content strong {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #fff;
+}
 
-    .service-content span {
-        color: #c8d4ff;
-        font-size: 14px;
-    }
+.service-content span {
+    color: rgba(255,255,255,0.5);
+    font-size: 12.5px;
+}
 
 
-
-
+/* ── FOOTER MAIN ─────────────────────────────────────────────────── */
 .footer-main {
-    padding: 60px 0;
+    padding: 72px 0 60px;
+    background: #070a14;
 }
 
 .footer-grid {
     display: grid;
-    grid-template-columns: minmax(320px, 2fr) 1fr 1fr 1fr;
-    gap: 55px;
+    grid-template-columns: minmax(300px, 2fr) 1fr 1fr 1fr;
+    gap: 64px;
 }
 
 
-
-
-.footer-brand {
-    max-width: 500px;
-}
+/* ── FOOTER BRAND ─────────────────────────────────────────────────── */
+.footer-brand { max-width: 420px; }
 
 .footer-logo {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 20px;
     color: white;
     text-decoration: none;
 }
 
-    .footer-logo:hover {
-        color: white;
-    }
+.footer-logo:hover { color: white; }
 
-    .footer-logo .emua-logo-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: white;
-        color: #464582;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
+.footer-logo .emua-logo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.45);
+}
 
-    .footer-logo > div:last-child {
-        display: flex;
-        flex-direction: column;
-    }
+.footer-logo > div:last-child {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+}
 
-    .footer-logo strong {
-        font-size: 24px;
-        font-weight: 800;
-    }
+.footer-logo strong {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
-    .footer-logo span {
-        color: #aabaff;
-        font-size: 14px;
-    }
-
-
-
+.footer-logo span {
+    margin-top: 3px;
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    font-weight: 400;
+}
 
 .footer-description {
     margin-bottom: 24px;
-    color: #d4dcf8;
-    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    font-size: 13.5px;
     line-height: 1.8;
 }
 
 
-
-
+/* ── FOOTER CONTACT ─────────────────────────────────────────────── */
 .footer-contact {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    color: #d4dcf8;
-}
-
-    .footer-contact span {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .footer-contact i {
-        width: 18px;
-        color: #ffd600;
-        font-size: 17px;
-    }
-
-
-
-
-.social-list {
-    margin-top: 25px;
-    display: flex;
     gap: 12px;
 }
 
-    .social-list a {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: #30305d;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        text-decoration: none;
-        transition: 0.2s;
-    }
+.footer-contact span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    transition: color 0.15s;
+}
 
-        .social-list a:hover {
-            background: #464582;
-            color: white;
-        }
+.footer-contact span:hover {
+    color: #60a5fa;
+}
 
-
+.footer-contact i {
+    width: 18px;
+    color: #60a5fa;
+    font-size: 15px;
+}
 
 
+/* ── SOCIAL ICONS ─────────────────────────────────────────────────── */
+.social-list {
+    margin-top: 24px;
+    display: flex;
+    gap: 10px;
+}
+
+.social-list a {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: all 0.2s ease;
+}
+
+.social-list a:hover {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+}
+
+
+/* ── FOOTER COLUMNS ─────────────────────────────────────────────── */
 .footer-column {
     display: flex;
     flex-direction: column;
-    gap: 17px;
+    gap: 14px;
 }
 
-    .footer-column h5 {
-        margin: 0 0 8px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid #39395d;
-        color: white;
-        font-size: 17px;
-        font-weight: 700;
-    }
+.footer-column h5 {
+    margin: 0 0 6px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
 
-    .footer-column a {
-        color: #d4dcf8;
-        text-decoration: none;
-        transition: 0.2s;
-    }
-
-        .footer-column a:hover {
-            color: white;
-        }
-
-
-
-
-.footer-bottom {
-    border-top: 1px solid #39395d;
-    padding: 18px 0;
-    color: #aeb5d3;
+.footer-column a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
     font-size: 13px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-column a::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(37,99,235,0.5);
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.footer-column a:hover {
+    color: #60a5fa;
+    padding-left: 4px;
+}
+
+.footer-column a:hover::before {
+    background: #60a5fa;
 }
 
 
+/* ── FOOTER BOTTOM ─────────────────────────────────────────────── */
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 20px 0;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+}
 
+.footer-bottom .emua-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.footer-bottom span {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+}
+
+.footer-bottom-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-bottom-links a {
+    color: rgba(255,255,255,0.35);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.15s;
+}
+
+.footer-bottom-links a:hover {
+    color: rgba(255,255,255,0.7);
+}
+
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .footer-grid {
+        grid-template-columns: minmax(260px, 1.8fr) 1fr 1fr;
+        gap: 48px;
+    }
+    .footer-grid .footer-column:last-child {
+        grid-column: 2;
+    }
+}
 
 @media (max-width: 992px) {
-
-    .service-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .service-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 40px; }
 }
 
-
 @media (max-width: 576px) {
-
-    .service-grid {
-        grid-template-columns: 1fr;
+    .service-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; }
+    .footer-main { padding: 48px 0 40px; }
+    .footer-bottom .emua-container {
+        flex-direction: column;
+        text-align: center;
     }
-
-    .footer-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-main {
-        padding: 40px 0;
-    }
+    .footer-bottom-links { justify-content: center; }
 }

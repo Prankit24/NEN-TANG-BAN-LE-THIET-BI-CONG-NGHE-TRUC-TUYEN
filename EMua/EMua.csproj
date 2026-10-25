@@ -27,15 +27,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.12" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.12">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook"
+                      Version="8.0.12" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google"
+                      Version="8.0.12" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer"
+                      Version="8.0.12" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"
+                      Version="8.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+
+    <PackageReference Include="Microsoft.ML"
+                      Version="5.0.0" />
+
+    <PackageReference Include="System.Collections.Immutable"
+                      Version="9.0.4" />
+
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"
+                      Version="8.0.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +57,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="MLModels\domain-model.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
