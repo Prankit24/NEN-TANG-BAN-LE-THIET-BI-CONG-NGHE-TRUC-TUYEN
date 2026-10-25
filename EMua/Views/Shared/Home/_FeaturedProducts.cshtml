@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EMua.Models.Database.SanPham>
+@model IEnumerable<EMua.Models.Database.SanPham>
 
 
 <section class="featured-section">
@@ -6,15 +6,9 @@
     <div class="featured-container">
 
         <div class="featured-heading">
-
-            <span>
-                ĐƯỢC QUAN TÂM
-            </span>
-
-            <h2>
-                Sản phẩm nổi bật
-            </h2>
-
+            <div class="emua-section-tag">ĐƯỢC QUAN TÂM</div>
+            <h2 class="featured-title">Sản phẩm nổi bật</h2>
+            <p class="featured-sub">Những sản phẩm được khách hàng yêu thích nhất tại EMUA.</p>
         </div>
 
 
@@ -27,62 +21,52 @@
                 .OrderBy(x => x.Gia)
                 .FirstOrDefault();
 
-
                 var photo = item.SanPhamHinhAnhs
                 .OrderByDescending(x => x.LaAnhChinh)
                 .ThenBy(x => x.ThuTu)
                 .FirstOrDefault();
-
 
                 var image =
                 photo?.DuongDanAnh
                 ?? variant?.HinhAnh
                 ?? "/images/no-image.png";
 
-
                 var price =
                 variant?.Gia
                 ?? item.GiaGoc
                 ?? 0;
 
-
                 <article class="featured-card">
 
-                    <div class="featured-image">
-
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
-
-                    </div>
-
+                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="featured-image">
+                        <img src="@image" alt="@item.TenSanPham" loading="lazy" />
+                        <div class="featured-overlay">
+                            <span class="featured-quick-view">
+                                <i class="bi bi-eye"></i> Xem nhanh
+                            </span>
+                        </div>
+                    </a>
 
                     <div class="featured-body">
 
-                        <small>
+                        <small class="featured-brand">
                             @item.MaThuongHieuNavigation?.TenThuongHieu
                         </small>
 
-                        <h3>
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="featured-name">
                             @item.TenSanPham
-                        </h3>
+                        </a>
 
                         <div class="featured-variant">
-
                             @variant?.PhienBan
-
                             @if (!string.IsNullOrWhiteSpace(variant?.MauSac))
                             {
-                                <span>
-                                    · @variant.MauSac
-                                </span>
+                                <span>· @variant.MauSac</span>
                             }
-
                         </div>
 
-                        <div class="featured-price">
-
-                            @price.ToString("N0")₫
-
+                        <div class="featured-price-row">
+                            <div class="featured-price">@price.ToString("N0")₫</div>
                         </div>
 
 
@@ -91,11 +75,8 @@
                             <button type="button"
                                     onclick="homeAddCart(@variant.MaBienThe)"
                                     class="featured-cart">
-
                                 <i class="bi bi-cart-plus"></i>
-
                                 Thêm vào giỏ
-
                             </button>
                         }
 
@@ -114,152 +95,206 @@
 <style>
 
     .featured-section {
-        padding: 70px 0;
-        background: linear-gradient( 180deg, #f0f0f9, #f7f7fc );
+        padding: 80px 0;
+        background: linear-gradient(180deg, #ffffff, #f8faff);
     }
 
-
     .featured-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
     }
 
+    .featured-heading { margin-bottom: 36px; }
 
-    .featured-heading {
-        margin-bottom: 28px;
+    .emua-section-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 14px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.07);
+        color: #2563eb;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
     }
 
+    .featured-title {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+        font-weight: 900;
+        color: #0f172a;
+        letter-spacing: -0.8px;
+    }
 
-        .featured-heading span {
-            color: #5b67c8;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
-
-
-        .featured-heading h2 {
-            margin: 7px 0 0;
-            color: #17172a;
-            font-size: 30px;
-        }
-
+    .featured-sub {
+        margin: 8px 0 0;
+        color: #94a3b8;
+        font-size: 14px;
+    }
 
     .featured-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
-        gap: 18px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
     }
 
 
+    /* Card */
     .featured-card {
         overflow: hidden;
-        border-radius: 19px;
-        border: 1px solid rgba(77,74,141,.09);
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.05);
         background: #fff;
-        transition: .3s;
+        box-shadow: 0 2px 12px rgba(15,23,42,0.05);
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+                    box-shadow 0.3s ease;
+    }
+
+    .featured-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 52px rgba(15,23,42,0.12);
     }
 
 
-        .featured-card:hover {
-            transform: translateY(-7px);
-            box-shadow: 0 18px 42px rgba(69,65,133,.13);
-        }
-
-
+    /* Image */
     .featured-image {
-        height: 235px;
-        padding: 20px;
-        background: linear-gradient( 145deg, #fafafd, #f0f0f7 );
+        display: block;
+        position: relative;
+        height: 220px;
+        padding: 22px;
+        overflow: hidden;
+        background: linear-gradient(145deg, #f8f9fd, #f1f2f9);
+        text-decoration: none;
     }
 
-
-        .featured-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .featured-card:hover
     .featured-image img {
-        transform: scale(1.06);
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.4s cubic-bezier(0.25,1,0.5,1);
     }
 
-
-    .featured-body {
-        padding: 17px;
+    .featured-card:hover .featured-image img {
+        transform: scale(1.08);
     }
 
+    .featured-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        backdrop-filter: blur(2px);
+    }
 
-        .featured-body small {
-            color: #9696a7;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+    .featured-card:hover .featured-overlay { opacity: 1; }
+
+    .featured-quick-view {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 20px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.95);
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 700;
+        transform: translateY(10px);
+        transition: transform 0.25s ease;
+    }
+
+    .featured-card:hover .featured-quick-view { transform: translateY(0); }
 
 
-        .featured-body h3 {
-            min-height: 44px;
-            margin: 6px 0 8px;
-            color: #202030;
-            font-size: 15px;
-            line-height: 1.45;
-        }
+    /* Body */
+    .featured-body { padding: 16px 18px 18px; }
 
+    .featured-brand {
+        display: block;
+        color: #94a3b8;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .featured-name {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+        text-decoration: none;
+        line-height: 1.45;
+        min-height: 40px;
+        margin-bottom: 6px;
+        transition: color 0.15s;
+    }
+
+    .featured-name:hover { color: #2563eb; }
 
     .featured-variant {
-        min-height: 20px;
-        margin-bottom: 8px;
-        color: #85869a;
-        font-size: 11px;
+        min-height: 18px;
+        margin-bottom: 10px;
+        color: #94a3b8;
+        font-size: 11.5px;
     }
 
+    .featured-price-row {
+        margin-bottom: 14px;
+    }
 
     .featured-price {
-        margin-bottom: 14px;
-        color: #d83d55;
-        font-size: 19px;
-        font-weight: 760;
+        color: #ef4444;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
     }
-
 
     .featured-cart {
         width: 100%;
-        min-height: 42px;
+        min-height: 44px;
         border: 0;
-        border-radius: 9px;
+        border-radius: 12px;
         color: white;
-        background: linear-gradient( 135deg, #4d4a8d, #625db1 );
-        transition: .25s;
+        font-size: 13.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        box-shadow: 0 4px 16px rgba(37,99,235,0.28);
+        transition: all 0.2s ease;
+    }
+
+    .featured-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(37,99,235,0.42);
     }
 
 
-        .featured-cart:hover {
-            transform: translateY(-2px);
-            background: linear-gradient( 135deg, #5e59aa, #716ad0 );
-        }
-
-
-    @@media(max-width:1050px) {
-
-        .featured-grid {
-            grid-template-columns: repeat(3,1fr);
-        }
+    @@media (max-width: 1100px) {
+        .featured-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
+    @@media (max-width: 800px) {
+        .featured-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .featured-image { height: 175px; }
+    }
 
-    @@media(max-width:750px) {
-
-        .featured-grid {
-            grid-template-columns: repeat(2,1fr);
-        }
-
-
-        .featured-image {
-            height: 180px;
-        }
+    @@media (max-width: 480px) {
+        .featured-image { height: 155px; padding: 16px; }
+        .featured-body { padding: 12px 14px 14px; }
     }
 
 </style>

@@ -8,6 +8,11 @@
 
     <title>@ViewData["Title"] - EMUA</title>
 
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <!-- Bootstrap Icons -->
@@ -24,6 +29,13 @@
     <!-- HOME & AUTH CSS -->
     <link rel="stylesheet" href="~/css/home/categories.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+
+    <!-- Ẩn hoàn toàn giỏ nổi khi rỗng, kể cả header.css đặt display: flex -->
+    <style>
+        .emua-floating-cart[hidden] {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -44,10 +56,11 @@
     <!-- AI CHAT: CHỈ GỌI 1 LẦN -->
     <partial name="_AIChat" />
 
-    <!-- GIỎ HÀNG NỔI: Tối ưu vị trí bám góc cho mobile -->
+    <!-- GIỎ HÀNG NỔI: ban đầu ẩn, chỉ hiện khi giỏ có sản phẩm -->
     <a href="@(User.Identity?.IsAuthenticated == true ? "/Cart" : "/Auth/Login?returnUrl=%2FCart")"
        id="emuaFloatingCart"
        class="emua-floating-cart"
+       hidden
        aria-label="Giỏ hàng"
        title="Giỏ hàng">
         <i class="bi bi-cart3"></i>
@@ -83,6 +96,10 @@
 
         window.saveGuestCart = function (items) {
             localStorage.setItem(window.EMUA_GUEST_CART_KEY, JSON.stringify(items || []));
+            // Khi xóa toàn bộ sản phẩm trong giỏ khách, ẩn ngay nút giỏ hàng nổi.
+            if (!window.EMUA_IS_AUTHENTICATED && typeof window.setGlobalCartCount === 'function') {
+                window.setGlobalCartCount(window.getGuestCartCount(), false);
+            }
         };
 
         window.getGuestCartCount = function () {
@@ -117,14 +134,20 @@
         };
 
         window.setGlobalCartCount = function (count, animate = false) {
-            count = Number.parseInt(count) || 0;
+            count = Math.max(0, Number.parseInt(count, 10) || 0);
 
             document.querySelectorAll('.cart-count').forEach(function (badge) {
                 badge.textContent = count;
                 badge.style.display = count > 0 ? 'flex' : 'none';
             });
 
-            if (animate && typeof window.showCartAddedFeedback === 'function') {
+            // Chỉ hiện nút giỏ hàng nổi khi thực sự có sản phẩm.
+            const floatingCart = document.getElementById('emuaFloatingCart');
+            if (floatingCart) {
+                floatingCart.hidden = count === 0;
+            }
+
+            if (animate && count > 0 && typeof window.showCartAddedFeedback === 'function') {
                 window.showCartAddedFeedback();
             }
         };

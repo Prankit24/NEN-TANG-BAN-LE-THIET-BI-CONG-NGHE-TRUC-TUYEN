@@ -1,138 +1,515 @@
+/* ================================================================
+   EMUA DESIGN SYSTEM 2026 — GLOBAL BASE
+   ================================================================ */
+
+/* ── 1. CSS VARIABLES ─────────────────────────────────────────── */
+:root {
+    /* Primary palette */
+    --emua-primary:       #2563eb;
+    --emua-primary-dark:  #1d4ed8;
+    --emua-primary-light: #3b82f6;
+    --emua-accent:        #06b6d4;   /* cyan accent */
+    --emua-violet:        #7c3aed;
+    --emua-red:           #ef4444;
+    --emua-orange:        #f97316;
+
+    /* Gradients */
+    --grad-primary:   linear-gradient(135deg, #2563eb, #7c3aed);
+    --grad-hot:       linear-gradient(135deg, #ef4444, #f97316);
+    --grad-cyan:      linear-gradient(135deg, #06b6d4, #2563eb);
+    --grad-new:       linear-gradient(135deg, #2563eb, #06b6d4);
+
+    /* Dark backgrounds */
+    --dark-900:  #070a14;
+    --dark-800:  #0c1024;
+    --dark-700:  #111629;
+    --dark-600:  #181e35;
+    --dark-500:  #1e2540;
+
+    /* Neutral */
+    --gray-50:   #f8fafc;
+    --gray-100:  #f1f5f9;
+    --gray-200:  #e2e8f0;
+    --gray-400:  #94a3b8;
+    --gray-600:  #475569;
+    --gray-800:  #1e293b;
+    --gray-900:  #0f172a;
+
+    /* Surfaces */
+    --surface-card:     #ffffff;
+    --surface-card-bg:  #f8fafc;
+    --surface-hover:    #f1f5f9;
+
+    /* Borders */
+    --border-light:  rgba(37, 99, 235, 0.1);
+    --border-card:   rgba(0, 0, 0, 0.06);
+
+    /* Shadows */
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg:   0 12px 40px rgba(0,0,0,0.12);
+    --shadow-xl:   0 24px 64px rgba(0,0,0,0.16);
+    --shadow-blue: 0 8px 32px rgba(37,99,235,0.25);
+    --shadow-card: 0 2px 12px rgba(15,23,42,0.06);
+    --shadow-card-hover: 0 16px 48px rgba(15,23,42,0.14);
+
+    /* Typography */
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 15px;
+    --font-size-lg: 17px;
+
+    /* Radius */
+    --radius-sm:   6px;
+    --radius-md:   12px;
+    --radius-lg:   18px;
+    --radius-xl:   24px;
+    --radius-full: 999px;
+
+    /* Transitions */
+    --transition-fast:   all 0.15s ease;
+    --transition-base:   all 0.25s ease;
+    --transition-slow:   all 0.4s ease;
+    --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
 
-/* ========================================================== */
-/* BỔ SUNG ĐỒNG BỘ RESPONSIVE MOBILE CHO TOÀN BỘ DỰ ÁN EMUA  */
-/* ========================================================== */
+/* ── 2. RESET & BASE ──────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
-/* Tránh tình trạng lòi ngang (horizontal scroll) trên điện thoại */
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
 html, body {
     overflow-x: hidden;
     width: 100%;
 }
 
-/* Tự động căn chỉnh hình ảnh tràn khung không bị vỡ */
+body {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--gray-800);
+    background-color: #ffffff;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 img {
     max-width: 100%;
     height: auto;
+    display: block;
 }
 
-/* Điểm gãy màn hình di động (< 768px) */
+a {
+    transition: var(--transition-fast);
+}
+
+
+/* ── 3. SCROLLBAR ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* ── 4. LAYOUT UTILITIES ──────────────────────────────────────── */
+.emua-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+.main-content {
+    min-height: 500px;
+}
+
+.section {
+    padding: 80px 0;
+}
+
+.d-none { display: none !important; }
+.text-center { text-align: center; }
+
+
+/* ── 5. SECTION HEADINGS ──────────────────────────────────────── */
+.emua-section-label {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--emua-primary);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+}
+
+.emua-section-title {
+    font-size: clamp(24px, 3vw, 34px);
+    font-weight: 800;
+    color: var(--gray-900);
+    margin: 0 0 8px;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.emua-section-sub {
+    color: var(--gray-400);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+
+/* ── 6. BUTTONS ───────────────────────────────────────────────── */
+.btn-emua-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: var(--grad-primary);
+    color: #fff;
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-spring);
+    box-shadow: var(--shadow-blue);
+    white-space: nowrap;
+}
+
+.btn-emua-primary:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.4);
+}
+
+.btn-emua-primary:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.btn-emua-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.btn-emua-ghost:hover {
+    border-color: var(--emua-primary);
+    color: var(--emua-primary);
+    background: rgba(37, 99, 235, 0.04);
+}
+
+
+/* ── 7. PRODUCT CARD BASE ─────────────────────────────────────── */
+.emua-flash-card,
+.featured-card,
+.new-product-card,
+.best-card,
+.emua-category-card,
+.emua-brand-card,
+.product-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.25s ease !important;
+    will-change: transform, box-shadow;
+}
+
+.emua-flash-card:hover,
+.featured-card:hover,
+.new-product-card:hover,
+.best-card:hover,
+.emua-category-card:hover,
+.emua-brand-card:hover,
+.product-card:hover {
+    transform: translateY(-6px) !important;
+    box-shadow: var(--shadow-card-hover) !important;
+}
+
+/* Image zoom inside card */
+.emua-flash-image img,
+.featured-image img,
+.new-product-image img,
+.best-image img,
+.product-card img {
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    will-change: transform;
+}
+
+.emua-flash-card:hover .emua-flash-image img,
+.featured-card:hover .featured-image img,
+.new-product-card:hover .new-product-image img,
+.best-card:hover .best-image img,
+.product-card:hover img {
+    transform: scale(1.08) !important;
+}
+
+
+/* ── 8. BADGES ────────────────────────────────────────────────── */
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 6px rgba(239,68,68,0.4)); }
+    50%       { transform: scale(1.06); filter: drop-shadow(0 4px 12px rgba(239,68,68,0.6)); }
+}
+
+.flash-badge,
+.badge-sale,
+.discount-badge {
+    animation: badgePulse 2.4s ease-in-out infinite !important;
+    transform-origin: center;
+}
+
+
+/* ── 9. BUTTONS INTERACTIONS ──────────────────────────────────── */
+button,
+.btn,
+.primary-button,
+.btn-primary,
+[role="button"],
+.flash-cart,
+.featured-cart,
+.btn-add-cart,
+.new-product-cart,
+.best-cart {
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s ease,
+                background 0.2s ease !important;
+    will-change: transform;
+}
+
+button:active,
+.btn:active,
+.primary-button:active,
+.btn-primary:active,
+[role="button"]:active,
+.flash-cart:active,
+.featured-cart:active,
+.new-product-cart:active {
+    transform: scale(0.96) !important;
+}
+
+
+/* ── 10. LOGO ─────────────────────────────────────────────────── */
+.emua-logo {
+    transition: var(--transition-spring) !important;
+}
+.emua-logo:hover {
+    transform: scale(1.03) translateY(-1px);
+}
+
+
+/* ── 11. FLOATING CART ────────────────────────────────────────── */
+.emua-floating-cart {
+    position: fixed;
+    right: 28px;
+    bottom: 110px;
+    z-index: 9992;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--grad-primary);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.45);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease !important;
+}
+
+.emua-floating-cart:hover {
+    color: #fff;
+    transform: scale(1.12) translateY(-3px) !important;
+    box-shadow: 0 16px 48px rgba(37, 99, 235, 0.55) !important;
+}
+
+.emua-floating-cart > i {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.emua-floating-cart .floating-cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--emua-red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.emua-floating-cart[hidden] {
+    display: none !important;
+}
+
+/* Cart feedback animation */
+.cart-action .header-icon-wrapper::after {
+    content: "+1";
+    position: absolute;
+    top: -17px;
+    right: -25px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(7px) scale(.85);
+    pointer-events: none;
+}
+
+.cart-action.cart-added-feedback .header-icon-wrapper {
+    animation: emuaCartIconPop .55s ease;
+}
+
+.cart-action.cart-added-feedback .header-icon-wrapper::after {
+    animation: emuaCartPlusOne .8s ease forwards;
+}
+
+.emua-floating-cart.cart-added-feedback {
+    animation: emuaFloatingCartPop .55s ease;
+}
+
+.emua-floating-cart::after {
+    content: "+1";
+    position: absolute;
+    top: -18px;
+    right: -10px;
+    color: var(--emua-red);
+    font-size: 13px;
+    font-weight: 900;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.emua-floating-cart.cart-added-feedback::after {
+    animation: emuaFloatingPlusOne .8s ease forwards;
+}
+
+@keyframes emuaCartIconPop {
+    0%, 100% { transform: scale(1); }
+    45%       { transform: scale(1.2); }
+}
+
+@keyframes emuaCartPlusOne {
+    0%   { opacity: 0; transform: translateY(7px) scale(.85); }
+    25%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-13px) scale(1); }
+}
+
+@keyframes emuaFloatingCartPop {
+    0%, 100% { transform: scale(1); }
+    45%       { transform: scale(1.16); }
+}
+
+@keyframes emuaFloatingPlusOne {
+    0%   { opacity: 0; transform: translateY(7px) scale(.85); }
+    25%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-13px) scale(1); }
+}
+
+
+/* ── 12. CATEGORY CARD ICON BOUNCE ───────────────────────────── */
+.emua-category-card .emua-category-icon {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    will-change: transform;
+}
+.emua-category-card:hover .emua-category-icon {
+    transform: scale(1.15) rotate(-4deg);
+}
+
+
+/* ── 13. SEARCH BAR FOCUS EFFECT ─────────────────────────────── */
+.emua-search {
+    transition: box-shadow 0.25s ease, transform 0.2s ease !important;
+}
+.emua-search:focus-within {
+    box-shadow: 0 4px 24px rgba(37, 99, 235, 0.2) !important;
+    transform: translateY(-1px);
+}
+
+
+/* ── 14. RESPONSIVE ───────────────────────────────────────────── */
 @media (max-width: 768px) {
-    /* Thu nhỏ padding của khung nội dung chính */
+    .emua-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .section { padding: 52px 0; }
     .main-content {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
-
-    /* Giỏ hàng nổi: chỉnh lại vị trí để không che khuất nút thao tác */
     .emua-floating-cart {
-        bottom: 75px !important;
-        right: 15px !important;
-        width: 48px !important;
-        height: 48px !important;
-        font-size: 1.2rem !important;
+        right: 16px;
+        bottom: 80px;
+        width: 50px;
+        height: 50px;
     }
-
-    /* Bảng dữ liệu tự động cuộn ngang nếu vượt quá độ rộng màn hình */
     table {
         display: block;
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-
-    /* Các Form & Input tự tràn 100% dòng */
     .form-control, .form-select, .btn {
         font-size: 0.95rem;
     }
 }
 
-
-
-.main-content {
-    min-height: 500px;
-}
-
-.emua-container {
-    width: 100%;
-    max-width: 1440px;
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-
-
-
-.text-center {
-    text-align: center;
-}
-
-.d-none {
-    display: none !important;
-}
-
-.section {
-    padding: 50px 0;
-}
-
-.section-title {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 24px;
-}
-
-
-
-
-@media (max-width: 768px) {
-
-    .emua-container {
-        padding-left: 15px;
-        padding-right: 15px;
+@media (max-width: 576px) {
+    .emua-floating-cart {
+        right: 14px;
+        bottom: 72px;
+        width: 48px;
+        height: 48px;
     }
-
-    .section {
-        padding: 35px 0;
-    }
-
-    .section-title {
-        font-size: 24px;
-    }
+    .footer-content { grid-template-columns: 1fr; }
 }
-
 
 @media (max-width: 992px) {
-
-    .header-actions {
-        gap: 15px;
-    }
-
-    .category-nav {
-        overflow-x: auto;
-        gap: 25px;
-    }
-
-    .service-bar {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .footer-content {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 576px) {
-
-    .emua-topbar {
-        display: none;
-    }
-
-    .service-bar {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-content {
-        grid-template-columns: 1fr;
-    }
+    .header-actions { gap: 15px; }
+    .category-nav { overflow-x: auto; gap: 25px; }
+    .service-bar { grid-template-columns: repeat(2, 1fr); }
+    .footer-content { grid-template-columns: repeat(2, 1fr); }
 }

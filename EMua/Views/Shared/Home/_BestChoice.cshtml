@@ -1,24 +1,20 @@
-﻿@model IEnumerable<EMua.Models.Database.SanPham>
+@model IEnumerable<EMua.Models.Database.SanPham>
 
 
 <section class="best-choice-section">
 
+    <!-- Background decoration -->
+    <div class="best-bg-orb best-orb-1"></div>
+    <div class="best-bg-orb best-orb-2"></div>
+
     <div class="best-container">
 
         <div class="best-heading">
-
-            <span>
-                EMUA RECOMMENDS
-            </span>
-
-            <h2>
-                ⭐ Best Choice
-            </h2>
-
-            <p>
-                Những sản phẩm nổi bật được EMUA lựa chọn.
-            </p>
-
+            <div class="best-tag">
+                <span>⭐</span> EMUA RECOMMENDS
+            </div>
+            <h2 class="best-title">Best Choice</h2>
+            <p class="best-sub">Những sản phẩm được EMUA lựa chọn kỹ lưỡng cho bạn.</p>
         </div>
 
 
@@ -31,60 +27,43 @@
                 .OrderBy(x => x.Gia)
                 .FirstOrDefault();
 
-
                 var photo = item.SanPhamHinhAnhs
                 .OrderByDescending(x => x.LaAnhChinh)
                 .ThenBy(x => x.ThuTu)
                 .FirstOrDefault();
-
 
                 var image =
                 photo?.DuongDanAnh
                 ?? variant?.HinhAnh
                 ?? "/images/no-image.png";
 
-
                 var price =
                 variant?.Gia
                 ?? item.GiaGoc
                 ?? 0;
 
-
                 <article class="best-card">
 
-                    <div class="best-image">
+                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="best-image">
 
-                        <span class="best-badge">
-                            BEST
-                        </span>
+                        <span class="best-badge">BEST</span>
 
-                        <img src="@image"
-                             alt="@item.TenSanPham" />
+                        <img src="@image" alt="@item.TenSanPham" loading="lazy" />
 
-                    </div>
+                    </a>
 
 
                     <div class="best-body">
 
-                        <small>
-                            @item.MaThuongHieuNavigation?.TenThuongHieu
-                        </small>
+                        <small>@item.MaThuongHieuNavigation?.TenThuongHieu</small>
 
-                        <h3>
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="best-name">
                             @item.TenSanPham
-                        </h3>
+                        </a>
 
-                        <div class="best-variant">
+                        <div class="best-variant">@variant?.PhienBan</div>
 
-                            @variant?.PhienBan
-
-                        </div>
-
-                        <div class="best-price">
-
-                            @price.ToString("N0")₫
-
-                        </div>
+                        <div class="best-price">@price.ToString("N0")₫</div>
 
 
                         @if (variant != null)
@@ -92,11 +71,8 @@
                             <button type="button"
                                     onclick="homeAddCart(@variant.MaBienThe)"
                                     class="best-cart">
-
                                 <i class="bi bi-cart-plus"></i>
-
                                 Thêm vào giỏ
-
                             </button>
                         }
 
@@ -119,189 +95,220 @@
         padding: 80px 0;
         overflow: hidden;
         color: #fff;
-        background: radial-gradient( circle at 85% 25%, rgba(139,124,246,.17), transparent 30% ), radial-gradient( circle at 20% 100%, rgba(91,140,255,.12), transparent 28% ), linear-gradient( 135deg, #15172f, #0d0f25 );
+        background:
+            radial-gradient(ellipse 70% 50% at 90% 20%, rgba(124,58,237,.22), transparent 55%),
+            radial-gradient(ellipse 60% 50% at 10% 90%, rgba(37,99,235,.18), transparent 55%),
+            linear-gradient(150deg, #060915 0%, #0b102a 50%, #07091e 100%);
     }
 
+    .best-bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        pointer-events: none;
+    }
+
+    .best-orb-1 {
+        width: 400px; height: 400px;
+        right: 5%; top: -80px;
+        background: radial-gradient(circle, rgba(124,58,237,.3), transparent 65%);
+        animation: bestOrb 9s ease-in-out infinite;
+    }
+
+    .best-orb-2 {
+        width: 300px; height: 300px;
+        left: 8%; bottom: -60px;
+        background: radial-gradient(circle, rgba(37,99,235,.25), transparent 65%);
+        animation: bestOrb 11s ease-in-out infinite reverse;
+    }
+
+    @@keyframes bestOrb {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-25px); }
+    }
 
     .best-container {
-        width: min(1400px,92%);
+        width: min(1400px, 92%);
         margin: auto;
+        position: relative;
+        z-index: 2;
     }
 
+    .best-heading { margin-bottom: 36px; }
 
-    .best-heading {
-        margin-bottom: 30px;
+    .best-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 16px;
+        border-radius: 999px;
+        background: rgba(234,179,8,0.12);
+        border: 1px solid rgba(234,179,8,0.25);
+        color: #fbbf24;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
     }
 
+    .best-title {
+        margin: 0;
+        font-size: clamp(26px, 3vw, 36px);
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.8px;
+    }
 
-        .best-heading span {
-            color: #e5c75f;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 3px;
-        }
-
-
-        .best-heading h2 {
-            margin: 7px 0 7px;
-            color: #fff;
-            font-size: 31px;
-        }
-
-
-        .best-heading p {
-            color: #9e9fb3;
-            margin: 0;
-        }
-
+    .best-sub {
+        margin: 8px 0 0;
+        color: rgba(255,255,255,0.45);
+        font-size: 14px;
+    }
 
     .best-grid {
         display: grid;
-        grid-template-columns: repeat(4,minmax(0,1fr));
-        gap: 18px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
     }
 
-
+    /* Card */
     .best-card {
         overflow: hidden;
-        border-radius: 19px;
-        border: 1px solid rgba(255,255,255,.10);
-        background: rgba(255,255,255,.055);
-        backdrop-filter: blur(14px);
-        transition: .3s;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(20px);
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
     }
 
+    .best-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(251,191,36,.25);
+        box-shadow: 0 20px 52px rgba(0,0,0,0.35);
+    }
 
-        .best-card:hover {
-            transform: translateY(-7px);
-            border-color: rgba(229,199,95,.28);
-            box-shadow: 0 20px 45px rgba(0,0,0,.25);
-        }
-
-
+    /* Image */
     .best-image {
+        display: block;
         position: relative;
-        height: 235px;
-        padding: 20px;
-        background: linear-gradient( 145deg, #fbfbfd, #eeeef4 );
+        height: 220px;
+        padding: 22px;
+        background: linear-gradient(145deg, #f9f9fd, #eeeeF5);
+        text-decoration: none;
+        overflow: hidden;
     }
 
-
-        .best-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            transition: .35s;
-        }
-
-
-    .best-card:hover
     .best-image img {
-        transform: scale(1.06);
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.4s cubic-bezier(0.25,1,0.5,1);
     }
 
+    .best-card:hover .best-image img { transform: scale(1.08); }
 
+    /* Golden badge with shimmer */
     .best-badge {
         position: absolute;
-        top: 13px;
-        left: 13px;
+        top: 14px; left: 14px;
         z-index: 2;
-        padding: 6px 10px;
-        border-radius: 7px;
-        color: #201b08;
+        padding: 5px 10px;
+        border-radius: 8px;
+        color: #1c1500;
         font-size: 10px;
-        font-weight: 850;
-        background: linear-gradient( 100deg, #a97c13, #edcd66, #fff0a7, #c59219 );
+        font-weight: 800;
+        letter-spacing: 1px;
+        background: linear-gradient(100deg, #a97c13, #edcd66, #fff0a7, #c59219);
         background-size: 250%;
-        animation: bestBadgeShine 4s linear infinite;
+        animation: goldShine 3.5s linear infinite;
+        box-shadow: 0 4px 12px rgba(180,130,0,0.4);
     }
 
-
-    .best-body {
-        padding: 17px;
+    @@keyframes goldShine {
+        from { background-position: 250% center; }
+        to { background-position: -250% center; }
     }
 
+    /* Body */
+    .best-body { padding: 16px 18px 18px; }
 
-        .best-body small {
-            color: #a7a8ba;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+    .best-body small {
+        color: rgba(255,255,255,0.4);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 4px;
+    }
 
+    .best-name {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        line-height: 1.45;
+        min-height: 40px;
+        margin-bottom: 6px;
+        transition: color 0.15s;
+    }
 
-        .best-body h3 {
-            min-height: 44px;
-            margin: 6px 0 8px;
-            color: #fff;
-            font-size: 15px;
-            line-height: 1.45;
-        }
-
+    .best-name:hover { color: #fbbf24; }
 
     .best-variant {
-        min-height: 20px;
-        margin-bottom: 8px;
-        color: #9798ac;
-        font-size: 11px;
+        min-height: 18px;
+        margin-bottom: 10px;
+        color: rgba(255,255,255,0.35);
+        font-size: 11.5px;
     }
-
 
     .best-price {
         margin-bottom: 14px;
-        color: #efcf6b;
-        font-size: 19px;
-        font-weight: 760;
+        color: #fbbf24;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
     }
-
 
     .best-cart {
         width: 100%;
-        min-height: 42px;
+        min-height: 44px;
         border: 0;
-        border-radius: 9px;
-        color: #17172a;
+        border-radius: 12px;
+        color: #1c1500;
         cursor: pointer;
-        background: linear-gradient( 135deg, #e5c45a, #f3dc87 );
-        transition: .25s;
+        font-size: 13.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        background: linear-gradient(135deg, #e5c45a, #f3dc87);
+        box-shadow: 0 4px 16px rgba(229,196,90,0.35);
+        transition: all 0.2s ease;
+    }
+
+    .best-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(229,196,90,0.5);
+        background: linear-gradient(135deg, #f0cf6a, #fff5c0);
     }
 
 
-        .best-cart:hover {
-            transform: translateY(-2px);
-            background: #fff;
-        }
+    @@media (max-width: 1100px) { .best-grid { grid-template-columns: repeat(3, 1fr); } }
 
-
-    @@keyframes bestBadgeShine {
-
-        from {
-            background-position: 250% center;
-        }
-
-        to {
-            background-position: -250% center;
-        }
+    @@media (max-width: 800px) {
+        .best-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .best-image { height: 175px; }
     }
 
-
-    @@media(max-width:1050px) {
-
-        .best-grid {
-            grid-template-columns: repeat(3,1fr);
-        }
-    }
-
-
-    @@media(max-width:750px) {
-
-        .best-grid {
-            grid-template-columns: repeat(2,1fr);
-        }
-
-
-        .best-image {
-            height: 180px;
-        }
+    @@media (max-width: 480px) {
+        .best-image { height: 155px; padding: 16px; }
+        .best-body { padding: 12px 14px 14px; }
     }
 
 </style>

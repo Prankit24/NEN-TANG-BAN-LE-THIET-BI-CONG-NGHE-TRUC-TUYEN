@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using EMua.Models.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace EMua.Data;
 
@@ -41,253 +42,337 @@ public partial class EMuaDbContext : DbContext
     {
         modelBuilder.Entity<BaoCao>(entity =>
         {
-            entity.HasKey(e => e.MaBaoCao).HasName("PK__BaoCao__25A9188CF7650BAA");
+            entity.HasKey(e => e.MaBaoCao)
+                .HasName("PK__BaoCao__25A9188CF7650BAA");
         });
 
         modelBuilder.Entity<BienTheSanPham>(entity =>
         {
-            entity.HasKey(e => e.MaBienThe).HasName("PK__BienTheS__3987CEF598B5B7D6");
+            entity.HasKey(e => e.MaBienThe)
+                .HasName("PK__BienTheS__3987CEF598B5B7D6");
 
-            entity.Property(e => e.TrangThai).HasDefaultValue("Còn hàng");
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue("Còn hàng");
 
-            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.BienTheSanPhams)
+            entity.HasOne(d => d.MaSanPhamNavigation)
+                .WithMany(p => p.BienTheSanPhams)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_BienTheSanPham_SanPham");
         });
 
         modelBuilder.Entity<ChiTietDonHang>(entity =>
         {
-            entity.HasKey(e => e.MaChiTietDonHang).HasName("PK__ChiTietD__835ED13B4D53BB16");
+            entity.HasKey(e => e.MaChiTietDonHang)
+                .HasName("PK__ChiTietD__835ED13B4D53BB16");
 
-            entity.HasOne(d => d.MaBienTheNavigation).WithMany(p => p.ChiTietDonHangs)
+            entity.HasOne(d => d.MaBienTheNavigation)
+                .WithMany(p => p.ChiTietDonHangs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ChiTietDonHang_BienThe");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.ChiTietDonHangs)
+            entity.HasOne(d => d.MaDonHangNavigation)
+                .WithMany(p => p.ChiTietDonHangs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CTDH_DonHang");
         });
 
         modelBuilder.Entity<ChiTietGioHang>(entity =>
         {
-            entity.HasKey(e => e.MaChiTietGioHang).HasName("PK__ChiTietG__BBF4749877F09C5C");
+            entity.HasKey(e => e.MaChiTietGioHang)
+                .HasName("PK__ChiTietG__BBF4749877F09C5C");
 
-            entity.Property(e => e.NgayThem).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.SoLuong).HasDefaultValue(1);
+            entity.Property(e => e.NgayThem)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaBienTheNavigation).WithMany(p => p.ChiTietGioHangs)
+            entity.Property(e => e.SoLuong)
+                .HasDefaultValue(1);
+
+            entity.HasOne(d => d.MaBienTheNavigation)
+                .WithMany(p => p.ChiTietGioHangs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ChiTietGioHang_BienThe");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.ChiTietGioHangs)
+            entity.HasOne(d => d.MaNguoiDungNavigation)
+                .WithMany(p => p.ChiTietGioHangs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ChiTietGioHang_NguoiDung");
         });
 
         modelBuilder.Entity<CuocHoiThoaiAi>(entity =>
         {
-            entity.HasKey(e => e.MaCuocHoiThoai).HasName("PK__CuocHoiT__3707D875B03839C0");
+            entity.HasKey(e => e.MaCuocHoiThoai)
+                .HasName("PK__CuocHoiT__3707D875B03839C0");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.NgayTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.CuocHoiThoaiAis)
+            entity.HasOne(d => d.MaNguoiDungNavigation)
+                .WithMany(p => p.CuocHoiThoaiAis)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CuocHoiThoaiAI_NguoiDung");
         });
 
         modelBuilder.Entity<DanhGiaSanPham>(entity =>
         {
-            entity.HasKey(e => e.MaDanhGia).HasName("PK__DanhGiaS__AA9515BFCBF70C5B");
+            entity.HasKey(e => e.MaDanhGia)
+                .HasName("PK__DanhGiaS__AA9515BFCBF70C5B");
 
-            entity.HasIndex(e => new { e.MaNguoiDung, e.MaSanPham }, "UQ_DanhGia_User_Product")
+            entity.HasIndex(
+                    e => new { e.MaNguoiDung, e.MaSanPham },
+                    "UQ_DanhGia_User_Product")
                 .IsUnique()
-                .HasFilter("\"MaNguoiDung\" IS NOT NULL AND \"MaSanPham\" IS NOT NULL");
+                .HasFilter("manguoidung IS NOT NULL AND masanpham IS NOT NULL");
 
-            entity.Property(e => e.NgayDanhGia).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+            entity.Property(e => e.NgayDanhGia)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.DanhGiaSanPhams)
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(true);
+
+            entity.HasOne(d => d.MaDonHangNavigation)
+                .WithMany(p => p.DanhGiaSanPhams)
                 .HasConstraintName("FK_DanhGia_DonHang");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DanhGiaSanPhams)
+            entity.HasOne(d => d.MaNguoiDungNavigation)
+                .WithMany(p => p.DanhGiaSanPhams)
                 .HasConstraintName("FK_DG_NguoiDung");
 
-            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.DanhGiaSanPhams)
+            entity.HasOne(d => d.MaSanPhamNavigation)
+                .WithMany(p => p.DanhGiaSanPhams)
                 .HasConstraintName("FK_DG_SanPham");
         });
 
         modelBuilder.Entity<DanhMucSanPham>(entity =>
         {
-            entity.HasKey(e => e.MaDanhMuc).HasName("PK__DanhMucS__B37508871346CE70");
+            entity.HasKey(e => e.MaDanhMuc)
+                .HasName("PK__DanhMucS__B37508871346CE70");
         });
 
         modelBuilder.Entity<DonHang>(entity =>
         {
-            entity.HasKey(e => e.MaDonHang).HasName("PK__DonHang__129584AD88A83EF4");
+            entity.HasKey(e => e.MaDonHang)
+                .HasName("PK__DonHang__129584AD88A83EF4");
 
-            entity.Property(e => e.TrangThaiDonHang).HasDefaultValue("Chờ xử lý");
+            entity.Property(e => e.TrangThaiDonHang)
+                .HasDefaultValue("Chờ xử lý");
 
-            entity.HasOne(d => d.MaKhuyenMaiNavigation).WithMany(p => p.DonHangs)
+            entity.HasOne(d => d.MaKhuyenMaiNavigation)
+                .WithMany(p => p.DonHangs)
                 .HasConstraintName("FK_DonHang_KhuyenMai");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.DonHangs)
+            entity.HasOne(d => d.MaNguoiDungNavigation)
+                .WithMany(p => p.DonHangs)
                 .HasConstraintName("FK_DonHang_NguoiDung");
         });
 
         modelBuilder.Entity<HoaDon>(entity =>
         {
-            entity.HasKey(e => e.MaHoaDon).HasName("PK__HoaDon__835ED13BE1E4A10D");
+            entity.HasKey(e => e.MaHoaDon)
+                .HasName("PK__HoaDon__835ED13BE1E4A10D");
 
-            entity.Property(e => e.NgayLapHoaDon).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.TrangThaiHoaDon).HasDefaultValue("Đã lập");
+            entity.Property(e => e.NgayLapHoaDon)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithOne(p => p.HoaDon)
+            entity.Property(e => e.TrangThaiHoaDon)
+                .HasDefaultValue("Đã lập");
+
+            entity.HasOne(d => d.MaDonHangNavigation)
+                .WithOne(p => p.HoaDon)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_HoaDon_DonHang");
         });
 
         modelBuilder.Entity<KhuyenMai>(entity =>
         {
-            entity.HasKey(e => e.MaKhuyenMai).HasName("PK__KhuyenMa__6F56B3BD8771E9E5");
+            entity.HasKey(e => e.MaKhuyenMai)
+                .HasName("PK__KhuyenMa__6F56B3BD8771E9E5");
 
-            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(true);
         });
 
         modelBuilder.Entity<LichSuVanChuyen>(entity =>
         {
-            entity.HasKey(e => e.MaLichSu).HasName("PK__LichSuVa__C443222A60038AB5");
+            entity.HasKey(e => e.MaLichSu)
+                .HasName("PK__LichSuVa__C443222A60038AB5");
 
-            entity.Property(e => e.ThoiGian).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.ThoiGian)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.LichSuVanChuyens)
+            entity.HasOne(d => d.MaDonHangNavigation)
+                .WithMany(p => p.LichSuVanChuyens)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_LichSuVanChuyen_DonHang");
         });
 
         modelBuilder.Entity<NguoiDung>(entity =>
         {
-            entity.HasKey(e => e.MaNguoiDung).HasName("PK__NguoiDun__C539D76221D1D8FC");
+            entity.HasKey(e => e.MaNguoiDung)
+                .HasName("PK__NguoiDun__C539D76221D1D8FC");
 
             entity.HasIndex(e => e.Email, "UQ_NguoiDung_Email")
                 .IsUnique()
-                .HasFilter("\"Email\" IS NOT NULL");
+                .HasFilter("email IS NOT NULL");
 
-            entity.HasIndex(e => e.TenDangNhap, "UQ_NguoiDung_TenDangNhap")
+            entity.HasIndex(
+                    e => e.TenDangNhap,
+                    "UQ_NguoiDung_TenDangNhap")
                 .IsUnique()
-                .HasFilter("\"TenDangNhap\" IS NOT NULL");
+                .HasFilter("tendangnhap IS NOT NULL");
 
-            entity.Property(e => e.MaQuyen).HasDefaultValue(3);
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+            entity.Property(e => e.MaQuyen)
+                .HasDefaultValue(3);
 
-            entity.HasOne(d => d.MaQuyenNavigation).WithMany(p => p.NguoiDungs)
+            entity.Property(e => e.NgayTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(true);
+
+            entity.HasOne(d => d.MaQuyenNavigation)
+                .WithMany(p => p.NguoiDungs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_NguoiDung_PhanQuyen");
         });
 
         modelBuilder.Entity<PhanQuyen>(entity =>
         {
-            entity.HasKey(e => e.MaQuyen).HasName("PK__PhanQuye__1D4B7ED47D31A58F");
+            entity.HasKey(e => e.MaQuyen)
+                .HasName("PK__PhanQuye__1D4B7ED47D31A58F");
         });
 
         modelBuilder.Entity<SanPham>(entity =>
         {
-            entity.HasKey(e => e.MaSanPham).HasName("PK__SanPham__FAC7442D8E7CBCF5");
+            entity.HasKey(e => e.MaSanPham)
+                .HasName("PK__SanPham__FAC7442D8E7CBCF5");
 
-            entity.Property(e => e.TrangThaiSanPham).HasDefaultValue("Còn hàng");
+            entity.Property(e => e.TrangThaiSanPham)
+                .HasDefaultValue("Còn hàng");
 
-            entity.HasOne(d => d.MaDanhMucNavigation).WithMany(p => p.SanPhams)
+            entity.HasOne(d => d.MaDanhMucNavigation)
+                .WithMany(p => p.SanPhams)
                 .HasConstraintName("FK_SanPham_DanhMuc");
 
-            entity.HasOne(d => d.MaThuongHieuNavigation).WithMany(p => p.SanPhams)
+            entity.HasOne(d => d.MaThuongHieuNavigation)
+                .WithMany(p => p.SanPhams)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SanPham_ThuongHieu");
         });
 
         modelBuilder.Entity<SanPhamHinhAnh>(entity =>
         {
-            entity.HasKey(e => e.MaAnh).HasName("PK__SanPhamH__356240DF6D083CA7");
+            entity.HasKey(e => e.MaAnh)
+                .HasName("PK__SanPhamH__356240DF6D083CA7");
 
-            entity.Property(e => e.ThuTu).HasDefaultValue(1);
+            entity.Property(e => e.ThuTu)
+                .HasDefaultValue(1);
 
-            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.SanPhamHinhAnhs)
+            entity.HasOne(d => d.MaSanPhamNavigation)
+                .WithMany(p => p.SanPhamHinhAnhs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SanPhamHinhAnh_SanPham");
         });
 
         modelBuilder.Entity<ThanhToan>(entity =>
         {
-            entity.HasKey(e => e.MaThanhToan).HasName("PK__ThanhToa__D4B25844E085DA97");
+            entity.HasKey(e => e.MaThanhToan)
+                .HasName("PK__ThanhToa__D4B25844E085DA97");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.TrangThai).HasDefaultValue("Chờ thanh toán");
+            entity.Property(e => e.NgayTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.ThanhToans)
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue("Chờ thanh toán");
+
+            entity.HasOne(d => d.MaDonHangNavigation)
+                .WithMany(p => p.ThanhToans)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ThanhToan_DonHang");
         });
 
         modelBuilder.Entity<ThuongHieu>(entity =>
         {
-            entity.HasKey(e => e.MaThuongHieu).HasName("PK__ThuongHi__A3733E2C0EF3AC57");
+            entity.HasKey(e => e.MaThuongHieu)
+                .HasName("PK__ThuongHi__A3733E2C0EF3AC57");
 
-            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(true);
         });
 
         modelBuilder.Entity<TinNhanAi>(entity =>
         {
-            entity.HasKey(e => e.MaTinNhan).HasName("PK__TinNhanA__E5B3062ACADFFD71");
+            entity.HasKey(e => e.MaTinNhan)
+                .HasName("PK__TinNhanA__E5B3062ACADFFD71");
 
-            entity.Property(e => e.NgayGui).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.NgayGui)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaCuocHoiThoaiNavigation).WithMany(p => p.TinNhanAis)
+            entity.HasOne(d => d.MaCuocHoiThoaiNavigation)
+                .WithMany(p => p.TinNhanAis)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TinNhanAI_CuocHoiThoai");
         });
 
         modelBuilder.Entity<TuCam>(entity =>
         {
-            entity.HasKey(e => e.MaTuCam).HasName("PK__TuCam__B89513110632111A");
+            entity.HasKey(e => e.MaTuCam)
+                .HasName("PK__TuCam__B89513110632111A");
 
-            entity.Property(e => e.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.TrangThai).HasDefaultValue(true);
+            entity.Property(e => e.NgayTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(e => e.TrangThai)
+                .HasDefaultValue(true);
         });
 
         modelBuilder.Entity<YeuThich>(entity =>
         {
-            entity.HasKey(e => e.MaYeuThich).HasName("PK__YeuThich__B9007E4CB6025510");
+            entity.HasKey(e => e.MaYeuThich)
+                .HasName("PK__YeuThich__B9007E4CB6025510");
 
-            entity.Property(e => e.NgayThem).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.NgayThem)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.YeuThiches)
+            entity.HasOne(d => d.MaNguoiDungNavigation)
+                .WithMany(p => p.YeuThiches)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_YeuThich_NguoiDung");
 
-            entity.HasOne(d => d.MaSanPhamNavigation).WithMany(p => p.YeuThiches)
+            entity.HasOne(d => d.MaSanPhamNavigation)
+                .WithMany(p => p.YeuThiches)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_YeuThich_SanPham");
         });
 
-        // DBeaver SQL Server -> PostgreSQL migration uses lowercase identifiers.
-        // This mapping assumes PostgreSQL tables AND columns were created in lowercase.
-        // Verify against information_schema before using in production.
         OnModelCreatingPartial(modelBuilder);
 
+        // PostgreSQL: tên bảng/cột trong database đã chuyển thành chữ thường.
+        // Áp dụng sau khi khai báo tất cả entity và OnModelCreatingPartial.
+        // CHỈ dùng khi đã kiểm tra các bảng/cột tương ứng trong PostgreSQL
+        // thực sự dùng tên chữ thường (không đổi tên bảng trong database).
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            var tableName = entityType.GetTableName();
-            if (tableName is null) continue;
+            var originalTableName = entityType.GetTableName();
+            if (string.IsNullOrWhiteSpace(originalTableName))
+                continue;
 
-            entityType.SetTableName(tableName.ToLowerInvariant());
-            entityType.SetSchema("public");
+            // Lấy mapping cột từ tên bảng gốc trước khi thay đổi metadata.
+            var originalTable = StoreObjectIdentifier.Table(
+                originalTableName,
+                entityType.GetSchema());
 
             foreach (var property in entityType.GetProperties())
             {
-                // Preserve any existing explicit column mapping, changing only casing.
-                var columnName = property.GetColumnName();
-                if (columnName is not null)
-                    property.SetColumnName(columnName.ToLowerInvariant());
+                var originalColumnName = property.GetColumnName(originalTable);
+                if (!string.IsNullOrWhiteSpace(originalColumnName))
+                {
+                    property.SetColumnName(
+                        originalColumnName.ToLowerInvariant());
+                }
             }
+
+            entityType.SetSchema("public");
+            entityType.SetTableName(originalTableName.ToLowerInvariant());
         }
     }
 
