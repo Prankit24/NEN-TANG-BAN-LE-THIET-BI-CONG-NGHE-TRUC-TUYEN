@@ -3,34 +3,66 @@
 
 <head>
     <meta charset="utf-8" />
-    <!-- Tối ưu hiển thị responsive chuẩn cho di động: chặn zoom vỡ khung -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
 
     <title>@ViewData["Title"] - EMUA</title>
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+    <!-- Biểu tượng trên tab trình duyệt -->
+    
+    <link rel="icon"
+          type="image/png"
+          href="~/images/logo/chicken.png"
+          asp-append-version="true" />
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="apple-touch-icon"
+          href="~/images/logo/chicken.png"
+          asp-append-version="true" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+          rel="stylesheet" />
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
     <!-- CSS chung -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/home/header.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/home/footer.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
 
-    <!-- AI Chat CSS -->
-    <link rel="stylesheet" href="~/css/ai-chat.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/css/home/header.css"
+          asp-append-version="true" />
 
-    <!-- HOME & AUTH CSS -->
-    <link rel="stylesheet" href="~/css/home/categories.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="~/css/home/footer.css"
+          asp-append-version="true" />
 
-    <!-- Ẩn hoàn toàn giỏ nổi khi rỗng, kể cả header.css đặt display: flex -->
+    <link rel="stylesheet"
+          href="~/css/ai-chat.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/home/categories.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/auth.css"
+          asp-append-version="true" />
+
     <style>
         .emua-floating-cart[hidden] {
             display: none !important;
@@ -39,55 +71,57 @@
 </head>
 
 <body>
+    <div style="display:none">
+        @Html.AntiForgeryToken()
+    </div>
 
-    <div style="display:none">@Html.AntiForgeryToken()</div>
-
-    <!-- HEADER -->
+    <!-- Header -->
     <partial name="_Header" />
 
-    <!-- PAGE CONTENT -->
+    <!-- Nội dung trang -->
     <main class="main-content">
         @RenderBody()
     </main>
 
-    <!-- FOOTER -->
+    <!-- Footer -->
     <partial name="_Footer" />
 
-    <!-- AI CHAT: CHỈ GỌI 1 LẦN -->
+    <!-- AI Chat -->
     <partial name="_AIChat" />
 
-    <!-- GIỎ HÀNG NỔI: ban đầu ẩn, chỉ hiện khi giỏ có sản phẩm -->
-    <a href="@(User.Identity?.IsAuthenticated == true ? "/Cart" : "/Auth/Login?returnUrl=%2FCart")"
+    <!-- Giỏ hàng nổi -->
+    <a href="@(User.Identity?.IsAuthenticated == true
+                       ? "/Cart"
+                       : "/Auth/Login?returnUrl=%2FCart")"
        id="emuaFloatingCart"
        class="emua-floating-cart"
        hidden
        aria-label="Giỏ hàng"
        title="Giỏ hàng">
-        <i class="bi bi-cart3"></i>
+
+        <i class="bi bi-cart3" aria-hidden="true"></i>
         <span class="cart-count floating-cart-count">0</span>
     </a>
 
-    <!-- LIBRARY SCRIPTS -->
+    <!-- Thư viện JavaScript -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- SITE JS -->
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    <!-- AI JS -->
-    <script src="~/js/ai-chat.js" asp-append-version="true"></script>
-
-    <!-- JS RIÊNG CỦA TỪNG VIEW -->
-    @await RenderSectionAsync("Scripts", required: false)
-
+    <!-- Giỏ hàng dùng chung -->
     <script>
-        window.EMUA_IS_AUTHENTICATED = @(User.Identity?.IsAuthenticated == true ? "true" : "false");
+        window.EMUA_IS_AUTHENTICATED =
+            @(User.Identity?.IsAuthenticated == true ? "true" : "false");
+
         window.EMUA_GUEST_CART_KEY = 'emuaGuestCart';
 
         window.getGuestCart = function () {
             try {
-                const raw = localStorage.getItem(window.EMUA_GUEST_CART_KEY);
+                const raw = localStorage.getItem(
+                    window.EMUA_GUEST_CART_KEY
+                );
+
                 const parsed = raw ? JSON.parse(raw) : [];
+
                 return Array.isArray(parsed) ? parsed : [];
             } catch {
                 return [];
@@ -95,92 +129,141 @@
         };
 
         window.saveGuestCart = function (items) {
-            localStorage.setItem(window.EMUA_GUEST_CART_KEY, JSON.stringify(items || []));
-            // Khi xóa toàn bộ sản phẩm trong giỏ khách, ẩn ngay nút giỏ hàng nổi.
-            if (!window.EMUA_IS_AUTHENTICATED && typeof window.setGlobalCartCount === 'function') {
-                window.setGlobalCartCount(window.getGuestCartCount(), false);
+            localStorage.setItem(
+                window.EMUA_GUEST_CART_KEY,
+                JSON.stringify(items || [])
+            );
+
+            if (
+                !window.EMUA_IS_AUTHENTICATED &&
+                typeof window.setGlobalCartCount === 'function'
+            ) {
+                window.setGlobalCartCount(
+                    window.getGuestCartCount(),
+                    false
+                );
             }
         };
 
         window.getGuestCartCount = function () {
             return window.getGuestCart().reduce(function (sum, item) {
-                return sum + (Number.parseInt(item.quantity) || 0);
+                return sum + (Number.parseInt(item.quantity, 10) || 0);
             }, 0);
         };
 
         window.addToGuestCart = function (variantId, quantity = 1) {
-            variantId = Number.parseInt(variantId);
-            quantity = Number.parseInt(quantity) || 1;
+            variantId = Number.parseInt(variantId, 10);
+            quantity = Number.parseInt(quantity, 10) || 1;
 
             if (!variantId || quantity <= 0) return 0;
 
             const items = window.getGuestCart();
-            const existing = items.find(x => Number.parseInt(x.variantId) === variantId);
+
+            const existing = items.find(function (item) {
+                return Number.parseInt(item.variantId, 10) === variantId;
+            });
 
             if (existing) {
-                existing.quantity = (Number.parseInt(existing.quantity) || 0) + quantity;
+                existing.quantity =
+                    (Number.parseInt(existing.quantity, 10) || 0) +
+                    quantity;
             } else {
-                items.push({ variantId: variantId, quantity: quantity });
+                items.push({
+                    variantId: variantId,
+                    quantity: quantity
+                });
             }
 
             window.saveGuestCart(items);
+
             const count = window.getGuestCartCount();
+
             window.setGlobalCartCount(count, true);
+
             return count;
         };
 
         window.getLoginUrl = function (returnUrl) {
-            return '/Auth/Login?returnUrl=' + encodeURIComponent(returnUrl || '/Cart');
+            return '/Auth/Login?returnUrl=' +
+                encodeURIComponent(returnUrl || '/Cart');
         };
 
         window.setGlobalCartCount = function (count, animate = false) {
-            count = Math.max(0, Number.parseInt(count, 10) || 0);
+            count = Math.max(
+                0,
+                Number.parseInt(count, 10) || 0
+            );
 
-            document.querySelectorAll('.cart-count').forEach(function (badge) {
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'flex' : 'none';
-            });
+            document.querySelectorAll('.cart-count')
+                .forEach(function (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'flex' : 'none';
+                });
 
-            // Chỉ hiện nút giỏ hàng nổi khi thực sự có sản phẩm.
-            const floatingCart = document.getElementById('emuaFloatingCart');
+            const floatingCart = document.getElementById(
+                'emuaFloatingCart'
+            );
+
             if (floatingCart) {
                 floatingCart.hidden = count === 0;
             }
 
-            if (animate && count > 0 && typeof window.showCartAddedFeedback === 'function') {
+            if (
+                animate &&
+                count > 0 &&
+                typeof window.showCartAddedFeedback === 'function'
+            ) {
                 window.showCartAddedFeedback();
             }
         };
 
         window.showCartAddedFeedback = function () {
-            document.querySelectorAll('.cart-action, .emua-floating-cart').forEach(function (cartAction) {
+            document.querySelectorAll(
+                '.cart-action, .emua-floating-cart'
+            ).forEach(function (cartAction) {
                 cartAction.classList.remove('cart-added-feedback');
+
                 void cartAction.offsetWidth;
+
                 cartAction.classList.add('cart-added-feedback');
-                setTimeout(() => cartAction.classList.remove('cart-added-feedback'), 850);
+
+                setTimeout(function () {
+                    cartAction.classList.remove('cart-added-feedback');
+                }, 850);
             });
         };
 
         async function syncCartCountFromServer() {
             if (!window.EMUA_IS_AUTHENTICATED) {
-                window.setGlobalCartCount(window.getGuestCartCount(), false);
+                window.setGlobalCartCount(
+                    window.getGuestCartCount(),
+                    false
+                );
+
                 return;
             }
 
             try {
                 const response = await fetch('/Cart/Summary', {
                     method: 'GET',
-                    headers: { 'Accept': 'application/json' },
+                    headers: {
+                        'Accept': 'application/json'
+                    },
                     cache: 'no-store'
                 });
 
                 if (!response.ok) return;
+
                 const result = await response.json();
+
                 if (result && result.count !== undefined) {
                     window.setGlobalCartCount(result.count, false);
                 }
             } catch (error) {
-                console.debug('Không thể đồng bộ số lượng giỏ hàng.', error);
+                console.debug(
+                    'Không thể đồng bộ số lượng giỏ hàng.',
+                    error
+                );
             }
         }
 
@@ -188,9 +271,13 @@
             if (!window.EMUA_IS_AUTHENTICATED) return false;
 
             const guestItems = window.getGuestCart();
+
             if (!guestItems.length) return false;
 
-            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const tokenInput = document.querySelector(
+                'input[name="__RequestVerificationToken"]'
+            );
+
             if (!tokenInput) return false;
 
             try {
@@ -207,11 +294,21 @@
                 if (!response.ok) return false;
 
                 const result = await response.json();
+
                 window.saveGuestCart([]);
-                window.setGlobalCartCount(result?.count ?? 0, false);
+
+                window.setGlobalCartCount(
+                    result?.count ?? 0,
+                    false
+                );
+
                 return true;
             } catch (error) {
-                console.debug('Không thể gộp giỏ hàng khách.', error);
+                console.debug(
+                    'Không thể gộp giỏ hàng khách.',
+                    error
+                );
+
                 return false;
             }
         }
@@ -219,11 +316,16 @@
         window.emuaBuyNow = function (variantId, quantity = 1) {
             if (!window.EMUA_IS_AUTHENTICATED) {
                 window.addToGuestCart(variantId, quantity);
+
                 window.location.href = window.getLoginUrl('/Cart');
+
                 return;
             }
 
-            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const tokenInput = document.querySelector(
+                'input[name="__RequestVerificationToken"]'
+            );
+
             if (!tokenInput) {
                 window.location.href = '/Cart';
                 return;
@@ -235,23 +337,46 @@
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': tokenInput.value
                 },
-                body: JSON.stringify({ variantId: variantId, quantity: quantity })
-            }).then(r => {
-                if (r.ok) window.location.href = '/Cart';
+                body: JSON.stringify({
+                    variantId: variantId,
+                    quantity: quantity
+                })
+            }).then(function (response) {
+                if (response.ok) {
+                    window.location.href = '/Cart';
+                }
             });
         };
 
-        document.addEventListener('DOMContentLoaded', async function () {
-            if (window.EMUA_IS_AUTHENTICATED) {
-                const merged = await mergeGuestCartAfterLogin();
-                if (merged && window.location.pathname.toLowerCase() === '/cart') {
-                    window.location.reload();
-                    return;
+        document.addEventListener(
+            'DOMContentLoaded',
+            async function () {
+                if (window.EMUA_IS_AUTHENTICATED) {
+                    const merged = await mergeGuestCartAfterLogin();
+
+                    if (
+                        merged &&
+                        window.location.pathname.toLowerCase() === '/cart'
+                    ) {
+                        window.location.reload();
+                        return;
+                    }
                 }
+
+                await syncCartCountFromServer();
             }
-            await syncCartCountFromServer();
-        });
+        );
     </script>
+
+    <!-- JavaScript của website -->
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
+    <script src="~/js/ai-chat.js"
+            asp-append-version="true"></script>
+
+    <!-- JavaScript riêng của từng view -->
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>

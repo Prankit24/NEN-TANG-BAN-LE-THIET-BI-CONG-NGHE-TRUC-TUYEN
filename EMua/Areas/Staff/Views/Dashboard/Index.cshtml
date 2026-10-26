@@ -1,121 +1,1101 @@
+@using System.Globalization
 @model StaffDashboardViewModel
+
 @{
     ViewData["Title"] = "Tổng quan kinh doanh";
-    var maxRevenue = Math.Max(Model.RevenueByMonth.DefaultIfEmpty(0).Max(), 1);
-    var chartPoints = string.Join(" ", Model.RevenueByMonth.Select((value, index) =>
-        $"{index * 100.0 / 11:0.##},{92 - (double)(value / maxRevenue * 72):0.##}"));
-    var monthNames = new[] { "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12" };
-}
-<div class="staff-dashboard-heading">
-    <div><span class="staff-eyebrow"><i class="bi bi-circle-fill"></i> Tổng quan</span>
-        <h2>Tổng quan kinh doanh</h2>
-        <p>Báo cáo tổng quan hoạt động bán hàng và hiệu suất cửa hàng EMUA</p>
-    </div>
-    <form method="get" class="staff-period staff-period-form">
-        <i class="bi bi-calendar3"></i>
-        <select name="month" aria-label="Chọn tháng">@for (var option = 1; option <= 12; option++) {
-            <option
-            value="@option" selected="@(option == Model.SelectedMonth)">Tháng @option</option>
-        }
-    </select>
-    <select name="year" aria-label="Chọn năm">@for (var option = Model.SelectedYear - 2; option <=
-        Model.SelectedYear + 1; option++) {
-            <option value="@option" selected="@(option == Model.SelectedYear)">
-                @option</option>
-            }
-        </select>
-        <button type="submit" title="Xem thống kê"><i class="bi bi-arrow-right"></i></button>
-    </form>
-</div>
 
-<div class="staff-kpi-grid">
-    <article class="staff-kpi-card">
-        <div><span>Tổng doanh thu</span><strong>@Model.Revenue.ToString("N0")<small>đ</small></strong></div><i
-        class="bi bi-cash-stack"></i>
-        <p class="@(Model.RevenueGrowth >= 0 ? "positive" : "negative")"><i class="bi bi-arrow-up"></i>
-            @Math.Abs(Model.RevenueGrowth)% <em>so với tháng trước</em></p>
-        </article>
-        <article class="staff-kpi-card">
-            <div><span>Đơn hàng mới</span><strong>@Model.OrderCount.ToString("N0")</strong></div><i class="bi bi-cart3"></i>
-            <p class="@(Model.OrderGrowth >= 0 ? "positive" : "negative")"><i class="bi bi-arrow-up"></i>
-                @Math.Abs(Model.OrderGrowth)% <em>so với tháng trước</em></p>
-            </article>
-            <article class="staff-kpi-card">
-                <div><span>Sản phẩm đang bán</span><strong>@Model.SoldUnits.ToString("N0")</strong></div><i
-                class="bi bi-box-seam"></i>
-                <p><b>@Model.LowStockCount</b> SKU sắp hết hàng</p>
-            </article>
-            <article class="staff-kpi-card">
-                <div><span>Khách hàng mới</span><strong>@Model.NewCustomers.ToString("N0")</strong></div><i
-                class="bi bi-person-plus"></i>
-                <p><b>Tháng này</b> có khách hàng mới</p>
-            </article>
+    // SVG phải dùng dấu chấm thập phân, không dùng dấu phẩy.
+    var revenues = Model.RevenueByMonth.Take(12).ToList();
+
+    while (revenues.Count < 12)
+    {
+        revenues.Add(0);
+    }
+
+    var maxRevenue = Math.Max(revenues.Max(), 1);
+
+    var chartPoints = string.Join(" ", revenues.Select((value, index) =>
+    {
+        var x = 20 + index * 960.0 / 11;
+        var y = 220 - (double)(value / maxRevenue) * 190;
+
+        return FormattableString.Invariant($"{x:0.##},{y:0.##}");
+    }));
+
+    var monthNames = new[]
+    {
+        "T1", "T2", "T3", "T4", "T5", "T6",
+        "T7", "T8", "T9", "T10", "T11", "T12"
+    };
+}
+
+@section Styles {
+    <style>
+        /* NỀN NỘI DUNG — GIỮ SIDEBAR XANH ĐEN */
+        .staff-shell .admin-main,
+        .staff-shell .staff-content {
+            background: #f4f6fa;
+            color: #182238;
+        }
+
+        .staff-shell .admin-header {
+            background: #fff;
+            border-bottom: 1px solid #e4e9f1;
+            color: #182238;
+        }
+
+            .staff-shell .admin-header h1 {
+                color: #182238;
+                font-size: 20px;
+                letter-spacing: -.5px;
+            }
+
+            .staff-shell .admin-header p {
+                color: #78859a;
+            }
+
+        .staff-shell .admin-menu-toggle,
+        .staff-shell .admin-header-link,
+        .staff-shell .staff-notification {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: 1px solid #e1e7f0;
+            border-radius: 9px;
+            background: #fff;
+            color: #53627a;
+            text-decoration: none;
+        }
+
+            .staff-shell .admin-menu-toggle:hover,
+            .staff-shell .admin-header-link:hover,
+            .staff-shell .staff-notification:hover {
+                background: #eff4ff;
+                border-color: #cbd8fb;
+                color: #315efb;
+            }
+
+        .staff-shell .staff-notification {
+            width: 40px;
+            padding: 0;
+        }
+
+        .staff-shell .staff-notification-badge {
+            border-color: #fff;
+        }
+
+        .staff-shell .admin-user,
+        .staff-shell .staff-user-name {
+            color: #26344c;
+        }
+
+            .staff-shell .admin-user > i {
+                color: #8490a4;
+            }
+
+        /* LOGO */
+        .staff-shell .staff-brand {
+            min-height: 104px;
+        }
+
+        .staff-brand .staff-brand-wordmark {
+            width: 174px;
+            height: 64px;
+            object-fit: contain;
+        }
+
+        .staff-brand .admin-logo-text small {
+            display: none;
+        }
+
+        /* DASHBOARD */
+        .emua-dashboard {
+            --dash-blue: #315efb;
+            --dash-text: #182238;
+            --dash-muted: #7b879a;
+            --dash-border: #e6ebf2;
+            color: var(--dash-text);
+        }
+
+            .emua-dashboard * {
+                box-sizing: border-box;
+            }
+
+        .dash-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+            .dash-heading h2 {
+                margin: 0 0 6px;
+                color: #182238;
+                font-size: 23px;
+                font-weight: 700;
+                letter-spacing: -.7px;
+            }
+
+            .dash-heading p {
+                margin: 0;
+                color: #7b879a;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+
+        /* BỘ LỌC */
+        .dash-period {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 1px solid #e1e7f0;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+            .dash-period > i {
+                margin-left: 4px;
+                color: #7b879a;
+            }
+
+            .dash-period select {
+                min-height: 32px;
+                padding: 4px 24px 4px 7px;
+                border: 0;
+                border-radius: 5px;
+                background-color: #fff;
+                color: #34435b;
+                font: inherit;
+                font-size: 13px;
+                cursor: pointer;
+            }
+
+            .dash-period button {
+                display: grid;
+                width: 34px;
+                height: 34px;
+                place-items: center;
+                border: 0;
+                border-radius: 7px;
+                background: #315efb;
+                color: #fff;
+                cursor: pointer;
+            }
+
+                .dash-period button:hover {
+                    background: #244bd6;
+                }
+
+        /* THỐNG KÊ */
+        .dash-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .dash-kpi {
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid var(--dash-border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(23, 42, 79, .025);
+        }
+
+        .dash-kpi-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .dash-kpi-label {
+            display: block;
+            margin-bottom: 12px;
+            color: #7b879a;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .dash-kpi-value {
+            display: block;
+            color: #182238;
+            font-size: clamp(22px, 2vw, 30px);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -.8px;
+            overflow-wrap: anywhere;
+        }
+
+            .dash-kpi-value small {
+                margin-left: 3px;
+                font-size: 17px;
+                font-weight: 600;
+            }
+
+        .dash-kpi-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 10px;
+            background: #edf2ff;
+            color: #315efb;
+            font-size: 19px;
+        }
+
+            .dash-kpi-icon.green {
+                background: #eaf7f2;
+                color: #269e76;
+            }
+
+            .dash-kpi-icon.orange {
+                background: #fff3e7;
+                color: #d79235;
+            }
+
+            .dash-kpi-icon.cyan {
+                background: #eaf6fc;
+                color: #3692bd;
+            }
+
+        .dash-kpi-bottom {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin: 20px 0 0;
+            padding-top: 14px;
+            border-top: 1px solid #eff2f7;
+            color: #8b96a8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .dash-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            color: #209c75;
+            font-weight: 600;
+        }
+
+            .dash-trend.negative {
+                color: #df5b6c;
+            }
+
+        .dash-kpi-bottom b {
+            color: #53627a;
+            font-weight: 600;
+        }
+
+        /* KHỐI NỘI DUNG */
+        .dash-middle {
+            display: grid;
+            grid-template-columns: minmax(0, 1.8fr) minmax(290px, 1fr);
+            align-items: stretch;
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+
+        .dash-panel {
+            min-width: 0;
+            border: 1px solid var(--dash-border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(23, 42, 79, .025);
+        }
+
+        .dash-panel-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 23px 24px;
+        }
+
+            .dash-panel-heading h3 {
+                margin: 0 0 6px;
+                color: #243149;
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 1.5;
+            }
+
+            .dash-panel-heading p {
+                margin: 0;
+                color: #8b96a8;
+                font-size: 12px;
+                line-height: 1.6;
+            }
+
+        .dash-panel-link {
+            display: inline-flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 6px;
+            padding-top: 3px;
+            color: #315efb;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+            .dash-panel-link:hover {
+                color: #244bd6;
+                text-decoration: underline;
+            }
+
+        .dash-chart-key {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 7px;
+            padding-top: 5px;
+            color: #8792a5;
+            font-size: 11px;
+        }
+
+            .dash-chart-key i {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #315efb;
+            }
+
+        /* BIỂU ĐỒ */
+        .dash-chart-wrap {
+            padding: 0 24px;
+        }
+
+        .dash-chart {
+            position: relative;
+            height: 250px;
+        }
+
+        .dash-chart-grid {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px 0;
+            pointer-events: none;
+        }
+
+            .dash-chart-grid span {
+                display: block;
+                width: 100%;
+                height: 1px;
+                background: #edf1f6;
+            }
+
+        .dash-chart svg {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .dash-chart-months {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            margin-top: 10px;
+            color: #929daf;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .dash-chart-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 25px;
+            padding: 18px 24px;
+            border-top: 1px solid #edf1f6;
+        }
+
+            .dash-chart-summary > div + div {
+                padding-left: 18px;
+                border-left: 1px solid #edf1f6;
+            }
+
+            .dash-chart-summary span {
+                display: block;
+                margin-bottom: 7px;
+                color: #929daf;
+                font-size: 10px;
+            }
+
+            .dash-chart-summary strong {
+                color: #26344c;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+                .dash-chart-summary strong.positive {
+                    color: #209c75;
+                }
+
+                .dash-chart-summary strong.negative {
+                    color: #df5b6c;
+                }
+
+        /* TỒN KHO */
+        .dash-stock-heading-icon {
+            margin-right: 5px;
+            color: #d79235;
+        }
+
+        .dash-stock-note {
+            margin: 0 24px 16px;
+            padding-top: 15px;
+            border-top: 1px solid #edf1f6;
+            color: #929daf;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .dash-stock-list {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 0 24px;
+        }
+
+        .dash-stock-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 13px 0;
+            border-bottom: 1px solid #edf1f6;
+        }
+
+            .dash-stock-item:last-child {
+                border-bottom: 0;
+            }
+
+        .dash-stock-icon {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #e7edf7;
+            border-radius: 8px;
+            background: #f4f7fc;
+            color: #6b82b0;
+            font-size: 17px;
+        }
+
+        .dash-stock-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .dash-stock-info strong,
+            .dash-stock-info small {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .dash-stock-info strong {
+                color: #34435b;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .dash-stock-info small {
+                margin-top: 4px;
+                color: #929daf;
+                font-size: 10px;
+            }
+
+        .dash-stock-count {
+            flex-shrink: 0;
+            padding: 4px 7px;
+            border-radius: 5px;
+            background: #fff4e7;
+            color: #b77a28;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .dash-stock-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 17px 24px 22px;
+            padding: 11px;
+            border: 1px solid #dfe7f6;
+            border-radius: 7px;
+            background: #f5f8ff;
+            color: #315efb;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+            .dash-stock-action:hover {
+                background: #edf2ff;
+                color: #244bd6;
+            }
+
+        .dash-empty {
+            margin: 0;
+            padding: 30px 12px;
+            color: #929daf;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* BẢNG ĐƠN HÀNG */
+        .dash-orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #53627a;
+            font-size: 12px;
+        }
+
+            .dash-orders-table th {
+                padding: 14px 20px;
+                border-top: 1px solid #edf1f6;
+                border-bottom: 1px solid #edf1f6;
+                background: #f8fafd;
+                color: #8792a5;
+                font-size: 10px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            .dash-orders-table td {
+                padding: 17px 20px;
+                border-bottom: 1px solid #edf1f6;
+                background: #fff;
+                vertical-align: middle;
+            }
+
+            .dash-orders-table tbody tr:last-child td {
+                border-bottom: 0;
+            }
+
+            .dash-orders-table tbody tr:hover td {
+                background: #fbfcff;
+            }
+
+        .dash-order-id {
+            color: #315efb;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .dash-customer-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 170px;
+        }
+
+        .dash-customer-avatar {
+            display: grid;
+            width: 33px;
+            height: 33px;
+            flex-shrink: 0;
+            place-items: center;
+            border-radius: 50%;
+            background: #edf2ff;
+            color: #5274ca;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .dash-customer-info strong,
+        .dash-customer-info small {
+            display: block;
+        }
+
+        .dash-customer-info strong {
+            color: #34435b;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .dash-customer-info small {
+            margin-top: 4px;
+            color: #929daf;
+            font-size: 10px;
+        }
+
+        .dash-product-summary {
+            min-width: 160px;
+            max-width: 260px;
+            line-height: 1.7;
+        }
+
+        .dash-nowrap {
+            white-space: nowrap;
+        }
+
+        .dash-status {
+            display: inline-block;
+            padding: 5px 9px;
+            border: 1px solid #e0e8fa;
+            border-radius: 5px;
+            background: #f1f5ff;
+            color: #5574bd;
+            font-size: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .dash-order-action {
+            display: inline-grid;
+            width: 31px;
+            height: 31px;
+            place-items: center;
+            border: 1px solid #e6ebf2;
+            border-radius: 6px;
+            color: #7183a1;
+            text-decoration: none;
+        }
+
+            .dash-order-action:hover {
+                background: #edf2ff;
+                color: #315efb;
+            }
+
+        .emua-dashboard a:focus-visible,
+        .emua-dashboard button:focus-visible,
+        .emua-dashboard select:focus-visible {
+            outline: 2px solid #7192ff;
+            outline-offset: 3px;
+        }
+
+        @@media (max-width: 1200px) {
+            .dash-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dash-middle {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .dash-stock-list {
+                max-height: 240px;
+            }
+        }
+
+        @@media (max-width: 650px) {
+            .dash-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+                .dash-heading h2 {
+                    font-size: 20px;
+                }
+
+                .dash-heading p {
+                    font-size: 12px;
+                }
+
+            .dash-period {
+                width: 100%;
+            }
+
+                .dash-period select {
+                    flex: 1;
+                    min-width: 0;
+                }
+
+            .dash-kpis {
+                gap: 12px;
+            }
+
+            .dash-kpi {
+                padding: 15px;
+            }
+
+            .dash-kpi-top {
+                gap: 7px;
+            }
+
+            .dash-kpi-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 15px;
+            }
+
+            .dash-kpi-label {
+                font-size: 10px;
+            }
+
+            .dash-kpi-value {
+                font-size: 21px;
+            }
+
+            .dash-kpi-bottom {
+                margin-top: 15px;
+                font-size: 10px;
+            }
+
+            .dash-panel-heading {
+                padding: 18px;
+            }
+
+                .dash-panel-heading h3 {
+                    font-size: 14px;
+                }
+
+                .dash-panel-heading p {
+                    font-size: 11px;
+                }
+
+            .dash-chart-wrap {
+                padding: 0 18px;
+            }
+
+            .dash-chart {
+                height: 210px;
+            }
+
+            .dash-chart-summary {
+                gap: 8px;
+                padding: 16px;
+            }
+
+                .dash-chart-summary > div + div {
+                    padding-left: 10px;
+                }
+
+                .dash-chart-summary strong {
+                    font-size: 12px;
+                }
+
+            .dash-chart-key {
+                font-size: 10px;
+            }
+        }
+    </style>
+}
+
+<div class="emua-dashboard">
+
+    <!-- HEADER TRANG -->
+    <div class="dash-heading">
+        <div>
+            <h2>Hiệu suất cửa hàng</h2>
+            <p>
+                Theo dõi doanh thu, đơn hàng và tình trạng kho trong
+                tháng @Model.SelectedMonth/@Model.SelectedYear.
+            </p>
         </div>
 
-        <div class="staff-dashboard-middle">
-            <section class="staff-card staff-revenue-card">
-                <div class="staff-card-title">
-                    <div>
-                        <h2>Biểu đồ doanh thu &amp; tăng trưởng</h2><span>Doanh số bán hàng theo từng tháng năm
-                        @Model.SelectedYear</span>
-                    </div><span class="staff-chart-key"><i></i> Năm @Model.SelectedYear</span>
+        <form method="get" class="dash-period">
+            <i class="bi bi-calendar3"></i>
+
+            <select name="month" aria-label="Chọn tháng">
+                @for (var option = 1; option <= 12; option++)
+                {
+                    <option value="@option"
+                            selected="@(option == Model.SelectedMonth)">
+                        Tháng @option
+                    </option>
+                }
+            </select>
+
+            <select name="year" aria-label="Chọn năm">
+                @for (var option = Model.SelectedYear - 2;
+                                option <= Model.SelectedYear + 1;
+                                option++)
+                {
+                    <option value="@option"
+                            selected="@(option == Model.SelectedYear)">
+                        @option
+                    </option>
+                }
+            </select>
+
+            <button type="submit"
+                    title="Xem thống kê"
+                    aria-label="Xem thống kê">
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- THỐNG KÊ -->
+    <div class="dash-kpis">
+        <article class="dash-kpi">
+            <div class="dash-kpi-top">
+                <div>
+                    <span class="dash-kpi-label">Tổng doanh thu</span>
+                    <strong class="dash-kpi-value">
+                        @Model.Revenue.ToString("N0")<small>đ</small>
+                    </strong>
                 </div>
-                <div class="staff-line-chart">
-                    <div class="staff-y-lines"><i></i><i></i><i></i><i></i></div>
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Biểu đồ doanh thu 12 tháng">
+
+                <span class="dash-kpi-icon">
+                    <i class="bi bi-cash-stack"></i>
+                </span>
+            </div>
+
+            <p class="dash-kpi-bottom">
+                <span class="dash-trend @(Model.RevenueGrowth < 0 ? "negative" : "")">
+                    <i class="bi @(Model.RevenueGrowth >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                    @Math.Abs(Model.RevenueGrowth)%
+                </span>
+                <span>so với tháng trước</span>
+            </p>
+        </article>
+
+        <article class="dash-kpi">
+            <div class="dash-kpi-top">
+                <div>
+                    <span class="dash-kpi-label">Đơn hàng mới</span>
+                    <strong class="dash-kpi-value">
+                        @Model.OrderCount.ToString("N0")
+                    </strong>
+                </div>
+
+                <span class="dash-kpi-icon green">
+                    <i class="bi bi-bag-check"></i>
+                </span>
+            </div>
+
+            <p class="dash-kpi-bottom">
+                <span class="dash-trend @(Model.OrderGrowth < 0 ? "negative" : "")">
+                    <i class="bi @(Model.OrderGrowth >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                    @Math.Abs(Model.OrderGrowth)%
+                </span>
+                <span>so với tháng trước</span>
+            </p>
+        </article>
+
+        <article class="dash-kpi">
+            <div class="dash-kpi-top">
+                <div>
+                    <span class="dash-kpi-label">Số lượng đã bán</span>
+                    <strong class="dash-kpi-value">
+                        @Model.SoldUnits.ToString("N0")
+                    </strong>
+                </div>
+
+                <span class="dash-kpi-icon orange">
+                    <i class="bi bi-box-seam"></i>
+                </span>
+            </div>
+
+            <p class="dash-kpi-bottom">
+                <b>@Model.LowStockCount SKU</b>
+                <span>sắp hết hàng</span>
+            </p>
+        </article>
+
+        <article class="dash-kpi">
+            <div class="dash-kpi-top">
+                <div>
+                    <span class="dash-kpi-label">Khách hàng mới</span>
+                    <strong class="dash-kpi-value">
+                        @Model.NewCustomers.ToString("N0")
+                    </strong>
+                </div>
+
+                <span class="dash-kpi-icon cyan">
+                    <i class="bi bi-person-plus"></i>
+                </span>
+            </div>
+
+            <p class="dash-kpi-bottom">
+                <span>Trong tháng</span>
+                <b>@Model.SelectedMonth/@Model.SelectedYear</b>
+            </p>
+        </article>
+    </div>
+
+    <div class="dash-middle">
+
+        <!-- BIỂU ĐỒ DOANH THU -->
+        <section class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <h3>Doanh thu theo tháng</h3>
+                    <p>Tổng quan doanh số năm @Model.SelectedYear</p>
+                </div>
+
+                <span class="dash-chart-key">
+                    <i></i>
+                    Doanh thu
+                </span>
+            </div>
+
+            <div class="dash-chart-wrap">
+                <div class="dash-chart">
+                    <div class="dash-chart-grid" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <svg viewBox="0 0 1000 250"
+                         preserveAspectRatio="none"
+                         role="img"
+                         aria-label="Biểu đồ doanh thu 12 tháng năm @Model.SelectedYear">
                         <defs>
-                            <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0%" stop-color="#1b1d24" stop-opacity=".13" />
-                                <stop offset="100%" stop-color="#1b1d24" stop-opacity="0" />
+                            <linearGradient id="emuaRevenueFill"
+                                            x1="0%"
+                                            y1="0%"
+                                            x2="0%"
+                                            y2="100%">
+                                <stop offset="0%"
+                                      stop-color="#315efb"
+                                      stop-opacity=".16" />
+                                <stop offset="100%"
+                                      stop-color="#315efb"
+                                      stop-opacity="0" />
                             </linearGradient>
                         </defs>
-                        <polygon points="0,100 @chartPoints 100,100" fill="url(#revenueFill)" />
-                        <polyline points="@chartPoints" fill="none" stroke="#1a1c23" stroke-width="1.2"
+
+                        <polygon points="20,220 @chartPoints 980,220"
+                                 fill="url(#emuaRevenueFill)" />
+
+                        <polyline points="@chartPoints"
+                                  fill="none"
+                                  stroke="#315efb"
+                                  stroke-width="2.5"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
                                   vector-effect="non-scaling-stroke" />
                     </svg>
                 </div>
-                <div class="staff-chart-months">@foreach (var month in monthNames) {
-                    <span>@month</span>
-                }
+
+                <div class="dash-chart-months">
+                    @foreach (var month in monthNames)
+                    {
+                        <span>@month</span>
+                    }
+                </div>
             </div>
-            <div class="staff-chart-footer">
-                <div><span>Doanh thu tháng này</span><strong>@Model.Revenue.ToString("N0") đ</strong></div>
-                <div><span>Đơn hàng mới</span><strong>@Model.OrderCount đơn</strong></div>
-                <div><span>Tăng trưởng</span><strong
-                    class="@(Model.RevenueGrowth >= 0 ? "positive" : "negative")">@Model.RevenueGrowth%</strong></div>
+
+            <div class="dash-chart-summary">
+                <div>
+                    <span>Doanh thu tháng @Model.SelectedMonth</span>
+                    <strong>@Model.Revenue.ToString("N0") đ</strong>
                 </div>
-            </section>
-            <aside class="staff-card staff-stock-card">
-                <div class="staff-card-title">
-                    <div>
-                        <h2><i class="bi bi-exclamation-triangle"></i> Cảnh báo tồn kho</h2><span>Sản phẩm có số lượng
-                        thấp</span>
-                    </div><a asp-controller="Product" asp-action="Index">Xem kho</a>
+
+                <div>
+                    <span>Đơn hàng mới</span>
+                    <strong>@Model.OrderCount.ToString("N0") đơn</strong>
                 </div>
-                <p class="staff-stock-description">Các biến thể còn từ 10 sản phẩm trở xuống cần được bổ sung.</p>
-                <div class="staff-stock-list">@foreach(var item in Model.LowStockItems){
-                    <div class="staff-stock-item"><i class="bi bi-box"></i>
-                        <div><strong>@item.ProductName</strong><small>@item.VariantName</small></div><b>Còn @item.Quantity</b>
+
+                <div>
+                    <span>Tăng trưởng doanh thu</span>
+                    <strong class="@(Model.RevenueGrowth >= 0 ? "positive" : "negative")">
+                        @(Model.RevenueGrowth > 0 ? "+" : "")@Model.RevenueGrowth%
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- TỒN KHO -->
+        <aside class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-exclamation-triangle dash-stock-heading-icon"></i>
+                        Cảnh báo tồn kho
+                    </h3>
+                    <p>Sản phẩm cần được bổ sung</p>
+                </div>
+
+                <a asp-area="Staff"
+                   asp-controller="Product"
+                   asp-action="Index"
+                   class="dash-panel-link">
+                    Xem kho
+                    <i class="bi bi-arrow-up-right"></i>
+                </a>
+            </div>
+
+            <p class="dash-stock-note">
+                Các biến thể còn từ 10 sản phẩm trở xuống.
+            </p>
+
+            <div class="dash-stock-list">
+                @foreach (var item in Model.LowStockItems)
+                {
+                    <div class="dash-stock-item">
+                        <span class="dash-stock-icon">
+                            <i class="bi bi-box"></i>
+                        </span>
+
+                        <div class="dash-stock-info">
+                            <strong title="@item.ProductName">
+                                @item.ProductName
+                            </strong>
+                            <small title="@item.VariantName">
+                                @item.VariantName
+                            </small>
+                        </div>
+
+                        <span class="dash-stock-count">
+                            Còn @item.Quantity
+                        </span>
                     </div>
                 }
+
                 @if (!Model.LowStockItems.Any())
                 {
-                    <p class="staff-empty">Kho hàng đang ở mức an toàn.</p>
+                    <p class="dash-empty">
+                        <i class="bi bi-check-circle"></i>
+                        Kho hàng đang ở mức an toàn.
+                    </p>
                 }
-            </div><a class="staff-stock-action" asp-controller="Product" asp-action="Index"><i
-            class="bi bi-clipboard-check"></i>
-            Kiểm tra kho hàng</a>
+            </div>
+
+            <a asp-area="Staff"
+               asp-controller="Product"
+               asp-action="Index"
+               class="dash-stock-action">
+                <i class="bi bi-clipboard-check"></i>
+                Kiểm tra kho hàng
+            </a>
         </aside>
     </div>
 
-    <section class="staff-card staff-recent-card">
-        <div class="staff-card-title">
+    <!-- ĐƠN HÀNG GẦN ĐÂY -->
+    <section class="dash-panel">
+        <div class="dash-panel-heading">
             <div>
-                <h2>Đơn hàng gần đây</h2><span>Theo dõi 5 đơn hàng trực tuyến vừa phát sinh</span>
-            </div><a asp-controller="Order" asp-action="Index">Xem tất cả đơn hàng <i class="bi bi-arrow-right"></i></a>
+                <h3>Đơn hàng gần đây</h3>
+                <p>Theo dõi các đơn hàng trực tuyến vừa phát sinh</p>
+            </div>
+
+            <a asp-area="Staff"
+               asp-controller="Order"
+               asp-action="Index"
+               class="dash-panel-link">
+                Xem tất cả
+                <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
+
         <div class="table-responsive">
-            <table class="staff-table staff-dashboard-table">
+            <table class="dash-orders-table">
                 <thead>
                     <tr>
                         <th>Mã đơn</th>
@@ -127,29 +1107,89 @@
                         <th>Thao tác</th>
                     </tr>
                 </thead>
-                <tbody>@foreach(var order in Model.RecentOrders){
-                    <tr>
-                        <td><strong>#ORD-@order.OrderId.ToString("D4")</strong></td>
-                        <td><span class="staff-customer-avatar">@order.CustomerName[..1].ToUpper()</span>
-                            <div class="staff-customer"><strong>@order.CustomerName</strong><small>@(order.CustomerEmail ??
-                                                                                                    "Khách vãng lai")</small></div>
+
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        var customerName =
+                        string.IsNullOrWhiteSpace(order.CustomerName)
+                        ? "Khách vãng lai"
+                        : order.CustomerName.Trim();
+
+                        var customerInitial =
+                        customerName[..1].ToUpperInvariant();
+
+                        <tr>
+                            <td>
+                                <strong class="dash-order-id">
+                                    #ORD-@order.OrderId.ToString("D4")
+                                </strong>
                             </td>
-                            <td>@(string.IsNullOrWhiteSpace(order.ProductSummary) ? "Chưa có chi tiết sản phẩm" :
-                                                                                            order.ProductSummary)</td>
-                                <td>@(order.OrderedAt?.ToString("HH:mm - dd/MM") ?? "—")</td>
-                                <td><strong>@order.Total.ToString("N0") đ</strong></td>
-                                <td><span class="staff-badge">@order.Status</span></td>
-                                <td><a class="staff-action-icon" asp-controller="Order" asp-action="Index" title="Xem đơn hàng"><i
-                                    class="bi bi-eye"></i></a></td>
-                                </tr>
-                            }
-                            @if (!Model.RecentOrders.Any())
-                            {
-                                <tr>
-                                    <td colspan="7" class="text-center">Chưa có đơn hàng để hiển thị.</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+
+                            <td>
+                                <div class="dash-customer-cell">
+                                    <span class="dash-customer-avatar">
+                                        @customerInitial
+                                    </span>
+
+                                    <div class="dash-customer-info">
+                                        <strong>@customerName</strong>
+                                        <small>
+                                            @(string.IsNullOrWhiteSpace(order.CustomerEmail)
+                                                                                    ? "Khách vãng lai"
+                                                                                    : order.CustomerEmail)
+                                                                                                      </small>
+                                                                                                  </div>
+                                                                                              </div>
+                                                                                          </td>
+
+                            <td class="dash-product-summary">
+                                @(string.IsNullOrWhiteSpace(order.ProductSummary)
+                                                            ? "Chưa có chi tiết sản phẩm"
+                                                            : order.ProductSummary)
+                        </td>
+
+                            <td class="dash-nowrap">
+                                @(order.OrderedAt?.ToString("HH:mm - dd/MM") ?? "—")
+                            </td>
+
+                            <td class="dash-nowrap">
+                                <strong>
+                                    @order.Total.ToString("N0") đ
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="dash-status">
+                                    @order.Status
+                                </span>
+                            </td>
+
+                            <td>
+                                <a asp-area="Staff"
+                                   asp-controller="Order"
+                                   asp-action="Index"
+                                   class="dash-order-action"
+                                   title="Xem danh sách đơn hàng"
+                                   aria-label="Xem danh sách đơn hàng">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                                        }
+
+                    @if (!Model.RecentOrders.Any())
+                    {
+                        <tr>
+                            <td colspan="7">
+                                <p class="dash-empty">
+                                    Chưa có đơn hàng để hiển thị.
+                                </p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

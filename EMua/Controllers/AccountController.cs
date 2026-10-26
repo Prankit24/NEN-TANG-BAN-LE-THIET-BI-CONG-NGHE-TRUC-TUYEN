@@ -3,7 +3,10 @@ using System.Text.RegularExpressions;
 using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +17,7 @@ public class AccountController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _environment;
+    private readonly IPasswordHasher<NguoiDung> _passwordHasher;
 
     private static readonly string[] BuiltInAvatars =
     {
@@ -26,12 +30,17 @@ public class AccountController : Controller
 
     public AccountController(
         EMuaDbContext db,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IPasswordHasher<NguoiDung> passwordHasher)
     {
         _db = db;
         _environment = environment;
+        _passwordHasher = passwordHasher;
     }
 
+    // =====================================================
+    // XEM HỒ SƠ
+    // =====================================================
     [HttpGet]
     public async Task<IActionResult> Profile()
     {
@@ -43,6 +52,9 @@ public class AccountController : Controller
         return View(ToProfileViewModel(user));
     }
 
+    // =====================================================
+    // CHỈNH SỬA HỒ SƠ
+    // =====================================================
     [HttpGet]
     public async Task<IActionResult> Edit()
     {
@@ -62,11 +74,10 @@ public class AccountController : Controller
         });
     }
 
-
-
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(EditAccountProfileViewModel model)
+    public async Task<IActionResult> Edit(
+        EditAccountProfileViewModel model)
     {
         var user = await GetCurrentUserAsync();
 
@@ -81,8 +92,7 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(
                 nameof(model.SelectedAvatar),
-                "Ảnh đại diện được chọn không hợp lệ."
-            );
+                "Ảnh đại diện được chọn không hợp lệ.");
         }
 
         if (model.AvatarFile is { Length: > 0 })
@@ -95,23 +105,21 @@ public class AccountController : Controller
                 ".webp"
             };
 
-            var extension = Path.GetExtension(model.AvatarFile.FileName)
-                .ToLowerInvariant();
+            var extension = Path.GetExtension(
+                model.AvatarFile.FileName).ToLowerInvariant();
 
             if (!allowedExtensions.Contains(extension))
             {
                 ModelState.AddModelError(
                     nameof(model.AvatarFile),
-                    "Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP."
-                );
+                    "Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.");
             }
 
             if (model.AvatarFile.Length > 2 * 1024 * 1024)
             {
                 ModelState.AddModelError(
                     nameof(model.AvatarFile),
-                    "Ảnh đại diện không được vượt quá 2 MB."
-                );
+                    "Ảnh đại diện không được vượt quá 2 MB.");
             }
         }
 
@@ -122,7 +130,9 @@ public class AccountController : Controller
         var currentPhone = string.IsNullOrWhiteSpace(user.SoDienThoai)
             ? null
             : NormalizePhone(user.SoDienThoai);
-        if (!string.IsNullOrWhiteSpace(phone) && phone != currentPhone)
+
+        if (!string.IsNullOrWhiteSpace(phone) &&
+            phone != currentPhone)
         {
             var phoneExists = await _db.NguoiDungs.AnyAsync(x =>
                 x.MaNguoiDung != user.MaNguoiDung &&
@@ -132,8 +142,7 @@ public class AccountController : Controller
             {
                 ModelState.AddModelError(
                     nameof(model.PhoneNumber),
-                    "Số điện thoại này đã được sử dụng."
-                );
+                    "Số điện thoại này đã được sử dụng.");
             }
         }
 
@@ -147,35 +156,36 @@ public class AccountController : Controller
                     message = ModelState.Values
                         .SelectMany(x => x.Errors)
                         .Select(x => x.ErrorMessage)
-                        .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+                        .FirstOrDefault(
+                            x => !string.IsNullOrWhiteSpace(x))
                         ?? "Dữ liệu hồ sơ chưa hợp lệ."
                 });
             }
 
             return View(model);
         }
+
         if (model.AvatarFile is { Length: > 0 })
         {
-            var extension = Path.GetExtension(model.AvatarFile.FileName)
-                .ToLowerInvariant();
+            var extension = Path.GetExtension(
+                model.AvatarFile.FileName).ToLowerInvariant();
 
             var avatarFolder = Path.Combine(
                 _environment.WebRootPath,
                 "uploads",
-                "avatars"
-            );
+                "avatars");
 
             Directory.CreateDirectory(avatarFolder);
 
             var fileName = $"{Guid.NewGuid():N}{extension}";
             var filePath = Path.Combine(avatarFolder, fileName);
 
-            await using var stream = new FileStream(
+            await using (var stream = new FileStream(
                 filePath,
-                FileMode.Create
-            );
-
-            await model.AvatarFile.CopyToAsync(stream);
+                FileMode.Create))
+            {
+                await model.AvatarFile.CopyToAsync(stream);
+            }
 
             user.AnhDaiDien = $"/uploads/avatars/{fileName}";
         }
@@ -213,9 +223,142 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Profile));
     }
 
+    // =====================================================
+    // ĐỔI MẬT KHẨU
+    // =====================================================
+    [HttpGet]
+    [ResponseCache(
+        Duration = 0,
+        Location = ResponseCacheLocation.None,
+        NoStore = true)]
+    public async Task<IActionResult> ChangePassword()
+    {
+        var user = await GetPasswordUserAsync();
+
+        if (user == null || !user.TrangThai)
+        {
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return RedirectToAction("Login", "Auth");
+        }
+
+        if (string.IsNullOrWhiteSpace(user.MatKhau))
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Tài khoản chưa có mật khẩu nội bộ. " +
+                "Vui lòng dùng chức năng quên mật khẩu nếu được hỗ trợ.");
+        }
+
+        return View(new ChangePasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [ResponseCache(
+        Duration = 0,
+        Location = ResponseCacheLocation.None,
+        NoStore = true)]
+    public async Task<IActionResult> ChangePassword(
+        ChangePasswordViewModel model)
+    {
+        var user = await GetPasswordUserAsync();
+
+        if (user == null || !user.TrangThai)
+        {
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return RedirectToAction("Login", "Auth");
+        }
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        if (string.IsNullOrWhiteSpace(user.MatKhau))
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Tài khoản chưa có mật khẩu nội bộ. " +
+                "Vui lòng dùng chức năng quên mật khẩu nếu được hỗ trợ.");
+
+            return View(model);
+        }
+
+        PasswordVerificationResult verificationResult;
+
+        try
+        {
+            verificationResult =
+                _passwordHasher.VerifyHashedPassword(
+                    user,
+                    user.MatKhau,
+                    model.CurrentPassword);
+        }
+        catch (FormatException)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Định dạng mật khẩu hiện tại không tương thích. " +
+                "Vui lòng dùng chức năng quên mật khẩu.");
+
+            return View(model);
+        }
+
+        if (verificationResult == PasswordVerificationResult.Failed)
+        {
+            ModelState.AddModelError(
+                nameof(model.CurrentPassword),
+                "Mật khẩu hiện tại không đúng.");
+
+            return View(model);
+        }
+
+        if (model.CurrentPassword == model.NewPassword)
+        {
+            ModelState.AddModelError(
+                nameof(model.NewPassword),
+                "Mật khẩu mới phải khác mật khẩu hiện tại.");
+
+            return View(model);
+        }
+
+        user.MatKhau = _passwordHasher.HashPassword(
+            user,
+            model.NewPassword);
+
+        await _db.SaveChangesAsync();
+
+        // Đăng xuất phiên hiện tại sau khi đổi mật khẩu.
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        TempData["SuccessMessage"] =
+            "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+
+        return RedirectToAction("Login", "Auth");
+    }
+
+    // =====================================================
+    // HÀM HỖ TRỢ
+    // =====================================================
+    private async Task<NguoiDung?> GetPasswordUserAsync()
+    {
+        var userIdText = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdText, out var userId))
+            return null;
+
+        return await _db.NguoiDungs.FirstOrDefaultAsync(
+            x => x.MaNguoiDung == userId);
+    }
+
     private async Task<NguoiDung?> GetCurrentUserAsync()
     {
-        var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdText = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(userIdText, out var userId))
             return null;
@@ -224,14 +367,15 @@ public class AccountController : Controller
             .Include(x => x.MaQuyenNavigation)
             .Include(x => x.DonHangs)
             .Include(x => x.YeuThiches)
-            .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
+            .FirstOrDefaultAsync(
+                x => x.MaNguoiDung == userId);
     }
 
     private static AccountProfileViewModel ToProfileViewModel(
         NguoiDung user)
     {
-        var databaseRoleName = user.MaQuyenNavigation?.TenQuyen
-            ?? "KhachHang";
+        var databaseRoleName =
+            user.MaQuyenNavigation?.TenQuyen ?? "KhachHang";
 
         var roleName = databaseRoleName switch
         {
@@ -241,8 +385,11 @@ public class AccountController : Controller
             _ => databaseRoleName
         };
 
-        var isCustomer = databaseRoleName is "KhachHang" or "Khách hàng";
-        var isStaff = databaseRoleName is "NhanVien" or "Nhân viên";
+        var isCustomer =
+            databaseRoleName is "KhachHang" or "Khách hàng";
+
+        var isStaff =
+            databaseRoleName is "NhanVien" or "Nhân viên";
 
         return new AccountProfileViewModel
         {
@@ -273,6 +420,7 @@ public class AccountController : Controller
 
     private bool IsAjaxRequest()
     {
-        return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+        return Request.Headers["X-Requested-With"]
+            == "XMLHttpRequest";
     }
 }
