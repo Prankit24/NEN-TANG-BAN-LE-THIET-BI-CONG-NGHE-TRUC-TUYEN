@@ -1,13 +1,13 @@
 /* ================================================================
-   EMUA HEADER 2026 — Modern Tech Retail
+   EMUA HEADER
    ================================================================ */
 
-/* ── TOPBAR ─────────────────────────────────────────────────────── */
+/* TOPBAR */
 .emua-topbar {
     height: 38px;
     background: linear-gradient(90deg, #070a14, #0c1024 50%, #070a14);
-    color: rgba(255,255,255,0.92);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: rgba(255, 255, 255, .92);
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
 }
 
 .topbar-content {
@@ -18,26 +18,25 @@
     gap: 10px;
     font-size: 12.5px;
     font-weight: 500;
-    letter-spacing: 0.1px;
+    letter-spacing: .1px;
 }
 
 .topbar-divider {
-    color: rgba(255,255,255,0.2);
+    color: rgba(255, 255, 255, .2);
     font-size: 14px;
 }
 
-
-/* ── MAIN HEADER ─────────────────────────────────────────────────── */
+/* MAIN HEADER */
 .emua-main-header {
     position: sticky;
     top: 0;
     z-index: 999;
     padding: 0;
-    background: rgba(10, 13, 30, 0.96);
+    background: rgba(10, 13, 30, .96);
     backdrop-filter: blur(20px) saturate(1.8);
     -webkit-backdrop-filter: blur(20px) saturate(1.8);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 4px 32px rgba(0,0,0,0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+    box-shadow: 0 4px 32px rgba(0, 0, 0, .35);
 }
 
 .main-header-wrapper {
@@ -47,108 +46,97 @@
     padding: 16px 0;
 }
 
-
-/* ── LOGO ─────────────────────────────────────────────────────────── */
+/* LOGO */
 .emua-logo {
-    display: flex;
-    min-width: 160px;
+    display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
-    gap: 11px;
-    color: white;
-    text-decoration: none;
-    flex-shrink: 0;
-}
-
-.emua-logo:hover { color: white; }
-
-.emua-logo-icon {
-    display: flex;
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    min-width: 145px;
     color: #fff;
-    font-size: 22px;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.45);
+    text-decoration: none;
 }
+
+    .emua-logo:hover {
+        color: #fff;
+    }
 
 .emua-logo-text {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 5px;
     line-height: 1;
 }
 
-.emua-logo-text strong {
-    font-size: 21px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #fff, #a5b4fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
+    .emua-logo-text .emua-wordmark {
+        display: block;
+        width: 138px;
+        height: 44px;
+        border: 0;
+        border-radius: 0;
+        object-fit: cover;
+        object-position: center;
+    }
 
-.emua-logo-text span {
-    margin-top: 3px;
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
-    font-weight: 400;
-    letter-spacing: 0.2px;
-}
+    .emua-logo-text span {
+        margin: 0;
+        color: #a4a7b8;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+        letter-spacing: .2px;
+    }
 
-
-/* ── SEARCH BAR ─────────────────────────────────────────────────── */
+/* SEARCH */
 .emua-search {
     display: flex;
-    height: 46px;
     flex: 1;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    height: 46px;
+    margin: 0;
     padding: 0 18px;
+    border: 1.5px solid rgba(255, 255, 255, .1);
     border-radius: 999px;
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid rgba(255,255,255,0.1);
-    transition: all 0.25s ease;
+    background: rgba(255, 255, 255, .07);
+    transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
-.emua-search:focus-within {
-    background: rgba(255,255,255,0.12) !important;
-    border-color: rgba(37,99,235,0.6) !important;
-    box-shadow: 0 0 0 4px rgba(37,99,235,0.15),
-                0 4px 20px rgba(0,0,0,0.2) !important;
-    transform: translateY(-1px);
-}
+    .emua-search:focus-within {
+        background: rgba(255, 255, 255, .12);
+        border-color: rgba(49, 94, 251, .8);
+        box-shadow: 0 0 0 4px rgba(49, 94, 251, .15);
+    }
 
-.emua-search i {
-    color: rgba(255,255,255,0.45);
-    font-size: 16px;
-    flex-shrink: 0;
-}
+    .emua-search i {
+        flex-shrink: 0;
+        color: #a4a7b8;
+        font-size: 16px;
+    }
 
-.emua-search input {
-    width: 100%;
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: rgba(255,255,255,0.92);
-    font-size: 14px;
-    font-family: inherit;
-}
+    .emua-search input {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: #eef0f7;
+        font-size: 14px;
+        font-family: inherit;
+    }
 
-.emua-search input::placeholder {
-    color: rgba(255,255,255,0.35);
-}
+        .emua-search input::placeholder {
+            color: #9a9daf;
+        }
 
-
-/* ── HEADER ACTIONS ─────────────────────────────────────────────── */
+/* HEADER ACTIONS */
 .emua-header-actions {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-shrink: 0;
 }
 
 .header-action-btn {
@@ -158,46 +146,47 @@
     flex-direction: column;
     gap: 3px;
     padding: 8px 12px;
-    border: none;
+    border: 0;
     border-radius: 12px;
     background: transparent;
-    color: rgba(255,255,255,0.85);
+    color: rgba(255, 255, 255, .85);
     cursor: pointer;
+    font-family: inherit;
     font-size: 11.5px;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: background .2s ease, color .2s ease;
 }
 
-.header-action-btn:hover {
-    color: #fff;
-    background: rgba(255,255,255,0.08);
-}
+    .header-action-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, .08);
+    }
 
-.header-action-btn i {
-    font-size: 22px;
-}
+    .header-action-btn i {
+        font-size: 22px;
+    }
 
-.header-action-btn > span {
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+    .header-action-btn > span {
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-.header-action-btn.dropdown-toggle::after {
-    display: none;
-}
+    .header-action-btn.dropdown-toggle::after {
+        display: none;
+    }
 
-
-/* ── ACCOUNT DROPDOWN ───────────────────────────────────────────── */
+/* ACCOUNT DROPDOWN */
 .account-dropdown {
     width: 260px;
     padding: 8px;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
-    background: #fff;
+    border: 1px solid #363849;
+    border-radius: 12px;
+    background: #1d1f2f;
+    color: #eef0f7;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
 }
 
 .account-dropdown-profile {
@@ -205,16 +194,16 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    border-radius: 12px;
-    color: var(--gray-800, #1e293b);
+    border-radius: 8px;
+    color: #eef0f7;
     text-decoration: none;
-    transition: background 0.15s ease;
+    transition: background .15s ease;
 }
 
-.account-dropdown-profile:hover {
-    background: #f8fafc;
-    color: #1e293b;
-}
+    .account-dropdown-profile:hover {
+        background: #293047;
+        color: #fff;
+    }
 
 .account-dropdown-avatar {
     display: grid;
@@ -222,37 +211,41 @@
     height: 40px;
     flex-shrink: 0;
     place-items: center;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    color: white;
+    border-radius: 10px;
+    background: #315efb;
+    color: #fff;
     font-weight: 800;
     font-size: 16px;
 }
 
 .account-dropdown-info {
     display: flex;
-    min-width: 0;
     flex: 1;
+    min-width: 0;
     flex-direction: column;
 }
 
-.account-dropdown-info strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 13.5px;
-    color: #0f172a;
-}
+    .account-dropdown-info strong {
+        overflow: hidden;
+        color: #eef0f7;
+        font-size: 13.5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-.account-dropdown-info small {
-    margin-top: 2px;
-    color: #94a3b8;
-    font-size: 11.5px;
-}
+    .account-dropdown-info small {
+        margin-top: 2px;
+        color: #a4a7b8;
+        font-size: 11.5px;
+    }
 
 .account-dropdown-profile > i {
-    color: #cbd5e1;
+    color: #a4a7b8;
     font-size: 13px;
+}
+
+.account-dropdown .dropdown-divider {
+    border-top-color: #363849;
 }
 
 .account-dropdown-staff {
@@ -261,17 +254,25 @@
     gap: 9px;
     margin: 2px 0;
     padding: 9px 12px;
-    border-radius: 10px;
-    color: #2563eb;
+    border-radius: 8px;
+    color: #a8bcff;
     font-size: 13px;
     font-weight: 700;
     text-decoration: none;
-    transition: background 0.15s ease;
+    transition: background .15s ease;
 }
 
-.account-dropdown-staff:hover {
-    background: #f0f7ff;
-    color: #1d4ed8;
+    .account-dropdown-staff:hover {
+        background: #293047;
+        color: #d5dfff;
+    }
+
+.account-dropdown .account-dropdown-staff.text-primary {
+    color: #a8bcff !important;
+}
+
+.account-dropdown form {
+    margin: 0;
 }
 
 .account-dropdown-logout {
@@ -281,22 +282,22 @@
     gap: 9px;
     padding: 10px 12px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 8px;
     background: transparent;
-    color: #ef4444;
+    color: #ffacb8;
     cursor: pointer;
+    font-family: inherit;
     font-weight: 600;
     font-size: 13px;
     text-align: left;
-    transition: background 0.15s ease;
+    transition: background .15s ease;
 }
 
-.account-dropdown-logout:hover {
-    background: #fff5f5;
-}
+    .account-dropdown-logout:hover {
+        background: #38232e;
+    }
 
-
-/* ── CART ICON ──────────────────────────────────────────────────── */
+/* CART */
 .header-icon-wrapper {
     position: relative;
 }
@@ -306,26 +307,26 @@
     top: -8px;
     right: -10px;
     display: flex;
-    width: 18px;
+    width: auto;
     min-width: 18px;
     height: 18px;
     align-items: center;
     justify-content: center;
     padding: 0 4px;
+    border: 2px solid #0a0d1e;
     border-radius: 20px;
     background: #ef4444;
-    color: white;
+    color: #fff;
     font-size: 10px;
     font-weight: 800;
-    border: 2px solid rgba(10,13,30,1);
 }
 
-
-/* ── CATEGORY NAV ───────────────────────────────────────────────── */
+/* CATEGORY NAV */
 .emua-category-nav {
-    background: rgba(10, 13, 30, 0.92);
+    background: rgba(10, 13, 30, .92);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
 }
 
 .category-list {
@@ -335,117 +336,180 @@
     gap: 2px;
 }
 
-.category-list a {
-    display: flex;
-    height: 52px;
-    align-items: center;
-    gap: 7px;
-    padding: 0 18px;
-    color: rgba(255,255,255,0.72);
-    font-size: 13.5px;
-    font-weight: 600;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.18s ease;
-    position: relative;
-}
+    .category-list a {
+        position: relative;
+        display: flex;
+        flex-shrink: 0;
+        height: 52px;
+        align-items: center;
+        gap: 7px;
+        padding: 0 18px;
+        border-radius: 8px;
+        color: rgba(255, 255, 255, .78);
+        font-size: 13.5px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .18s ease, color .18s ease;
+    }
 
-.category-list a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 18px;
-    right: 18px;
-    height: 2px;
-    border-radius: 2px 2px 0 0;
-    background: linear-gradient(90deg, #2563eb, #7c3aed);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
+        .category-list a::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 18px;
+            right: 18px;
+            height: 2px;
+            border-radius: 2px 2px 0 0;
+            background: #315efb;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
 
-.category-list a:hover {
-    color: #fff;
-    background: rgba(255,255,255,0.07);
-}
+        .category-list a:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, .07);
+        }
 
-.category-list a:hover::after {
-    opacity: 1;
-}
+            .category-list a:hover::after {
+                opacity: 1;
+            }
 
-.category-list a i {
-    font-size: 16px;
-    color: rgba(37,99,235,0.8);
-}
+        .category-list a i {
+            color: #7192ff;
+            font-size: 16px;
+        }
 
-.category-list a:hover i {
-    color: #60a5fa;
-}
+        .category-list a:hover i {
+            color: #a8bcff;
+        }
 
-
-/* ── MOBILE MENU ────────────────────────────────────────────────── */
+/* MOBILE MENU */
 .mobile-menu-button {
     display: none;
     margin-left: auto;
-    border: none;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.08);
-    color: white;
-    font-size: 24px;
     padding: 6px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+    font-size: 24px;
     cursor: pointer;
-    transition: background 0.18s;
+    transition: background .18s ease;
 }
 
-.mobile-menu-button:hover {
-    background: rgba(255,255,255,0.14);
-}
+    .mobile-menu-button:hover {
+        background: rgba(255, 255, 255, .14);
+    }
 
 .mobile-category-menu {
     display: flex;
     flex-direction: column;
     padding: 12px 20px;
-    background: rgba(8, 11, 24, 0.98);
-    border-top: 1px solid rgba(255,255,255,0.05);
+    background: rgba(8, 11, 24, .98);
+    border-top: 1px solid rgba(255, 255, 255, .05);
 }
 
-.mobile-category-menu a {
-    padding: 11px 0;
-    color: rgba(255,255,255,0.8);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    transition: color 0.15s;
+    /* Cho phép Bootstrap collapse và thuộc tính hidden ẩn menu */
+    .mobile-category-menu.collapse:not(.show),
+    .mobile-category-menu[hidden] {
+        display: none;
+    }
+
+    .mobile-category-menu a {
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .06);
+        color: rgba(255, 255, 255, .8);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color .15s ease;
+    }
+
+        .mobile-category-menu a:last-child {
+            border-bottom: 0;
+        }
+
+        .mobile-category-menu a:hover {
+            color: #a8bcff;
+        }
+
+/* KEYBOARD FOCUS */
+.emua-site-header a:focus-visible,
+.emua-site-header button:focus-visible {
+    outline: 2px solid #91aaff;
+    outline-offset: 3px;
 }
 
-.mobile-category-menu a:last-child { border-bottom: none; }
-.mobile-category-menu a:hover { color: #60a5fa; }
-
-
-/* ── RESPONSIVE ────────────────────────────────────────────────── */
+/* RESPONSIVE */
 @media (max-width: 992px) {
-    .main-header-wrapper { flex-wrap: wrap; }
+    .main-header-wrapper {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
     .emua-search {
         order: 3;
         flex-basis: 100%;
     }
-    .emua-header-actions { margin-left: auto; }
+
+    .emua-header-actions {
+        margin-left: auto;
+    }
+
     .category-list {
         overflow-x: auto;
         white-space: nowrap;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
-    .category-list::-webkit-scrollbar { display: none; }
+
+        .category-list::-webkit-scrollbar {
+            display: none;
+        }
 }
 
 @media (max-width: 650px) {
     .emua-topbar,
     .emua-header-actions,
-    .emua-category-nav { display: none; }
-    .mobile-menu-button { display: block; }
+    .emua-category-nav {
+        display: none;
+    }
+
+    .mobile-menu-button {
+        display: block;
+    }
+
+    .main-header-wrapper {
+        padding: 12px 0;
+    }
+
+    .emua-logo {
+        min-width: 120px;
+    }
+
+    .emua-logo-text .emua-wordmark {
+        width: 120px;
+        height: 38px;
+    }
+
+    .emua-search {
+        height: 44px;
+    }
+
+        .emua-search input {
+            font-size: 16px;
+        }
 }
 
 @media (max-width: 400px) {
-    .emua-logo-text span { display: none; }
+    .emua-logo-text span {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .emua-site-header *,
+    .emua-site-header *::after {
+        transition: none !important;
+    }
 }
