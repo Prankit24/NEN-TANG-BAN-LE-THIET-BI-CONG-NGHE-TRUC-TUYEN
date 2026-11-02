@@ -1,142 +1,56 @@
 @model IEnumerable<EMua.Models.Database.ThuongHieu>
+@using System.Linq
+@using System.Collections.Generic
+@using System
+@functions {
+    private string Asset(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var path = value.Trim().Replace("\\", "/");
+        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
+        path = path.TrimStart('~', '/');
+        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
+        return Url.Content("~/" + path);
+    }
+}
 
+<section class="ep-section" id="brands" aria-labelledby="brand-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div class="ep-heading-left">
+                <span class="ep-eyebrow">
+                    <i class="bi bi-patch-check-fill" aria-hidden="true"></i> ĐỐI TÁC CHIẾN LƯỢC
+                </span>
+                <h2 id="brand-heading">Thương hiệu chính hãng</h2>
+                <p>EMUA tự hào là đại lý phân phối chính thức của các tập đoàn công nghệ hàng đầu thế giới.</p>
+            </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Xem tất cả</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
 
-<section class="emua-brands-section">
-
-    <div class="emua-brands-container">
-
-        <div class="emua-brands-heading">
-            <div class="brands-tag">THƯƠNG HIỆU</div>
-            <h2 class="brands-title">Thương hiệu nổi bật</h2>
-            <p class="brands-sub">Những thương hiệu công nghệ hàng đầu tại EMUA.</p>
-        </div>
-
-
-        <div class="emua-brands-grid">
-
-            @foreach (var item in Model)
+        <div class="ep-brands">
+            @if (Model != null && Model.Any())
             {
-                <a asp-controller="Product" asp-action="Index" asp-route-brand="@item.TenThuongHieu"
-                   class="emua-brand-card">
-
-                    @if (!string.IsNullOrWhiteSpace(item.Logo))
-                    {
-                        <img src="@item.Logo" alt="@item.TenThuongHieu" loading="lazy" />
-                    }
-                    else
-                    {
-                        <strong>@item.TenThuongHieu</strong>
-                    }
-
-                </a>
+                foreach (var item in Model)
+                {
+                    <a class="ep-brand-tile" asp-area="" asp-controller="Product" asp-action="Index" asp-route-brandId="@item.MaThuongHieu" title="@item.TenThuongHieu">
+                        @if (!string.IsNullOrWhiteSpace(item.Logo))
+                        {
+                            <img src="@Asset(item.Logo)" alt="@item.TenThuongHieu" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
+                            <strong hidden>@item.TenThuongHieu</strong>
+                        }
+                        else
+                        {
+                            <strong>@item.TenThuongHieu</strong>
+                        }
+                    </a>
+                }
             }
-
+            else
+            {
+                <p class="ep-empty">Thương hiệu đang được cập nhật.</p>
+            }
         </div>
-
     </div>
-
 </section>
-
-
-<style>
-
-    .emua-brands-section {
-        padding: 80px 0 100px;
-        background: #fff;
-    }
-
-    .emua-brands-container {
-        width: min(1400px, 92%);
-        margin: auto;
-    }
-
-    .emua-brands-heading { margin-bottom: 36px; }
-
-    .brands-tag {
-        display: inline-flex;
-        padding: 4px 14px;
-        border-radius: 999px;
-        background: rgba(37,99,235,.07);
-        color: #2563eb;
-        font-size: 10.5px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        margin-bottom: 10px;
-    }
-
-    .brands-title {
-        margin: 0;
-        font-size: clamp(24px, 3vw, 34px);
-        font-weight: 900;
-        color: #0f172a;
-        letter-spacing: -0.8px;
-    }
-
-    .brands-sub {
-        margin: 8px 0 0;
-        color: #94a3b8;
-        font-size: 14px;
-    }
-
-    .emua-brands-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 16px;
-    }
-
-    .emua-brand-card {
-        min-height: 110px;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 18px;
-        border: 1.5px solid rgba(0,0,0,0.05);
-        background: #fafbff;
-        text-decoration: none;
-        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
-                    box-shadow 0.3s ease,
-                    border-color 0.25s ease;
-        filter: grayscale(30%);
-    }
-
-    .emua-brand-card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(37,99,235,.22);
-        box-shadow: 0 16px 40px rgba(37,99,235,0.1);
-        background: #fff;
-        filter: grayscale(0%);
-    }
-
-    .emua-brand-card img {
-        display: block;
-        max-width: 100%;
-        max-height: 56px;
-        object-fit: contain;
-        transition: transform 0.25s ease;
-    }
-
-    .emua-brand-card:hover img {
-        transform: scale(1.06);
-    }
-
-    .emua-brand-card strong {
-        color: #1e293b;
-        font-size: 17px;
-        font-weight: 800;
-    }
-
-
-    @@media (max-width: 1000px) {
-        .emua-brands-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    @@media (max-width: 700px) {
-        .emua-brands-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @@media (max-width: 480px) {
-        .emua-brands-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-</style>

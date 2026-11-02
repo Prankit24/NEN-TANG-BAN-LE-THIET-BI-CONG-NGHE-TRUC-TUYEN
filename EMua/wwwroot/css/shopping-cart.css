@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 /* ==========================================================
    1. TỔNG THỂ & HEADER (có nút Quay lại)
@@ -517,3 +517,54 @@
         font-size: 15px;
     }
 }
+
+/* Compact coupon picker: styles scoped to the cart component. */
+.emua-coupons { margin: 20px 0 24px; font-size: 13px; color: #26334a; }
+.emua-coupons [hidden] { display: none !important; }
+.emua-coupons details { border: 1px solid #dce3ee; border-radius: 12px; background: #fff; overflow: hidden; }
+.emua-coupons summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px; cursor: pointer; list-style: none; font-weight: 700; color: #264cba; background: #f5f8ff; }
+.emua-coupons summary::-webkit-details-marker { display: none; }
+.emua-coupons summary i { margin-right: 7px; }
+.emua-coupons .ec-chevron { font-size: 20px; transition: transform .18s; }
+.emua-coupons details[open] .ec-chevron { transform: rotate(180deg); }
+.emua-coupons .ec-panel { padding: 14px; border-top: 1px solid #e3e9f4; }
+.emua-coupons .ec-panel-heading { display: grid; gap: 4px; margin-bottom: 14px; }
+.emua-coupons .ec-panel-heading strong { font-size: 13px; }
+.emua-coupons .ec-panel-heading small { font-size: 11px; color: #65738a; line-height: 1.5; }
+.emua-coupons .ec-list { display: grid; gap: 10px; }
+.emua-coupons .ec-ticket { padding: 13px; border: 1px solid #dde5f2; border-radius: 10px; background: #fafcff; min-width: 0; }
+.emua-coupons .ec-ticket-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; align-items: center; }
+.emua-coupons .ec-code { font-size: 13px; letter-spacing: .3px; overflow-wrap: anywhere; }
+.emua-coupons .ec-value { color: #2451bc; background: #eaf0ff; padding: 3px 7px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.emua-coupons .ec-name { font-size: 12px; line-height: 1.5; margin: 8px 0 5px; overflow-wrap: anywhere; }
+.emua-coupons .ec-condition, .emua-coupons .ec-expiry { font-size: 11px; color: #65738a; margin: 3px 0; line-height: 1.5; }
+.emua-coupons .ec-ticket-footer { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d7e0ee; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.emua-coupons .ec-saving { color: #13734c; font-weight: 600; font-size: 11px; }
+.emua-coupons button { cursor: pointer; font: inherit; border: 1px solid #cdd9f1; border-radius: 7px; padding: 8px 10px; background: #fff; color: #254fb7; font-weight: 600; min-height: 36px; }
+.emua-coupons button:hover:not(:disabled) { background: #eaf0ff; border-color: #8aa5e3; }
+.emua-coupons button:disabled { opacity: .5; cursor: default; }
+.emua-coupons button[data-applied="true"] { color: #13734c; border-color: #bbdfcc; background: #eef8f2; opacity: 1; }
+.emua-coupons .ec-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 14px; }
+.emua-coupons .ec-pagination button { width: 36px; padding: 3px; font-size: 22px; }
+.emua-coupons .ec-pagination span { color: #65738a; font-size: 12px; font-variant-numeric: tabular-nums; }
+.emua-coupons .ec-list-status { font-size: 12px; line-height: 1.6; color: #65738a; margin: 8px 0 0; }
+.emua-coupons .ec-list-status:empty { display: none; }
+.emua-coupons .ec-retry { margin-top: 10px; }
+.emua-coupons .ec-manual { margin-top: 15px; }
+.emua-coupons .ec-manual label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 600; }
+.emua-coupons .ec-input-row { display: flex; gap: 8px; }
+.emua-coupons input { flex: 1; width: 0; min-width: 0; border: 1px solid #d6deea; border-radius: 8px; padding: 11px; font: inherit; color: #26334a; background: #fff; }
+.emua-coupons .ec-input-row button { background: #2855c5; color: #fff; border-color: #2855c5; white-space: nowrap; }
+.emua-coupons .ec-input-row button:hover:not(:disabled) { background: #1f43a2; }
+.emua-coupons .ec-applied { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding: 10px; border-radius: 8px; background: #eef8f2; color: #166441; }
+.emua-coupons .ec-applied span { min-width: 0; overflow-wrap: anywhere; }
+.emua-coupons .ec-applied button { flex-shrink: 0; color: #4b5a70; border-color: transparent; background: transparent; }
+.emua-coupons .ec-message { padding: 11px 12px; border-radius: 8px; margin: 12px 0 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.emua-coupons .ec-message.is-error { background: #fff3ef; color: #983c26; border: 1px solid #f1d4ca; }
+.emua-coupons .ec-message.is-success { background: #eef8f2; color: #166441; border: 1px solid #c8e5d4; }
+.emua-coupons :is(button, input, summary):focus-visible { outline: 3px solid #9ab7ff; outline-offset: 2px; }
+.cart-container > .customer-alert { padding: 14px 18px; border-radius: 10px; margin-bottom: 18px; font-size: 14px; line-height: 1.6; }
+.cart-container > .customer-alert.error { color: #983c26; background: #fff3ef; border: 1px solid #f1d4ca; }
+.cart-container > .customer-alert.success { color: #166441; background: #eef8f2; border: 1px solid #c8e5d4; }
+@media (max-width: 480px) { .emua-coupons .ec-panel { padding: 10px; } .emua-coupons input { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .emua-coupons .ec-chevron { transition: none; } }

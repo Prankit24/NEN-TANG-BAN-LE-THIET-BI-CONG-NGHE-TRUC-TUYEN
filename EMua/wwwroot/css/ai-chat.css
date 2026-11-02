@@ -590,3 +590,16 @@
         font-size: 16px;
     }
 }
+/* Không để lớp AI chặn thao tác trên website */
+.emua-ai-wrapper {
+    pointer-events: none;
+}
+
+    /* Cho phép tương tác với các thành phần AI */
+    .emua-ai-wrapper button,
+    .emua-ai-wrapper input,
+    .emua-ai-wrapper textarea,
+    .emua-ai-wrapper a,
+    .emua-ai-wrapper select {
+        pointer-events: auto;
+    }

@@ -1,5 +1,10 @@
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using EMua.Services.AI;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace EMua.Controllers
 {
@@ -8,15 +13,18 @@ namespace EMua.Controllers
         private readonly DomainClassifier _domainClassifier;
         private readonly GeminiService _geminiService;
         private readonly RecommendationService _recommendationService;
+        private readonly ILogger<AIController> _logger;
 
         public AIController(
             DomainClassifier domainClassifier,
             GeminiService geminiService,
-            RecommendationService recommendationService)
+            RecommendationService recommendationService,
+            ILogger<AIController> logger)
         {
             _domainClassifier = domainClassifier;
             _geminiService = geminiService;
             _recommendationService = recommendationService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -32,31 +40,60 @@ namespace EMua.Controllers
                 });
             }
 
-            // 1. Kiểm tra domain xem có phải câu hỏi công nghệ hay không
-            var prediction =
-                _domainClassifier.Predict(request.Message);
-            if (!prediction.IsTechnology)
-            {
-                return Json(new
-                {
-                    domain = "NonTechnology",
-                    message =
-                        "Tôi là trợ lý công nghệ của EMUA. " +
-                        "Tôi chỉ hỗ trợ các câu hỏi liên quan đến " +
-                        "công nghệ, thiết bị và sản phẩm tại EMUA."
-                });
-            }
+            var stage = "Phân loại câu hỏi";
 
             try
             {
-                // 2. Lấy dữ liệu sản phẩm thực tế từ Database để làm ngữ cảnh tư vấn
-                var productContext = await _recommendationService.GetProductContextAsync(request.Message);
+                var prediction =
+                    _domainClassifier.Predict(request.Message);
 
-                // 3. Ghép ngữ cảnh cửa hàng vào câu hỏi của khách để Gemini tổng hợp câu trả lời chính xác
-                var promptWithContext = $"{productContext}\n\nYêu cầu của khách hàng: {request.Message}\nHãy tư vấn sản phẩm phù hợp dựa vào danh sách sản phẩm thực tế của cửa hàng ở trên.";
+                if (!prediction.IsTechnology)
+                {
+                    return Json(new
+                    {
+                        domain = "NonTechnology",
+                        message =
+                            "Tôi là trợ lý công nghệ của EMUA. " +
+                            "Tôi chỉ hỗ trợ các câu hỏi liên quan đến " +
+                            "công nghệ, thiết bị và sản phẩm tại EMUA.",
+                        isLimitReached = false
+                    });
+                }
+
+                stage = "Lấy dữ liệu sản phẩm";
+                _logger.LogInformation("EMUA AI: {Stage}", stage);
+
+                var productContext =
+                    await _recommendationService
+                        .GetProductContextAsync(request.Message);
+
+                var promptWithContext =
+                    "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
+                    productContext +
+                    "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
+                    request.Message;
+
+                stage = "Gọi Gemini";
+
+                // Chỉ ghi độ dài, không ghi API key hoặc nội dung khách.
+                _logger.LogInformation(
+                    "EMUA AI: {Stage}. Độ dài prompt: {Length} ký tự.",
+                    stage,
+                    promptWithContext.Length);
+
+                var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
 
                 var answer =
                     await _geminiService.AskAsync(promptWithContext);
+
+                geminiTimer.Stop();
+
+                _logger.LogInformation(
+                    "EMUA AI: Gemini trả lời sau {ElapsedMs} ms.",
+                    geminiTimer.ElapsedMilliseconds);
+
+                _logger.LogInformation(
+                    "EMUA AI: Đã nhận câu trả lời từ Gemini.");
 
                 return Json(new
                 {
@@ -65,19 +102,89 @@ namespace EMua.Controllers
                     isLimitReached = false
                 });
             }
-            catch (HttpRequestException ex)
-                when (ex.StatusCode ==
-                    System.Net.HttpStatusCode.TooManyRequests ||
-                      ex.StatusCode ==
-                    System.Net.HttpStatusCode.ServiceUnavailable)
+            catch (OperationCanceledException)
+                when (HttpContext.RequestAborted.IsCancellationRequested)
             {
-                return Json(new
+                // Trình duyệt đã ngắt yêu cầu.
+                return new EmptyResult();
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "EMUA AI: Hết thời gian chờ tại bước {Stage}.",
+                    stage);
+
+                return StatusCode(504, new
                 {
                     domain = "Technology",
                     message =
-                        "EMUA AI đang bận. Bạn vui lòng chờ ít phút, " +
-                        "chuyên viên tư vấn sẽ hỗ trợ bạn sớm.",
-                    isLimitReached = true
+                        "Dịch vụ tư vấn phản hồi quá lâu. " +
+                        "Bạn vui lòng thử lại sau.",
+                    errorCode = "AI_TIMEOUT",
+                    isLimitReached = false
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "EMUA AI: Lỗi HTTP tại bước {Stage}. Mã: {StatusCode}.",
+                    stage,
+                    ex.StatusCode);
+
+                var isRateLimited =
+                    ex.StatusCode == HttpStatusCode.TooManyRequests;
+
+                var message = ex.StatusCode switch
+                {
+                    HttpStatusCode.TooManyRequests =>
+                        "Dịch vụ AI đang vượt giới hạn sử dụng. " +
+                        "Bạn vui lòng thử lại sau.",
+
+                    HttpStatusCode.ServiceUnavailable =>
+                        "Dịch vụ AI tạm thời không khả dụng. " +
+                        "Bạn vui lòng thử lại sau.",
+
+                    HttpStatusCode.Unauthorized or
+                    HttpStatusCode.Forbidden =>
+                        "Dịch vụ AI đang gặp lỗi xác thực hoặc quyền truy cập.",
+
+                    HttpStatusCode.NotFound =>
+                        "Model AI đang cấu hình không khả dụng.",
+
+                    HttpStatusCode.BadRequest =>
+                        "Dịch vụ AI từ chối yêu cầu. " +
+                        "Cần kiểm tra cấu hình và dữ liệu gửi đi.",
+
+                    _ =>
+                        "Không thể kết nối ổn định với dịch vụ AI. " +
+                        "Bạn vui lòng thử lại sau."
+                };
+
+                return StatusCode(isRateLimited ? 503 : 502, new
+                {
+                    domain = "Technology",
+                    message,
+                    errorCode = "AI_UPSTREAM_ERROR",
+                    isLimitReached = isRateLimited
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "EMUA AI: Lỗi tại bước {Stage}.",
+                    stage);
+
+                return StatusCode(500, new
+                {
+                    domain = "Technology",
+                    message =
+                        "Hệ thống tư vấn đang gặp sự cố. " +
+                        "Bạn vui lòng thử lại sau.",
+                    errorCode = "AI_INTERNAL_ERROR",
+                    isLimitReached = false
                 });
             }
         }

@@ -2,104 +2,429 @@
 
 @{
     ViewData["Title"] = "Chọn phương thức thanh toán";
-    string selectedMethod = ViewBag.PaymentMethod as string ?? Model.PaymentMethod ?? "COD";
+
+    var selectedMethod =
+        ViewBag.PaymentMethod as string
+        ?? Model.PaymentMethod
+        ?? "COD";
+
+    var vi = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
 }
 
-<link rel="stylesheet" href="~/css/payment.css" asp-append-version="true" />
+<link rel="stylesheet"
+      href="~/css/payment.css"
+      asp-append-version="true" />
 
-<div class="customer-page container py-4">
+<style>
+    .emua-payment .checkout-review-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .emua-payment .checkout-validation {
+        grid-column: 1 / -1;
+        padding: 12px 16px;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        background: #fff1f2;
+        color: #b42318;
+        line-height: 1.6;
+    }
+
+    .emua-payment .validation-summary-valid {
+        display: none;
+    }
+
+    .emua-payment .checkout-validation ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .emua-payment .form-panel,
+    .emua-payment .summary-card {
+        min-width: 0;
+    }
+
+    .emua-payment .payment-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .18s, background .18s;
+    }
+
+        .emua-payment .payment-option:hover {
+            border-color: #a5b4fc;
+            background: #fafaff;
+        }
+
+        .emua-payment .payment-option.is-selected {
+            border-color: #5145e5;
+            background: #f5f4ff;
+        }
+
+        .emua-payment .payment-option input {
+            flex: 0 0 auto;
+            width: 18px;
+            height: 18px;
+            margin: 3px 0 0;
+            accent-color: #5145e5;
+        }
+
+    .emua-payment .payment-option-copy {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+    }
+
+        .emua-payment .payment-option-copy strong {
+            color: #1e293b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .emua-payment .payment-option-copy small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+    .emua-payment .payment-method-note {
+        margin: -3px 0 16px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .emua-payment [hidden] {
+        display: none !important;
+    }
+
+    .emua-payment .coupon-field label {
+        display: block;
+        margin-bottom: 8px;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    .emua-payment .coupon-input-row {
+        display: flex;
+        gap: 8px;
+    }
+
+        .emua-payment .coupon-input-row input {
+            flex: 1;
+            width: 0;
+            min-width: 0;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid #dbe1ec;
+            border-radius: 9px;
+            background: #fff;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+            .emua-payment .coupon-input-row input[aria-invalid="true"] {
+                border-color: #dc6b58;
+            }
+
+    .emua-payment .coupon-apply {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 9px;
+        background: #5145e5;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .emua-payment .coupon-apply:hover:not(:disabled) {
+            background: #4034c8;
+        }
+
+    .emua-payment button:disabled {
+        opacity: .6;
+        cursor: wait;
+    }
+
+    .emua-payment .coupon-message {
+        margin: 10px 0 0;
+        padding: 10px 12px;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+        .emua-payment .coupon-message.is-success {
+            background: #eef8f2;
+            border-color: #c8e5d4;
+            color: #166441;
+        }
+
+        .emua-payment .coupon-message.is-error {
+            background: #fff3ef;
+            border-color: #f1d4ca;
+            color: #983c26;
+        }
+
+        .emua-payment .coupon-message.is-info {
+            background: #eff4ff;
+            border-color: #d6e2ff;
+            color: #294d92;
+        }
+
+    .emua-payment .coupon-applied {
+        margin: 10px 0 0;
+        color: #166441;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .emua-payment .summary-heading {
+        margin-top: 24px;
+    }
+
+    .emua-payment .review-actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+        .emua-payment .review-actions .customer-button {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
+
+    .emua-payment :is(input, button, a):focus-visible {
+        outline: 3px solid #a5b4fc;
+        outline-offset: 3px;
+    }
+
+    @@media (max-width: 900px) {
+        .emua-payment .checkout-review-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .emua-payment .summary-card {
+            position: static;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .emua-payment .coupon-input-row input {
+            font-size: 16px;
+        }
+
+        .emua-payment .payment-option {
+            padding: 13px;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .emua-payment .payment-option {
+            transition: none;
+        }
+    }
+</style>
+
+<div class="customer-page container py-4 emua-payment">
     <partial name="_CheckoutSteps" model="2" />
 
     <div class="customer-heading compact mb-4">
         <div>
             <span class="eyebrow">BƯỚC 2 / 3</span>
             <h1>Phương thức thanh toán</h1>
-            <p>Chọn phương thức thanh toán phù hợp với bạn.</p>
+            <p>Chọn cách thanh toán và kiểm tra ưu đãi cho đơn hàng.</p>
         </div>
     </div>
 
-    <form asp-action="Payment" method="post" class="checkout-review-layout">
+    <form id="paymentForm"
+          asp-controller="Checkout"
+          asp-action="Payment"
+          method="post"
+          class="checkout-review-layout"
+          data-coupon-url="@Url.Action("ApplyCoupon", "Checkout")"
+          data-login-url="@Url.Action("Login", "Auth", new { returnUrl = Url.Action("Payment", "Checkout") })">
+
         @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="All"
+             class="checkout-validation"
+             role="alert"></div>
 
         <section class="form-panel">
             <h2>Lựa chọn thanh toán</h2>
 
-            <!-- Option 1: COD -->
-            <label class="form-check p-3 mb-2 cursor-pointer">
-                <input type="radio" name="paymentMethod" value="COD" class="form-check-input" @(selectedMethod == "COD" ? "checked" : "") onchange="togglePaymentDetails('COD')" />
-                <span class="form-check-label ms-2">
-                    <i class="bi bi-cash-stack text-success me-2 fs-5"></i>
-                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+            <label class="payment-option @(selectedMethod == "COD" ? "is-selected" : "")">
+                <input type="radio"
+                       name="paymentMethod"
+                       value="COD"
+                       checked="@(selectedMethod == "COD")"
+                       required />
+
+                <span class="payment-option-copy">
+                    <strong>
+                        <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                        Thanh toán khi nhận hàng
+                    </strong>
+                    <small>Thanh toán cho đơn vị vận chuyển khi nhận sản phẩm.</small>
                 </span>
             </label>
 
-            <!-- Option 2: BANK QR -->
-            <label class="form-check p-3 mb-2 cursor-pointer">
-                <input type="radio" name="paymentMethod" value="BANK_TRANSFER" class="form-check-input" @(selectedMethod == "BANK_TRANSFER" ? "checked" : "") onchange="togglePaymentDetails('BANK_TRANSFER')" />
-                <span class="form-check-label ms-2">
-                    <i class="bi bi-qr-code-scan text-primary me-2 fs-5"></i>
-                    <strong>Chuyển khoản Ngân hàng (VietQR / MB Bank)</strong>
+            <label class="payment-option @(selectedMethod == "BANK_TRANSFER" ? "is-selected" : "")">
+                <input type="radio"
+                       name="paymentMethod"
+                       value="BANK_TRANSFER"
+                       checked="@(selectedMethod == "BANK_TRANSFER")"
+                       aria-controls="bank-details-box" />
+
+                <span class="payment-option-copy">
+                    <strong>
+                        <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                        Chuyển khoản ngân hàng
+                    </strong>
+                    <small>Thanh toán qua VietQR / MB Bank.</small>
                 </span>
             </label>
 
-            <!-- Box thông tin QR Bank -->
-            <div id="bank-details-box" class="payment-notice alert alert-info mt-2" style="display: none;">
-                <div class="d-flex flex-column flex-sm-row align-items-center gap-3">
-                    <img src="https://img.vietqr.io/image/MB-0963453170-compact2.png?accountName=PHAN%20DANG%20PHUONG%20ANH" alt="QR MB Bank" style="width: 140px; height: 140px;" class="rounded border" />
-                    <div class="small">
-                        <h6 class="fw-bold mb-1 text-primary"><i class="bi bi-bank me-1"></i>Thông tin MB Bank</h6>
-                        <p class="mb-1">Số TK: <strong class="fs-6 text-dark">0963453170</strong></p>
-                        <p class="mb-1">Chủ TK: <strong>PHAN DANG PHUONG ANH</strong></p>
-                        <p class="mb-0 text-muted">* Bạn có thể quét mã QR thanh toán ngay bây giờ.</p>
-                    </div>
-                </div>
+            <div id="bank-details-box"
+                 class="payment-method-note"
+                 hidden="@(selectedMethod != "BANK_TRANSFER")">
+                Mã QR và nội dung chuyển khoản theo đơn hàng sẽ được hiển thị
+                sau khi bạn xác nhận đặt hàng.
             </div>
 
-            <!-- Option 3: WEB3 -->
-            <label class="form-check p-3 mb-2 cursor-pointer">
-                <input type="radio" name="paymentMethod" value="WEB3" class="form-check-input" @(selectedMethod == "WEB3" ? "checked" : "") onchange="togglePaymentDetails('WEB3')" />
-                <span class="form-check-label ms-2">
-                    <i class="bi bi-wallet2 text-warning me-2 fs-5"></i>
-                    <strong>Ví Web3 (Crypto / USDT)</strong>
+            <label class="payment-option @(selectedMethod == "WEB3" ? "is-selected" : "")">
+                <input type="radio"
+                       name="paymentMethod"
+                       value="WEB3"
+                       checked="@(selectedMethod == "WEB3")"
+                       aria-controls="web3-details-box" />
+
+                <span class="payment-option-copy">
+                    <strong>
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>
+                        Ví Web3
+                    </strong>
+                    <small>Chọn thanh toán bằng tiền mã hóa.</small>
                 </span>
             </label>
 
-            <!-- Box thông tin Web3 -->
-            <div id="web3-details-box" class="payment-notice alert alert-warning mt-2" style="display: none;">
-                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-currency-bitcoin me-1"></i>Địa chỉ ví nhận USDT (BEP20 / ERC20)</h6>
-                <code class="d-block p-2 bg-dark text-warning rounded mt-2 text-break">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</code>
+            <div id="web3-details-box"
+                 class="payment-method-note"
+                 hidden="@(selectedMethod != "WEB3")">
+                Kiểm tra hướng dẫn thanh toán, mạng chuyển và số tiền
+                sau khi tạo đơn hàng.
             </div>
         </section>
 
         <aside class="summary-card">
             <h2>Mã giảm giá</h2>
-            <div class="form-group mb-3">
-                <input name="couponCode" value="@Model.CouponCode" class="form-control" placeholder="Nhập mã giảm giá (nếu có)" />
+
+            <div class="coupon-field">
+                <label for="checkoutCouponCode">
+                    Nhập mã ưu đãi của bạn
+                </label>
+
+                <div class="coupon-input-row">
+                    <input id="checkoutCouponCode"
+                           name="couponCode"
+                           value="@Model.CouponCode"
+                           maxlength="50"
+                           autocomplete="off"
+                           placeholder="Nhập mã giảm giá"
+                           aria-describedby="couponStatus couponApplied" />
+
+                    <button id="applyCouponButton"
+                            type="button"
+                            class="coupon-apply">
+                        Áp dụng
+                    </button>
+                </div>
+
+                <p id="couponApplied"
+                   class="coupon-applied"
+                   hidden="@(string.IsNullOrWhiteSpace(Model.CouponCode) || Model.Discount <= 0)">
+                    Đang áp dụng:
+                    <strong id="appliedCouponCode">@Model.CouponCode</strong>
+                </p>
+
+                <p id="couponStatus"
+                   class="coupon-message"
+                   role="status"
+                   aria-live="polite"
+                   aria-atomic="true"
+                   hidden></p>
+
+                <a id="couponLoginLink"
+                   class="back-link"
+                   href="@Url.Action("Login", "Auth", new { returnUrl = Url.Action("Payment", "Checkout") })"
+                   hidden>
+                    Đăng nhập lại
+                </a>
             </div>
 
-            <h2>Tóm tắt đơn hàng</h2>
+            <h2 class="summary-heading">Tóm tắt đơn hàng</h2>
+
             <div class="summary-line">
                 <span>Tạm tính</span>
-                <strong>@Model.Subtotal.ToString("N0") đ</strong>
-            </div>
-            <div class="summary-line discount">
-                <span>Giảm giá</span>
-                <strong>-@Model.Discount.ToString("N0") đ</strong>
-            </div>
-            <div class="summary-line">
-                <span>Vận chuyển</span>
-                <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
-            </div>
-            <hr />
-            <div class="summary-total">
-                <span>Tổng cần thanh toán</span>
-                <strong>@Model.Total.ToString("N0") đ</strong>
+                <strong>@Model.Subtotal.ToString("N0", vi) đ</strong>
             </div>
 
-            <div class="review-actions mt-3">
-                <a asp-action="Index" class="customer-button customer-button-light">Quay lại</a>
-                <button class="customer-button" type="submit">
-                    Tiếp tục: Xác nhận <i class="bi bi-arrow-right"></i>
+            <div class="summary-line discount">
+                <span>Giảm giá</span>
+                <strong id="checkoutDiscount">
+                    -@Model.Discount.ToString("N0", vi) đ
+                </strong>
+            </div>
+
+            <div class="summary-line">
+                <span>Vận chuyển</span>
+                <strong id="checkoutShipping">
+                    @(Model.ShippingFee == 0
+                                        ? "Miễn phí"
+                                        : Model.ShippingFee.ToString("N0", vi) + " đ")
+                </strong>
+            </div>
+
+            <hr />
+
+            <div class="summary-total">
+                <span>Tổng cần thanh toán</span>
+                <strong id="checkoutTotal">
+                    @Model.Total.ToString("N0", vi) đ
+                </strong>
+            </div>
+
+            <div class="review-actions">
+                <a asp-controller="Checkout"
+                   asp-action="Index"
+                   class="customer-button customer-button-light">
+                    Quay lại
+                </a>
+
+                <button id="continuePaymentButton"
+                        class="customer-button"
+                        type="submit">
+                    Tiếp tục: Xác nhận
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
                 </button>
             </div>
         </aside>
@@ -108,16 +433,231 @@
 
 @section Scripts {
     <script>
-        function togglePaymentDetails(method) {
-            document.getElementById('bank-details-box').style.display = (method === 'BANK_TRANSFER') ? 'block' : 'none';
-            document.getElementById('web3-details-box').style.display = (method === 'WEB3') ? 'block' : 'none';
-        }
+        (function () {
+            'use strict';
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
-            if (checkedRadio) {
-                togglePaymentDetails(checkedRadio.value);
+            const form = document.getElementById('paymentForm');
+            if (!form) return;
+
+            const input = document.getElementById('checkoutCouponCode');
+            const applyButton = document.getElementById('applyCouponButton');
+            const continueButton = document.getElementById('continuePaymentButton');
+            const status = document.getElementById('couponStatus');
+            const loginLink = document.getElementById('couponLoginLink');
+
+            let applying = false;
+
+            const formatMoney = value =>
+                Number(value).toLocaleString('vi-VN', {
+                    maximumFractionDigits: 0
+                }) + ' đ';
+
+            function showStatus(message, type) {
+                status.textContent = message;
+                status.className = 'coupon-message is-' + type;
+                status.hidden = false;
             }
-        });
+
+            function setBusy(value) {
+                applying = value;
+                applyButton.disabled = value;
+                continueButton.disabled = value;
+                input.readOnly = value;
+
+                applyButton.textContent = value
+                    ? 'Đang kiểm tra…'
+                    : 'Áp dụng';
+
+                form.setAttribute('aria-busy', String(value));
+            }
+
+            function updatePaymentDetails() {
+                const selected = form.querySelector(
+                    'input[name="paymentMethod"]:checked'
+                );
+
+                const method = selected?.value || 'COD';
+
+                document.getElementById('bank-details-box').hidden =
+                    method !== 'BANK_TRANSFER';
+
+                document.getElementById('web3-details-box').hidden =
+                    method !== 'WEB3';
+
+                form.querySelectorAll('.payment-option').forEach(option => {
+                    const radio = option.querySelector(
+                        'input[name="paymentMethod"]'
+                    );
+
+                    option.classList.toggle(
+                        'is-selected',
+                        Boolean(radio?.checked)
+                    );
+                });
+            }
+
+            async function applyCoupon() {
+                if (applying) return;
+
+                const code = input.value.trim();
+
+                loginLink.hidden = true;
+                input.removeAttribute('aria-invalid');
+
+                if (!code) {
+                    showStatus('Vui lòng nhập mã giảm giá.', 'error');
+                    input.setAttribute('aria-invalid', 'true');
+                    input.focus();
+                    return;
+                }
+
+                const token = form.querySelector(
+                    'input[name="__RequestVerificationToken"]'
+                )?.value;
+
+                if (!token) {
+                    showStatus(
+                        'Không tìm thấy mã bảo mật. Vui lòng tải lại trang.',
+                        'error'
+                    );
+                    return;
+                }
+
+                setBusy(true);
+                showStatus('Đang kiểm tra mã giảm giá…', 'info');
+
+                try {
+                    const response = await fetch(form.dataset.couponUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            couponCode: code
+                        })
+                    });
+
+                    if (
+                        response.status === 401 ||
+                        response.status === 403 ||
+                        response.redirected
+                    ) {
+                        showStatus(
+                            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+                            'error'
+                        );
+
+                        loginLink.hidden = false;
+                        return;
+                    }
+
+                    const contentType =
+                        response.headers.get('content-type') || '';
+
+                    if (!contentType.includes('application/json')) {
+                        throw new Error(
+                            response.status === 400
+                                ? 'Phiên bảo mật đã hết hạn hoặc yêu cầu không hợp lệ. Vui lòng tải lại trang.'
+                                : 'Máy chủ chưa thể xử lý mã giảm giá. Vui lòng thử lại.'
+                        );
+                    }
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        input.setAttribute('aria-invalid', 'true');
+
+                        throw new Error(
+                            result.message ||
+                            'Không thể áp dụng mã giảm giá này.'
+                        );
+                    }
+
+                    const discount = Number(result.discount);
+                    const total = Number(result.total);
+                    const shipping = Number(result.shippingFee);
+
+                    if (
+                        !Number.isFinite(discount) ||
+                        !Number.isFinite(total) ||
+                        !Number.isFinite(shipping)
+                    ) {
+                        throw new Error(
+                            'Phản hồi tổng tiền không hợp lệ. Vui lòng tải lại trang để kiểm tra.'
+                        );
+                    }
+
+                    input.value = result.couponCode || code;
+
+                    document.getElementById('checkoutDiscount').textContent =
+                        '-' + formatMoney(discount);
+
+                    document.getElementById('checkoutTotal').textContent =
+                        formatMoney(total);
+
+                    document.getElementById('checkoutShipping').textContent =
+                        shipping === 0 ? 'Miễn phí' : formatMoney(shipping);
+
+                    document.getElementById('appliedCouponCode').textContent =
+                        input.value;
+
+                    document.getElementById('couponApplied').hidden = false;
+
+                    showStatus(
+                        'Đã áp dụng ' + input.value +
+                        ' — giảm ' + formatMoney(discount) + '.',
+                        'success'
+                    );
+                } catch (error) {
+                    showStatus(
+                        error instanceof TypeError
+                            ? 'Chưa nhận được phản hồi từ máy chủ. Kiểm tra kết nối và tải lại trang để xác nhận mã đang dùng.'
+                            : error.message || 'Không thể áp dụng mã. Vui lòng thử lại.',
+                        'error'
+                    );
+                } finally {
+                    setBusy(false);
+                }
+            }
+
+            applyButton.addEventListener('click', applyCoupon);
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    applyCoupon();
+                }
+            });
+
+            input.addEventListener('input', function () {
+                input.removeAttribute('aria-invalid');
+
+                showStatus(
+                    'Bạn đã sửa mã. Bấm Áp dụng để cập nhật số tiền; tổng tiền đang hiển thị là kết quả trước đó.',
+                    'info'
+                );
+            });
+
+            form.querySelectorAll(
+                'input[name="paymentMethod"]'
+            ).forEach(radio => {
+                radio.addEventListener('change', updatePaymentDetails);
+            });
+
+            form.addEventListener('submit', function (event) {
+                if (applying) {
+                    event.preventDefault();
+
+                    showStatus(
+                        'Vui lòng chờ kiểm tra mã giảm giá hoàn tất.',
+                        'info'
+                    );
+                }
+            });
+
+            updatePaymentDetails();
+        })();
     </script>
 }

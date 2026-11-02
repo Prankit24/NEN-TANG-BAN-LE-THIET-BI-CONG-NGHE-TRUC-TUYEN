@@ -1,0 +1,172 @@
+﻿/* ===== BANNER CHÍNH ===== */
+
+.emua-banner-section {
+    padding: 24px 0;
+    background: #f5f6f8;
+}
+
+.emua-banner-container {
+    width: min(1280px, calc(100% - 48px));
+    margin: 0 auto;
+}
+
+.emua-banner-link {
+    display: block;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #101010;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.emua-banner-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    border: 0;
+}
+
+.emua-banner-link:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 5px;
+}
+
+/* ===== CĂN CHỈNH CÁC PHẦN TRANG CHỦ ===== */
+
+.ep .ep-container {
+    width: min(1280px, calc(100% - 48px));
+}
+
+.ep.ep-section {
+    padding: 44px 0;
+}
+
+.ep .ep-heading {
+    margin-bottom: 24px;
+}
+
+    .ep .ep-heading h2 {
+        font-size: clamp(23px, 2.4vw, 30px);
+        font-weight: 700;
+        letter-spacing: -0.6px;
+    }
+
+    .ep .ep-heading p {
+        margin-top: 8px;
+        line-height: 1.65;
+    }
+
+.ep .ep-products {
+    gap: 18px;
+}
+
+.ep .ep-card {
+    border-radius: 12px;
+}
+
+    .ep .ep-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    }
+
+.ep .ep-picture {
+    height: 225px;
+    padding: 32px 24px 20px;
+}
+
+.ep .ep-card-body {
+    padding: 18px;
+}
+
+.ep .ep-product-name {
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 42px;
+}
+
+.ep .ep-price {
+    font-size: 21px;
+    font-weight: 750;
+}
+
+.ep .ep-cart {
+    min-height: 44px;
+    border-radius: 7px;
+}
+
+/* ===== TABLET ===== */
+
+@media (max-width: 800px) {
+    .emua-banner-container,
+    .ep .ep-container {
+        width: calc(100% - 32px);
+    }
+
+    .emua-banner-section {
+        padding: 16px 0;
+    }
+
+    .ep.ep-section {
+        padding: 32px 0;
+    }
+
+    .ep .ep-products {
+        gap: 12px;
+    }
+
+    .ep .ep-picture {
+        height: 200px;
+        padding: 30px 18px 18px;
+    }
+}
+
+/* ===== ĐIỆN THOẠI ===== */
+
+@media (max-width: 480px) {
+    .emua-banner-container,
+    .ep .ep-container {
+        width: calc(100% - 24px);
+    }
+
+    .emua-banner-section {
+        padding: 12px 0;
+    }
+
+    .emua-banner-link {
+        border-radius: 8px;
+    }
+
+    .ep .ep-products {
+        gap: 10px;
+    }
+
+    .ep .ep-picture {
+        height: 160px;
+        padding: 30px 12px 14px;
+    }
+
+    .ep .ep-card-body {
+        padding: 12px;
+    }
+
+    .ep .ep-product-name {
+        font-size: 12px;
+        min-height: 36px;
+    }
+
+    .ep .ep-price {
+        font-size: 17px;
+    }
+
+    .ep .ep-cart {
+        font-size: 11px;
+        gap: 5px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ep .ep-card:hover {
+        transform: none;
+    }
+}

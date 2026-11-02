@@ -97,7 +97,7 @@
                 @Html.AntiForgeryToken()
                 <div class="review-actions">
                     <a asp-action="Payment" class="customer-button customer-button-light">Quay lại</a>
-                    <button type="button" onclick="submitOrder()" class="customer-button">
+                    <button type="button" onclick="submitOrder(this)" class="customer-button">
                         Đặt hàng <i class="bi bi-check2"></i>
                     </button>
                 </div>
@@ -108,8 +108,8 @@
 
 @section Scripts {
     <script>
-        async function submitOrder() {
-            const btn = event.target;
+        async function submitOrder(btn) {
+            if (btn.disabled) return;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo đơn...';
 
@@ -119,11 +119,17 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json',
                         'RequestVerificationToken': token
                     }
                 });
 
-                const result = await response.json();
+                if (response.status === 401 || response.status === 403 || response.redirected) {
+                    window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent('/Checkout/Review');
+                    return;
+                }
+                const isJson = (response.headers.get('content-type') || '').includes('application/json');
+                const result = isJson ? await response.json() : { success: false, message: 'Phiên thanh toán không hợp lệ. Vui lòng tải lại trang.' };
                 if (result.success && result.redirectUrl) {
                     window.location.href = result.redirectUrl;
                 } else {

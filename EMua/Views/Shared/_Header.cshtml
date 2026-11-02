@@ -20,19 +20,21 @@
             "Auth",
             new { area = "", returnUrl = "/Cart" });
 
+    var favoriteUrl = isAuthenticated
+        ? Url.Action("Index", "Favorite", new { area = "" })
+        : Url.Action(
+            "Login",
+            "Auth",
+            new { area = "", returnUrl = "/Favorite" });
+
     var categories = new[]
     {
         new { Key = "Laptop", Name = "Laptop", Icon = "bi-laptop" },
         new { Key = "DienThoai", Name = "Điện thoại", Icon = "bi-phone" },
-        new { Key = "Gaming", Name = "Gaming", Icon = "bi-controller" },
-        new { Key = "PhuKien", Name = "Phụ kiện", Icon = "bi-box" },
+        new { Key = "Gaming", Name = "Gaming Gear", Icon = "bi-controller" },
         new { Key = "AmThanh", Name = "Âm thanh", Icon = "bi-headphones" },
-        new
-        {
-            Key = "ThietBiThongMinh",
-            Name = "Thiết bị thông minh",
-            Icon = "bi-smartwatch"
-        }
+        new { Key = "ThietBiThongMinh", Name = "Thiết bị thông minh", Icon = "bi-smartwatch" },
+        new { Key = "PhuKien", Name = "Phụ kiện", Icon = "bi-box-seam" }
     };
 
     var stores = new[]
@@ -40,127 +42,262 @@
         new
         {
             Name = "Cơ sở 1: Nguyễn Văn Linh",
-            Address = "1020 Nguyễn Văn Linh, Đà Nẵng"
+            Address = "1020 Nguyễn Văn Linh, Hải Châu, Đà Nẵng",
+            Phone = "0236 3888 101"
         },
         new
         {
             Name = "Cơ sở 2: Nguyễn Lương Bằng",
-            Address = "540 Nguyễn Lương Bằng, Đà Nẵng"
+            Address = "540 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng",
+            Phone = "0236 3888 102"
         },
         new
         {
             Name = "Cơ sở 3: Tôn Thất Đạm",
-            Address = "65 Tôn Thất Đạm, Đà Nẵng"
+            Address = "65 Tôn Thất Đạm, Thanh Khê, Đà Nẵng",
+            Phone = "0236 3888 103"
         },
         new
         {
             Name = "Cơ sở 4: Ngô Xuân Thu",
-            Address = "76 Ngô Xuân Thu, Đà Nẵng"
+            Address = "76 Ngô Xuân Thu, Liên Chiểu, Đà Nẵng",
+            Phone = "0236 3888 104"
         },
         new
         {
             Name = "Cơ sở Hà Nội: Ba Đình",
-            Address = "13 Ba Đình, Hà Nội"
+            Address = "13 Ba Đình, Ba Đình, Hà Nội",
+            Phone = "024 3888 2005"
         }
     };
 }
 
 <header class="emua-site-header">
 
-    <!-- TOPBAR -->
-    <div class="emua-topbar">
-        <div class="container-fluid emua-container">
-            <div class="topbar-content">
-                <span>🚀 Miễn phí vận chuyển đơn từ 500K</span>
-                <span class="topbar-divider" aria-hidden="true">|</span>
-                <span>Giao 2 giờ tại Đà Nẵng &amp; Hà Nội</span>
-                <span class="topbar-divider" aria-hidden="true">|</span>
-                <span>Hotline: <strong>1800 2005</strong></span>
+    <!-- 1. TOPBAR: Announcement Marquee (Chạy ngang mượt mà, thuần CSS, dừng khi hover/focus) -->
+    <div class="emua-topbar" role="region" aria-label="Thông báo ưu đãi">
+        <div class="emua-marquee-wrap">
+            <div class="emua-marquee-track">
+                <!-- Nhóm thông báo 1 (Chính) -->
+                <div class="emua-marquee-group">
+                    <span class="marquee-item">
+                        <i class="bi bi-truck text-primary" aria-hidden="true"></i>
+                        <span>Miễn phí vận chuyển đơn từ <strong>500K</strong></span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-lightning-charge-fill text-warning" aria-hidden="true"></i>
+                        <span>Giao 2 giờ tại <strong>Đà Nẵng &amp; Hà Nội</strong></span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-shield-check text-success" aria-hidden="true"></i>
+                        <span>100% Thiết bị chính hãng · Bảo hành 12 - 24 tháng</span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-telephone-fill text-info" aria-hidden="true"></i>
+                        <span>Hotline: <a href="tel:18002005" class="marquee-link"><strong>1800 2005</strong></a> (Miễn phí cước)</span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-shop text-primary" aria-hidden="true"></i>
+                        <a asp-area="" asp-controller="Home" asp-action="StoreLocations" class="marquee-link">Hệ thống @stores.Length showroom trải nghiệm công nghệ</a>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                </div>
+
+                <!-- Nhóm thông báo 2 (Bản sao tạo vòng lặp vô tận liền mạch, không giật) -->
+                <div class="emua-marquee-group" aria-hidden="true">
+                    <span class="marquee-item">
+                        <i class="bi bi-truck text-primary" aria-hidden="true"></i>
+                        <span>Miễn phí vận chuyển đơn từ <strong>500K</strong></span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-lightning-charge-fill text-warning" aria-hidden="true"></i>
+                        <span>Giao 2 giờ tại <strong>Đà Nẵng &amp; Hà Nội</strong></span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-shield-check text-success" aria-hidden="true"></i>
+                        <span>100% Thiết bị chính hãng · Bảo hành 12 - 24 tháng</span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-telephone-fill text-info" aria-hidden="true"></i>
+                        <span>Hotline: <a href="tel:18002005" class="marquee-link" tabindex="-1"><strong>1800 2005</strong></a> (Miễn phí cước)</span>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                    <span class="marquee-item">
+                        <i class="bi bi-shop text-primary" aria-hidden="true"></i>
+                        <a asp-area="" asp-controller="Home" asp-action="StoreLocations" class="marquee-link" tabindex="-1">Hệ thống @stores.Length showroom trải nghiệm công nghệ</a>
+                    </span>
+                    <span class="marquee-divider" aria-hidden="true">✦</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN HEADER -->
+    <!-- 2. MAIN HEADER -->
     <div class="emua-main-header">
         <div class="container-fluid emua-container">
             <div class="main-header-wrapper">
 
-                <!-- LOGO -->
+                <!-- BRAND LOGO -->
                 <a asp-area=""
                    asp-controller="Home"
                    asp-action="Index"
                    class="emua-logo"
-                   aria-label="EMUA — Trang chủ">
-
-                    <div class="emua-logo-text">
-                        <img src="~/images/logo/logo.png"
-                             asp-append-version="true"
-                             alt="EMUA"
-                             class="emua-wordmark" />
-
-                        <span>Mua sắm điện tử</span>
-                    </div>
+                   aria-label="EMUA — Về trang chủ">
+                    <img src="~/images/logo/icon-logo.png"
+                         asp-append-version="true"
+                         alt="EMUA"
+                         class="emua-wordmark" />
+                    <span class="emua-brand-tagline">TECH STORE</span>
                 </a>
 
-                <!-- SEARCH -->
+                <!-- OMNI SEARCH -->
                 <form asp-area=""
                       asp-controller="Product"
                       asp-action="Search"
                       method="get"
                       role="search"
-                      class="emua-search">
-
-                    <i class="bi bi-search" aria-hidden="true"></i>
-
+                      class="emua-search"
+                      onsubmit="return validateEmuaSearch(this)">
+                    <i class="bi bi-search emua-search-icon" aria-hidden="true"></i>
                     <input type="search"
                            name="keyword"
                            autocomplete="off"
                            aria-label="Tìm kiếm sản phẩm"
-                           placeholder="Tìm kiếm laptop, điện thoại, gaming gear..." />
+                           placeholder="Tìm kiếm laptop, điện thoại, phụ kiện công nghệ..." />
+                    <button type="submit" class="emua-search-btn" aria-label="Tìm kiếm">
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </button>
                 </form>
 
                 <!-- DESKTOP ACTIONS -->
                 <div class="emua-header-actions">
 
-                    <!-- ACCOUNT -->
-                    <div class="dropdown">
+                    <!-- STORES DROPDOWN -->
+                    <div class="dropdown emua-header-dropdown">
+                        <button type="button"
+                                id="headerStoreMenu"
+                                class="header-action-btn dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            <i class="bi bi-shop action-icon" aria-hidden="true"></i>
+                            <span class="action-text">
+                                <small>Hệ thống</small>
+                                <strong>Cửa hàng</strong>
+                            </span>
+                            <i class="bi bi-chevron-down action-arrow" aria-hidden="true"></i>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end emua-dropdown-panel store-dropdown-panel"
+                            aria-labelledby="headerStoreMenu">
+                            <li class="dropdown-header-custom">
+                                <div>
+                                    <span class="dropdown-badge">HỆ THỐNG PHÂN PHỐI</span>
+                                    <h6>Hệ thống cửa hàng EMUA</h6>
+                                </div>
+                                <span class="store-count-badge">@stores.Length chi nhánh</span>
+                            </li>
+                            <li class="dropdown-scroll-list">
+                                @foreach (var store in stores)
+                                {
+                                    <div class="store-item">
+                                        <div class="store-item-icon">
+                                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="store-item-info">
+                                            <strong class="store-item-name">@store.Name</strong>
+                                            <p class="store-item-address">@store.Address</p>
+                                            <small class="store-item-phone"><i class="bi bi-telephone me-1" aria-hidden="true"></i>@store.Phone</small>
+                                        </div>
+                                    </div>
+                                }
+                            </li>
+                            <li class="dropdown-footer-actions">
+                                <a asp-area=""
+                                   asp-controller="Home"
+                                   asp-action="StoreLocations"
+                                   class="dropdown-footer-btn primary">
+                                    <i class="bi bi-map-fill" aria-hidden="true"></i>
+                                    <span>Bản đồ hệ thống</span>
+                                </a>
+                                <a asp-area=""
+                                   asp-controller="Home"
+                                   asp-action="Franchise"
+                                   class="dropdown-footer-btn secondary">
+                                    <i class="bi bi-award-fill" aria-hidden="true"></i>
+                                    <span>Nhượng quyền</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ACCOUNT DROPDOWN -->
+                    <div class="dropdown emua-header-dropdown">
                         <button type="button"
                                 id="headerAccountMenu"
                                 class="header-action-btn dropdown-toggle"
                                 data-bs-toggle="dropdown"
                                 aria-expanded="false">
-
-                            <i class="bi bi-person" aria-hidden="true"></i>
-                            <span>
-                                @(isAuthenticated? displayName : "Tài khoản")
+                            @if (isAuthenticated)
+                            {
+                                <span class="header-avatar-circle" aria-hidden="true">@avatarLetter</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-person-circle action-icon" aria-hidden="true"></i>
+                            }
+                            <span class="action-text">
+                                <small>Xin chào</small>
+                                <strong>@(isAuthenticated? displayName : "Tài khoản")</strong>
                             </span>
+                            <i class="bi bi-chevron-down action-arrow" aria-hidden="true"></i>
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end account-dropdown"
+                        <ul class="dropdown-menu dropdown-menu-end emua-dropdown-panel account-dropdown-panel"
                             aria-labelledby="headerAccountMenu">
 
                             @if (isAuthenticated)
                             {
+                                <li class="dropdown-user-card">
+                                    <span class="dropdown-user-avatar">@avatarLetter</span>
+                                    <div class="dropdown-user-details">
+                                        <strong>@displayName</strong>
+                                        <small>Thành viên EMUA</small>
+                                    </div>
+                                </li>
                                 <li>
                                     <a asp-area=""
                                        asp-controller="Account"
                                        asp-action="Profile"
-                                       class="account-dropdown-profile">
-
-                                        <span class="account-dropdown-avatar">
-                                            @avatarLetter
-                                        </span>
-
-                                        <span class="account-dropdown-info">
-                                            <strong>@displayName</strong>
-                                            <small>Hồ sơ của tôi</small>
-                                        </span>
-
-                                        <i class="bi bi-chevron-right"
-                                           aria-hidden="true"></i>
+                                       class="dropdown-menu-link">
+                                        <i class="bi bi-person-badge" aria-hidden="true"></i>
+                                        <span>Thông tin tài khoản</span>
                                     </a>
                                 </li>
-
+                                <li>
+                                    <a asp-area=""
+                                       asp-controller="Favorite"
+                                       asp-action="Index"
+                                       class="dropdown-menu-link">
+                                        <i class="bi bi-heart" aria-hidden="true"></i>
+                                        <span>Sản phẩm yêu thích</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a asp-area=""
+                                       asp-controller="Account"
+                                       asp-action="ChangePassword"
+                                       class="dropdown-menu-link">
+                                        <i class="bi bi-key" aria-hidden="true"></i>
+                                        <span>Đổi mật khẩu</span>
+                                    </a>
+                                </li>
 
                                 @if (isStaff)
                                 {
@@ -168,10 +305,8 @@
                                         <a asp-area="Staff"
                                            asp-controller="Dashboard"
                                            asp-action="Index"
-                                           class="account-dropdown-staff">
-
-                                            <i class="bi bi-grid-1x2"
-                                               aria-hidden="true"></i>
+                                           class="dropdown-menu-link link-highlight">
+                                            <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
                                             <span>Khu vực nhân viên</span>
                                         </a>
                                     </li>
@@ -183,31 +318,24 @@
                                         <a asp-area="Admin"
                                            asp-controller="Dashboard"
                                            asp-action="Index"
-                                           class="account-dropdown-staff">
-
-                                            <i class="bi bi-shield-lock-fill"
-                                               aria-hidden="true"></i>
+                                           class="dropdown-menu-link link-admin">
+                                            <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
                                             <span>Khu vực quản trị</span>
                                         </a>
                                     </li>
                                 }
 
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
+                                <li><hr class="dropdown-divider-custom" /></li>
 
                                 <li>
                                     <form asp-area=""
                                           asp-controller="Auth"
                                           asp-action="Logout"
-                                          method="post">
-
+                                          method="post"
+                                          class="m-0">
                                         @Html.AntiForgeryToken()
-
-                                        <button type="submit"
-                                                class="account-dropdown-logout">
-                                            <i class="bi bi-box-arrow-right"
-                                               aria-hidden="true"></i>
+                                        <button type="submit" class="dropdown-menu-link link-logout">
+                                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                                             <span>Đăng xuất</span>
                                         </button>
                                     </form>
@@ -215,132 +343,88 @@
                             }
                             else
                             {
-                                <li>
+                                <li class="dropdown-auth-guest">
+                                    <p class="dropdown-guest-lead">Đăng nhập để nhận ưu đãi thành viên và theo dõi đơn hàng dễ dàng.</p>
                                     <a asp-area=""
                                        asp-controller="Auth"
                                        asp-action="Login"
-                                       class="account-dropdown-profile">
-
-                                        <i class="bi bi-box-arrow-in-right"
-                                           aria-hidden="true"></i>
+                                       class="btn-emua-dropdown primary">
+                                        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                                         <span>Đăng nhập</span>
                                     </a>
-                                </li>
-
-                                <li>
                                     <a asp-area=""
                                        asp-controller="Auth"
                                        asp-action="Register"
-                                       class="account-dropdown-profile">
-
-                                        <i class="bi bi-person-plus"
-                                           aria-hidden="true"></i>
-                                        <span>Đăng ký</span>
+                                       class="btn-emua-dropdown secondary">
+                                        <i class="bi bi-person-plus" aria-hidden="true"></i>
+                                        <span>Đăng ký tài khoản</span>
                                     </a>
                                 </li>
                             }
                         </ul>
                     </div>
 
-                    <!-- STORES -->
-                    <div class="dropdown">
-                        <button type="button"
-                                id="headerStoreMenu"
-                                class="header-action-btn dropdown-toggle"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false">
-
-                            <i class="bi bi-shop" aria-hidden="true"></i>
-                            <span>Cửa hàng</span>
-                        </button>
-
-                        <ul class="dropdown-menu dropdown-menu-end account-dropdown"
-                            aria-labelledby="headerStoreMenu"
-                            style="width:320px; max-width:calc(100vw - 24px); max-height:480px; overflow-y:auto;">
-
-                            <li>
-                                <div class="px-3 py-2">
-                                    <small style="color:#a4a7b8; font-weight:700;">
-                                        HỆ THỐNG CỬA HÀNG EMUA
-                                    </small>
-                                </div>
-                            </li>
-
-                            @foreach (var store in stores)
-                            {
-                                <li>
-                                    <div class="px-3 py-2">
-                                        <strong class="d-block"
-                                                style="color:#eef0f7; font-size:13px;">
-                                            <i class="bi bi-geo-alt"
-                                               style="color:#91aaff;"
-                                               aria-hidden="true"></i>
-                                            @store.Name
-                                        </strong>
-
-                                        <small class="d-block mt-1"
-                                               style="color:#b5b9cb;">
-                                            @store.Address
-                                        </small>
-                                    </div>
-                                </li>
-                            }
-
-                            <li>
-                                <hr class="dropdown-divider" />
-                            </li>
-
-                            <li>
-                                <a asp-area=""
-                                   asp-controller="Home"
-                                   asp-action="StoreLocations"
-                                   class="account-dropdown-staff">
-
-                                    <i class="bi bi-map" aria-hidden="true"></i>
-                                    <span>Bản đồ hệ thống cửa hàng</span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a asp-area=""
-                                   asp-controller="Home"
-                                   asp-action="Franchise"
-                                   class="account-dropdown-staff">
-
-                                    <i class="bi bi-award" aria-hidden="true"></i>
-                                    <span>Nhượng quyền cửa hàng</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- CART -->
+                    <!-- CART ACTION -->
                     <a href="@cartUrl"
-                       class="header-action-btn cart-action">
+                       class="header-action-btn cart-action-btn cart-action"
+                       aria-label="Giỏ hàng">
                         <div class="header-icon-wrapper">
-                            <i class="bi bi-cart3" aria-hidden="true"></i>
+                            <i class="bi bi-bag-fill action-icon" aria-hidden="true"></i>
+                            <span class="cart-count" style="display:none;">0</span>
                         </div>
-                        <span>Giỏ hàng</span>
+                        <span class="action-text">
+                            <small>Đơn hàng</small>
+                            <strong>Giỏ hàng</strong>
+                        </span>
                     </a>
                 </div>
 
-                <!-- MOBILE MENU BUTTON -->
-                <button type="button"
-                        class="mobile-menu-button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mobileCategories"
-                        aria-controls="mobileCategories"
-                        aria-expanded="false"
-                        aria-label="Mở menu">
-
-                    <i class="bi bi-list" aria-hidden="true"></i>
-                </button>
+                <!-- MOBILE ACTION CONTROLS -->
+                <div class="emua-mobile-controls">
+                    <a href="@cartUrl" class="mobile-action-btn cart-action" aria-label="Giỏ hàng">
+                        <div class="header-icon-wrapper">
+                            <i class="bi bi-bag-fill" aria-hidden="true"></i>
+                            <span class="cart-count" style="display:none;">0</span>
+                        </div>
+                    </a>
+                    <button type="button"
+                            class="mobile-menu-button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#mobileCategories"
+                            aria-controls="mobileCategories"
+                            aria-expanded="false"
+                            aria-label="Mở menu">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                    </button>
+                </div>
 
             </div>
+
+            <!-- MOBILE SEARCH (Hiển thị ngay dưới Logo trên Mobile) -->
+            <div class="emua-mobile-search-wrap">
+                <form asp-area=""
+                      asp-controller="Product"
+                      asp-action="Search"
+                      method="get"
+                      role="search"
+                      class="emua-search emua-mobile-search"
+                      onsubmit="return validateEmuaSearch(this)">
+                    <i class="bi bi-search emua-search-icon" aria-hidden="true"></i>
+                    <input type="search"
+                           name="keyword"
+                           autocomplete="off"
+                           aria-label="Tìm kiếm sản phẩm"
+                           placeholder="Tìm kiếm laptop, điện thoại..." />
+                    <button type="submit" class="emua-search-btn" aria-label="Tìm kiếm">
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 
-    <!-- DESKTOP CATEGORIES -->
+    <!-- 3. CATEGORY NAVIGATION BAR -->
     <nav class="emua-category-nav" aria-label="Danh mục sản phẩm">
         <div class="container-fluid emua-container">
             <div class="category-list">
@@ -349,8 +433,8 @@
                     <a asp-area=""
                        asp-controller="Product"
                        asp-action="Index"
-                       asp-route-category="@category.Key">
-
+                       asp-route-category="@category.Key"
+                       class="category-nav-item">
                         <i class="bi @category.Icon" aria-hidden="true"></i>
                         <span>@category.Name</span>
                     </a>
@@ -359,127 +443,117 @@
         </div>
     </nav>
 
-    <!-- MOBILE MENU -->
+    <!-- 4. MOBILE DRAWER COLLAPSE -->
     <div class="collapse" id="mobileCategories">
         <nav class="mobile-category-menu" aria-label="Menu trên điện thoại">
 
-            <div class="pb-3 mb-2"
-                 style="border-bottom:1px solid #363849;">
-
+            <div class="mobile-menu-user-card">
                 @if (isAuthenticated)
                 {
-                    <a asp-area=""
-                       asp-controller="Account"
-                       asp-action="Profile"
-                       class="d-flex align-items-center gap-2">
-
-                        <span class="account-dropdown-avatar">
-                            @avatarLetter
-                        </span>
-
-                        <span class="account-dropdown-info">
+                    <div class="mobile-user-header">
+                        <span class="dropdown-user-avatar">@avatarLetter</span>
+                        <div>
                             <strong>@displayName</strong>
-                            <small>Hồ sơ của tôi</small>
-                        </span>
-                    </a>
-
-                    <a asp-area=""
-                       asp-controller="Account"
-                       asp-action="ChangePassword">
-                        <i class="bi bi-key me-2" aria-hidden="true"></i>
-                        Đổi mật khẩu
-                    </a>
-
-                    @if (isStaff)
-                    {
-                        <a asp-area="Staff"
-                           asp-controller="Dashboard"
-                           asp-action="Index">
-                            <i class="bi bi-grid-1x2 me-2"
-                               aria-hidden="true"></i>
-                            Khu vực nhân viên
+                            <small class="d-block text-muted">Thành viên EMUA</small>
+                        </div>
+                    </div>
+                    <div class="mobile-user-links">
+                        <a asp-area="" asp-controller="Account" asp-action="Profile">
+                            <i class="bi bi-person-badge me-2" aria-hidden="true"></i>Hồ sơ của tôi
                         </a>
-                    }
-
-                    @if (isAdmin)
-                    {
-                        <a asp-area="Admin"
-                           asp-controller="User"
-                           asp-action="Index">
-                            <i class="bi bi-shield-lock-fill me-2"
-                               aria-hidden="true"></i>
-                            Khu vực quản trị
+                        <a asp-area="" asp-controller="Favorite" asp-action="Index">
+                            <i class="bi bi-heart me-2" aria-hidden="true"></i>Sản phẩm yêu thích
                         </a>
-                    }
+                        <a asp-area="" asp-controller="Account" asp-action="ChangePassword">
+                            <i class="bi bi-key me-2" aria-hidden="true"></i>Đổi mật khẩu
+                        </a>
 
-                    <form asp-area=""
-                          asp-controller="Auth"
-                          asp-action="Logout"
-                          method="post"
-                          class="mt-2 mb-0">
+                        @if (isStaff)
+                        {
+                            <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index" class="text-primary fw-bold">
+                                <i class="bi bi-grid-1x2-fill me-2" aria-hidden="true"></i>Khu vực nhân viên
+                            </a>
+                        }
 
-                        @Html.AntiForgeryToken()
+                        @if (isAdmin)
+                        {
+                            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-warning fw-bold">
+                                <i class="bi bi-shield-lock-fill me-2" aria-hidden="true"></i>Khu vực quản trị
+                            </a>
+                        }
 
-                        <button type="submit"
-                                class="account-dropdown-logout">
-                            <i class="bi bi-box-arrow-right"
-                               aria-hidden="true"></i>
-                            <span>Đăng xuất</span>
-                        </button>
-                    </form>
+                        <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post" class="mt-2 mb-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="mobile-logout-btn">
+                                <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Đăng xuất
+                            </button>
+                        </form>
+                    </div>
                 }
                 else
                 {
-                    <a asp-area=""
-                       asp-controller="Auth"
-                       asp-action="Login">
-                        <i class="bi bi-box-arrow-in-right me-2"
-                           aria-hidden="true"></i>
-                        Đăng nhập
-                    </a>
+                    <div class="mobile-guest-actions">
+                        <a asp-area="" asp-controller="Auth" asp-action="Login" class="btn-emua-dropdown primary">
+                            <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Đăng nhập
+                        </a>
+                        <a asp-area="" asp-controller="Auth" asp-action="Register" class="btn-emua-dropdown secondary">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Đăng ký
+                        </a>
+                    </div>
+                }
+            </div>
 
+            <div class="mobile-categories-heading">
+                <span>DANH MỤC THIẾT BỊ</span>
+            </div>
+
+            <div class="mobile-category-grid">
+                @foreach (var category in categories)
+                {
                     <a asp-area=""
-                       asp-controller="Auth"
-                       asp-action="Register">
-                        <i class="bi bi-person-plus me-2"
-                           aria-hidden="true"></i>
-                        Đăng ký
+                       asp-controller="Product"
+                       asp-action="Index"
+                       asp-route-category="@category.Key"
+                       class="mobile-cat-link">
+                        <i class="bi @category.Icon" aria-hidden="true"></i>
+                        <span>@category.Name</span>
                     </a>
                 }
             </div>
 
-            @foreach (var category in categories)
-            {
-                <a asp-area=""
-                   asp-controller="Product"
-                   asp-action="Index"
-                   asp-route-category="@category.Key">
-
-                    <i class="bi @category.Icon me-2"
-                       aria-hidden="true"></i>
-                    @category.Name
+            <div class="mobile-menu-footer-links">
+                <a asp-area="" asp-controller="Home" asp-action="StoreLocations">
+                    <i class="bi bi-geo-alt-fill me-2 text-primary" aria-hidden="true"></i>Bản đồ hệ thống cửa hàng
                 </a>
-            }
+                <a asp-area="" asp-controller="Home" asp-action="Franchise">
+                    <i class="bi bi-award-fill me-2 text-warning" aria-hidden="true"></i>Hợp tác nhượng quyền
+                </a>
+                <div class="mobile-hotline-strip">
+                    <i class="bi bi-headset me-2 text-success" aria-hidden="true"></i>
+                    <span>Tư vấn miễn phí: <strong>1800 2005</strong> (7:30 - 22:00)</span>
+                </div>
+            </div>
 
-            <a href="@cartUrl">
-                <i class="bi bi-cart3 me-2" aria-hidden="true"></i>
-                Giỏ hàng
-            </a>
-
-            <a asp-area=""
-               asp-controller="Home"
-               asp-action="StoreLocations">
-                <i class="bi bi-map me-2" aria-hidden="true"></i>
-                Bản đồ hệ thống cửa hàng
-            </a>
-
-            <a asp-area=""
-               asp-controller="Home"
-               asp-action="Franchise">
-                <i class="bi bi-award me-2" aria-hidden="true"></i>
-                Nhượng quyền cửa hàng
-            </a>
         </nav>
     </div>
 
 </header>
+
+
+<script>
+    // Không gửi form nếu từ khóa rỗng hoặc chỉ có khoảng trắng.
+    function validateEmuaSearch(form) {
+        const input = form.querySelector('input[name="keyword"]');
+        if (!input) return false;
+
+        const keyword = input.value.trim();
+        if (!keyword) {
+            input.value = '';
+            return false;
+        }
+
+        input.value = keyword;
+        return true;
+    }
+
+</script>

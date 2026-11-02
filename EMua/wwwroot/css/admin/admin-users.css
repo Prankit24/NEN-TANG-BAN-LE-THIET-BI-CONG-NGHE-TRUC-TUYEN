@@ -1,7 +1,7 @@
 ﻿/* ==========================================================
    Quản lý người dùng & phân quyền  -  bản "premium"
    Đặt tại: wwwroot/css/admin/admin-users.css
-   Palette: Ink #0f172a · Indigo #4f46e5 · Gold #b7791f · Mist #f4f5f9
+   Palette: Ink #0f172a · Indigo #315efb · Gold #b7791f · Mist #f4f5f9
    ========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -14,8 +14,8 @@
     --c-line-soft: #f0f2f7;
     --c-surface: #ffffff;
     --c-bg: #f4f5f9;
-    --c-brand: #4f46e5;
-    --c-brand-2: #7c3aed;
+    --c-brand: #315efb;
+    --c-brand-2: #244bd6;
     --c-brand-soft: #eef0ff;
     --c-gold: #b7791f;
     --c-gold-soft: #fdf3dc;
@@ -649,3 +649,141 @@ body:has(.users-page) {
         transform: none;
     }
 }
+
+
+/* Giao diện phẳng EMUA */
+.users-page {
+    --c-brand: #315efb;
+    --c-brand-2: #244bd6;
+    --c-brand-soft: #edf2ff;
+    --c-bg: #f4f6fa;
+    --c-line: #e1e7ef;
+    --shadow-sm: none;
+    --shadow-md: none;
+    font-family: Inter,system-ui,sans-serif;
+}
+
+body:has(.users-page) {
+    background: #f4f6fa;
+}
+
+.users-page .btn {
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.users-page .btn-primary {
+    background: #315efb !important;
+    border-color: #315efb !important;
+    color: #fff !important;
+}
+
+    .users-page .btn-primary:hover {
+        background: #244bd6 !important;
+        border-color: #244bd6 !important;
+    }
+
+.users-page .btn-outline-primary {
+    color: #315efb;
+    border-color: #bfcdf2;
+}
+
+    .users-page .btn-outline-primary:hover {
+        color: #fff;
+        background: #315efb;
+        border-color: #315efb;
+    }
+
+.users-page .mini-stat {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dfe5ee !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    padding: 14px 8px 16px 0 !important;
+}
+
+    .users-page .mini-stat::after, .users-page .mini-stat::before {
+        display: none !important;
+    }
+
+.users-page .mini-stat-icon {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #6784ba !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.users-page .mini-stat-value {
+    color: #26344c !important;
+    font-size: 1.35rem !important;
+}
+
+.users-page .mini-stat-label {
+    color: #687991 !important;
+}
+
+.users-page .card {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.users-page .role-card, .users-page .role-card.is-protected {
+    background: transparent !important;
+    border: 0 !important;
+    border-top: 1px solid #dfe5ee !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+    .users-page .role-card.is-protected::before {
+        display: none !important;
+    }
+
+    .users-page .role-card:hover {
+        background: #f0f4fa !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+.users-page .table {
+    --bs-table-bg: transparent;
+    color: #34435b;
+}
+
+    .users-page .table > thead > tr > th {
+        background: transparent !important;
+        color: #6f7e95;
+        border-bottom: 1px solid #dce3ec;
+        text-transform: none;
+    }
+
+    .users-page .table > tbody > tr > td {
+        background: transparent;
+        border-color: #e3e9f1;
+    }
+
+    .users-page .table > tbody > tr.table-active > td, .users-page .table > tbody > tr.row-self > td {
+        background: #eef3ff !important;
+    }
+
+.users-page .pagination .page-item.active .page-link {
+    background: #315efb !important;
+    border-color: #315efb !important;
+}
+
+#createRoleModal .btn-primary, #successDialogModal .btn-primary {
+    background: #315efb !important;
+    border-color: #315efb !important;
+}
+
+.users-page a:focus-visible, .users-page button:focus-visible, .users-page input:focus-visible, .users-page select:focus-visible {
+    outline: 2px solid #7192ff;
+    outline-o

@@ -18,7 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDataProtection()
     .SetApplicationName("EMua");
 
+// =====================================================
+// EMAIL / EMAIL VERIFICATION
+// =====================================================
 builder.Services.AddScoped<IAppEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<EmailVerificationService>();
 
 // =====================================================
 // SESSION
@@ -46,7 +50,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
 
 // =====================================================
-// FORWARDED HEADERS
+// FORWARDED HEADERS (Tối ưu cho Somee / IIS Reverse Proxy)
 // =====================================================
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -54,17 +58,37 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedFor |
         ForwardedHeaders.XForwardedProto;
 
+    // Xóa KnownNetworks và KnownProxies để chấp nhận header từ proxy của Somee
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
 
 // =====================================================
-// DATABASE - POSTGRESQL
+// HTTPS REDIRECTION
 // =====================================================
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = 443;
+});
+
+// =====================================================
+// DATABASE - POSTGRESQL / SUPABASE
+// =====================================================
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Chưa có ConnectionStrings:DefaultConnection trong cấu hình.");
+}
+
 builder.Services.AddDbContext<EMuaDbContext>(options =>
+{
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
+        connectionString,
+        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure());
+});
 
 // =====================================================
 // PASSWORD HASHER
@@ -74,128 +98,166 @@ builder.Services.AddScoped<
     PasswordHasher<NguoiDung>>();
 
 // =====================================================
+// REQUIRED CONFIGURATION
+// =====================================================
+string RequiredConfiguration(string key)
+{
+    var value = builder.Configuration[key];
+
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        throw new InvalidOperationException(
+            $"Chưa có {key} trong cấu hình.");
+    }
+
+    return value.Trim();
+}
+
+var googleClientId =
+    RequiredConfiguration("Authentication:Google:ClientId");
+
+var googleClientSecret =
+    RequiredConfiguration("Authentication:Google:ClientSecret");
+
+var facebookAppId =
+    RequiredConfiguration("Authentication:Facebook:AppId");
+
+var facebookAppSecret =
+    RequiredConfiguration("Authentication:Facebook:AppSecret");
+
+// =====================================================
 // AUTHENTICATION
 // =====================================================
 builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    .AddAuthentication(
+        CookieAuthenticationDefaults.AuthenticationScheme)
+
+    // Cookie đăng nhập chính
+    .AddCookie(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.Events.OnRedirectToLogin = context =>
+            {
+                if (context.Request.Headers.Accept.ToString()
+                        .Contains("application/json") ||
+                    context.Request.ContentType?
+                        .Contains("application/json") == true)
+                {
+                    context.Response.StatusCode =
+                        StatusCodes.Status401Unauthorized;
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            };
+
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if (context.Request.Headers.Accept.ToString()
+                        .Contains("application/json") ||
+                    context.Request.ContentType?
+                        .Contains("application/json") == true)
+                {
+                    context.Response.StatusCode =
+                        StatusCodes.Status403Forbidden;
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+
+                return Task.CompletedTask;
+            };
+
+            options.LoginPath = "/Auth/Login";
+            options.AccessDeniedPath = "/Auth/Login";
+
+            options.ExpireTimeSpan = TimeSpan.FromDays(7);
+            options.SlidingExpiration = true;
+
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy =
+                CookieSecurePolicy.Always;
+        })
+
+    // Cookie tạm cho đăng nhập Google/Facebook
+    .AddCookie("External", options =>
     {
-        options.LoginPath = "/Auth/Login";
-        options.AccessDeniedPath = "/Auth/Login";
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy =
+            CookieSecurePolicy.Always;
     })
-    .AddCookie("External")
-    .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-    {
-        options.ClientId =
-            builder.Configuration["Authentication:Google:ClientId"]
-            ?? throw new InvalidOperationException(
-                "Chưa có Google ClientId trong cấu hình.");
 
-        options.ClientSecret =
-            builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? throw new InvalidOperationException(
-                "Chưa có Google ClientSecret trong cấu hình.");
+    // GOOGLE LOGIN
+    .AddGoogle(
+        GoogleDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
 
-        options.SignInScheme = "External";
-        options.CallbackPath = "/signin-google";
-    })
-    .AddFacebook(FacebookDefaults.AuthenticationScheme, options =>
-    {
-        options.AppId =
-            builder.Configuration["Authentication:Facebook:AppId"]
-            ?? throw new InvalidOperationException(
-                "Chưa có Facebook AppId trong cấu hình.");
+            options.SignInScheme = "External";
+            options.CallbackPath = "/signin-google";
 
-        options.AppSecret =
-            builder.Configuration["Authentication:Facebook:AppSecret"]
-            ?? throw new InvalidOperationException(
-                "Chưa có Facebook AppSecret trong cấu hình.");
+            options.CorrelationCookie.HttpOnly = true;
+            options.CorrelationCookie.SameSite = SameSiteMode.None;
+            options.CorrelationCookie.SecurePolicy =
+                CookieSecurePolicy.Always;
+        })
 
-        options.SignInScheme = "External";
-        options.CallbackPath = "/signin-facebook";
-        options.Scope.Add("email");
-        options.Fields.Add("id");
-        options.Fields.Add("name");
-        options.Fields.Add("email");
-    });
+    // FACEBOOK LOGIN
+    .AddFacebook(
+        FacebookDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.AppId = facebookAppId;
+            options.AppSecret = facebookAppSecret;
+
+            options.SignInScheme = "External";
+            options.CallbackPath = "/signin-facebook";
+
+            options.Scope.Add("email");
+
+            options.Fields.Add("id");
+            options.Fields.Add("name");
+            options.Fields.Add("email");
+
+            options.CorrelationCookie.HttpOnly = true;
+            options.CorrelationCookie.SameSite = SameSiteMode.None;
+            options.CorrelationCookie.SecurePolicy =
+                CookieSecurePolicy.Always;
+        });
 
 var app = builder.Build();
 
 // =====================================================
-// KIỂM TRA CẤU HÌNH - KHÔNG GHI GIÁ TRỊ BÍ MẬT
-// Dùng LogWarning để xuất hiện với mức log hiện tại.
+// ERROR HANDLING
 // =====================================================
-var configPath = Path.Combine(
-    app.Environment.ContentRootPath,
-    "appsettings.json");
-
-var productionConfigPath = Path.Combine(
-    app.Environment.ContentRootPath,
-    "appsettings.Production.json");
-
-app.Logger.LogWarning(
-    "CONFIG DIAGNOSTICS VERSION: EMUA-CONFIG-01");
-
-app.Logger.LogWarning(
-    "CONFIG ROOT: {ContentRoot}",
-    app.Environment.ContentRootPath);
-
-app.Logger.LogWarning(
-    "CONFIG ENVIRONMENT: {EnvironmentName}",
-    app.Environment.EnvironmentName);
-
-app.Logger.LogWarning(
-    "CONFIG FILE EXISTS: {Exists}",
-    File.Exists(configPath));
-
-app.Logger.LogWarning(
-    "PRODUCTION CONFIG FILE EXISTS: {Exists}",
-    File.Exists(productionConfigPath));
-
-app.Logger.LogWarning(
-    "GOOGLE CLIENT ID PRESENT: {Present}",
-    !string.IsNullOrWhiteSpace(
-        app.Configuration["Authentication:Google:ClientId"]));
-
-app.Logger.LogWarning(
-    "GOOGLE CLIENT SECRET PRESENT: {Present}",
-    !string.IsNullOrWhiteSpace(
-        app.Configuration["Authentication:Google:ClientSecret"]));
-
-// Kiểm tra riêng appsettings.json để phân biệt:
-// file không chứa ClientId hay cấu hình sau đó ghi đè.
-if (File.Exists(configPath))
+if (!app.Environment.IsDevelopment())
 {
-    try
-    {
-        var fileConfig = new ConfigurationBuilder()
-    .SetBasePath(app.Environment.ContentRootPath)
-    .AddJsonFile(
-        "appsettings.json",
-        optional: false,
-        reloadOnChange: false)
-    .Build();
-
-        app.Logger.LogWarning(
-            "GOOGLE CLIENT ID IN APPSETTINGS FILE: {Present}",
-            !string.IsNullOrWhiteSpace(
-                fileConfig["Authentication:Google:ClientId"]));
-    }
-    catch (Exception ex)
-    {
-        // Chỉ ghi loại lỗi để tránh đưa nội dung cấu hình vào log.
-        app.Logger.LogWarning(
-            "APPSETTINGS READ FAILED: {ExceptionType}",
-            ex.GetType().Name);
-    }
+    app.UseExceptionHandler("/Home/Error");
 }
 
 // =====================================================
-// FORWARDED HEADERS
+// FORWARDED HEADERS (Phải đặt ở đầu tiên trong pipeline)
 // =====================================================
 app.UseForwardedHeaders();
+
+// =====================================================
+// HSTS
+// =====================================================
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
 
 // =====================================================
 // AI TRAINING DATA
@@ -213,6 +275,15 @@ var domainModelPath = Path.Combine(
 
 if (!File.Exists(domainModelPath))
 {
+    if (!File.Exists(domainDataPath))
+    {
+        throw new FileNotFoundException(
+            "Thiếu dữ liệu huấn luyện AI. Hãy upload " +
+            "Data/AITraining/domain-data.csv hoặc model " +
+            "MLModels/domain-model.zip.",
+            domainDataPath);
+    }
+
     Directory.CreateDirectory(
         Path.GetDirectoryName(domainModelPath)!);
 
@@ -222,22 +293,18 @@ if (!File.Exists(domainModelPath))
 }
 
 // =====================================================
-// ERROR HANDLING
-// =====================================================
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-// =====================================================
-// MIDDLEWARE
+// MIDDLEWARE PIPELINE
 // =====================================================
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseSession();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 // =====================================================
@@ -245,10 +312,12 @@ app.UseAuthorization();
 // =====================================================
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+    pattern:
+        "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern:
+        "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

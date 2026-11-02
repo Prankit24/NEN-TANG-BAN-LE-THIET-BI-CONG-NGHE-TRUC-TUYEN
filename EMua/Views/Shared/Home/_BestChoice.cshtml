@@ -1,314 +1,128 @@
 @model IEnumerable<EMua.Models.Database.SanPham>
+@using System.Linq
+@using System.Collections.Generic
+@using System
+@functions {
+    private string Asset(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var path = value.Trim().Replace("\\", "/");
+        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
+        path = path.TrimStart('~', '/');
+        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
+        return Url.Content("~/" + path);
+    }
+}
+@{
+    var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    var viCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+}
 
-
-<section class="best-choice-section">
-
-    <!-- Background decoration -->
-    <div class="best-bg-orb best-orb-1"></div>
-    <div class="best-bg-orb best-orb-2"></div>
-
-    <div class="best-container">
-
-        <div class="best-heading">
-            <div class="best-tag">
-                <span>⭐</span> EMUA RECOMMENDS
+<section class="ep-section" id="best-choice" aria-labelledby="choice-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div class="ep-heading-left">
+                <span class="ep-eyebrow">
+                    <i class="bi bi-award-fill" aria-hidden="true"></i> EMUA SELECTION
+                </span>
+                <h2 id="choice-heading">Lựa chọn đáng cân nhắc</h2>
+                <p>Những thiết bị được chuyên gia công nghệ khuyên dùng cho trải nghiệm vượt trội.</p>
             </div>
-            <h2 class="best-title">Best Choice</h2>
-            <p class="best-sub">Những sản phẩm được EMUA lựa chọn kỹ lưỡng cho bạn.</p>
-        </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Khám phá thêm</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
 
+        @if (products.Count == 0)
+        {
+            <p class="ep-empty">Sản phẩm đang được cập nhật. Bạn vui lòng quay lại sau.</p>
+        }
+        else
+        {
+            <div class="ep-products">
+                @foreach (var item in products)
+                {
+                    var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
+                    var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
+                    var photo = item.SanPhamHinhAnhs?.Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh)).OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).FirstOrDefault();
+                    var image = Asset(photo?.DuongDanAnh ?? variant?.HinhAnh);
+                    var price = variant?.Gia ?? item.GiaGoc ?? 0;
+                    var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
+                    var detail = string.Join(" · ", new[] { variant?.PhienBan, variant?.MauSac }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
-        <div class="best-grid">
+                    var originalPrice = item.GiaGoc;
+                    var hasDiscount = originalPrice.HasValue && originalPrice.Value > price && price > 0;
+                    var discountPercent = hasDiscount ? (int)Math.Round((1m - (price / originalPrice!.Value)) * 100m) : 0;
+                    var isStock = available != null && available.SoLuong > 0;
 
-            @foreach (var item in Model)
-            {
-                var variant = item.BienTheSanPhams
-                .Where(x => x.SoLuong > 0)
-                .OrderBy(x => x.Gia)
-                .FirstOrDefault();
+                    <article class="ep-card">
+                        <a class="ep-picture" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" aria-label="Xem @name">
+                            @if (hasDiscount)
+                            {
+                                <span class="ep-chip ep-chip-discount">-@discountPercent%</span>
+                            }
+                            else
+                            {
+                                <span class="ep-chip ep-chip-slate">Khuyên dùng</span>
+                            }
 
-                var photo = item.SanPhamHinhAnhs
-                .OrderByDescending(x => x.LaAnhChinh)
-                .ThenBy(x => x.ThuTu)
-                .FirstOrDefault();
-
-                var image =
-                photo?.DuongDanAnh
-                ?? variant?.HinhAnh
-                ?? "/images/no-image.png";
-
-                var price =
-                variant?.Gia
-                ?? item.GiaGoc
-                ?? 0;
-
-                <article class="best-card">
-
-                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="best-image">
-
-                        <span class="best-badge">BEST</span>
-
-                        <img src="@image" alt="@item.TenSanPham" loading="lazy" />
-
-                    </a>
-
-
-                    <div class="best-body">
-
-                        <small>@item.MaThuongHieuNavigation?.TenThuongHieu</small>
-
-                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="best-name">
-                            @item.TenSanPham
+                            @if (!string.IsNullOrWhiteSpace(image))
+                            {
+                                <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
+                                <span class="ep-placeholder" hidden>Ảnh đang cập nhật</span>
+                            }
+                            else
+                            {
+                                <span class="ep-placeholder">Ảnh đang cập nhật</span>
+                            }
                         </a>
-
-                        <div class="best-variant">@variant?.PhienBan</div>
-
-                        <div class="best-price">@price.ToString("N0")₫</div>
-
-
-                        @if (variant != null)
-                        {
-                            <button type="button"
-                                    onclick="homeAddCart(@variant.MaBienThe)"
-                                    class="best-cart">
-                                <i class="bi bi-cart-plus"></i>
-                                Thêm vào giỏ
-                            </button>
-                        }
-
-                    </div>
-
-                </article>
-            }
-
-        </div>
-
+                        <div class="ep-card-body">
+                            <div class="ep-card-meta">
+                                <span class="ep-brand">@(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</span>
+                                <span class="ep-stock-status @(isStock ? "" : "ep-stock-out")">
+                                    <span class="ep-stock-dot"></span>
+                                    @(isStock ? "Còn hàng" : "Hết hàng")
+                                </span>
+                            </div>
+                            <a class="ep-product-name" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="@name">@name</a>
+                            <p class="ep-spec">@(string.IsNullOrWhiteSpace(detail) ? "Cấu hình chuẩn · Chính hãng" : detail)</p>
+                            <div class="ep-buy">
+                                <div class="ep-price-block">
+                                    <div class="ep-price-row">
+                                        <span class="ep-price">@(price > 0 ? price.ToString("N0", viCulture) + " ₫" : "Liên hệ")</span>
+                                        @if (hasDiscount)
+                                        {
+                                            <span class="ep-original-price">@originalPrice!.Value.ToString("N0", viCulture) ₫</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="ep-card-actions">
+                                    @if (available != null && price > 0)
+                                    {
+                                        <button type="button" class="ep-btn-cart" onclick="homeAddCart(@available.MaBienThe, this)" aria-label="Thêm @name vào giỏ">
+                                            <i class="bi bi-cart-plus" aria-hidden="true"></i>
+                                            <span>Thêm vào giỏ</span>
+                                        </button>
+                                    }
+                                    else if (available != null)
+                                    {
+                                        <a class="ep-btn-cart" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham">
+                                            <span>Chi tiết</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="ep-btn-cart" disabled>Hết hàng</button>
+                                    }
+                                    <a class="ep-btn-view" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="Chi tiết sản phẩm">
+                                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
     </div>
-
 </section>
-
-
-<style>
-
-    .best-choice-section {
-        position: relative;
-        padding: 80px 0;
-        overflow: hidden;
-        color: #fff;
-        background:
-            radial-gradient(ellipse 70% 50% at 90% 20%, rgba(124,58,237,.22), transparent 55%),
-            radial-gradient(ellipse 60% 50% at 10% 90%, rgba(37,99,235,.18), transparent 55%),
-            linear-gradient(150deg, #060915 0%, #0b102a 50%, #07091e 100%);
-    }
-
-    .best-bg-orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(90px);
-        pointer-events: none;
-    }
-
-    .best-orb-1 {
-        width: 400px; height: 400px;
-        right: 5%; top: -80px;
-        background: radial-gradient(circle, rgba(124,58,237,.3), transparent 65%);
-        animation: bestOrb 9s ease-in-out infinite;
-    }
-
-    .best-orb-2 {
-        width: 300px; height: 300px;
-        left: 8%; bottom: -60px;
-        background: radial-gradient(circle, rgba(37,99,235,.25), transparent 65%);
-        animation: bestOrb 11s ease-in-out infinite reverse;
-    }
-
-    @@keyframes bestOrb {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-25px); }
-    }
-
-    .best-container {
-        width: min(1400px, 92%);
-        margin: auto;
-        position: relative;
-        z-index: 2;
-    }
-
-    .best-heading { margin-bottom: 36px; }
-
-    .best-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 5px 16px;
-        border-radius: 999px;
-        background: rgba(234,179,8,0.12);
-        border: 1px solid rgba(234,179,8,0.25);
-        color: #fbbf24;
-        font-size: 10.5px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        margin-bottom: 12px;
-    }
-
-    .best-title {
-        margin: 0;
-        font-size: clamp(26px, 3vw, 36px);
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: -0.8px;
-    }
-
-    .best-sub {
-        margin: 8px 0 0;
-        color: rgba(255,255,255,0.45);
-        font-size: 14px;
-    }
-
-    .best-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-    }
-
-    /* Card */
-    .best-card {
-        overflow: hidden;
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.04);
-        backdrop-filter: blur(20px);
-        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
-    }
-
-    .best-card:hover {
-        transform: translateY(-6px);
-        border-color: rgba(251,191,36,.25);
-        box-shadow: 0 20px 52px rgba(0,0,0,0.35);
-    }
-
-    /* Image */
-    .best-image {
-        display: block;
-        position: relative;
-        height: 220px;
-        padding: 22px;
-        background: linear-gradient(145deg, #f9f9fd, #eeeeF5);
-        text-decoration: none;
-        overflow: hidden;
-    }
-
-    .best-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        transition: transform 0.4s cubic-bezier(0.25,1,0.5,1);
-    }
-
-    .best-card:hover .best-image img { transform: scale(1.08); }
-
-    /* Golden badge with shimmer */
-    .best-badge {
-        position: absolute;
-        top: 14px; left: 14px;
-        z-index: 2;
-        padding: 5px 10px;
-        border-radius: 8px;
-        color: #1c1500;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        background: linear-gradient(100deg, #a97c13, #edcd66, #fff0a7, #c59219);
-        background-size: 250%;
-        animation: goldShine 3.5s linear infinite;
-        box-shadow: 0 4px 12px rgba(180,130,0,0.4);
-    }
-
-    @@keyframes goldShine {
-        from { background-position: 250% center; }
-        to { background-position: -250% center; }
-    }
-
-    /* Body */
-    .best-body { padding: 16px 18px 18px; }
-
-    .best-body small {
-        color: rgba(255,255,255,0.4);
-        font-size: 10.5px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    .best-name {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        overflow: hidden;
-        font-size: 14px;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        line-height: 1.45;
-        min-height: 40px;
-        margin-bottom: 6px;
-        transition: color 0.15s;
-    }
-
-    .best-name:hover { color: #fbbf24; }
-
-    .best-variant {
-        min-height: 18px;
-        margin-bottom: 10px;
-        color: rgba(255,255,255,0.35);
-        font-size: 11.5px;
-    }
-
-    .best-price {
-        margin-bottom: 14px;
-        color: #fbbf24;
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-    }
-
-    .best-cart {
-        width: 100%;
-        min-height: 44px;
-        border: 0;
-        border-radius: 12px;
-        color: #1c1500;
-        cursor: pointer;
-        font-size: 13.5px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        background: linear-gradient(135deg, #e5c45a, #f3dc87);
-        box-shadow: 0 4px 16px rgba(229,196,90,0.35);
-        transition: all 0.2s ease;
-    }
-
-    .best-cart:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(229,196,90,0.5);
-        background: linear-gradient(135deg, #f0cf6a, #fff5c0);
-    }
-
-
-    @@media (max-width: 1100px) { .best-grid { grid-template-columns: repeat(3, 1fr); } }
-
-    @@media (max-width: 800px) {
-        .best-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .best-image { height: 175px; }
-    }
-
-    @@media (max-width: 480px) {
-        .best-image { height: 155px; padding: 16px; }
-        .best-body { padding: 12px 14px 14px; }
-    }
-
-</style>

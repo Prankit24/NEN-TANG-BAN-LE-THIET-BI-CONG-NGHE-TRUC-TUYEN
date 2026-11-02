@@ -6,6 +6,7 @@
 
     var captchaId = Configuration["GeeTest:Login:CaptchaId"];
     var returnUrl = ViewData["ReturnUrl"]?.ToString();
+    var showServerErrors = Context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase);
 }
 
 <link rel="stylesheet"
@@ -124,7 +125,15 @@
                                autocomplete="email"
                                aria-describedby="Identifier-error" />
                     </div>
-                    <span asp-validation-for="Identifier" id="Identifier-error" class="field-validation-error"></span>
+                    @if (showServerErrors)
+                    {
+                        <span asp-validation-for="Identifier" id="Identifier-error" class="field-validation-error"></span>
+                    }
+                    else
+                    {
+                        <span data-valmsg-for="Identifier" data-valmsg-replace="true"
+                              id="Identifier-error" class="field-validation-error"></span>
+                    }
                 </div>
 
                 <!-- PASSWORD -->
@@ -147,7 +156,15 @@
                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <span asp-validation-for="Password" id="Password-error" class="field-validation-error"></span>
+                    @if (showServerErrors)
+                    {
+                        <span asp-validation-for="Password" id="Password-error" class="field-validation-error"></span>
+                    }
+                    else
+                    {
+                        <span data-valmsg-for="Password" data-valmsg-replace="true"
+                              id="Password-error" class="field-validation-error"></span>
+                    }
                 </div>
 
                 <!-- OPTIONS -->
@@ -206,6 +223,7 @@
 
             let captchaObj = null;
             let verified = false;
+            let submitting = false;
 
             /* SHOW / HIDE PASSWORD */
             document.querySelectorAll(".field-toggle").forEach(function (toggle) {
@@ -265,8 +283,16 @@
                             verified = true;
                             if (message) message.textContent = "";
 
+                            // GeeTest đã xác minh, kiểm tra lần cuối trước khi gửi.
+                            if (!form.checkValidity() ||
+                                (window.jQuery && window.jQuery.validator && !window.jQuery(form).valid())) {
+                                setLoading(false);
+                                form.reportValidity();
+                                return;
+                            }
+                            submitting = true;
                             setLoading(true);
-                            form.submit();
+                            HTMLFormElement.prototype.submit.call(form);
                         });
 
                         captcha.onClose(function () {
@@ -284,16 +310,19 @@
             initCaptcha();
 
             form.addEventListener("submit", function (event) {
-                if (verified) return;
-
                 event.preventDefault();
+                if (submitting) return;
 
-                if (!form.checkValidity()) {
+                const nativeValid = form.checkValidity();
+                const jqueryValid = !(window.jQuery && window.jQuery.validator) ||
+                    window.jQuery(form).valid();
+                if (!nativeValid || !jqueryValid) {
                     form.reportValidity();
                     return;
                 }
 
                 if (!captchaObj) {
+                    if (message) message.textContent = "CAPTCHA chưa sẵn sàng. Vui lòng tải lại trang hoặc liên hệ quản trị viên.";
                     return;
                 }
 

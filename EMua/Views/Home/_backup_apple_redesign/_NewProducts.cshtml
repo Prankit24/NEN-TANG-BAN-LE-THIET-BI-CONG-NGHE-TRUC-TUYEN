@@ -1,0 +1,111 @@
+@model IEnumerable<EMua.Models.Database.SanPham>
+@using System.Linq
+@using System.Collections.Generic
+@using System
+@functions {
+    private string Asset(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var path = value.Trim().Replace("\\", "/");
+        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
+        path = path.TrimStart('~', '/');
+        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
+        return Url.Content("~/" + path);
+    }
+}
+@{
+    var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    var viCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+}
+
+<section class="ep ep-section" id="new-products" aria-labelledby="new-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div>
+                <span class="ep-eyebrow"><i class="bi bi-sparkles" aria-hidden="true"></i> VỪA CẬP BẾN</span>
+                <h2 id="new-heading">Mới tại EMUA</h2>
+                <p>Khám phá các sản phẩm công nghệ thế hệ mới nhất vừa lên kệ.</p>
+            </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Xem tất cả</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        @if (products.Count == 0)
+        {
+            <p class="ep-empty">Sản phẩm đang được cập nhật. Bạn vui lòng quay lại sau.</p>
+        }
+        else
+        {
+            <div class="ep-products">
+                @foreach (var item in products)
+                {
+                    var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
+                    var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
+                    var photo = item.SanPhamHinhAnhs?.Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh)).OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).FirstOrDefault();
+                    var image = Asset(photo?.DuongDanAnh ?? variant?.HinhAnh);
+                    var price = variant?.Gia ?? item.GiaGoc ?? 0;
+                    var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
+                    var detail = string.Join(" · ", new[] { variant?.PhienBan, variant?.MauSac }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                    var originalPrice = item.GiaGoc;
+                    var hasDiscount = originalPrice.HasValue && originalPrice.Value > price && price > 0;
+                    var discountPercent = hasDiscount ? (int)Math.Round((1m - (price / originalPrice!.Value)) * 100m) : 0;
+
+                    <article class="ep-card">
+                        <a class="ep-picture" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" aria-label="Xem @name">
+                            @if (hasDiscount)
+                            {
+                                <span class="ep-chip ep-chip-discount">-@discountPercent%</span>
+                            }
+                            else
+                            {
+                                <span class="ep-chip ep-chip-new">✨ Mới</span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(image))
+                            {
+                                <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
+                                <span class="ep-placeholder" hidden>Ảnh đang cập nhật</span>
+                            }
+                            else
+                            {
+                                <span class="ep-placeholder">Ảnh đang cập nhật</span>
+                            }
+                        </a>
+                        <div class="ep-card-body">
+                            <small class="ep-brand">@(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</small>
+                            <a class="ep-product-name" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="@name">@name</a>
+                            <p class="ep-spec">@(string.IsNullOrWhiteSpace(detail) ? "Cấu hình chuẩn · Chính hãng" : detail)</p>
+                            <div class="ep-buy">
+                                <div class="ep-price-block">
+                                    <div class="ep-price-row">
+                                        <span class="ep-price">@(price > 0 ? price.ToString("N0", viCulture) + " ₫" : "Liên hệ")</span>
+                                        @if (hasDiscount)
+                                        {
+                                            <span class="ep-original-price">@originalPrice!.Value.ToString("N0", viCulture) ₫</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (available != null && price > 0)
+                                {
+                                    <button type="button" class="ep-cart" onclick="homeAddCart(@available.MaBienThe)" aria-label="Thêm @name vào giỏ">
+                                        <i class="bi bi-cart-plus" aria-hidden="true"></i> Thêm vào giỏ
+                                    </button>
+                                }
+                                else if (available != null)
+                                {
+                                    <a class="ep-cart" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham">Xem chi tiết</a>
+                                }
+                                else
+                                {
+                                    <button type="button" class="ep-cart" disabled>Tạm hết hàng</button>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+</section>

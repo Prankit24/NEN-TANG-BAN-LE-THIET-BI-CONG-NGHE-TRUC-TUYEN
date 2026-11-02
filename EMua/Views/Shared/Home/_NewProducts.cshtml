@@ -1,318 +1,128 @@
 @model IEnumerable<EMua.Models.Database.SanPham>
+@using System.Linq
+@using System.Collections.Generic
+@using System
+@functions {
+    private string Asset(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var path = value.Trim().Replace("\\", "/");
+        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
+        path = path.TrimStart('~', '/');
+        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
+        return Url.Content("~/" + path);
+    }
+}
+@{
+    var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    var viCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+}
 
+<section class="ep-section" id="new-products" aria-labelledby="new-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div class="ep-heading-left">
+                <span class="ep-eyebrow">
+                    <i class="bi bi-sparkles" aria-hidden="true"></i> VỪA CẬP BẾN
+                </span>
+                <h2 id="new-heading">Mới tại EMUA</h2>
+                <p>Khám phá các thiết bị công nghệ thế hệ mới nhất vừa lên kệ tại hệ thống.</p>
+            </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Xem tất cả</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
 
-<section class="new-product-section" id="new-products">
+        @if (products.Count == 0)
+        {
+            <p class="ep-empty">Sản phẩm đang được cập nhật. Bạn vui lòng quay lại sau.</p>
+        }
+        else
+        {
+            <div class="ep-products">
+                @foreach (var item in products)
+                {
+                    var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
+                    var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
+                    var photo = item.SanPhamHinhAnhs?.Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh)).OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).FirstOrDefault();
+                    var image = Asset(photo?.DuongDanAnh ?? variant?.HinhAnh);
+                    var price = variant?.Gia ?? item.GiaGoc ?? 0;
+                    var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
+                    var detail = string.Join(" · ", new[] { variant?.PhienBan, variant?.MauSac }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
-    <div class="new-product-container">
+                    var originalPrice = item.GiaGoc;
+                    var hasDiscount = originalPrice.HasValue && originalPrice.Value > price && price > 0;
+                    var discountPercent = hasDiscount ? (int)Math.Round((1m - (price / originalPrice!.Value)) * 100m) : 0;
+                    var isStock = available != null && available.SoLuong > 0;
 
-        <div class="new-product-heading">
-            <div class="np-tag">MỚI TẠI EMUA</div>
-            <h2 class="np-title">Sản phẩm mới</h2>
-            <p class="np-sub">Cập nhật những thiết bị công nghệ mới nhất tại EMUA.</p>
-        </div>
-
-
-        <div class="new-product-grid">
-
-            @foreach (var item in Model)
-            {
-                var variant = item.BienTheSanPhams
-                .Where(x => x.SoLuong > 0)
-                .OrderBy(x => x.Gia)
-                .FirstOrDefault();
-
-                var photo = item.SanPhamHinhAnhs
-                .OrderByDescending(x => x.LaAnhChinh)
-                .ThenBy(x => x.ThuTu)
-                .FirstOrDefault();
-
-                var image =
-                photo?.DuongDanAnh
-                ?? variant?.HinhAnh
-                ?? "/images/no-image.png";
-
-                var price =
-                variant?.Gia
-                ?? item.GiaGoc
-                ?? 0;
-
-                <article class="new-product-card">
-
-                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="new-product-image">
-
-                        <span class="new-product-badge">NEW</span>
-
-                        <img src="@image" alt="@item.TenSanPham" loading="lazy" />
-
-                        <div class="np-overlay">
-                            <span class="np-quick"><i class="bi bi-eye"></i> Xem nhanh</span>
-                        </div>
-
-                    </a>
-
-
-                    <div class="new-product-body">
-
-                        <div class="new-product-brand">
-                            @item.MaThuongHieuNavigation?.TenThuongHieu
-                        </div>
-
-                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" class="np-name">
-                            @item.TenSanPham
-                        </a>
-
-                        <div class="new-product-variant">
-                            @variant?.PhienBan
-                            @if (!string.IsNullOrWhiteSpace(variant?.MauSac))
+                    <article class="ep-card">
+                        <a class="ep-picture" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" aria-label="Xem @name">
+                            @if (hasDiscount)
                             {
-                                <span>· @variant.MauSac</span>
+                                <span class="ep-chip ep-chip-discount">-@discountPercent%</span>
                             }
+                            else
+                            {
+                                <span class="ep-chip ep-chip-blue">Mới</span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(image))
+                            {
+                                <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
+                                <span class="ep-placeholder" hidden>Ảnh đang cập nhật</span>
+                            }
+                            else
+                            {
+                                <span class="ep-placeholder">Ảnh đang cập nhật</span>
+                            }
+                        </a>
+                        <div class="ep-card-body">
+                            <div class="ep-card-meta">
+                                <span class="ep-brand">@(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</span>
+                                <span class="ep-stock-status @(isStock ? "" : "ep-stock-out")">
+                                    <span class="ep-stock-dot"></span>
+                                    @(isStock ? "Còn hàng" : "Hết hàng")
+                                </span>
+                            </div>
+                            <a class="ep-product-name" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="@name">@name</a>
+                            <p class="ep-spec">@(string.IsNullOrWhiteSpace(detail) ? "Cấu hình chuẩn · Chính hãng" : detail)</p>
+                            <div class="ep-buy">
+                                <div class="ep-price-block">
+                                    <div class="ep-price-row">
+                                        <span class="ep-price">@(price > 0 ? price.ToString("N0", viCulture) + " ₫" : "Liên hệ")</span>
+                                        @if (hasDiscount)
+                                        {
+                                            <span class="ep-original-price">@originalPrice!.Value.ToString("N0", viCulture) ₫</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="ep-card-actions">
+                                    @if (available != null && price > 0)
+                                    {
+                                        <button type="button" class="ep-btn-cart" onclick="homeAddCart(@available.MaBienThe, this)" aria-label="Thêm @name vào giỏ">
+                                            <i class="bi bi-cart-plus" aria-hidden="true"></i>
+                                            <span>Thêm vào giỏ</span>
+                                        </button>
+                                    }
+                                    else if (available != null)
+                                    {
+                                        <a class="ep-btn-cart" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham">
+                                            <span>Chi tiết</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="ep-btn-cart" disabled>Hết hàng</button>
+                                    }
+                                    <a class="ep-btn-view" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="Chi tiết sản phẩm">
+                                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="new-product-price">@price.ToString("N0")₫</div>
-
-
-                        @if (variant != null)
-                        {
-                            <button type="button"
-                                    class="new-product-cart"
-                                    onclick="homeAddCart(@variant.MaBienThe)">
-                                <i class="bi bi-cart-plus"></i>
-                                Thêm vào giỏ
-                            </button>
-                        }
-
-                    </div>
-
-                </article>
-            }
-
-        </div>
-
+                    </article>
+                }
+            </div>
+        }
     </div>
-
 </section>
-
-
-<style>
-
-    .new-product-section {
-        padding: 80px 0;
-        background: linear-gradient(180deg, #f8faff, #f2f4fb);
-    }
-
-    .new-product-container {
-        width: min(1400px, 92%);
-        margin: auto;
-    }
-
-    .new-product-heading { margin-bottom: 36px; }
-
-    .np-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 14px;
-        border-radius: 999px;
-        background: rgba(37,99,235,.07);
-        color: #2563eb;
-        font-size: 10.5px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        margin-bottom: 10px;
-    }
-
-    .np-title {
-        margin: 0;
-        font-size: clamp(24px, 3vw, 34px);
-        font-weight: 900;
-        color: #0f172a;
-        letter-spacing: -0.8px;
-    }
-
-    .np-sub {
-        margin: 8px 0 0;
-        color: #94a3b8;
-        font-size: 14px;
-    }
-
-    .new-product-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-    }
-
-
-    /* Card */
-    .new-product-card {
-        min-width: 0;
-        overflow: hidden;
-        border-radius: 20px;
-        border: 1px solid rgba(0,0,0,0.05);
-        background: #fff;
-        box-shadow: 0 2px 12px rgba(15,23,42,0.05);
-        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
-    }
-
-    .new-product-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 20px 52px rgba(15,23,42,0.12);
-    }
-
-
-    /* Image */
-    .new-product-image {
-        display: block;
-        position: relative;
-        width: 100%;
-        height: 220px;
-        padding: 22px;
-        overflow: hidden;
-        background: linear-gradient(145deg, #f8f9fd, #f1f2f9);
-        text-decoration: none;
-    }
-
-    .new-product-image img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-        transition: transform 0.4s cubic-bezier(0.25,1,0.5,1);
-    }
-
-    .new-product-card:hover .new-product-image img {
-        transform: scale(1.08);
-    }
-
-    /* Overlay */
-    .np-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(15,23,42,0.45);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.25s ease;
-        backdrop-filter: blur(2px);
-    }
-
-    .new-product-card:hover .np-overlay { opacity: 1; }
-
-    .np-quick {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 20px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.95);
-        color: #0f172a;
-        font-size: 13px;
-        font-weight: 700;
-        transform: translateY(10px);
-        transition: transform 0.25s ease;
-    }
-
-    .new-product-card:hover .np-quick { transform: translateY(0); }
-
-
-    /* Badge */
-    .new-product-badge {
-        position: absolute;
-        top: 14px; left: 14px;
-        z-index: 2;
-        padding: 5px 10px;
-        border-radius: 8px;
-        color: #fff;
-        background: linear-gradient(135deg, #2563eb, #06b6d4);
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        box-shadow: 0 4px 12px rgba(37,99,235,0.4);
-    }
-
-
-    /* Body */
-    .new-product-body { padding: 16px 18px 18px; }
-
-    .new-product-brand {
-        color: #94a3b8;
-        font-size: 10.5px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-    }
-
-    .np-name {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        overflow: hidden;
-        font-size: 14px;
-        font-weight: 700;
-        color: #0f172a;
-        text-decoration: none;
-        line-height: 1.45;
-        min-height: 40px;
-        margin-bottom: 6px;
-        transition: color 0.15s;
-    }
-
-    .np-name:hover { color: #2563eb; }
-
-    .new-product-variant {
-        min-height: 18px;
-        margin-bottom: 10px;
-        color: #94a3b8;
-        font-size: 11.5px;
-    }
-
-    .new-product-price {
-        margin-bottom: 14px;
-        color: #ef4444;
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-    }
-
-    .new-product-cart {
-        width: 100%;
-        min-height: 44px;
-        border: 0;
-        border-radius: 12px;
-        color: #fff;
-        cursor: pointer;
-        font-size: 13.5px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        box-shadow: 0 4px 16px rgba(37,99,235,0.28);
-        transition: all 0.2s ease;
-    }
-
-    .new-product-cart:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(37,99,235,0.42);
-    }
-
-
-    @@media (max-width: 1100px) {
-        .new-product-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @@media (max-width: 800px) {
-        .new-product-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .new-product-image { height: 175px; }
-    }
-
-    @@media (max-width: 480px) {
-        .new-product-image { height: 155px; padding: 16px; }
-        .new-product-body { padding: 12px 14px 14px; }
-    }
-
-</style>

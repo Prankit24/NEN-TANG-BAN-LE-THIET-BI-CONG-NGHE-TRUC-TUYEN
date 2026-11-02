@@ -1,208 +1,92 @@
-﻿@model EMua.Models.ViewModels.HomeViewModel
-
+@model EMua.Models.ViewModels.HomeViewModel
 @{
-    ViewData["Title"] = "Trang chủ";
+    ViewData["Title"] = "EMUA — Siêu thị thiết bị công nghệ chính hãng";
+    ViewData["HomeRedesign"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/home-refresh.css"
+          asp-append-version="true" />
 }
 
 @Html.AntiForgeryToken()
 
+<div class="emua-home">
+    @* 1. HERO BANNER CÔNG NGHỆ CAO CẤP (Carousel 4 Slide Flagship) *@
+    <partial name="Home/_Hero" />
 
-<partial name="Home/_Hero" />
+    @* 2. DANH MỤC THIẾT BỊ DẠNG GRID HIỆN ĐẠI *@
+    <partial name="Home/_Categories" model="Model.DanhMucs" />
 
-<partial name="Home/_IPhoneDuo" />
+    @* 3. FLASH SALE GIÁ SỐC (Nếu có dữ liệu) *@
+    @if (Model.FlashSale != null && Model.FlashSale.Any())
+    {
+        <partial name="Home/_FlashSale" model="Model.FlashSale" />
+    }
 
-<partial name="Home/_Categories"
-         model="Model.DanhMucs" />
+    @* 4. SẢN PHẨM NỔI BẬT (BÁN CHẠY NHẤT) *@
+    <partial name="Home/_FeaturedProducts" model="Model.SanPhamNoiBat" />
 
-<partial name="Home/_FlashSale"
-         model="Model.FlashSale" />
+    @* 5. PRODUCT SHOWCASE (Bố cục bất đối xứng: Laptop, Smartphone, Âm thanh, Gaming) *@
+    <partial name="Home/_Showcase" />
 
-<partial name="Home/_FeaturedProducts"
-         model="Model.SanPhamNoiBat" />
+    @* 6. LỰA CHỌN ĐÁNG CÂN NHẮC (EMUA SELECTION) *@
+    @if (Model.BestChoice != null && Model.BestChoice.Any())
+    {
+        <partial name="Home/_BestChoice" model="Model.BestChoice" />
+    }
 
-<partial name="Home/_BestChoice"
-         model="Model.BestChoice" />
+    @* 7. KHU VỰC TRỢ LÝ AI EMUA (Tư vấn công nghệ cao cấp) *@
+    <section class="home-advisor" aria-labelledby="advisor-title">
+        <div class="ep-container">
+            <div class="home-advisor-inner">
+                <div class="advisor-copy">
+                    <span>
+                        <i class="bi bi-cpu-fill" aria-hidden="true"></i> TRỢ LÝ THÔNG MINH
+                    </span>
+                    <h2 id="advisor-title">Chọn đúng thiết bị, dễ dàng hơn cùng AI.</h2>
+                    <p>Chia sẻ nhu cầu và ngân sách — trợ lý AI sẽ phân tích và đề xuất cấu hình tối ưu nhất cho bạn.</p>
+                </div>
+                <button type="button" class="advisor-button" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Bắt đầu tư vấn cùng AI">
+                    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                    <span>Tư vấn cùng AI</span>
+                </button>
+            </div>
+        </div>
+    </section>
 
-<partial name="Home/_NewProducts"
-         model="Model.SanPhamMoi" />
+    @* 8. SẢN PHẨM MỚI TẠI EMUA *@
+    <partial name="Home/_NewProducts" model="Model.SanPhamMoi" />
 
-<partial name="Home/_Brands"
-         model="Model.ThuongHieus" />
-
+    @* 9. THƯƠNG HIỆU ĐỐI TÁC CHIẾN LƯỢC *@
+    <partial name="Home/_Brands" model="Model.ThuongHieus" />
+</div>
 
 <script>
+    // Đồng hồ đếm ngược Flash Sale kết thúc vào 23:59:59 mỗi ngày
+    (function initFlashSaleTimer() {
+        function updateTimer() {
+            const now = new Date();
+            const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            let diff = Math.max(0, Math.floor((midnight - now) / 1000));
 
-    async function homeAddCart(variantId) {
+            const hours = String(Math.floor(diff / 3600)).padStart(2, '0');
+            diff %= 3600;
+            const minutes = String(Math.floor(diff / 60)).padStart(2, '0');
+            const seconds = String(diff % 60).padStart(2, '0');
 
-        // Khách chưa đăng nhập vẫn được thêm vào giỏ tạm trên trình duyệt.
-        if (!window.EMUA_IS_AUTHENTICATED) {
-            window.addToGuestCart(variantId, 1);
-            if (typeof showCartAddedFeedback === 'function') showCartAddedFeedback();
-            return;
+            const hElem = document.getElementById('fsHours');
+            const mElem = document.getElementById('fsMinutes');
+            const sElem = document.getElementById('fsSeconds');
+
+            if (hElem) hElem.textContent = hours;
+            if (mElem) mElem.textContent = minutes;
+            if (sElem) sElem.textContent = seconds;
         }
 
-        /*
-         * Token được sinh bởi:
-         *
-         * @Html.AntiForgeryToken()
-         */
-        const tokenInput =
-            document.querySelector(
-                'input[name="__RequestVerificationToken"]'
-            );
-
-
-        if (!tokenInput) {
-
-            console.error(
-                'Không tìm thấy __RequestVerificationToken'
-            );
-
-            alert(
-                'Không tìm thấy mã bảo mật.'
-            );
-
-            return;
-        }
-
-
-        try {
-
-            const response =
-                await fetch(
-                    '/Cart/Add',
-                    {
-
-                        method:
-                            'POST',
-
-                        headers: {
-
-                            'Content-Type':
-                                'application/json',
-
-                            'RequestVerificationToken':
-                                tokenInput.value
-                        },
-
-
-                        body:
-                            JSON.stringify({
-
-                                variantId:
-                                    variantId,
-
-                                quantity:
-                                    1
-
-                            })
-
-                    }
-                );
-
-
-            /*
-             * Chưa đăng nhập.
-             */
-            if (
-                response.status === 401
-                ||
-                response.status === 403
-            ) {
-
-                window.location.href =
-                    '/Auth/Login?returnUrl='
-                    +
-                    encodeURIComponent(
-                        window.location.pathname
-                    );
-
-                return;
-            }
-
-
-            /*
-             * Không gọi response.json() bừa nữa.
-             * Kiểm tra content-type trước.
-             */
-            let result = null;
-
-
-            const contentType =
-                response.headers.get(
-                    'content-type'
-                );
-
-
-            if (
-                contentType &&
-                contentType.includes(
-                    'application/json'
-                )
-            ) {
-
-                result =
-                    await response.json();
-
-            }
-
-
-            /*
-             * Nếu lỗi.
-             */
-            if (!response.ok) {
-
-                console.error(
-                    'Cart Add Error',
-                    response.status,
-                    result
-                );
-
-
-                alert(
-                    result?.message
-                    ||
-                    'Không thể thêm sản phẩm vào giỏ hàng.'
-                );
-
-                return;
-            }
-
-
-            /*
-             * Thành công: không hiện toast.
-             * Chỉ nháy icon giỏ hàng và hiện +1.
-             */
-            if (typeof showCartAddedFeedback === 'function') {
-                showCartAddedFeedback();
-            }
-
-
-            const newCount =
-                result?.count
-                ?? result?.cartCount
-                ?? result?.totalQuantity;
-
-            if (newCount !== undefined &&
-                typeof setGlobalCartCount === 'function') {
-                setGlobalCartCount(newCount, false);
-            }
-
-        }
-        catch (error) {
-
-            console.error(
-                'Lỗi khi gọi /Cart/Add:',
-                error
-            );
-
-
-            alert(
-                'Không thể kết nối đến giỏ hàng.'
-            );
-
-        }
-
-    }
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    })();
 
 </script>

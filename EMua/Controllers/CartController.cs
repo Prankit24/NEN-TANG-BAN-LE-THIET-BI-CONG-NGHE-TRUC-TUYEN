@@ -1,3 +1,4 @@
+using EMua.Services;
 using System.Security.Claims;
 using EMua.Data;
 using EMua.Models.Database;
@@ -61,47 +62,95 @@ public class CartController : Controller
         };
 
         await ApplyCouponFromSessionAsync(viewModel);
-        viewModel.AvailableCoupons = await GetAvailableCouponsAsync(viewModel.Subtotal);
+        // CouponOptions loads only two eligible coupons per request.
 
         return View(viewModel);
     }
 
-    // Áp dụng mã khuyến mãi cho giỏ hàng, lưu lại qua Session để giữ khi đổi số lượng/tải lại trang.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApplyCoupon(string code)
+    private bool WantsJson => Request.Headers.Accept.ToString().Contains("application/json");
+
+    private async Task<decimal> CartSubtotalAsync(int userId) =>
+        await _db.ChiTietGioHangs.Where(x => x.MaNguoiDung == userId)
+            .SumAsync(x => (decimal?)(x.SoLuong * x.MaBienTheNavigation.Gia)) ?? 0m;
+
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> CouponOptions(int page = 1)
     {
         var userId = GetUserId();
-        if (userId == null) return RedirectToAction("Login", "Auth");
-
-        var subtotal = await _db.ChiTietGioHangs
-            .Include(x => x.MaBienTheNavigation)
-            .Where(x => x.MaNguoiDung == userId)
-            .SumAsync(x => x.SoLuong * (x.MaBienTheNavigation!.Gia));
-
-        var coupon = await FindValidCouponAsync(code, subtotal);
-
-        if (coupon == null)
+        if (userId == null) return Unauthorized(new { message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." });
+        var subtotal = await CartSubtotalAsync(userId.Value);
+        var now = DateTime.Now;
+        var query = _db.KhuyenMais.AsNoTracking().Where(x =>
+            subtotal > 0 && x.TrangThai && x.GiaTriGiam > 0 &&
+            (x.SoLuong == null || x.SoLuong > 0) &&
+            (x.NgayBatDau == null || x.NgayBatDau <= now) &&
+            (x.NgayKetThuc == null || x.NgayKetThuc >= now) &&
+            (x.GiaTriDonHangToiThieu ?? 0) <= subtotal);
+        var total = await query.CountAsync();
+        var pages = Math.Max(1, (int)Math.Ceiling(total / 2d));
+        page = Math.Clamp(page, 1, pages);
+        var coupons = await query.OrderBy(x => x.MaKhuyenMai)
+            .Skip((page - 1) * 2).Take(2).ToListAsync();
+        return Json(new
         {
-            TempData["Error"] = "Mã khuyến mãi không hợp lệ, đã hết hạn, hết lượt dùng hoặc đơn hàng chưa đạt giá trị tối thiểu.";
-        }
-        else
-        {
-            HttpContext.Session.SetString(CouponSessionKey, coupon.MaCode);
-            TempData["Success"] = $"Đã áp dụng mã \"{coupon.MaCode}\" thành công!";
-        }
+            page, pages, total,
+            items = coupons.Select(x => new
+            {
+                code = x.MaCode, name = x.TenKhuyenMai,
+                discount = CalculateDiscount(x, subtotal),
+                minimum = x.GiaTriDonHangToiThieu ?? 0m,
+                expires = x.NgayKetThuc?.ToString("dd/MM/yyyy HH:mm") ?? "Không giới hạn",
+                label = ((x.LoaiGiamGia ?? "").Contains("%") || (x.LoaiGiamGia ?? "").Contains("trăm", StringComparison.OrdinalIgnoreCase))
+                    ? $"Giảm {x.GiaTriGiam:0.##}%" : $"Giảm {x.GiaTriGiam:N0}đ"
+            })
+        });
+    }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApplyCoupon(string? code)
+    {
+        var userId = GetUserId();
+        if (userId == null)
+            return WantsJson ? Unauthorized(new { message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." })
+                : RedirectToAction("Login", "Auth");
+        var subtotal = await CartSubtotalAsync(userId.Value);
+        var check = await CheckCouponAsync(code, subtotal);
+        if (check.Error != null)
+        {
+            if (WantsJson) return BadRequest(new { success = false, message = check.Error });
+            TempData["CouponError"] = check.Error;
+            return RedirectToAction(nameof(Index));
+        }
+        var coupon = check.Coupon!;
+        HttpContext.Session.SetString(CouponSessionKey, coupon.MaCode);
+        var discount = CalculateDiscount(coupon, subtotal);
+        var message = $"Đã áp dụng {coupon.MaCode} — giảm {discount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"))}đ.";
+        if (WantsJson) return CouponTotals(subtotal, discount, coupon.MaCode, message);
+        TempData["CouponSuccess"] = message;
         return RedirectToAction(nameof(Index));
     }
 
-    // Gỡ mã khuyến mãi đang áp dụng khỏi giỏ hàng.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult RemoveCoupon()
+    public async Task<IActionResult> RemoveCoupon()
     {
+        var userId = GetUserId();
+        if (userId == null)
+            return WantsJson ? Unauthorized(new { message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." })
+                : RedirectToAction("Login", "Auth");
         HttpContext.Session.Remove(CouponSessionKey);
-        TempData["Success"] = "Đã gỡ mã khuyến mãi khỏi giỏ hàng.";
+        if (WantsJson) return CouponTotals(await CartSubtotalAsync(userId.Value), 0m, null, "Đã bỏ mã giảm giá.");
+        TempData["CouponSuccess"] = "Đã bỏ mã giảm giá.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private JsonResult CouponTotals(decimal subtotal, decimal discount, string? code, string message)
+    {
+        var shipping = subtotal <= 0 || subtotal >= 500000m ? 0m : 30000m;
+        return Json(new { success = true, message, code, subtotal, discount, shipping,
+            total = Math.Max(0m, subtotal + shipping - discount) });
     }
 
     // Lấy số lượng sản phẩm để cập nhật badge giỏ hàng.
@@ -161,7 +210,7 @@ public class CartController : Controller
 
         if (variant == null || variant.TrangThai != "Còn hàng" ||
             variant.MaSanPhamNavigation.TrangThaiSanPham == "Ẩn" ||
-            variant.SoLuong < quantity)
+            variant.SoLuong < quantity || variant.Gia <= 0)
         {
             TempData["Error"] = "Phiên bản đã chọn không còn đủ hàng. Vui lòng chọn lại.";
             return LocalRedirect(backUrl);
@@ -170,6 +219,7 @@ public class CartController : Controller
         if (buyNow)
         {
             // Không ghi vào bảng giỏ hàng: thanh toán riêng đúng phiên bản và số lượng đã chọn.
+            TempData["Checkout_BuyNowExpected"] = true;
             HttpContext.Session.SetInt32("Checkout_BuyNowUserId", userId.Value);
             HttpContext.Session.SetInt32("Checkout_BuyNowVariantId", variantId);
             HttpContext.Session.SetInt32("Checkout_BuyNowQuantity", quantity);
@@ -185,7 +235,7 @@ public class CartController : Controller
         var cartItem = await _db.ChiTietGioHangs.FirstOrDefaultAsync(x =>
             x.MaNguoiDung == userId.Value && x.MaBienThe == variantId);
 
-        var combinedQuantity = (cartItem?.SoLuong ?? 0) + quantity;
+        var combinedQuantity = (long)(cartItem?.SoLuong ?? 0) + quantity;
         if (combinedQuantity > variant.SoLuong)
         {
             TempData["Error"] = "Số lượng trong giỏ hàng cộng với số lượng mới vượt quá tồn kho.";
@@ -204,7 +254,7 @@ public class CartController : Controller
         }
         else
         {
-            cartItem.SoLuong = combinedQuantity;
+            cartItem.SoLuong = (int)combinedQuantity;
         }
 
         await _db.SaveChangesAsync();
@@ -238,9 +288,10 @@ public class CartController : Controller
         }
 
         var variant = await _db.BienTheSanPhams
-            .FindAsync(request.VariantId);
+            .Include(x => x.MaSanPhamNavigation)
+            .FirstOrDefaultAsync(x => x.MaBienThe == request.VariantId);
 
-        if (variant == null || variant.TrangThai != "Còn hàng")
+        if (variant == null || variant.TrangThai != "Còn hàng" || variant.Gia <= 0 || variant.MaSanPhamNavigation?.TrangThaiSanPham == "Ẩn")
         {
             return NotFound(new
             {
@@ -254,7 +305,7 @@ public class CartController : Controller
                 x.MaNguoiDung == userId &&
                 x.MaBienThe == request.VariantId);
 
-        var newQuantity = (cartItem?.SoLuong ?? 0) + request.Quantity;
+        var newQuantity = (long)(cartItem?.SoLuong ?? 0) + request.Quantity;
 
         if (newQuantity > variant.SoLuong)
         {
@@ -277,7 +328,7 @@ public class CartController : Controller
         }
         else
         {
-            cartItem.SoLuong = newQuantity;
+            cartItem.SoLuong = (int)newQuantity;
         }
 
         await _db.SaveChangesAsync();
@@ -306,6 +357,10 @@ public class CartController : Controller
             else if (quantity <= item.MaBienTheNavigation.SoLuong)
             {
                 item.SoLuong = quantity;
+            }
+            else
+            {
+                TempData["Error"] = "Số lượng yêu cầu vượt quá tồn kho.";
             }
             await _db.SaveChangesAsync();
         }
@@ -358,16 +413,17 @@ public class CartController : Controller
             .Select(g => new GuestCartItemRequest
             {
                 VariantId = g.Key,
-                Quantity = g.Sum(x => x.Quantity)
+                Quantity = (int)Math.Min(int.MaxValue, g.Sum(x => (long)x.Quantity))
             })
             .ToList();
 
         foreach (var guestItem in normalizedItems)
         {
             var variant = await _db.BienTheSanPhams
+                .Include(x => x.MaSanPhamNavigation)
                 .FirstOrDefaultAsync(x => x.MaBienThe == guestItem.VariantId);
 
-            if (variant == null || variant.TrangThai != "Còn hàng" || variant.SoLuong <= 0)
+            if (variant == null || variant.TrangThai != "Còn hàng" || variant.SoLuong <= 0 || variant.Gia <= 0 || variant.MaSanPhamNavigation?.TrangThaiSanPham == "Ẩn")
                 continue;
 
             var dbItem = await _db.ChiTietGioHangs
@@ -376,8 +432,8 @@ public class CartController : Controller
                     x.MaBienThe == guestItem.VariantId);
 
             var currentQuantity = dbItem?.SoLuong ?? 0;
-            var desiredQuantity = currentQuantity + guestItem.Quantity;
-            var safeQuantity = Math.Min(desiredQuantity, variant.SoLuong);
+            var desiredQuantity = (long)currentQuantity + guestItem.Quantity;
+            var safeQuantity = (int)Math.Min(desiredQuantity, variant.SoLuong);
 
             if (safeQuantity <= 0)
                 continue;
@@ -409,12 +465,13 @@ public class CartController : Controller
         var code = HttpContext.Session.GetString(CouponSessionKey);
         if (string.IsNullOrWhiteSpace(code)) return;
 
-        var coupon = await FindValidCouponAsync(code, model.Subtotal);
+        var check = await CheckCouponAsync(code, model.Subtotal);
+        var coupon = check.Coupon;
 
         if (coupon == null)
         {
             HttpContext.Session.Remove(CouponSessionKey);
-            TempData["Error"] = $"Mã \"{code}\" không còn áp dụng được cho giỏ hàng hiện tại nên đã được tự động gỡ bỏ.";
+            TempData["CouponError"] = check.Error + " Mã đã được gỡ khỏi giỏ hàng.";
             return;
         }
 
@@ -422,56 +479,29 @@ public class CartController : Controller
         model.Discount = CalculateDiscount(coupon, model.Subtotal);
     }
 
-    private async Task<KhuyenMai?> FindValidCouponAsync(string? code, decimal subtotal)
+    private async Task<(KhuyenMai? Coupon, string? Error)> CheckCouponAsync(string? code, decimal subtotal)
     {
-        if (string.IsNullOrWhiteSpace(code)) return null;
-
+        if (string.IsNullOrWhiteSpace(code)) return (null, "Vui lòng nhập mã giảm giá.");
+        if (code.Trim().Length > 50) return (null, "Mã giảm giá không hợp lệ (tối đa 50 ký tự).");
+        if (subtotal <= 0) return (null, "Giỏ hàng chưa có sản phẩm để áp dụng mã.");
+        var normalized = code.Trim().ToLower();
+        var coupon = await _db.KhuyenMais.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.MaCode.Trim().ToLower() == normalized);
+        if (coupon == null) return (null, "Không tìm thấy mã giảm giá này. Bạn kiểm tra lại mã nhé.");
+        if (!coupon.TrangThai) return (null, "Mã giảm giá này đang tạm ngừng áp dụng.");
         var now = DateTime.Now;
-        var coupon = await _db.KhuyenMais
-            .FirstOrDefaultAsync(x => x.MaCode.ToLower() == code.Trim().ToLower());
-
-        if (coupon == null
-            || !coupon.TrangThai
-            || coupon.SoLuong is <= 0
-            || coupon.NgayBatDau > now
-            || coupon.NgayKetThuc < now
-            || (coupon.GiaTriDonHangToiThieu ?? 0) > subtotal)
-        {
-            return null;
-        }
-
-        return coupon;
+        if (coupon.NgayBatDau > now) return (null, $"Mã bắt đầu áp dụng lúc {coupon.NgayBatDau:dd/MM/yyyy HH:mm}.");
+        if (coupon.NgayKetThuc < now) return (null, "Mã giảm giá đã hết hạn.");
+        if (coupon.SoLuong is <= 0) return (null, "Mã giảm giá đã hết lượt sử dụng.");
+        var minimum = coupon.GiaTriDonHangToiThieu ?? 0m;
+        if (minimum > subtotal)
+            return (null, $"Mua thêm {(minimum - subtotal).ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"))}đ để sử dụng mã này.");
+        if (coupon.GiaTriGiam <= 0) return (null, "Mã này chưa có mức giảm hợp lệ. Vui lòng chọn mã khác.");
+        return (coupon, null);
     }
 
     private static decimal CalculateDiscount(KhuyenMai coupon, decimal subtotal) =>
-        coupon.LoaiGiamGia.Contains("%") || coupon.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)
-            ? Math.Min(subtotal, subtotal * coupon.GiaTriGiam / 100m)
-            : Math.Min(subtotal, coupon.GiaTriGiam);
-
-    // Lấy các mã khuyến mãi đang còn hiệu lực để gợi ý cho khách ngay trên trang giỏ hàng.
-    private async Task<List<CouponOptionViewModel>> GetAvailableCouponsAsync(decimal subtotal)
-    {
-        var now = DateTime.Now;
-
-        return await _db.KhuyenMais.AsNoTracking()
-            .Where(x => x.TrangThai
-                && x.SoLuong > 0
-                && (x.NgayBatDau == null || x.NgayBatDau <= now)
-                && (x.NgayKetThuc == null || x.NgayKetThuc >= now))
-            .OrderBy(x => x.GiaTriDonHangToiThieu ?? 0)
-            .ThenByDescending(x => x.GiaTriGiam)
-            .Take(4)
-            .Select(x => new CouponOptionViewModel
-            {
-                Code = x.MaCode,
-                Name = x.TenKhuyenMai,
-                DiscountText = x.LoaiGiamGia.Contains("%")
-                    ? $"Giảm {x.GiaTriGiam:N0}%"
-                    : $"Giảm {x.GiaTriGiam:N0}đ",
-                MinimumOrder = x.GiaTriDonHangToiThieu
-            })
-            .ToListAsync();
-    }
+        ShoppingRules.Discount(coupon, subtotal);
 
     private int? GetUserId()
     {
