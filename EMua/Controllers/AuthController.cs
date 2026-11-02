@@ -31,6 +31,7 @@ public class AuthController : Controller
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AuthController> _logger;
     private readonly IAppEmailSender _emailSender;
+    private readonly EmailVerificationService _emailVerification;
 
     public AuthController(
         EMuaDbContext db,
@@ -38,7 +39,8 @@ public class AuthController : Controller
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
         ILogger<AuthController> logger,
-        IAppEmailSender emailSender)
+        IAppEmailSender emailSender,
+        EmailVerificationService emailVerification)
     {
         _db = db;
         _passwordHasher = passwordHasher;
@@ -46,6 +48,7 @@ public class AuthController : Controller
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _emailSender = emailSender;
+        _emailVerification = emailVerification;
     }
 
     // =====================================================
@@ -160,9 +163,32 @@ public class AuthController : Controller
             return View(model);
         }
 
-        TempData["SuccessMessage"] =
-            "Đăng ký thành công. Hãy đăng nhập để tiếp tục.";
+        try
+        {
+            await _emailVerification.SendAsync(user.MaNguoiDung, email);
+            TempData["SuccessMessage"] =
+                "Đăng ký thành công. Vui lòng kiểm tra email để kích hoạt tài khoản.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Không gửi được email kích hoạt cho UserId={UserId}", user.MaNguoiDung);
+            TempData["ErrorMessage"] =
+                "Tài khoản đã được tạo nhưng chưa gửi được email kích hoạt. Vui lòng liên hệ hỗ trợ.";
+        }
 
+        return RedirectToAction(nameof(Login));
+    }
+
+    // =====================================================
+    // VERIFY EMAIL
+    // =====================================================
+    [HttpGet]
+    public async Task<IActionResult> VerifyEmail(string? token)
+    {
+        var ok = await _emailVerification.VerifyAsync(token);
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+            ? "Xác minh email thành công. Bạn có thể đăng nhập."
+            : "Liên kết xác minh không hợp lệ, đã hết hạn hoặc đã sử dụng.";
         return RedirectToAction(nameof(Login));
     }
 
@@ -290,6 +316,14 @@ public class AuthController : Controller
                 return View(model);
         }
 
+        // Khách hàng mới chưa xác minh email không được đăng nhập.
+        if (user.MaQuyen == 3 && await _emailVerification.IsPendingAsync(user.MaNguoiDung))
+        {
+            ModelState.AddModelError("",
+                "Email chưa được xác minh. Vui lòng mở liên kết kích hoạt trong hộp thư.");
+            return View(model);
+        }
+
         // 5. ĐĂNG NHẬP THÀNH CÔNG -> CLEAR SESSION
         HttpContext.Session.Remove("FailedPasswordCount");
         HttpContext.Session.Remove("LockUntil");
@@ -379,14 +413,53 @@ public class AuthController : Controller
                 var resetUrl = new Uri(uri, path).AbsoluteUri;
                 var safeUrl = HtmlEncoder.Default.Encode(resetUrl);
 
-                var htmlBody =
-                    "<h2>Đặt lại mật khẩu EMUA</h2>" +
-                    "<p>Chúng tôi nhận được yêu cầu khôi phục mật khẩu.</p>" +
-                    $"<p><a href=\"{safeUrl}\">Nhấn vào đây để đặt mật khẩu mới</a></p>" +
-                    "<p>Liên kết có hiệu lực trong 30 phút.</p>" +
-                    "<p>Nếu không yêu cầu, bạn có thể bỏ qua email này.</p>";
+                var customerName = string.IsNullOrWhiteSpace(user.TenNguoiDung)
+                    ? "Quý khách"
+                    : user.TenNguoiDung.Trim();
+                var safeCustomerName = HtmlEncoder.Default.Encode(customerName);
 
-                await _emailSender.SendAsync(email, "EMUA - Đặt lại mật khẩu", htmlBody);
+                var htmlBody = $"""
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin:0;padding:24px 12px;background:#f2f4f8;font-family:Arial,sans-serif;">
+                    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+                        <div style="padding:26px 30px 18px;border-bottom:1px solid #e5e7eb;">
+                            <h1 style="margin:0;color:#2454df;font-size:28px;">EMUA</h1>
+                        </div>
+                        <div style="padding:30px;">
+                            <h2 style="font-size:21px;color:#1f2937;margin:0 0 22px;">Xin chào {safeCustomerName},</h2>
+                            <p style="color:#374151;font-size:15px;line-height:1.7;">
+                                Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu tài khoản EMUA của bạn.
+                            </p>
+                            <p style="color:#374151;font-size:15px;line-height:1.7;">
+                                Bạn có thể thay đổi mật khẩu bằng cách nhấn vào nút bên dưới.
+                            </p>
+                            <div style="text-align:center;margin:30px 0;">
+                                <a href="{safeUrl}" style="display:inline-block;padding:14px 32px;background:#2454df;color:#ffffff;text-decoration:none;font-size:16px;font-weight:bold;border-radius:6px;">Đổi mật khẩu</a>
+                            </div>
+                            <p style="font-size:13px;color:#64748b;line-height:1.6;">
+                                Liên kết này có hiệu lực trong 30 phút.
+                            </p>
+                            <hr style="border:0;border-top:1px solid #e5e7eb;margin:28px 0;">
+                            <h3 style="font-size:16px;color:#1f2937;">Bạn không yêu cầu thay đổi này?</h3>
+                            <p style="color:#64748b;font-size:14px;line-height:1.7;">
+                                Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.
+                                Mật khẩu hiện tại của bạn vẫn được giữ nguyên.
+                            </p>
+                        </div>
+                        <div style="padding:18px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px;">
+                            © EMUA - Cửa hàng thiết bị công nghệ
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """;
+
+                await _emailSender.SendAsync(email, "EMUA | Yêu cầu đặt lại mật khẩu", htmlBody);
             }
             catch (Exception ex)
             {
@@ -658,6 +731,14 @@ public class AuthController : Controller
         {
             await HttpContext.SignOutAsync("External");
             ModelState.AddModelError("", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+            return View("Login", new LoginViewModel());
+        }
+
+        // Không cho OAuth bỏ qua yêu cầu xác minh của tài khoản đã đăng ký bằng mật khẩu.
+        if (user.MaQuyen == 3 && await _emailVerification.IsPendingAsync(user.MaNguoiDung))
+        {
+            await HttpContext.SignOutAsync("External");
+            ModelState.AddModelError("", "Email tài khoản chưa được xác minh.");
             return View("Login", new LoginViewModel());
         }
 

@@ -3,7 +3,7 @@
 
     var avatarLetter = string.IsNullOrWhiteSpace(displayName)
         ? "A"
-        : displayName[..1].ToUpper();
+        : displayName[..1].ToUpperInvariant();
 
     var currentController =
         ViewContext.RouteData.Values["Controller"]?.ToString();
@@ -13,13 +13,26 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
 
     <title>@ViewData["Title"] - EMUA Admin</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="icon"
+          type="image/png"
+          href="~/images/logo/chicken.png"
+          asp-append-version="true" />
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin />
+
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" />
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
 
     <link rel="stylesheet"
           href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -31,18 +44,681 @@
           href="~/css/admin/admin-layout.css"
           asp-append-version="true" />
 
+    <style>
+        body.emua-admin {
+            margin: 0;
+            background: #f4f6fa;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .emua-admin .admin-shell {
+            --sidebar-width: 248px;
+            --sidebar-mini-width: 80px;
+            display: block;
+            min-height: 100vh;
+            background: #f4f6fa;
+        }
+
+        /* =====================================
+                   SIDEBAR
+                ===================================== */
+
+        .emua-admin .admin-sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            display: flex;
+            width: var(--sidebar-width);
+            height: 100vh;
+            height: 100dvh;
+            flex-direction: column;
+            overflow: hidden;
+            border-right: 1px solid #252c3e;
+            background: #141827;
+            color: #c3cce0;
+            box-shadow: none;
+            transition: width .2s ease, transform .2s ease;
+        }
+
+        /* =====================================
+                   LOGO
+                ===================================== */
+
+        .emua-admin .admin-logo {
+            position: relative;
+            display: flex;
+            flex: 0 0 auto;
+            min-height: 104px;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 18px 22px;
+            border-bottom: 1px solid #252c3e;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .emua-admin .admin-logo-text {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emua-admin .admin-brand-image {
+            display: block;
+            width: 164px;
+            height: 60px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            object-fit: contain;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-logo-mini {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-brand-icon {
+            display: block;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            object-fit: contain;
+        }
+
+        /* =====================================
+                   MENU
+                ===================================== */
+
+        .emua-admin .admin-nav {
+            position: relative;
+            display: flex;
+            flex: 1 1 0%;
+            min-height: 0;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 5px;
+            margin: 0;
+            padding: 18px 14px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #35405a transparent;
+        }
+
+            .emua-admin .admin-nav > .admin-nav-label {
+                position: static;
+                display: block;
+                flex: 0 0 auto;
+                width: auto;
+                height: auto;
+                min-height: 20px;
+                max-height: none;
+                margin: 20px 0 5px;
+                padding: 0 12px;
+                overflow: visible;
+                border: 0;
+                background: transparent;
+                color: #8795b0;
+                font-size: 10px;
+                font-weight: 700;
+                line-height: 20px;
+                letter-spacing: .8px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                opacity: 1;
+                transform: none;
+            }
+
+                .emua-admin .admin-nav > .admin-nav-label:first-child {
+                    margin-top: 0;
+                }
+
+            .emua-admin .admin-nav > a {
+                position: relative;
+                display: flex;
+                flex: 0 0 auto;
+                box-sizing: border-box;
+                width: 100%;
+                height: auto;
+                min-height: 45px;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 12px;
+                margin: 0;
+                padding: 11px 13px;
+                overflow: hidden;
+                border: 0;
+                border-radius: 7px;
+                background: transparent;
+                background-image: none;
+                color: #bdc8dd;
+                font-size: 13px;
+                font-weight: 500;
+                line-height: 22px;
+                text-align: left;
+                text-decoration: none;
+                opacity: 1;
+                filter: none;
+                transform: none;
+                box-shadow: none;
+                transition: background .18s ease, color .18s ease;
+            }
+
+                .emua-admin .admin-nav > a::before,
+                .emua-admin .admin-nav > a::after {
+                    display: none;
+                    content: none;
+                }
+
+                .emua-admin .admin-nav > a > i {
+                    display: grid;
+                    flex: 0 0 21px;
+                    width: 21px;
+                    height: 22px;
+                    margin: 0;
+                    padding: 0;
+                    place-items: center;
+                    border: 0;
+                    border-radius: 0;
+                    background: transparent;
+                    color: #91a3c5;
+                    font-size: 18px;
+                    line-height: 1;
+                    box-shadow: none;
+                }
+
+                .emua-admin .admin-nav > a > span {
+                    display: block;
+                    flex: 1;
+                    min-width: 0;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                    color: inherit;
+                    line-height: 22px;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .emua-admin .admin-nav > a:hover {
+                    background: #202a42;
+                    color: #fff;
+                    filter: none;
+                    transform: none;
+                    box-shadow: none;
+                }
+
+                    .emua-admin .admin-nav > a:hover > i {
+                        color: #bfd0ff;
+                    }
+
+                .emua-admin .admin-nav > a.active {
+                    background: #263555;
+                    color: #d3deff;
+                    box-shadow: inset 3px 0 0 #6184ff;
+                }
+
+                    .emua-admin .admin-nav > a.active > i {
+                        color: #a5bcff;
+                    }
+
+        /* =====================================
+                   MENU DƯỚI
+                ===================================== */
+
+        .emua-admin .admin-sidebar-bottom {
+            position: static;
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            gap: 5px;
+            margin: 0;
+            padding: 12px 14px;
+            border-top: 1px solid #252c3e;
+            background: #141827;
+        }
+
+            .emua-admin .admin-sidebar-bottom form {
+                display: block;
+                margin: 0;
+            }
+
+        .emua-admin .admin-bottom-link {
+            display: flex;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 43px;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            margin: 0;
+            padding: 10px 13px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #bdc8dd;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 22px;
+            text-align: left;
+            text-decoration: none;
+            transform: none;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+            .emua-admin .admin-bottom-link > i {
+                display: grid;
+                flex: 0 0 21px;
+                width: 21px;
+                place-items: center;
+                font-size: 18px;
+            }
+
+            .emua-admin .admin-bottom-link > span {
+                white-space: nowrap;
+            }
+
+            .emua-admin .admin-bottom-link:hover {
+                background: #202a42;
+                color: #fff;
+            }
+
+            .emua-admin .admin-bottom-link.logout {
+                color: #f6a1af;
+            }
+
+                .emua-admin .admin-bottom-link.logout:hover {
+                    background: #34232e;
+                    color: #ffc0cc;
+                }
+
+        /* =====================================
+                   NỘI DUNG
+                ===================================== */
+
+        .emua-admin .admin-main {
+            display: block;
+            width: auto;
+            min-width: 0;
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            padding: 0;
+            background: #f4f6fa;
+            transition: margin-left .2s ease;
+        }
+
+        .emua-admin .admin-content {
+            min-width: 0;
+            padding: 28px;
+            background: #f4f6fa;
+            color: #26344c;
+        }
+
+        /* =====================================
+                   HEADER
+                ===================================== */
+
+        .emua-admin .admin-header {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            display: flex;
+            min-height: 84px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 28px;
+            border-bottom: 1px solid #e5eaf2;
+            background: #fff;
+            color: #26344c;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-header-left {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .emua-admin .admin-header-left > div {
+                min-width: 0;
+            }
+
+        .emua-admin .admin-menu-toggle {
+            display: grid;
+            box-sizing: border-box;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            place-items: center;
+            padding: 0;
+            border: 1px solid #e2e8f1;
+            border-radius: 8px;
+            background: #fff;
+            color: #66758e;
+            font-family: inherit;
+            font-size: 21px;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-header h1 {
+            margin: 0 0 5px;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: -.5px;
+        }
+
+        .emua-admin .admin-header p {
+            margin: 0;
+            color: #7b879a;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .emua-admin .admin-header-actions {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .emua-admin .admin-header-link {
+            display: inline-flex;
+            box-sizing: border-box;
+            min-height: 37px;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border: 1px solid #e5eaf2;
+            border-radius: 8px;
+            background: #fff;
+            color: #71809a;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+            .emua-admin .admin-header-link > i {
+                font-size: 16px;
+            }
+
+            .emua-admin .admin-header-link:hover,
+            .emua-admin .admin-header-link.active,
+            .emua-admin .admin-menu-toggle:hover {
+                border-color: #cad7fa;
+                background: #f0f4ff;
+                color: #315efb;
+            }
+
+        /* =====================================
+                   TÀI KHOẢN
+                ===================================== */
+
+        .emua-admin .admin-user {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 10px;
+            margin-left: 5px;
+            padding: 0 0 0 15px;
+            border-left: 1px solid #e5eaf2;
+            border-radius: 0;
+            background: transparent;
+            color: #34435b;
+        }
+
+        .emua-admin .admin-avatar {
+            display: grid;
+            box-sizing: border-box;
+            width: 37px;
+            height: 37px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dbe5ff;
+            border-radius: 50%;
+            background: #edf2ff;
+            color: #315efb;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-account-info {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+            .emua-admin .admin-account-info strong {
+                display: block;
+                max-width: 170px;
+                overflow: hidden;
+                color: #34435b;
+                font-size: 11px;
+                font-weight: 600;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .emua-admin .admin-account-info small {
+                color: #7b879a;
+                font-size: 10px;
+            }
+
+        /* =====================================
+                   THU GỌN SIDEBAR
+                ===================================== */
+
+        .emua-admin.admin-sidebar-collapsed .admin-sidebar {
+            width: var(--sidebar-mini-width);
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-main {
+            margin-left: var(--sidebar-mini-width);
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo {
+            padding: 18px 8px;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo-text {
+            display: none;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo-mini {
+            display: flex;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-nav {
+            gap: 7px;
+            padding: 18px 11px;
+        }
+
+            .emua-admin.admin-sidebar-collapsed
+            .admin-nav > .admin-nav-label {
+                display: none;
+            }
+
+            .emua-admin.admin-sidebar-collapsed .admin-nav > a {
+                justify-content: center;
+                gap: 0;
+                padding: 11px 8px;
+            }
+
+                .emua-admin.admin-sidebar-collapsed .admin-nav > a > span,
+                .emua-admin.admin-sidebar-collapsed .admin-bottom-link > span {
+                    display: none;
+                }
+
+        .emua-admin.admin-sidebar-collapsed .admin-sidebar-bottom {
+            padding: 12px 11px;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-bottom-link {
+            justify-content: center;
+            gap: 0;
+            padding: 10px 8px;
+        }
+
+        /* =====================================
+                   BACKDROP / FOCUS
+                ===================================== */
+
+        .emua-admin .admin-sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1030;
+            display: block;
+            visibility: hidden;
+            background: rgba(10, 18, 35, .48);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease, visibility .2s ease;
+        }
+
+        .emua-admin a:focus-visible,
+        .emua-admin button:focus-visible {
+            outline: 2px solid #7192ff;
+            outline-offset: 3px;
+        }
+
+        /* =====================================
+                   RESPONSIVE
+                ===================================== */
+
+        @@media (max-width: 1100px) {
+            .emua-admin .admin-header-link > span {
+                display: none;
+            }
+
+            .emua-admin .admin-header-link {
+                width: 37px;
+                padding: 0;
+            }
+
+            .emua-admin .admin-account-info strong {
+                max-width: 120px;
+            }
+        }
+
+        @@media (max-width: 850px) {
+            .emua-admin .admin-sidebar {
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+            }
+
+                .emua-admin .admin-sidebar.is-open {
+                    transform: translateX(0);
+                }
+
+            .emua-admin .admin-main {
+                margin-left: 0;
+            }
+
+            .emua-admin .admin-sidebar-backdrop.is-visible {
+                visibility: visible;
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .emua-admin .admin-header {
+                min-height: 76px;
+                padding: 14px 20px;
+            }
+
+            .emua-admin .admin-content {
+                padding: 22px 20px;
+            }
+
+            .emua-admin .admin-header h1 {
+                font-size: 17px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .emua-admin .admin-header {
+                gap: 10px;
+                padding: 12px 14px;
+            }
+
+            .emua-admin .admin-header-left {
+                gap: 10px;
+            }
+
+            .emua-admin .admin-header h1 {
+                font-size: 15px;
+            }
+
+            .emua-admin .admin-header p {
+                font-size: 10px;
+            }
+
+            .emua-admin .admin-content {
+                padding: 18px 14px;
+            }
+
+            .emua-admin .admin-user {
+                margin-left: 0;
+                padding-left: 8px;
+            }
+
+            .emua-admin .admin-account-info,
+            .emua-admin .admin-help-link,
+            .emua-admin .admin-notification-link {
+                display: none;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .emua-admin .admin-sidebar,
+            .emua-admin .admin-main,
+            .emua-admin .admin-sidebar-backdrop,
+            .emua-admin .admin-nav > a {
+                transition: none;
+            }
+        }
+    </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
 
-<body>
+<body class="emua-admin">
     <div class="admin-shell">
 
         <div class="admin-sidebar-backdrop"
              id="adminSidebarBackdrop"></div>
 
+        <!-- SIDEBAR -->
         <aside class="admin-sidebar"
                id="adminSidebar">
 
+            <!-- GIỮ LOGO HIỆN TẠI -->
             <a asp-area="Admin"
                asp-controller="Dashboard"
                asp-action="Index"
@@ -50,97 +726,129 @@
                title="EMUA Admin">
 
                 <span class="admin-logo-text">
-                    <strong>EMUA</strong>
-                    <small>Admin Panel</small>
+                    <img src="~/images/logo/icon-logo.png"
+                         asp-append-version="true"
+                         alt="EMUA"
+                         class="admin-brand-image" />
                 </span>
 
-                <span class="admin-logo-mini">EM</span>
+                <span class="admin-logo-mini">
+                    <img src="~/images/logo/chicken.png"
+                         asp-append-version="true"
+                         alt="EMUA"
+                         class="admin-brand-icon" />
+                </span>
             </a>
 
-            <nav class="admin-nav">
-                <span class="admin-nav-label">Tổng quan</span>
+            <!-- MENU -->
+            <nav class="admin-nav"
+                 aria-label="Menu quản trị">
+
+                <span class="admin-nav-label">
+                    Tổng quan
+                </span>
 
                 <a class="@(currentController == "Dashboard" ? "active" : "")"
-                   data-tooltip="Tổng quan"
                    asp-area="Admin"
                    asp-controller="Dashboard"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Tổng quan"
+                   aria-label="Tổng quan"
+                   aria-current="@(currentController == "Dashboard" ? "page" : null)">
 
                     <i class="bi bi-grid-1x2"></i>
                     <span>Tổng quan</span>
                 </a>
 
-                <span class="admin-nav-label">Quản lý cửa hàng</span>
+                <span class="admin-nav-label">
+                    Quản lý cửa hàng
+                </span>
 
-             
                 <a class="@(currentController == "Category" ? "active" : "")"
-                   data-tooltip="Danh mục"
                    asp-area="Admin"
                    asp-controller="Category"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Danh mục"
+                   aria-label="Danh mục"
+                   aria-current="@(currentController == "Category" ? "page" : null)">
 
                     <i class="bi bi-folder2"></i>
                     <span>Danh mục</span>
                 </a>
 
                 <a class="@(currentController == "Brand" ? "active" : "")"
-                   data-tooltip="Thương hiệu"
                    asp-area="Admin"
                    asp-controller="Brand"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Thương hiệu"
+                   aria-label="Thương hiệu"
+                   aria-current="@(currentController == "Brand" ? "page" : null)">
 
                     <i class="bi bi-award"></i>
                     <span>Thương hiệu</span>
                 </a>
 
-                <!-- Khách hàng (User Controller) -->
                 <a class="@(currentController == "User" ? "active" : "")"
-                   data-tooltip="Khách hàng"
                    asp-area="Admin"
                    asp-controller="User"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Khách hàng"
+                   aria-label="Khách hàng"
+                   aria-current="@(currentController == "User" ? "page" : null)">
 
                     <i class="bi bi-people"></i>
                     <span>Khách hàng</span>
                 </a>
 
-                <span class="admin-nav-label">Hệ thống</span>
+                <span class="admin-nav-label">
+                    Quản trị
+                </span>
 
-                <!-- Phân quyền (Role Controller) -->
                 <a class="@(currentController == "Role" ? "active" : "")"
-                   data-tooltip="Phân quyền"
                    asp-area="Admin"
                    asp-controller="Role"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Phân quyền"
+                   aria-label="Phân quyền"
+                   aria-current="@(currentController == "Role" ? "page" : null)">
 
                     <i class="bi bi-shield-lock"></i>
                     <span>Phân quyền</span>
                 </a>
 
-                <!-- Báo cáo (Report Controller) -->
                 <a class="@(currentController == "Report" || currentController == "BaoCao" ? "active" : "")"
-                   data-tooltip="Báo cáo"
                    asp-area="Admin"
                    asp-controller="Report"
-                   asp-action="Index">
+                   asp-action="Index"
+                   title="Báo cáo"
+                   aria-label="Báo cáo"
+                   aria-current="@(currentController == "Report" || currentController == "BaoCao" ? "page" : null)">
 
                     <i class="bi bi-bar-chart"></i>
                     <span>Báo cáo</span>
                 </a>
 
-                <a href="#"
-                   data-tooltip="Cài đặt">
-                    <i class="bi bi-gear"></i>
-                    <span>Cài đặt</span>
+                <a class="@(currentController == "System" ? "active" : "")"
+                   asp-area="Admin"
+                   asp-controller="System"
+                   asp-action="Index"
+                   title="Hệ thống"
+                   aria-label="Hệ thống"
+                   aria-current="@(currentController == "System" ? "page" : null)">
+
+                    <i class="bi bi-hdd-stack"></i>
+                    <span>Hệ thống</span>
                 </a>
             </nav>
 
+            <!-- MENU DƯỚI -->
             <div class="admin-sidebar-bottom">
                 <a asp-area=""
                    asp-controller="Home"
                    asp-action="Index"
                    class="admin-bottom-link"
-                   data-tooltip="Xem website">
+                   title="Xem website"
+                   aria-label="Xem website">
 
                     <i class="bi bi-eye"></i>
                     <span>Xem website</span>
@@ -150,11 +858,14 @@
                       asp-controller="Auth"
                       asp-action="Logout"
                       method="post">
+
                     @Html.AntiForgeryToken()
 
                     <button type="submit"
                             class="admin-bottom-link logout"
-                            data-tooltip="Đăng xuất">
+                            title="Đăng xuất"
+                            aria-label="Đăng xuất">
+
                         <i class="bi bi-box-arrow-right"></i>
                         <span>Đăng xuất</span>
                     </button>
@@ -162,8 +873,10 @@
             </div>
         </aside>
 
+        <!-- NỘI DUNG CHÍNH -->
         <main class="admin-main">
             <header class="admin-header">
+
                 <div class="admin-header-left">
                     <button type="button"
                             class="admin-menu-toggle"
@@ -171,42 +884,61 @@
                             aria-label="Thu gọn menu"
                             aria-controls="adminSidebar"
                             aria-expanded="true">
+
                         <i class="bi bi-list"></i>
                     </button>
 
                     <div>
                         <h1>@ViewData["Title"]</h1>
-                        <p>EMUA Admin — @DateTime.Now.ToString("dd/MM/yyyy")</p>
+
+                        <p>
+                            EMUA Admin —
+                            @DateTime.Now.ToString("dd/MM/yyyy")
+                        </p>
                     </div>
                 </div>
 
                 <div class="admin-header-actions">
                     <button type="button"
-                            class="admin-header-link"
-                            title="Thông báo">
+                            class="admin-header-link admin-notification-link"
+                            title="Thông báo"
+                            aria-label="Thông báo">
+
                         <i class="bi bi-bell"></i>
                         <span>Thông báo</span>
-                        <b></b>
                     </button>
 
                     <a href="mailto:phuonganhdt73@gmail.com?subject=Yêu cầu hỗ trợ EMUA"
-                       class="admin-header-link"
-                       title="Trợ giúp">
+                       class="admin-header-link admin-help-link"
+                       title="Trợ giúp"
+                       aria-label="Trợ giúp">
+
                         <i class="bi bi-question-circle"></i>
                         <span>Trợ giúp</span>
                     </a>
 
-                    <a href="#"
-                       class="admin-header-link"
-                       title="Cài đặt">
-                        <i class="bi bi-gear"></i>
-                        <span>Cài đặt</span>
+                    <a asp-area="Admin"
+                       asp-controller="System"
+                       asp-action="Index"
+                       class="admin-header-link @(currentController == "System" ? "active" : "")"
+                       title="Hệ thống"
+                       aria-label="Hệ thống">
+
+                        <i class="bi bi-hdd-stack"></i>
+                        <span>Hệ thống</span>
                     </a>
 
                     <div class="admin-user"
                          title="@displayName">
-                        <div class="admin-avatar">@avatarLetter</div>
-                        <i class="bi bi-chevron-down"></i>
+
+                        <div class="admin-avatar">
+                            @avatarLetter
+                        </div>
+
+                        <div class="admin-account-info">
+                            <strong>@displayName</strong>
+                            <small>Quản trị viên</small>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -220,96 +952,153 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        const sidebar = document.getElementById("adminSidebar");
-        const backdrop = document.getElementById("adminSidebarBackdrop");
-        const menuToggle = document.getElementById("adminMenuToggle");
+        (function () {
+            const sidebar =
+                document.getElementById("adminSidebar");
 
-        const desktopBreakpoint = 850;
-        const sidebarStorageKey = "emua_admin_sidebar_collapsed";
+            const backdrop =
+                document.getElementById("adminSidebarBackdrop");
 
-        function isMobile() {
-            return window.innerWidth <= desktopBreakpoint;
-        }
+            const menuToggle =
+                document.getElementById("adminMenuToggle");
 
-        function closeMobileSidebar() {
-            sidebar.classList.remove("is-open");
-            backdrop.classList.remove("is-visible");
-        }
+            const storageKey =
+                "emua_admin_sidebar_collapsed";
 
-        function updateDesktopSidebar() {
-            if (isMobile()) {
-                document.body.classList.remove("admin-sidebar-collapsed");
-                closeMobileSidebar();
-                return;
+            const mobileQuery =
+                window.matchMedia("(max-width: 850px)");
+
+            function readCollapsedState() {
+                try {
+                    return localStorage.getItem(storageKey) === "true";
+                } catch {
+                    return false;
+                }
             }
 
-            const isCollapsed =
-                localStorage.getItem(sidebarStorageKey) === "true";
+            function saveCollapsedState(value) {
+                try {
+                    localStorage.setItem(
+                        storageKey,
+                        String(value)
+                    );
+                } catch {
+                    // Menu vẫn hoạt động khi lưu trữ bị chặn.
+                }
+            }
 
-            document.body.classList.toggle(
-                "admin-sidebar-collapsed",
-                isCollapsed
-            );
-
-            menuToggle.setAttribute(
-                "aria-expanded",
-                (!isCollapsed).toString()
-            );
-
-            menuToggle.setAttribute(
-                "aria-label",
-                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
-            );
-        }
-
-        menuToggle?.addEventListener("click", function () {
-            if (isMobile()) {
-                const isOpen = sidebar.classList.toggle("is-open");
-
-                backdrop.classList.toggle(
-                    "is-visible",
-                    isOpen
+            function updateToggle(expanded, label) {
+                menuToggle.setAttribute(
+                    "aria-expanded",
+                    String(expanded)
                 );
 
                 menuToggle.setAttribute(
-                    "aria-expanded",
-                    isOpen.toString()
+                    "aria-label",
+                    label
+                );
+            }
+
+            function closeMobileSidebar() {
+                sidebar.classList.remove("is-open");
+                backdrop.classList.remove("is-visible");
+
+                if (mobileQuery.matches) {
+                    updateToggle(false, "Mở menu");
+                }
+            }
+
+            function applySidebarState() {
+                closeMobileSidebar();
+
+                if (mobileQuery.matches) {
+                    document.body.classList.remove(
+                        "admin-sidebar-collapsed"
+                    );
+
+                    updateToggle(false, "Mở menu");
+                    return;
+                }
+
+                const collapsed = readCollapsedState();
+
+                document.body.classList.toggle(
+                    "admin-sidebar-collapsed",
+                    collapsed
                 );
 
-                return;
+                updateToggle(
+                    !collapsed,
+                    collapsed
+                        ? "Mở rộng menu"
+                        : "Thu gọn menu"
+                );
             }
 
-            const isCollapsed = document.body.classList.toggle(
-                "admin-sidebar-collapsed"
+            menuToggle.addEventListener("click", function () {
+                if (mobileQuery.matches) {
+                    const open =
+                        sidebar.classList.toggle("is-open");
+
+                    backdrop.classList.toggle(
+                        "is-visible",
+                        open
+                    );
+
+                    updateToggle(
+                        open,
+                        open ? "Đóng menu" : "Mở menu"
+                    );
+
+                    return;
+                }
+
+                const collapsed =
+                    document.body.classList.toggle(
+                        "admin-sidebar-collapsed"
+                    );
+
+                saveCollapsedState(collapsed);
+
+                updateToggle(
+                    !collapsed,
+                    collapsed
+                        ? "Mở rộng menu"
+                        : "Thu gọn menu"
+                );
+            });
+
+            backdrop.addEventListener(
+                "click",
+                closeMobileSidebar
             );
 
-            localStorage.setItem(
-                sidebarStorageKey,
-                isCollapsed.toString()
+            sidebar.querySelectorAll("a").forEach(function (link) {
+                link.addEventListener("click", function () {
+                    if (mobileQuery.matches) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (
+                    event.key === "Escape" &&
+                    mobileQuery.matches &&
+                    sidebar.classList.contains("is-open")
+                ) {
+                    closeMobileSidebar();
+                    menuToggle.focus();
+                }
+            });
+
+            mobileQuery.addEventListener(
+                "change",
+                applySidebarState
             );
 
-            menuToggle.setAttribute(
-                "aria-expanded",
-                (!isCollapsed).toString()
-            );
-
-            menuToggle.setAttribute(
-                "aria-label",
-                isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
-            );
-        });
-
-        backdrop?.addEventListener("click", closeMobileSidebar);
-
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && isMobile()) {
-                closeMobileSidebar();
-            }
-        });
-
-        window.addEventListener("resize", updateDesktopSidebar);
-
-        updateDesktopSidebar();
+            applySidebarState();
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

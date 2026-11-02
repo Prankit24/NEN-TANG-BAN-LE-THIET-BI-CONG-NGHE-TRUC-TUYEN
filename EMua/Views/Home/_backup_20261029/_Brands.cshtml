@@ -1,0 +1,54 @@
+@model IEnumerable<EMua.Models.Database.ThuongHieu>
+@using System.Linq
+@using System.Collections.Generic
+@using System
+@functions {
+    private string Asset(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var path = value.Trim().Replace("\\", "/");
+        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
+        path = path.TrimStart('~', '/');
+        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
+        return Url.Content("~/" + path);
+    }
+}
+
+<section class="ep ep-section" id="brands" aria-labelledby="brand-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div>
+                <span class="ep-eyebrow"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> ĐỐI TÁC HÀNG ĐẦU</span>
+                <h2 id="brand-heading">Thương hiệu chính hãng</h2>
+                <p>Khám phá các thương hiệu công nghệ uy tín hàng đầu tại EMUA.</p>
+            </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Tất cả thương hiệu</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        <div class="ep-brands">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <a class="ep-brand-tile" asp-area="" asp-controller="Product" asp-action="Index" asp-route-brandId="@item.MaThuongHieu" title="@item.TenThuongHieu">
+                        @if (!string.IsNullOrWhiteSpace(item.Logo))
+                        {
+                            <img src="@Asset(item.Logo)" alt="@item.TenThuongHieu" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
+                            <strong hidden>@item.TenThuongHieu</strong>
+                        }
+                        else
+                        {
+                            <strong>@item.TenThuongHieu</strong>
+                        }
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="ep-empty">Thương hiệu đang được cập nhật.</p>
+            }
+        </div>
+    </div>
+</section>

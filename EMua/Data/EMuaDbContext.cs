@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using EMua.Models.Database;
+using EMua.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -29,6 +30,7 @@ public partial class EMuaDbContext : DbContext
     public virtual DbSet<KhuyenMai> KhuyenMais { get; set; }
     public virtual DbSet<LichSuVanChuyen> LichSuVanChuyens { get; set; }
     public virtual DbSet<NguoiDung> NguoiDungs { get; set; }
+    public virtual DbSet<EmailVerification> EmailVerifications { get; set; } = null!;
     public virtual DbSet<PhanQuyen> PhanQuyens { get; set; }
     public virtual DbSet<SanPham> SanPhams { get; set; }
     public virtual DbSet<SanPhamHinhAnh> SanPhamHinhAnhs { get; set; }
@@ -344,6 +346,24 @@ public partial class EMuaDbContext : DbContext
                 .HasConstraintName("FK_YeuThich_SanPham");
         });
 
+        // Bảng này được tạo thủ công bằng SQL với tên PascalCase có dấu ngoặc kép.
+        modelBuilder.Entity<EmailVerification>(entity =>
+        {
+            entity.ToTable("EmailVerifications", "public");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
+            entity.Property(x => x.UserId).HasColumnName("UserId");
+            entity.Property(x => x.Email).HasColumnName("Email").HasMaxLength(320).IsRequired();
+            entity.Property(x => x.TokenHash).HasColumnName("TokenHash").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ExpiresAtUtc).HasColumnName("ExpiresAtUtc");
+            entity.Property(x => x.VerifiedAtUtc).HasColumnName("VerifiedAtUtc");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("CreatedAtUtc");
+            entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.HasIndex(x => x.UserId);
+            entity.HasOne<NguoiDung>().WithMany().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         OnModelCreatingPartial(modelBuilder);
 
         // PostgreSQL: tên bảng/cột trong database đã chuyển thành chữ thường.
@@ -354,6 +374,10 @@ public partial class EMuaDbContext : DbContext
         {
             var originalTableName = entityType.GetTableName();
             if (string.IsNullOrWhiteSpace(originalTableName))
+                continue;
+
+            // Giữ nguyên tên bảng/cột có phân biệt chữ hoa đã tạo bằng SQL.
+            if (entityType.ClrType == typeof(EmailVerification))
                 continue;
 
             // Lấy mapping cột từ tên bảng gốc trước khi thay đổi metadata.

@@ -1,0 +1,1313 @@
+/* ==========================================================================
+   EMUA — Modern Tech Retail E-Commerce Homepage (2026 Edition)
+   Identity:
+     Primary:    #2563EB (Tech Blue)
+     Dark:       #0F172A (Deep Slate Dark)
+     Surface:    #FFFFFF (Pure White)
+     Background: #F8FAFC (Soft Retail Gray)
+     Accent:     #F97316 (Flash Sale Orange)
+     Text:       #1E293B (Dark Slate Text)
+     Muted:      #64748B (Muted Slate)
+     Border:     #E2E8F0 (Subtle Border)
+   ========================================================================== */
+
+:root {
+    --ep-primary: #2563eb;
+    --ep-primary-hover: #1d4ed8;
+    --ep-primary-light: #eff6ff;
+    --ep-dark: #0f172a;
+    --ep-bg: #f8fafc;
+    --ep-surface: #ffffff;
+    --ep-accent: #f97316;
+    --ep-accent-light: #fff7ed;
+    --ep-text: #1e293b;
+    --ep-muted: #64748b;
+    --ep-border: #e2e8f0;
+    --ep-radius: 10px;
+    --ep-radius-lg: 14px;
+    --ep-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --ep-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --ep-shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.1);
+}
+
+/* Base resets for .emua-home-page */
+body.emua-home-page {
+    background: var(--ep-bg);
+    color: var(--ep-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+}
+
+.emua-home-page .main-content {
+    padding: 0;
+    min-height: 60vh;
+    background: var(--ep-bg);
+}
+
+.emua-home {
+    background: var(--ep-bg);
+    color: var(--ep-text);
+}
+
+.emua-home * {
+    box-sizing: border-box;
+}
+
+.emua-home [hidden] {
+    display: none !important;
+}
+
+.emua-home a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.emua-home a:focus-visible,
+.emua-home button:focus-visible {
+    outline: 2px solid var(--ep-primary);
+    outline-offset: 2px;
+}
+
+/* Container */
+.ep-container {
+    width: min(1280px, calc(100% - 40px));
+    margin-inline: auto;
+}
+
+/* Common Section */
+.ep-section {
+    padding: 24px 0;
+}
+
+.ep-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.ep-heading-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ep-heading h2 {
+    font-size: 20px;
+    font-weight: 750;
+    letter-spacing: -0.4px;
+    color: var(--ep-text);
+    margin: 0;
+    line-height: 1.25;
+}
+
+.ep-heading-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--ep-primary-light);
+    color: var(--ep-primary);
+    font-size: 15px;
+}
+
+.ep-text-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ep-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-border);
+    border-radius: 7px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.ep-text-link:hover {
+    color: var(--ep-primary-hover);
+    border-color: #cbd5e1;
+    background: var(--ep-primary-light);
+}
+
+.ep-empty {
+    padding: 24px;
+    text-align: center;
+    border: 1px dashed var(--ep-border);
+    color: var(--ep-muted);
+    border-radius: var(--ep-radius);
+    grid-column: 1 / -1;
+    background: var(--ep-surface);
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   2. COMPACT HEADER OVERRIDES FOR HOMEPAGE
+   ========================================================================== */
+.emua-home-page .emua-topbar {
+    background: #0f172a;
+    border: 0;
+    height: 28px;
+}
+
+.emua-home-page .topbar-content {
+    height: 28px;
+    font-size: 11.5px;
+    color: #cbd5e1;
+}
+
+.emua-home-page .emua-main-header {
+    background: #ffffff;
+    backdrop-filter: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    border-bottom: 1px solid var(--ep-border);
+}
+
+.emua-home-page .main-header-wrapper {
+    padding: 10px 0;
+    gap: 20px;
+}
+
+.emua-home-page .emua-logo-text .emua-wordmark {
+    height: 32px;
+    width: auto;
+}
+
+.emua-home-page .emua-search {
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 8px;
+    height: 40px;
+    transition: all 0.15s ease;
+}
+
+.emua-home-page .emua-search input {
+    color: var(--ep-text);
+    font-size: 13px;
+    padding-left: 12px;
+}
+
+.emua-home-page .emua-search input::placeholder {
+    color: #94a3b8;
+}
+
+.emua-home-page .emua-search:focus-within {
+    background: #ffffff;
+    border-color: var(--ep-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.emua-home-page .header-action-btn {
+    color: #334155;
+    border-radius: 7px;
+    font-size: 11.5px;
+    padding: 6px 10px;
+    transition: all 0.15s ease;
+}
+
+.emua-home-page .header-action-btn:hover {
+    color: var(--ep-primary);
+    background: var(--ep-primary-light);
+}
+
+/* Hide duplicate horizontal category nav on homepage because Column 1 already has it */
+.emua-home-page .emua-category-nav {
+    display: none !important;
+}
+
+/* ==========================================================================
+   3. 3-COLUMN RETAIL HERO (Categories 20% | Main 55% | Side 25%)
+   Height: ~350px on desktop
+   ========================================================================== */
+.ep-hero-section {
+    padding: 16px 0 10px;
+}
+
+.ep-hero-retail-grid {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 270px;
+    gap: 14px;
+    align-items: stretch;
+    height: 350px;
+}
+
+/* CỘT 1: DANH MỤC SẢN PHẨM (20%) */
+.ep-hero-cat-col {
+    height: 100%;
+}
+
+.ep-hero-cat-card {
+    height: 100%;
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-border);
+    border-radius: var(--ep-radius);
+    box-shadow: var(--ep-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ep-hero-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    background: #f1f5f9;
+    border-bottom: 1px solid var(--ep-border);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ep-hero-cat-header i {
+    color: var(--ep-primary);
+    font-size: 15px;
+}
+
+.ep-hero-cat-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    overflow-y: auto;
+}
+
+.ep-hero-cat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    border-radius: 4px;
+    margin: 1px 6px;
+}
+
+.ep-cat-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ep-cat-item-left i {
+    font-size: 16px;
+    color: #64748b;
+    width: 20px;
+    text-align: center;
+    transition: color 0.15s ease;
+}
+
+.ep-cat-arrow {
+    font-size: 10px;
+    color: #94a3b8;
+    transition: transform 0.15s ease;
+}
+
+.ep-hero-cat-item:hover {
+    background: var(--ep-primary-light);
+    color: var(--ep-primary);
+    font-weight: 600;
+}
+
+.ep-hero-cat-item:hover .ep-cat-item-left i {
+    color: var(--ep-primary);
+}
+
+.ep-hero-cat-item:hover .ep-cat-arrow {
+    transform: translateX(2px);
+    color: var(--ep-primary);
+}
+
+.ep-cat-empty {
+    padding: 16px;
+    font-size: 12px;
+    color: var(--ep-muted);
+    text-align: center;
+}
+
+/* CỘT 2: BANNER CHÍNH RETAIL (55%) */
+.ep-hero-main-col {
+    height: 100%;
+}
+
+.ep-retail-banner {
+    height: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #0b1426 0%, #112247 50%, #1e3a8a 100%);
+    border-radius: var(--ep-radius);
+    overflow: hidden;
+    color: #ffffff;
+    display: grid;
+    grid-template-columns: 52% 48%;
+    align-items: center;
+    padding: 24px 20px 24px 32px;
+    box-shadow: var(--ep-shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle background accent glow - no white box! */
+.ep-retail-banner::after {
+    content: "";
+    position: absolute;
+    right: 8%;
+    top: 15%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.32) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.ep-banner-text-side {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ep-banner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(37, 99, 235, 0.3);
+    color: #93c5fd;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 12px;
+    border: 1px solid rgba(147, 197, 253, 0.3);
+}
+
+.ep-banner-title {
+    font-size: clamp(22px, 2.4vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    line-height: 1.2;
+    color: #ffffff;
+    margin: 0 0 8px;
+}
+
+.ep-banner-sub {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    margin: 0 0 20px;
+    max-width: 340px;
+}
+
+.ep-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ep-retail-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 18px;
+    min-height: 38px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 650;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.ep-retail-btn-primary {
+    background: var(--ep-primary);
+    color: #ffffff !important;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+}
+
+.ep-retail-btn-primary:hover {
+    background: var(--ep-primary-hover);
+    transform: translateY(-1px);
+}
+
+.ep-retail-btn-outline {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.ep-retail-btn-outline:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.ep-banner-img-side {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ep-banner-hero-img {
+    max-width: 100%;
+    max-height: 280px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.4));
+    transition: transform 0.25s ease;
+}
+
+.ep-retail-banner:hover .ep-banner-hero-img {
+    transform: scale(1.04) translateY(-2px);
+}
+
+/* CỘT 3: 2 BANNER PHỤ (25%) */
+.ep-hero-side-col {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ep-mini-banner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-border);
+    border-radius: var(--ep-radius);
+    text-decoration: none;
+    color: var(--ep-text);
+    transition: all 0.2s ease;
+    box-shadow: var(--ep-shadow-sm);
+    overflow: hidden;
+}
+
+.ep-mini-banner-1 {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+    border-color: #bfdbfe;
+}
+
+.ep-mini-banner-2 {
+    background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+    border-color: #fed7aa;
+}
+
+.ep-mini-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ep-shadow-md);
+}
+
+.ep-mini-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ep-mini-pill {
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: 0.6px;
+    color: var(--ep-primary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.ep-pill-orange {
+    color: #ea580c;
+}
+
+.ep-mini-text h3 {
+    font-size: 14.5px;
+    font-weight: 750;
+    color: var(--ep-text);
+    margin: 0 0 3px;
+    line-height: 1.3;
+}
+
+.ep-mini-text p {
+    font-size: 11.5px;
+    color: var(--ep-muted);
+    margin: 0;
+}
+
+.ep-mini-img {
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 10px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ep-mini-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.ep-mini-banner:hover .ep-mini-img img {
+    transform: scale(1.08);
+}
+
+/* Dải danh mục cuộn ngang cho Mobile/Tablet (ẩn trên Desktop) */
+.ep-mobile-cat-strip {
+    display: none;
+}
+
+/* ==========================================================================
+   4. FLASH SALE SECTION (Ngay dưới Hero)
+   ========================================================================== */
+.ep-flash-section {
+    background: linear-gradient(180deg, #fff7ed 0%, #f8fafc 100%);
+    border-top: 1px solid #fed7aa;
+    border-bottom: 1px solid var(--ep-border);
+    padding: 22px 0 26px;
+}
+
+.ep-flash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.ep-flash-title-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.ep-flash-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ep-accent);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 16px;
+    letter-spacing: 0.4px;
+    box-shadow: 0 3px 8px rgba(249, 115, 22, 0.25);
+}
+
+.ep-flash-timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: #7c2d12;
+    font-weight: 600;
+}
+
+.ep-flash-digits {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.ep-timer-box {
+    display: inline-block;
+    min-width: 26px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 750;
+    font-size: 12px;
+    border-radius: 5px;
+    padding: 0 3px;
+}
+
+/* ==========================================================================
+   5. PRODUCT CARDS & IMAGE CONTAINER (Standardized Retail Cards)
+   ========================================================================== */
+.ep-products {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ep-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-border);
+    border-radius: var(--ep-radius);
+    overflow: hidden;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: var(--ep-shadow-sm);
+}
+
+.ep-card:hover {
+    transform: translateY(-3px);
+    border-color: #93c5fd;
+    box-shadow: var(--ep-shadow-md);
+}
+
+/* Product image area: white background, contain, unified height */
+.emua-home .ep-picture,
+.ep .ep-picture,
+.ep-picture {
+    position: relative;
+    height: 220px !important;
+    padding: 16px !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.emua-home .ep-picture img,
+.ep .ep-picture img,
+.ep-picture img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    transition: transform 0.2s ease;
+}
+
+.ep-card:hover .ep-picture img {
+    transform: scale(1.05);
+}
+
+/* Badges / Chips on product card */
+.ep-chip {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--ep-primary-light);
+    color: var(--ep-primary);
+    border-radius: 5px;
+    padding: 3px 7px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    z-index: 1;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.ep-chip-discount {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.ep-chip-flash {
+    background: #fff7ed;
+    color: #ea580c;
+    border-color: #fed7aa;
+}
+
+.ep-chip-selection {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-color: #ddd6fe;
+}
+
+.ep-chip-new {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.ep-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    color: #94a3b8;
+    font-size: 11.5px;
+    text-align: center;
+}
+
+/* Card Body */
+.ep-card-body {
+    padding: 14px 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--ep-surface);
+}
+
+.ep-brand {
+    color: var(--ep-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    min-height: 15px;
+    margin-bottom: 4px;
+}
+
+.ep-product-name {
+    color: var(--ep-text);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.4;
+    min-height: 39px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    transition: color 0.15s ease;
+}
+
+.ep-product-name:hover {
+    color: var(--ep-primary);
+}
+
+.ep-spec {
+    color: var(--ep-muted);
+    font-size: 11.5px;
+    line-height: 1.4;
+    margin: 4px 0 12px;
+    min-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Buy & Price Section */
+.ep-buy {
+    margin-top: auto;
+}
+
+.ep-price-block {
+    margin-bottom: 10px;
+    min-height: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.ep-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.ep-price {
+    font-size: 17.5px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--ep-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.ep-flash-section .ep-price {
+    color: #ea580c;
+}
+
+.ep-original-price {
+    font-size: 12px;
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Cart Button */
+.ep-cart {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    min-height: 38px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #f8fafc;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ep-cart:hover:not(:disabled) {
+    background: var(--ep-primary);
+    border-color: var(--ep-primary);
+    color: #ffffff;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
+}
+
+.ep-cart:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   6. DUO BANNERS
+   ========================================================================== */
+.ep-promos {
+    padding: 16px 0;
+}
+
+.ep-promo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ep-promo {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 24px;
+    border-radius: var(--ep-radius);
+    background: #ffffff;
+    border: 1px solid var(--ep-border);
+    color: var(--ep-text);
+    transition: all 0.2s ease;
+    box-shadow: var(--ep-shadow-sm);
+}
+
+.ep-promo-blue {
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+    border-color: #bfdbfe;
+}
+
+.ep-promo:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ep-shadow-md);
+}
+
+.ep-eyebrow {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ep-primary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.ep-promo h3 {
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.3;
+    margin: 4px 0 10px;
+    color: var(--ep-text);
+}
+
+.ep-promo-image {
+    height: 110px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ep-promo-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+.ep-promo:hover .ep-promo-image img {
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   7. AI ADVISOR BANNER
+   ========================================================================== */
+.home-advisor {
+    padding: 16px 0;
+}
+
+.home-advisor-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 28px;
+    border-radius: var(--ep-radius);
+    background: linear-gradient(135deg, #0f244a 0%, #173873 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(15, 36, 74, 0.15);
+}
+
+.advisor-symbol {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 24px;
+    color: #93c5fd;
+}
+
+.advisor-copy {
+    flex: 1;
+}
+
+.advisor-copy > span {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: #93c5fd;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.advisor-copy h2 {
+    font-size: clamp(18px, 1.8vw, 22px);
+    font-weight: 750;
+    color: #ffffff;
+    margin: 0 0 4px;
+    line-height: 1.3;
+}
+
+.advisor-copy p {
+    font-size: 13px;
+    color: #cbd5e1;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.advisor-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 11px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #173873;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.advisor-button:hover {
+    background: #eff6ff;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   8. BRANDS SECTION
+   ========================================================================== */
+.ep-brands {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ep-brand-tile {
+    min-width: 0;
+    min-height: 74px;
+    border: 1px solid var(--ep-border);
+    border-radius: var(--ep-radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ep-surface);
+    color: var(--ep-text);
+    transition: all 0.15s ease;
+    box-shadow: var(--ep-shadow-sm);
+}
+
+.ep-brand-tile:hover {
+    border-color: #93c5fd;
+    transform: translateY(-2px);
+    box-shadow: var(--ep-shadow-md);
+}
+
+.ep-brand-tile img {
+    max-height: 34px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.ep-brand-tile strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ep-text);
+}
+
+/* ==========================================================================
+   9. FIX OVERLAPPING: FLOATING CART & AI CHATBOT
+   Proper stacking with ample clearance
+   ========================================================================== */
+.emua-floating-cart {
+    position: fixed !important;
+    right: 24px !important;
+    bottom: 112px !important;
+    z-index: 9992 !important;
+}
+
+.emua-ai-wrapper.modern-ai {
+    position: fixed !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    z-index: 9995 !important;
+}
+
+/* ==========================================================================
+   10. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+@media (max-width: 1100px) {
+    .ep-hero-retail-grid {
+        grid-template-columns: 210px minmax(0, 1fr) 230px;
+        gap: 10px;
+    }
+
+    .ep-products {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ep-brands {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    /* Tablet layout: Collapse left categories into quick mobile strip, hero takes full width */
+    .ep-hero-retail-grid {
+        grid-template-columns: minmax(0, 1fr) 240px;
+        height: 300px;
+    }
+
+    .ep-hero-cat-col {
+        display: none;
+    }
+
+    /* Show mobile quick category strip */
+    .ep-mobile-cat-strip {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 12px 0 4px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ep-mobile-cat-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ep-mobile-cat-chip {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-width: 68px;
+        text-align: center;
+    }
+
+    .ep-mcat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid var(--ep-border);
+        color: var(--ep-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: var(--ep-shadow-sm);
+    }
+
+    .ep-mobile-cat-chip span {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ep-text);
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .ep-container {
+        width: calc(100% - 24px);
+    }
+
+    .ep-section {
+        padding: 18px 0;
+    }
+
+    /* Hero stacks on tablet portrait / mobile */
+    .ep-hero-retail-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .ep-retail-banner {
+        grid-template-columns: 1fr 150px;
+        padding: 20px;
+        min-height: 200px;
+    }
+
+    .ep-banner-title {
+        font-size: 20px;
+    }
+
+    .ep-banner-sub {
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    .ep-banner-hero-img {
+        max-height: 160px;
+    }
+
+    .ep-hero-side-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        height: auto;
+    }
+
+    .ep-mini-banner {
+        min-height: 110px;
+    }
+
+    .ep-products {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    /* Mobile image height strictly 170px */
+    .emua-home .ep-picture,
+    .ep .ep-picture,
+    .ep-picture {
+        height: 170px !important;
+        padding: 12px !important;
+    }
+
+    .ep-promo-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-advisor-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .advisor-symbol {
+        display: none;
+    }
+
+    .advisor-button {
+        width: 100%;
+    }
+
+    .ep-brands {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    /* Responsive Floating Cart and AI Chatbot on mobile */
+    .emua-floating-cart {
+        right: 16px !important;
+        bottom: 96px !important;
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    .emua-ai-wrapper.modern-ai {
+        right: 16px !important;
+        bottom: 16px !important;
+    }
+
+    .emua-ai-button {
+        width: 56px !important;
+        height: 56px !important;
+    }
+
+    .ep-retail-banner {
+        grid-template-columns: 1fr;
+        padding: 18px 16px;
+    }
+
+    .ep-banner-img-side {
+        display: none;
+    }
+
+    .ep-hero-side-col {
+        grid-template-columns: 1fr;
+    }
+
+    .ep-card-body {
+        padding: 10px 10px 12px;
+    }
+
+    .ep-product-name {
+        font-size: 12.5px;
+        min-height: 35px;
+    }
+
+    .ep-price {
+        font-size: 15.5px;
+    }
+
+    .ep-cart {
+        font-size: 11px;
+        min-height: 36px;
+    }
+
+    .ep-brands {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .emua-home *,
+    .ep * {
+        transition: none !important;
+        animation: none !important;
+    }
+}

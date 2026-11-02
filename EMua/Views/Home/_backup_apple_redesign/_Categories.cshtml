@@ -1,0 +1,52 @@
+@model IEnumerable<EMua.Models.Database.DanhMucSanPham>
+@using System.Linq
+
+<section class="ep ep-section" id="categories" aria-labelledby="cat-heading">
+    <div class="ep-container">
+        <header class="ep-heading">
+            <div>
+                <span class="ep-eyebrow"><i class="bi bi-grid-fill" aria-hidden="true"></i> BẮT ĐẦU TỪ NHU CẦU</span>
+                <h2 id="cat-heading">Danh mục sản phẩm</h2>
+                <p>Khám phá nhanh các dòng thiết bị công nghệ chính hãng.</p>
+            </div>
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+                <span>Xem tất cả sản phẩm</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        </header>
+
+        <div class="ep-categories">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
+                    var icon = name.Contains("điện thoại") ? "bi-phone"
+                        : name.Contains("laptop") ? "bi-laptop"
+                        : name.Contains("gaming") ? "bi-controller"
+                        : name.Contains("tai nghe") || name.Contains("âm thanh") ? "bi-headphones"
+                        : name.Contains("tablet") || name.Contains("máy tính bảng") ? "bi-tablet"
+                        : name.Contains("màn hình") ? "bi-display"
+                        : name.Contains("thông minh") || name.Contains("đồng hồ") ? "bi-smartwatch"
+                        : name.Contains("sạc") || name.Contains("phụ kiện") ? "bi-plug"
+                        : "bi-cpu";
+
+                    <a class="ep-category" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
+                        <div class="ep-category-icon-wrap">
+                            <i class="bi @icon" aria-hidden="true"></i>
+                        </div>
+                        <strong>@item.TenDanhMuc</strong>
+                        @if (!string.IsNullOrWhiteSpace(item.MoTa))
+                        {
+                            <small>@item.MoTa</small>
+                        }
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="ep-empty">Danh mục đang được cập nhật.</p>
+            }
+        </div>
+    </div>
+</section>

@@ -1,6 +1,8 @@
 @model EMua.ViewModels.CartViewModel
 @{
     ViewData["Title"] = "Giỏ hàng";
+    var couponError = TempData["CouponError"] as string;
+    var couponSuccess = TempData["CouponSuccess"] as string;
 }
 <link rel="stylesheet" href="~/css/shopping-cart.css" asp-append-version="true" />
 
@@ -18,11 +20,11 @@
 
     @if (TempData["Error"] != null)
     {
-        <div class="customer-alert error">@TempData["Error"]</div>
+        <div class="customer-alert error" role="alert">@TempData["Error"]</div>
     }
     @if (TempData["Success"] != null)
     {
-        <div class="customer-alert success">@TempData["Success"]</div>
+        <div class="customer-alert success" role="status">@TempData["Success"]</div>
     }
 
     @if (Model.Items.Count == 0)
@@ -114,15 +116,39 @@
             <aside class="cart-card summary-card">
                 <h2>Tổng tiền</h2>
 
-                <!-- KHỐI CHỌN / NHẬP VOUCHER -->
-                <div class="voucher-box">
-                    <form asp-action="ApplyVoucher" method="post" class="voucher-form">
+                <section class="emua-coupons" id="couponWidget"
+                         data-options-url="@Url.Action("CouponOptions", "Cart")"
+                         data-active-code="@Model.CouponCode" aria-label="Mã giảm giá">
+                    <details id="couponPicker">
+                        <summary><span><i class="bi bi-ticket-perforated" aria-hidden="true"></i> Chọn mã giảm giá</span><span class="ec-chevron" aria-hidden="true">⌄</span></summary>
+                        <div class="ec-panel">
+                            <div class="ec-panel-heading"><strong>Ưu đãi dành cho giỏ hàng</strong><small>Chỉ hiện mã bạn đủ điều kiện sử dụng</small></div>
+                            <div id="couponList" class="ec-list" aria-live="polite"></div>
+                            <p id="couponListStatus" class="ec-list-status" role="status"></p>
+                            <button type="button" id="couponRetry" class="ec-retry" hidden>Thử tải lại</button>
+                            <nav class="ec-pagination" id="couponPagination" aria-label="Trang mã giảm giá" hidden>
+                                <button type="button" id="couponPrev" aria-label="Trang mã trước">‹</button>
+                                <span id="couponPage" aria-live="polite">1 / 1</span>
+                                <button type="button" id="couponNext" aria-label="Trang mã tiếp theo">›</button>
+                            </nav>
+                        </div>
+                    </details>
+                    <form asp-controller="Cart" asp-action="ApplyCoupon" method="post" id="couponApplyForm" class="ec-manual">
                         @Html.AntiForgeryToken()
-                        <input type="text" name="voucherCode" class="voucher-input" placeholder="Nhập mã giảm giá..." value="@ViewBag.VoucherCode" />
-                        <button type="submit" class="btn-apply-voucher">Áp dụng</button>
+                        <label for="couponCode">Bạn có mã khác?</label>
+                        <div class="ec-input-row">
+                            <input id="couponCode" name="code" maxlength="50" autocomplete="off" placeholder="Nhập mã giảm giá" aria-describedby="couponMessage" />
+                            <button type="submit">Áp dụng</button>
+                        </div>
                     </form>
-                </div>
-
+                    <form asp-controller="Cart" asp-action="RemoveCoupon" method="post" id="couponRemoveForm" class="ec-applied" hidden="@(string.IsNullOrWhiteSpace(Model.CouponCode))">
+                        @Html.AntiForgeryToken()
+                        <span>Đang dùng <strong id="couponActiveCode">@Model.CouponCode</strong></span>
+                        <button type="submit" aria-label="Bỏ mã giảm giá đang áp dụng">Bỏ mã</button>
+                    </form>
+                    <p id="couponMessage" class="ec-message @(couponError != null ? "is-error" : "is-success")" role="status" aria-live="polite" aria-atomic="true" hidden="@(couponError == null && couponSuccess == null)">@(couponError ?? couponSuccess)</p>
+                    <noscript><small>Nhập mã và bấm Áp dụng. Bật JavaScript để xem danh sách mã phù hợp.</small></noscript>
+                </section>
                 <div class="summary-row">
                     <span>Tạm tính (@Model.TotalQuantity sản phẩm)</span>
                     <span data-cart-subtotal>@Model.Subtotal.ToString("N0")đ</span>
@@ -130,7 +156,7 @@
 
                 <div class="summary-row">
                     <span>Phí vận chuyển</span>
-                    <span>30.000đ</span>
+                    <span data-cart-shipping>@(Model.ShippingFee == 0 ? "Miễn phí" : Model.ShippingFee.ToString("N0") + "đ")</span>
                 </div>
 
                 <div class="summary-row" id="discount-row" style="@(Model.Discount > 0 ? "" : "display:none;")">
@@ -162,52 +188,186 @@
 
 @section Scripts {
     <script>
-        const cartDiscount = @Html.Raw(Model.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+(function () {
+    'use strict';
+    const widget = document.getElementById('couponWidget');
+    let busy = false, loading = false, currentPage = 1, pages = 1;
+    const money = value => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + 'đ';
 
-        document.querySelectorAll('.cart-row').forEach(function (item) {
-            const input = item.querySelector('input[name="quantity"]');
-            const price = Number(item.dataset.unitPrice || 0);
-            const lineTotal = item.querySelector('[data-line-total]');
-            const max = Number(input.max || Infinity);
-            const minusBtn = item.querySelector('.qty-minus');
-            const plusBtn = item.querySelector('.qty-plus');
+    // Quantities are recalculated by the server, including coupon eligibility.
+    document.querySelectorAll('.cart-row').forEach(row => {
+        const input = row.querySelector('input[name="quantity"]');
+        const minus = row.querySelector('.qty-minus');
+        const plus = row.querySelector('.qty-plus');
+        minus.disabled = Number(input.value) <= 1;
+        plus.disabled = Number(input.value) >= Number(input.max);
+        function change(delta) {
+            if (busy) return;
+            const next = Number(input.value) + delta;
+            if (next < 1 || next > Number(input.max)) return;
+            busy = true;
+            input.value = next;
+            minus.disabled = plus.disabled = true;
+            input.form.requestSubmit();
+        }
+        minus.addEventListener('click', () => change(-1));
+        plus.addEventListener('click', () => change(1));
+    });
+    if (!widget) return;
+    const el = id => document.getElementById(id);
+    const picker = el('couponPicker'), list = el('couponList');
+    const applyForm = el('couponApplyForm'), removeForm = el('couponRemoveForm');
+    const input = el('couponCode'), message = el('couponMessage');
+    const prev = el('couponPrev'), next = el('couponNext');
+    let activeCode = widget.dataset.activeCode || '';
 
-            function updateCalculations() {
-                const qty = Math.max(0, Number(input.value || 0));
-                if (lineTotal) lineTotal.textContent = (price * qty).toLocaleString('vi-VN') + 'đ';
-
-                let subtotal = 0;
-                document.querySelectorAll('.cart-row').forEach(function (row) {
-                    const rowPrice = Number(row.dataset.unitPrice || 0);
-                    const rowQty = Math.max(0, Number(row.querySelector('input[name="quantity"]').value || 0));
-                    subtotal += rowPrice * rowQty;
-                });
-
-                document.querySelectorAll('[data-cart-subtotal]').forEach(e => e.textContent = subtotal.toLocaleString('vi-VN') + 'đ');
-                document.querySelectorAll('[data-cart-finaltotal]').forEach(e => {
-                    const finalTotal = Math.max(0, subtotal - cartDiscount + 30000);
-                    e.textContent = finalTotal.toLocaleString('vi-VN') + 'đ';
-                });
-            }
-
-            if (minusBtn) {
-                minusBtn.addEventListener('click', function () {
-                    if (Number(input.value) > 1) {
-                        input.value = Number(input.value) - 1;
-                        updateCalculations();
-                        input.form.submit();
-                    }
-                });
-            }
-            if (plusBtn) {
-                plusBtn.addEventListener('click', function () {
-                    if (Number(input.value) < max) {
-                        input.value = Number(input.value) + 1;
-                        updateCalculations();
-                        input.form.submit();
-                    }
-                });
-            }
+    function showMessage(text, error = false) {
+        message.textContent = text;
+        message.className = 'ec-message ' + (error ? 'is-error' : 'is-success');
+        message.hidden = false;
+    }
+    function controls() {
+        widget.querySelectorAll('button').forEach(button => {
+            button.disabled = busy || loading || button.dataset.applied === 'true';
         });
+        prev.disabled = busy || loading || currentPage <= 1;
+        next.disabled = busy || loading || currentPage >= pages;
+        input.disabled = busy;
+        widget.setAttribute('aria-busy', String(busy || loading));
+    }
+    async function readResponse(response) {
+        if (response.status === 401 || response.status === 403 || response.redirected) {
+            throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử mã.');
+        }
+        const json = (response.headers.get('content-type') || '').includes('application/json');
+        const result = json ? await response.json() : null;
+        if (!response.ok || !result) {
+            throw new Error(result?.message || (response.status === 400
+                ? 'Phiên bảo mật đã hết hạn hoặc yêu cầu không hợp lệ. Vui lòng tải lại trang.'
+                : 'Chưa thể xử lý mã giảm giá. Vui lòng thử lại.'));
+        }
+        return result;
+    }
+    function textNode(tag, className, text) {
+        const node = document.createElement(tag);
+        node.className = className;
+        node.textContent = text;
+        return node;
+    }
+    function renderItems(items) {
+        list.replaceChildren();
+        items.forEach(coupon => {
+            const card = document.createElement('article');
+            card.className = 'ec-ticket';
+            const heading = document.createElement('div');
+            heading.className = 'ec-ticket-heading';
+            heading.append(textNode('strong', 'ec-code', coupon.code), textNode('span', 'ec-value', coupon.label));
+            card.append(heading, textNode('p', 'ec-name', coupon.name),
+                textNode('p', 'ec-condition', Number(coupon.minimum) > 0 ? 'Đơn từ ' + money(coupon.minimum) : 'Không yêu cầu đơn tối thiểu'),
+                textNode('p', 'ec-expiry', 'Hạn dùng: ' + coupon.expires));
+            const footer = document.createElement('div');
+            footer.className = 'ec-ticket-footer';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.code = coupon.code;
+            const applied = coupon.code === activeCode;
+            button.dataset.applied = String(applied);
+            button.textContent = applied ? 'Đang dùng' : 'Áp dụng';
+            button.setAttribute('aria-label', (applied ? 'Đang dùng mã ' : 'Áp dụng mã ') + coupon.code);
+            button.disabled = applied;
+            button.addEventListener('click', () => mutate(applyForm, coupon.code));
+            footer.append(textNode('span', 'ec-saving', 'Tiết kiệm ' + money(coupon.discount)), button);
+            card.append(footer);
+            list.append(card);
+        });
+    }
+    async function loadPage(page) {
+        if (loading || busy) return;
+        loading = true;
+        controls();
+        el('couponRetry').hidden = true;
+        el('couponListStatus').textContent = 'Đang tìm ưu đãi phù hợp…';
+        try {
+            const url = new URL(widget.dataset.optionsUrl, window.location.href);
+            url.searchParams.set('page', page);
+            const result = await readResponse(await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' }));
+            currentPage = result.page;
+            pages = result.pages;
+            renderItems(result.items);
+            el('couponPage').textContent = currentPage + ' / ' + pages;
+            el('couponPagination').hidden = pages <= 1;
+            el('couponListStatus').textContent = result.total === 0 ? 'Chưa có mã phù hợp với giỏ hàng hiện tại. Bạn vẫn có thể nhập mã bên dưới.' : '';
+        } catch (error) {
+            list.replaceChildren();
+            el('couponPagination').hidden = true;
+            el('couponListStatus').textContent = error instanceof TypeError
+                ? 'Không thể tải ưu đãi. Kiểm tra kết nối rồi thử lại.' : error.message;
+            el('couponRetry').hidden = false;
+        } finally {
+            loading = false;
+            controls();
+        }
+    }
+    function updateTotals(result) {
+        document.querySelectorAll('[data-cart-subtotal]').forEach(node => node.textContent = money(result.subtotal));
+        document.querySelectorAll('[data-cart-finaltotal]').forEach(node => node.textContent = money(result.total));
+        document.querySelectorAll('[data-cart-shipping]').forEach(node => node.textContent = result.shipping === 0 ? 'Miễn phí' : money(result.shipping));
+        el('discount-row').style.display = result.discount > 0 ? '' : 'none';
+        el('discount-amount').textContent = '-' + money(result.discount);
+        activeCode = result.code || '';
+        el('couponActiveCode').textContent = activeCode;
+        removeForm.hidden = !activeCode;
+        list.querySelectorAll('button[data-code]').forEach(button => {
+            const applied = button.dataset.code === activeCode;
+            button.dataset.applied = String(applied);
+            button.textContent = applied ? 'Đang dùng' : 'Áp dụng';
+            button.setAttribute('aria-label', (applied ? 'Đang dùng mã ' : 'Áp dụng mã ') + button.dataset.code);
+        });
+    }
+    async function mutate(form, code) {
+        if (busy || loading) return;
+        // Capture form fields before disabling inputs.
+        const body = new FormData(form);
+        if (form === applyForm) {
+            const value = (code ?? input.value).trim();
+            if (!value) {
+                showMessage('Vui lòng nhập mã giảm giá.', true);
+                input.setAttribute('aria-invalid', 'true');
+                input.focus();
+                return;
+            }
+            body.set('code', value);
+        }
+        busy = true;
+        controls();
+        let succeeded = false;
+        input.removeAttribute('aria-invalid');
+        try {
+            const result = await readResponse(await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body }));
+            if (!result.success) throw new Error(result.message || 'Chưa thể áp dụng mã giảm giá.');
+            updateTotals(result);
+            showMessage(result.message);
+            input.value = '';
+            succeeded = true;
+        } catch (error) {
+            showMessage(error instanceof TypeError ? 'Chưa nhận được phản hồi. Kiểm tra kết nối và tải lại trang để xác nhận mã đang dùng.' : error.message, true);
+        } finally {
+            busy = false;
+            controls();
+        }
+        if (succeeded) {
+            message.tabIndex = -1;
+            message.focus({ preventScroll: true });
+            if (picker.open) await loadPage(currentPage);
+        }
+    }
+    applyForm.addEventListener('submit', event => { event.preventDefault(); mutate(applyForm); });
+    removeForm.addEventListener('submit', event => { event.preventDefault(); mutate(removeForm); });
+    picker.addEventListener('toggle', () => { if (picker.open) loadPage(1); });
+    prev.addEventListener('click', () => loadPage(currentPage - 1));
+    next.addEventListener('click', () => loadPage(currentPage + 1));
+    el('couponRetry').addEventListener('click', () => loadPage(currentPage));
+})();
+
     </script>
 }

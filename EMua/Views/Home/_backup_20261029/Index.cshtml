@@ -1,0 +1,178 @@
+@model EMua.Models.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "EMUA - Siêu thị thiết bị công nghệ chính hãng";
+    ViewData["HomeRedesign"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/home-refresh.css"
+          asp-append-version="true" />
+}
+
+@Html.AntiForgeryToken()
+
+<div class="emua-home">
+    @* 1. BANNER CHÍNH (70% Hero Banner + 30% Side Banners) *@
+    <partial name="Home/_Hero" />
+
+    @* 2. DANH MỤC SẢN PHẨM *@
+    <partial name="Home/_Categories" model="Model.DanhMucs" />
+
+    @* 3. FLASH SALE GIÁ SỐC *@
+    @if (Model.FlashSale != null && Model.FlashSale.Any())
+    {
+        <partial name="Home/_FlashSale" model="Model.FlashSale" />
+    }
+
+    @* 4. SẢN PHẨM NỔI BẬT *@
+    <partial name="Home/_FeaturedProducts" model="Model.SanPhamNoiBat" />
+
+    @* 5. BANNER ĐÔI QUẢNG BÁ DANH MỤC *@
+    <partial name="Home/_DuoBanners" />
+
+    @* 6. KHU VỰC TƯ VẤN CÙNG AI *@
+    <section class="home-advisor" aria-labelledby="advisor-title">
+        <div class="ep-container">
+            <div class="home-advisor-inner">
+                <div class="advisor-symbol" aria-hidden="true">
+                    <i class="bi bi-chat-square-text"></i>
+                </div>
+                <div class="advisor-copy">
+                    <span>TRỢ LÝ MUA SẮM EMUA</span>
+                    <h2 id="advisor-title">Chọn đúng thiết bị, dễ dàng hơn cùng AI.</h2>
+                    <p>Chia sẻ nhu cầu và ngân sách để trợ lý AI tư vấn sản phẩm phù hợp nhất với bạn.</p>
+                </div>
+                <button type="button" class="advisor-button" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Bắt đầu tư vấn cùng AI">
+                    <span>Tư vấn cùng AI</span>
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    @* 7. LỰA CHỌN ĐÁNG CÂN NHẮC (BEST CHOICE) *@
+    @if (Model.BestChoice != null && Model.BestChoice.Any())
+    {
+        <partial name="Home/_BestChoice" model="Model.BestChoice" />
+    }
+
+    @* 8. SẢN PHẨM MỚI TẠI EMUA *@
+    <partial name="Home/_NewProducts" model="Model.SanPhamMoi" />
+
+    @* 9. THƯƠNG HIỆU ĐỐI TÁC CHÍNH HÃNG *@
+    <partial name="Home/_Brands" model="Model.ThuongHieus" />
+</div>
+
+<script>
+    // Đồng hồ đếm ngược Flash Sale kết thúc vào 23:59:59 mỗi ngày
+    (function initFlashSaleTimer() {
+        function updateTimer() {
+            const now = new Date();
+            const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+            let diff = Math.max(0, Math.floor((midnight - now) / 1000));
+
+            const hours = String(Math.floor(diff / 3600)).padStart(2, '0');
+            diff %= 3600;
+            const minutes = String(Math.floor(diff / 60)).padStart(2, '0');
+            const seconds = String(diff % 60).padStart(2, '0');
+
+            const hElem = document.getElementById('fsHours');
+            const mElem = document.getElementById('fsMinutes');
+            const sElem = document.getElementById('fsSeconds');
+
+            if (hElem) hElem.textContent = hours;
+            if (mElem) mElem.textContent = minutes;
+            if (sElem) sElem.textContent = seconds;
+        }
+
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    })();
+
+    async function homeAddCart(variantId) {
+        // Khách chưa đăng nhập: thêm vào giỏ tạm trên trình duyệt.
+        if (!window.EMUA_IS_AUTHENTICATED) {
+            if (typeof window.addToGuestCart === 'function') {
+                window.addToGuestCart(variantId, 1);
+            }
+
+            if (typeof showCartAddedFeedback === 'function') {
+                showCartAddedFeedback();
+            }
+
+            return;
+        }
+
+        // Lấy token bảo mật được tạo ở đầu trang.
+        const tokenInput = document.querySelector(
+            'input[name="__RequestVerificationToken"]'
+        );
+
+        if (!tokenInput) {
+            console.error('Không tìm thấy __RequestVerificationToken');
+            alert('Không tìm thấy mã bảo mật.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/Cart/Add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': tokenInput.value
+                },
+                body: JSON.stringify({
+                    variantId: variantId,
+                    quantity: 1
+                })
+            });
+
+            // Phiên đăng nhập hết hạn hoặc không được phép truy cập.
+            if (response.status === 401 || response.status === 403) {
+                window.location.href =
+                    '/Auth/Login?returnUrl=' +
+                    encodeURIComponent(window.location.pathname);
+                return;
+            }
+
+            // Chỉ đọc JSON khi phản hồi có đúng định dạng.
+            let result = null;
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            }
+
+            if (!response.ok) {
+                console.error('Cart Add Error', response.status, result);
+                alert(
+                    result?.message ||
+                    'Không thể thêm sản phẩm vào giỏ hàng.'
+                );
+                return;
+            }
+
+            // Thành công: nháy biểu tượng giỏ hàng và hiện +1.
+            if (typeof showCartAddedFeedback === 'function') {
+                showCartAddedFeedback();
+            }
+
+            // Cập nhật số lượng trên biểu tượng giỏ hàng.
+            const newCount =
+                result?.count ??
+                result?.cartCount ??
+                result?.totalQuantity;
+
+            if (
+                newCount !== undefined &&
+                typeof setGlobalCartCount === 'function'
+            ) {
+                setGlobalCartCount(newCount, false);
+            }
+        } catch (error) {
+            console.error('Lỗi khi gọi /Cart/Add:', error);
+            alert('Không thể kết nối đến giỏ hàng.');
+        }
+    }
+</script>

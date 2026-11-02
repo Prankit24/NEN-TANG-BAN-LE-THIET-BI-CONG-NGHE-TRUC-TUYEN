@@ -1,0 +1,132 @@
+@model IEnumerable<EMua.Models.Database.DanhMucSanPham>
+@using System.Linq
+
+<section class="ep-hero-section" aria-label="Khu vực mua sắm nổi bật">
+    <div class="ep-container">
+        <div class="ep-hero-retail-grid">
+            
+            <!-- CỘT 1: DANH MỤC SẢN PHẨM (20%) -->
+            <aside class="ep-hero-cat-col" aria-label="Danh mục ngành hàng">
+                <div class="ep-hero-cat-card">
+                    <div class="ep-hero-cat-header">
+                        <i class="bi bi-list-ul" aria-hidden="true"></i>
+                        <span>Danh mục sản phẩm</span>
+                    </div>
+                    <nav class="ep-hero-cat-menu">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model.Take(8))
+                            {
+                                var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
+                                var icon = name.Contains("điện thoại") ? "bi-phone"
+                                    : name.Contains("laptop") ? "bi-laptop"
+                                    : name.Contains("gaming") ? "bi-controller"
+                                    : name.Contains("tai nghe") || name.Contains("âm thanh") ? "bi-headphones"
+                                    : name.Contains("tablet") || name.Contains("máy tính bảng") ? "bi-tablet"
+                                    : name.Contains("màn hình") ? "bi-display"
+                                    : name.Contains("thông minh") || name.Contains("đồng hồ") ? "bi-smartwatch"
+                                    : name.Contains("sạc") || name.Contains("phụ kiện") ? "bi-plug"
+                                    : "bi-cpu";
+
+                                <a class="ep-hero-cat-item" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
+                                    <div class="ep-cat-item-left">
+                                        <i class="bi @icon" aria-hidden="true"></i>
+                                        <span>@item.TenDanhMuc</span>
+                                    </div>
+                                    <i class="bi bi-chevron-right ep-cat-arrow" aria-hidden="true"></i>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <span class="ep-cat-empty">Đang cập nhật...</span>
+                        }
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- CỘT 2: BANNER CHÍNH RETAIL (55%) -->
+            <div class="ep-hero-main-col">
+                <div class="ep-retail-banner">
+                    <div class="ep-banner-text-side">
+                        <div class="ep-banner-badge">
+                            <i class="bi bi-stars" aria-hidden="true"></i> ƯU ĐÃI NỔI BẬT
+                        </div>
+                        <h1 class="ep-banner-title">iPhone 18 Pro & Pro Max</h1>
+                        <p class="ep-banner-sub">Đỉnh cao công nghệ · Trải nghiệm thông minh</p>
+                        <div class="ep-banner-actions">
+                            <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-retail-btn ep-retail-btn-primary" aria-label="Xem sản phẩm ngay">
+                                <span>Mua ngay</span>
+                                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                            </a>
+                            <button type="button" class="ep-retail-btn ep-retail-btn-outline" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Tư vấn cùng trợ lý AI">
+                                <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                                <span>Tư vấn AI</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ep-banner-img-side">
+                        <img src="~/images/apple2026/iphone-duo.png"
+                             asp-append-version="true"
+                             alt="iPhone 18 Pro & Pro Max"
+                             class="ep-banner-hero-img"
+                             fetchpriority="high" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT 3: 2 BANNER PHỤ (25%) -->
+            <div class="ep-hero-side-col">
+                <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-mini-banner ep-mini-banner-1" aria-label="Xem ưu đãi Laptop Pro">
+                    <div class="ep-mini-text">
+                        <span class="ep-mini-pill">LAPTOP AI</span>
+                        <h3>MacBook & Laptop Pro</h3>
+                        <p>Hiệu năng bứt phá</p>
+                    </div>
+                    <div class="ep-mini-img">
+                        <img src="~/images/products/macbook-pro-m3/1.jpg" asp-append-version="true" alt="MacBook Pro" loading="lazy" />
+                    </div>
+                </a>
+
+                <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-mini-banner ep-mini-banner-2" aria-label="Xem ưu đãi Tai nghe & Phụ kiện">
+                    <div class="ep-mini-text">
+                        <span class="ep-mini-pill ep-pill-orange">ÂM THANH</span>
+                        <h3>Tai nghe & Phụ kiện</h3>
+                        <p>Giảm đến 40%</p>
+                    </div>
+                    <div class="ep-mini-img">
+                        <img src="~/images/products/sony-wh1000xm5/1.jpg" asp-append-version="true" alt="Tai nghe Sony" loading="lazy" />
+                    </div>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Dải danh mục cuộn ngang trên Mobile / Tablet -->
+        <div class="ep-mobile-cat-strip" aria-label="Danh mục chọn nhanh">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
+                    var icon = name.Contains("điện thoại") ? "bi-phone"
+                        : name.Contains("laptop") ? "bi-laptop"
+                        : name.Contains("gaming") ? "bi-controller"
+                        : name.Contains("tai nghe") || name.Contains("âm thanh") ? "bi-headphones"
+                        : name.Contains("tablet") || name.Contains("máy tính bảng") ? "bi-tablet"
+                        : name.Contains("màn hình") ? "bi-display"
+                        : name.Contains("thông minh") || name.Contains("đồng hồ") ? "bi-smartwatch"
+                        : name.Contains("sạc") || name.Contains("phụ kiện") ? "bi-plug"
+                        : "bi-cpu";
+
+                    <a class="ep-mobile-cat-chip" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
+                        <div class="ep-mcat-icon">
+                            <i class="bi @icon" aria-hidden="true"></i>
+                        </div>
+                        <span>@item.TenDanhMuc</span>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</section>

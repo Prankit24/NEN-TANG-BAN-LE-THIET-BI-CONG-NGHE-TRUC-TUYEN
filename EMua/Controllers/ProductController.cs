@@ -1,4 +1,6 @@
-﻿using EMua.Data;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using EMua.Data;
 using EMua.Models.Database;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +15,51 @@ namespace EMua.Controllers
         public ProductController(EMuaDbContext db)
         {
             _db = db;
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Favorite(int productId)
+        {
+            // Khách chưa đăng nhập → chuyển đến Login kèm returnUrl về trang chi tiết sản phẩm
+            if (User.Identity?.IsAuthenticated != true ||
+                !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            {
+                var returnUrl = Url.Action(nameof(Details), "Product", new { id = productId });
+                return RedirectToAction("Login", "Auth", new { returnUrl });
+            }
+
+            if (!await _db.SanPhams.AnyAsync(x => x.MaSanPham == productId &&
+                (x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn")))
+                return NotFound();
+
+            // Kiểm tra đã yêu thích chưa để toggle (thêm/xóa)
+            var exists = await _db.Database
+                .SqlQuery<int>($@"
+                    SELECT COUNT(*)::int AS ""Value""
+                    FROM public.yeuthich
+                    WHERE manguoidung = {userId} AND masanpham = {productId}")
+                .FirstOrDefaultAsync();
+
+            if (exists > 0)
+            {
+                // Đã yêu thích → xóa
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    DELETE FROM public.yeuthich
+                    WHERE manguoidung = {userId} AND masanpham = {productId}");
+                TempData["Success"] = "Đã bỏ sản phẩm khỏi danh sách yêu thích.";
+            }
+            else
+            {
+                // Chưa yêu thích → thêm (ON CONFLICT để tránh lỗi race condition)
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO public.yeuthich (manguoidung, masanpham, ngaythem)
+                    VALUES ({userId}, {productId}, LOCALTIMESTAMP)
+                    ON CONFLICT (manguoidung, masanpham) DO NOTHING");
+                TempData["Success"] = "Đã lưu sản phẩm vào danh sách yêu thích.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = productId });
         }
 
         // =========================================================
@@ -89,6 +136,10 @@ namespace EMua.Controllers
                                                  (x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("thiết bị thông minh") ||
                                                   x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("smart") ||
                                                   x.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("đồng hồ")));
+                        break;
+                    default:
+                        query = query.Where(x => x.MaDanhMucNavigation != null &&
+                            x.MaDanhMucNavigation.TenDanhMuc == category);
                         break;
                 }
             }
@@ -181,7 +232,10 @@ namespace EMua.Controllers
                 return NotFound();
             }
 
-            var defaultVariant = product.BienTheSanPhams.FirstOrDefault();
+            var variants = product.BienTheSanPhams
+                .OrderByDescending(v => v.SoLuong > 0 && v.Gia > 0 && v.TrangThai == "Còn hàng")
+                .ThenBy(v => v.Gia).ThenBy(v => v.MaBienThe).ToList();
+            var defaultVariant = variants.FirstOrDefault();
 
             // 1. Lấy chuỗi đường dẫn thô
             var rawImageUrl = defaultVariant?.HinhAnh
@@ -212,7 +266,7 @@ namespace EMua.Controllers
                 Category = product.MaDanhMucNavigation?.TenDanhMuc,
                 Brand = product.MaThuongHieuNavigation?.TenThuongHieu,
                 Price = defaultVariant?.Gia ?? product.GiaGoc ?? 0,
-                Stock = defaultVariant?.SoLuong ?? 0,
+                Stock = defaultVariant?.TrangThai == "Còn hàng" ? defaultVariant.SoLuong : 0,
 
                 // Gán đường dẫn đã được thêm dấu / tuyệt đối ở đầu
                 ImageUrl = FixImage(rawImageUrl),
@@ -222,12 +276,12 @@ namespace EMua.Controllers
                 Specifications = product.ThongSoKyThuat,
                 Warranty = product.BaoHanh,
 
-                Variants = product.BienTheSanPhams.Select(v => new ProductVariantViewModel
+                Variants = variants.Select(v => new ProductVariantViewModel
                 {
                     VariantId = v.MaBienThe,
                     Label = string.Join(" / ", new[] { v.MauSac, v.PhienBan }.Where(s => !string.IsNullOrWhiteSpace(s))),
                     Price = v.Gia,
-                    Stock = v.SoLuong,
+                    Stock = v.TrangThai == "Còn hàng" ? v.SoLuong : 0,
                     ImageUrl = FixImage(v.HinhAnh)
                 }).ToList(),
 
@@ -247,6 +301,19 @@ namespace EMua.Controllers
                     ? (decimal)product.DanhGiaSanPhams.Where(r => r.TrangThai == true && r.SoLuongSao.HasValue).Average(r => r.SoLuongSao!.Value)
                     : 0m
             };
+
+            // Kiểm tra trạng thái yêu thích của người dùng hiện tại
+            ViewBag.IsFavorited = false;
+            if (User.Identity?.IsAuthenticated == true &&
+                int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId))
+            {
+                ViewBag.IsFavorited = await _db.Database
+                    .SqlQuery<int>($@"
+                        SELECT COUNT(*)::int AS ""Value""
+                        FROM public.yeuthich
+                        WHERE manguoidung = {currentUserId} AND masanpham = {id}")
+                    .FirstOrDefaultAsync() > 0;
+            }
 
             return View("~/Views/Product/Details.cshtml", viewModel);
         }

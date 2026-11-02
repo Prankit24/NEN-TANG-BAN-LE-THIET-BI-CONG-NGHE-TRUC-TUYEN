@@ -1,0 +1,76 @@
+<section class="ep-hero-section" aria-label="Banner nổi bật">
+    <div class="ep-container">
+        <div class="ep-hero-grid-combo">
+            <!-- Banner chính (70%) -->
+            <div class="ep-hero-main-card">
+                <div class="ep-hero-content">
+                    <span class="ep-hero-badge">
+                        <i class="bi bi-stars" aria-hidden="true"></i> EMUA · THIẾT BỊ CÔNG NGHỆ
+                    </span>
+                    <h1 class="ep-hero-title">Công nghệ cho mọi lựa chọn.</h1>
+                    <p class="ep-hero-desc">
+                        Khám phá laptop, điện thoại và phụ kiện chính hãng phù hợp với nhu cầu và ngân sách của bạn.
+                    </p>
+                    <div class="ep-hero-actions">
+                        <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-primary" aria-label="Khám phá toàn bộ sản phẩm">
+                            <span>Khám phá sản phẩm</span>
+                            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                        </a>
+                        <button type="button" class="ep-btn-secondary" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Tư vấn mua sắm cùng AI">
+                            <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                            <span>Tư vấn cùng AI</span>
+                        </button>
+                    </div>
+                    <div class="ep-hero-perks" aria-label="Cam kết dịch vụ">
+                        <span><i class="bi bi-shield-check" aria-hidden="true"></i> 100% Chính hãng</span>
+                        <span><i class="bi bi-truck" aria-hidden="true"></i> Giao nhanh toàn quốc</span>
+                        <span><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Bảo hành chính hãng</span>
+                    </div>
+                </div>
+
+                <div class="ep-hero-media">
+                    <div class="ep-hero-image-wrap">
+                        <img src="~/images/apple2026/iphone-duo.png"
+                             asp-append-version="true"
+                             alt="Thiết bị công nghệ EMUA"
+                             class="ep-hero-product-img"
+                             fetchpriority="high" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2 Banner phụ (30%) -->
+            <div class="ep-hero-side">
+                <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-side-banner ep-side-banner-top" aria-label="Xem danh mục Laptop">
+                    <div class="ep-side-banner-text">
+                        <span class="ep-side-tag">LÀM VIỆC & SÁNG TẠO</span>
+                        <h3>Laptop Pro & AI</h3>
+                        <p>Hiệu năng bứt phá</p>
+                        <span class="ep-side-link">Xem ngay <i class="bi bi-chevron-right" aria-hidden="true"></i></span>
+                    </div>
+                    <div class="ep-side-banner-img">
+                        <img src="~/images/products/macbook-pro-m3/1.jpg"
+                             asp-append-version="true"
+                             alt="Laptop MacBook Pro"
+                             loading="lazy" />
+                    </div>
+                </a>
+
+                <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-side-banner ep-side-banner-bottom" aria-label="Xem danh mục Phụ kiện & Âm thanh">
+                    <div class="ep-side-banner-text">
+                        <span class="ep-side-tag">ÂM THANH ĐỈNH CAO</span>
+                        <h3>Tai nghe & Phụ kiện</h3>
+                        <p>Chống ồn vượt trội</p>
+                        <span class="ep-side-link">Xem ngay <i class="bi bi-chevron-right" aria-hidden="true"></i></span>
+                    </div>
+                    <div class="ep-side-banner-img">
+                        <img src="~/images/products/sony-wh1000xm5/1.jpg"
+                             asp-append-version="true"
+                             alt="Tai nghe Sony WH-1000XM5"
+                             loading="lazy" />
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,645 +1,213 @@
-<section class="emua-hero">
-
-    <!-- Background particles -->
-    <div class="hero-bg-mesh"></div>
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-orb hero-orb-3"></div>
-
-    <div class="emua-hero-container">
-
-        <div class="emua-hero-content">
-
-            <div class="hero-badge">
-                <span class="hero-badge-dot"></span>
-                EMUA TECHNOLOGY 2026
-            </div>
-
-            <h1>
-                Công nghệ mới.
-                <br />
-                <span class="hero-title-gradient">Trải nghiệm</span>
-                <br />
-                vượt trội.
-            </h1>
-
-            <p>
-                Khám phá điện thoại, laptop, tai nghe và
-                thiết bị công nghệ cao cấp nhất tại EMUA.
-                Chính hãng — Giao nhanh — Bảo hành uy tín.
-            </p>
-
-            <div class="emua-hero-stats">
-                <div class="hero-stat">
-                    <strong>10K+</strong>
-                    <span>Sản phẩm</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <strong>500K+</strong>
-                    <span>Khách hàng</span>
-                </div>
-                <div class="hero-stat-divider"></div>
-                <div class="hero-stat">
-                    <strong>4.9★</strong>
-                    <span>Đánh giá</span>
+<section class="ep-hero-wrap" aria-label="Sản phẩm công nghệ flagship">
+    <!-- SLIDE 1: iPhone 18 Pro (Titanium Navy) -->
+    <div class="ep-hero-slide ep-hero-slide-iphone active" id="heroSlide0">
+        <div class="ep-hero-container">
+            <div class="ep-hero-info">
+                <span class="ep-hero-badge">
+                    <i class="bi bi-stars" aria-hidden="true"></i> TIÊN PHONG CÔNG NGHỆ 2026
+                </span>
+                <h1 class="ep-hero-title">iPhone 18 Pro & Pro Max</h1>
+                <p class="ep-hero-desc">
+                    Tôi luyện từ titan siêu nhẹ. Sức mạnh đột phá cùng Apple Intelligence và hệ thống camera tiềm vọng thế hệ mới.
+                </p>
+                <div class="ep-hero-actions">
+                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-keyword="iPhone" class="ep-btn-hero-primary" aria-label="Khám phá iPhone 18 Pro">
+                        <span>Khám phá ngay</span>
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <button type="button" class="ep-btn-hero-secondary" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Tư vấn mua sắm cùng AI">
+                        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+                        <span>Tư vấn cùng AI</span>
+                    </button>
                 </div>
             </div>
-
-            <div class="emua-hero-actions">
-
-                <a href="#new-products" class="emua-hero-primary">
-                    Khám phá ngay
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-
-                <a href="#categories" class="emua-hero-secondary">
-                    <i class="bi bi-grid-3x3-gap"></i>
-                    Xem danh mục
-                </a>
-
+            <div class="ep-hero-stage">
+                <img src="~/images/apple2026/iphone-duo.png"
+                     asp-append-version="true"
+                     alt="iPhone 18 Pro"
+                     class="ep-hero-img"
+                     fetchpriority="high" />
             </div>
-
         </div>
-
-
-        <div class="emua-hero-visual">
-
-            <div class="hero-phone-wrapper">
-                <div class="emua-phone">
-                    <div class="emua-phone-notch"></div>
-                    <div class="emua-phone-screen">
-                        <div class="phone-screen-header">
-                            <small>E M U A</small>
-                            <span class="phone-screen-dot"></span>
-                        </div>
-                        <strong>Technology</strong>
-                        <div class="phone-screen-bar">
-                            <div class="phone-bar-fill"></div>
-                        </div>
-                        <div class="phone-screen-icons">
-                            <i class="bi bi-phone"></i>
-                            <i class="bi bi-laptop"></i>
-                            <i class="bi bi-headphones"></i>
-                        </div>
-                    </div>
-                    <div class="emua-phone-button"></div>
-                </div>
-
-                <!-- Floating glow ring -->
-                <div class="phone-glow-ring"></div>
-            </div>
-
-
-            <div class="hero-chip hero-chip-a">
-                <div class="chip-icon"><i class="bi bi-headphones"></i></div>
-                <div class="chip-text">
-                    <strong>Âm thanh Hi-Fi</strong>
-                    <small>Dolby Atmos</small>
-                </div>
-            </div>
-
-            <div class="hero-chip hero-chip-b">
-                <div class="chip-icon chip-icon-green"><i class="bi bi-laptop"></i></div>
-                <div class="chip-text">
-                    <strong>Laptop AI</strong>
-                    <small>Intel Core Ultra</small>
-                </div>
-            </div>
-
-            <div class="hero-chip hero-chip-c">
-                <div class="chip-icon chip-icon-orange"><i class="bi bi-stars"></i></div>
-                <div class="chip-text">
-                    <strong>Flash Sale</strong>
-                    <small>Đến -50%</small>
-                </div>
-            </div>
-
-        </div>
-
     </div>
 
+    <!-- SLIDE 2: MacBook Pro M3 (Silver Studio) -->
+    <div class="ep-hero-slide ep-hero-slide-macbook" id="heroSlide1">
+        <div class="ep-hero-container">
+            <div class="ep-hero-info">
+                <span class="ep-hero-badge">
+                    <i class="bi bi-cpu" aria-hidden="true"></i> HIỆU NĂNG SIÊU VIỆT
+                </span>
+                <h2 class="ep-hero-title">MacBook Pro M3 Max</h2>
+                <p class="ep-hero-desc">
+                    Kiến trúc vi xử lý 3nm thế hệ mới. Màn hình Liquid Retina XDR sống động, khai phóng tiềm năng sáng tạo của chuyên gia.
+                </p>
+                <div class="ep-hero-actions">
+                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-btn-hero-primary" aria-label="Xem dòng máy MacBook Pro">
+                        <span>Xem chi tiết</span>
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Xem tất cả Laptop">
+                        <span>Tất cả Laptop</span>
+                    </a>
+                </div>
+            </div>
+            <div class="ep-hero-stage">
+                <img src="~/images/banners/macbook-pro-transparent.png"
+                     asp-append-version="true"
+                     alt="MacBook Pro M3"
+                     class="ep-hero-img"
+                     loading="lazy" />
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: Sony WH-1000XM5 (Midnight Studio) -->
+    <div class="ep-hero-slide ep-hero-slide-sony" id="heroSlide2">
+        <div class="ep-hero-container">
+            <div class="ep-hero-info">
+                <span class="ep-hero-badge">
+                    <i class="bi bi-headphones" aria-hidden="true"></i> CHUẨN ÂM STUDIO
+                </span>
+                <h2 class="ep-hero-title">Sony WH-1000XM5</h2>
+                <p class="ep-hero-desc">
+                    Không gian tĩnh lặng tuyệt đối. Công nghệ khử tiếng ồn đỉnh cao cùng chất âm Hi-Res nguyên bản sống động từng chi tiết.
+                </p>
+                <div class="ep-hero-actions">
+                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-btn-hero-primary" aria-label="Khám phá Sony WH-1000XM5">
+                        <span>Khám phá ngay</span>
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Xem thêm phụ kiện">
+                        <span>Phụ kiện âm thanh</span>
+                    </a>
+                </div>
+            </div>
+            <div class="ep-hero-stage">
+                <img src="~/images/banners/sony-transparent.png"
+                     asp-append-version="true"
+                     alt="Sony WH-1000XM5"
+                     class="ep-hero-img"
+                     loading="lazy" />
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: Gaming Laptop (Stealth Cyber) -->
+    <div class="ep-hero-slide ep-hero-slide-gaming" id="heroSlide3">
+        <div class="ep-hero-container">
+            <div class="ep-hero-info">
+                <span class="ep-hero-badge">
+                    <i class="bi bi-controller" aria-hidden="true"></i> CHIẾN TRƯỜNG ĐỈNH CAO
+                </span>
+                <h2 class="ep-hero-title">Laptop Gaming RTX 40-Series</h2>
+                <p class="ep-hero-desc">
+                    Tần số quét 240Hz siêu mượt mà. Sức mạnh đồ họa Ray Tracing tối tân cùng hệ thống tản nhiệt buồng hơi vượt trội.
+                </p>
+                <div class="ep-hero-actions">
+                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Gaming" class="ep-btn-hero-primary" aria-label="Khám phá Laptop Gaming">
+                        <span>Khám phá ngay</span>
+                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Tất cả thiết bị Gaming">
+                        <span>Thiết bị Gaming</span>
+                    </a>
+                </div>
+            </div>
+            <div class="ep-hero-stage">
+                <img src="~/images/banners/gaming-transparent.png"
+                     asp-append-version="true"
+                     alt="Laptop Gaming"
+                     class="ep-hero-img"
+                     loading="lazy" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide Indicators -->
+    <div class="ep-hero-indicators" role="tablist" aria-label="Chuyển slide banner">
+        <button type="button" class="ep-hero-dot active" data-slide="0" aria-label="iPhone 18 Pro" aria-selected="true"></button>
+        <button type="button" class="ep-hero-dot" data-slide="1" aria-label="MacBook Pro" aria-selected="false"></button>
+        <button type="button" class="ep-hero-dot" data-slide="2" aria-label="Sony Audio" aria-selected="false"></button>
+        <button type="button" class="ep-hero-dot" data-slide="3" aria-label="Gaming Gear" aria-selected="false"></button>
+    </div>
 </section>
 
-
-<style>
-
-    /* ── HERO SECTION ─────────────────────────────────────────────── */
-    .emua-hero {
-        position: relative;
-        min-height: 680px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        color: #fff;
-        background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(37,99,235,.18) 0, transparent 60%),
-                    radial-gradient(ellipse 60% 50% at 30% 80%, rgba(124,58,237,.15) 0, transparent 55%),
-                    linear-gradient(165deg, #07091a 0%, #0c1127 40%, #080c1e 100%);
-    }
-
-
-    /* Background mesh grid */
-    .hero-bg-mesh {
-        position: absolute;
-        inset: 0;
-        background-image:
-            linear-gradient(rgba(37,99,235,.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(37,99,235,.05) 1px, transparent 1px);
-        background-size: 60px 60px;
-        mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, #000 40%, transparent 100%);
-        pointer-events: none;
-    }
-
-
-    /* Glowing orbs */
-    .hero-orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(80px);
-        pointer-events: none;
-    }
-
-    .hero-orb-1 {
-        width: 480px; height: 480px;
-        right: 5%; top: -80px;
-        background: radial-gradient(circle, rgba(37,99,235,.35), transparent 70%);
-        animation: orbFloat1 8s ease-in-out infinite;
-    }
-
-    .hero-orb-2 {
-        width: 320px; height: 320px;
-        right: 30%; bottom: -100px;
-        background: radial-gradient(circle, rgba(124,58,237,.28), transparent 70%);
-        animation: orbFloat2 10s ease-in-out infinite;
-    }
-
-    .hero-orb-3 {
-        width: 200px; height: 200px;
-        left: 5%; top: 20%;
-        background: radial-gradient(circle, rgba(6,182,212,.2), transparent 70%);
-        animation: orbFloat1 7s ease-in-out infinite reverse;
-    }
-
-    @@keyframes orbFloat1 {
-        0%, 100% { transform: translateY(0) scale(1); }
-        50% { transform: translateY(-30px) scale(1.06); }
-    }
-
-    @@keyframes orbFloat2 {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(24px); }
-    }
-
-
-    /* Container */
-    .emua-hero-container {
-        width: min(1360px, 92%);
-        margin: auto;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-        gap: 60px;
-        position: relative;
-        z-index: 3;
-        padding: 80px 0;
-    }
-
-
-    /* ── HERO BADGE ───────────────────────────────────────────────── */
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-        padding: 6px 16px;
-        border-radius: 999px;
-        border: 1px solid rgba(37,99,235,.35);
-        background: rgba(37,99,235,.12);
-        color: #93c5fd;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 2px;
-    }
-
-    .hero-badge-dot {
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        background: #3b82f6;
-        box-shadow: 0 0 8px #3b82f6;
-        animation: dotPulse 2s ease-in-out infinite;
-    }
-
-    @@keyframes dotPulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(0.8); }
-    }
-
-
-    /* ── HERO TITLE ───────────────────────────────────────────────── */
-    .emua-hero-content h1 {
-        margin: 0;
-        font-size: clamp(44px, 5.5vw, 76px);
-        line-height: 1.05;
-        font-weight: 900;
-        letter-spacing: -2.5px;
-        color: #fff;
-    }
-
-    .hero-title-gradient {
-        background: linear-gradient(135deg, #60a5fa, #a78bfa, #67e8f9);
-        background-size: 200%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: titleShimmer 5s linear infinite;
-    }
-
-    @@keyframes titleShimmer {
-        0% { background-position: 0% center; }
-        100% { background-position: 200% center; }
-    }
-
-
-    /* ── HERO DESCRIPTION ─────────────────────────────────────────── */
-    .emua-hero-content p {
-        max-width: 500px;
-        margin-top: 22px;
-        color: rgba(255,255,255,0.58);
-        font-size: 15.5px;
-        line-height: 1.85;
-        font-weight: 400;
-    }
-
-
-    /* ── HERO STATS ───────────────────────────────────────────────── */
-    .emua-hero-stats {
-        display: flex;
-        align-items: center;
-        gap: 28px;
-        margin-top: 32px;
-        margin-bottom: 4px;
-    }
-
-    .hero-stat {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .hero-stat strong {
-        font-size: 22px;
-        font-weight: 800;
-        color: #fff;
-        letter-spacing: -0.5px;
-    }
-
-    .hero-stat span {
-        font-size: 11.5px;
-        color: rgba(255,255,255,0.45);
-        font-weight: 500;
-    }
-
-    .hero-stat-divider {
-        width: 1px;
-        height: 32px;
-        background: rgba(255,255,255,0.1);
-    }
-
-
-    /* ── HERO ACTIONS ─────────────────────────────────────────────── */
-    .emua-hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-top: 32px;
-    }
-
-    .emua-hero-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        min-height: 52px;
-        padding: 0 30px;
-        border-radius: 999px;
-        color: #fff;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 14.5px;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        box-shadow: 0 8px 32px rgba(37,99,235,0.45),
-                    inset 0 1px 0 rgba(255,255,255,0.15);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .emua-hero-primary::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .emua-hero-primary:hover {
-        color: #fff;
-        transform: translateY(-3px);
-        box-shadow: 0 16px 48px rgba(37,99,235,0.55);
-    }
-
-    .emua-hero-primary:hover::before { opacity: 1; }
-
-
-    .emua-hero-secondary {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        min-height: 52px;
-        padding: 0 26px;
-        border-radius: 999px;
-        color: rgba(255,255,255,0.82);
-        border: 1.5px solid rgba(255,255,255,0.15);
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(16px);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s ease;
-    }
-
-    .emua-hero-secondary:hover {
-        color: #fff;
-        background: rgba(255,255,255,0.1);
-        border-color: rgba(255,255,255,0.3);
-        transform: translateY(-3px);
-    }
-
-
-    /* ── HERO VISUAL ──────────────────────────────────────────────── */
-    .emua-hero-visual {
-        position: relative;
-        height: 540px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .hero-phone-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Phone glow ring */
-    .phone-glow-ring {
-        position: absolute;
-        width: 300px; height: 300px;
-        border-radius: 50%;
-        border: 1px solid rgba(37,99,235,0.2);
-        background: radial-gradient(circle at center, rgba(37,99,235,0.06), transparent 70%);
-        animation: ringPulse 4s ease-in-out infinite;
-        pointer-events: none;
-    }
-
-    @@keyframes ringPulse {
-        0%, 100% { transform: scale(1); opacity: 0.8; }
-        50% { transform: scale(1.08); opacity: 0.4; }
-    }
-
-
-    /* ── PHONE MOCKUP ─────────────────────────────────────────────── */
-    .emua-phone {
-        position: relative;
-        width: 240px;
-        height: 490px;
-        border-radius: 48px;
-        border: 8px solid #1a1f35;
-        background: #09090f;
-        box-shadow:
-            0 0 0 1px rgba(255,255,255,0.08),
-            0 50px 120px rgba(0,0,0,0.7),
-            0 0 80px rgba(37,99,235,0.12) inset;
-        animation: phoneFloat 6s ease-in-out infinite;
-        overflow: hidden;
-    }
-
-    .emua-phone-notch {
-        position: absolute;
-        top: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90px; height: 26px;
-        border-radius: 999px;
-        background: #09090f;
-        z-index: 10;
-        border: 2px solid #1a1f35;
-    }
-
-    .emua-phone-screen {
-        width: 100%;
-        height: 100%;
-        border-radius: 40px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 20px;
-        background:
-            radial-gradient(circle at 30% 25%, rgba(37,99,235,.45), transparent 40%),
-            radial-gradient(circle at 75% 75%, rgba(124,58,237,.4), transparent 42%),
-            radial-gradient(circle at 60% 10%, rgba(6,182,212,.2), transparent 35%),
-            #040407;
-    }
-
-    .phone-screen-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        padding: 0 6px;
-        margin-top: 28px;
-    }
-
-    .phone-screen-header small {
-        color: rgba(255,255,255,0.5);
-        letter-spacing: 5px;
-        font-size: 9px;
-        font-weight: 600;
-    }
-
-    .phone-screen-dot {
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        background: #22c55e;
-        box-shadow: 0 0 8px rgba(34,197,94,.7);
-    }
-
-    .emua-phone-screen strong {
-        font-size: 28px;
-        font-weight: 900;
-        letter-spacing: -1px;
-        background: linear-gradient(135deg, #fff, #93c5fd);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .phone-screen-bar {
-        width: 70%; height: 4px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.08);
-        overflow: hidden;
-    }
-
-    .phone-bar-fill {
-        height: 100%;
-        width: 68%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
-        animation: barFill 3s ease-in-out infinite alternate;
-    }
-
-    @@keyframes barFill {
-        0% { width: 40%; }
-        100% { width: 85%; }
-    }
-
-    .phone-screen-icons {
-        display: flex;
-        gap: 20px;
-        margin-top: 6px;
-    }
-
-    .phone-screen-icons i {
-        font-size: 20px;
-        color: rgba(255,255,255,0.25);
-    }
-
-    .emua-phone-button {
-        position: absolute;
-        right: -10px;
-        top: 130px;
-        width: 4px; height: 60px;
-        border-radius: 0 3px 3px 0;
-        background: #1a1f35;
-    }
-
-    @@keyframes phoneFloat {
-        0%, 100% { transform: rotate(5deg) translateY(0); }
-        50% { transform: rotate(3deg) translateY(-20px); }
-    }
-
-
-    /* ── FEATURE CHIPS ────────────────────────────────────────────── */
-    .hero-chip {
-        position: absolute;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 18px;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.1);
-        background: rgba(15,18,38,0.75);
-        backdrop-filter: blur(20px);
-        box-shadow: 0 16px 48px rgba(0,0,0,0.3);
-        white-space: nowrap;
-    }
-
-    .chip-icon {
-        width: 38px; height: 38px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(124,58,237,0.2));
-        border: 1px solid rgba(37,99,235,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #60a5fa;
-        font-size: 17px;
-        flex-shrink: 0;
-    }
-
-    .chip-icon-green {
-        background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(6,182,212,0.15));
-        border-color: rgba(34,197,94,0.3);
-        color: #4ade80;
-    }
-
-    .chip-icon-orange {
-        background: linear-gradient(135deg, rgba(249,115,22,0.2), rgba(239,68,68,0.15));
-        border-color: rgba(249,115,22,0.3);
-        color: #fb923c;
-    }
-
-    .chip-text {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .chip-text strong {
-        color: #fff;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .chip-text small {
-        color: rgba(255,255,255,0.45);
-        font-size: 11px;
-    }
-
-    .hero-chip-a {
-        left: 10px; top: 100px;
-        animation: chipFloat1 4.5s ease-in-out infinite;
-    }
-
-    .hero-chip-b {
-        right: 0px; top: 240px;
-        animation: chipFloat2 5.5s ease-in-out infinite;
-    }
-
-    .hero-chip-c {
-        left: 50px; bottom: 60px;
-        animation: chipFloat1 6s ease-in-out infinite 0.5s;
-    }
-
-    @@keyframes chipFloat1 {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-14px); }
-    }
-
-    @@keyframes chipFloat2 {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(14px); }
-    }
-
-
-    /* ── RESPONSIVE ───────────────────────────────────────────────── */
-    @@media (max-width: 1000px) {
-        .emua-hero-container {
-            grid-template-columns: 1fr;
-            text-align: center;
-            padding: 60px 0 40px;
-            gap: 48px;
+<script>
+    (function initHeroCarousel() {
+        const slides = document.querySelectorAll('.ep-hero-slide');
+        const dots = document.querySelectorAll('.ep-hero-dot');
+        if (!slides.length || !dots.length) return;
+
+        let currentIndex = 0;
+        let timer = null;
+
+        function goToSlide(index) {
+            slides[currentIndex].classList.remove('active');
+            dots[currentIndex].classList.remove('active');
+            dots[currentIndex].setAttribute('aria-selected', 'false');
+
+            currentIndex = (index + slides.length) % slides.length;
+
+            slides[currentIndex].classList.add('active');
+            dots[currentIndex].classList.add('active');
+            dots[currentIndex].setAttribute('aria-selected', 'true');
         }
-        .hero-badge { margin: 0 auto 20px; }
-        .emua-hero-content p { margin-left: auto; margin-right: auto; }
-        .emua-hero-stats { justify-content: center; }
-        .emua-hero-actions { justify-content: center; }
-        .emua-hero-visual { height: 440px; }
-    }
 
-    @@media (max-width: 600px) {
-        .emua-hero-content h1 {
-            font-size: 40px;
-            letter-spacing: -1.5px;
+        function startAutoPlay() {
+            stopAutoPlay();
+            timer = setInterval(function () {
+                goToSlide(currentIndex + 1);
+            }, 5500);
         }
-        .emua-hero-actions { flex-direction: column; align-items: center; }
-        .emua-phone { width: 195px; height: 400px; }
-        .emua-hero-visual { height: 380px; }
-        .hero-chip-b { display: none; }
-    }
 
-</style>
+        function stopAutoPlay() {
+            if (timer) clearInterval(timer);
+        }
+
+        dots.forEach(function (dot, i) {
+            dot.addEventListener('click', function () {
+                goToSlide(i);
+                startAutoPlay();
+            });
+        });
+
+        const heroWrap = document.querySelector('.ep-hero-wrap');
+        if (heroWrap) {
+            heroWrap.addEventListener('mouseenter', stopAutoPlay);
+            heroWrap.addEventListener('mouseleave', startAutoPlay);
+        }
+
+        startAutoPlay();
+    })();
+
+    /* Scroll Reveal — lightweight IntersectionObserver */
+    (function initScrollReveal() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const revealTargets = document.querySelectorAll(
+            '.ep-section, .ep-cat-card, .ep-card, .ep-showcase-card, .ep-brand-tile, .home-advisor'
+        );
+        if (!revealTargets.length) return;
+
+        revealTargets.forEach(function (el) { el.classList.add('ep-reveal'); });
+
+        /* Stagger children inside grids */
+        document.querySelectorAll('.ep-categories-grid .ep-cat-card, .ep-products .ep-card, .ep-brands .ep-brand-tile').forEach(function (el, i) {
+            el.classList.add('ep-reveal-child');
+            el.style.setProperty('--ep-delay', i % 8);
+        });
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('ep-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+        revealTargets.forEach(function (el) { observer.observe(el); });
+        document.querySelectorAll('.ep-reveal-child').forEach(function (el) { observer.observe(el); });
+    })();
+</script>

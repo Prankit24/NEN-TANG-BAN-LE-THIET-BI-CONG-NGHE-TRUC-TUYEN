@@ -1,0 +1,481 @@
+﻿@{
+    ViewData["Title"] = "Hệ thống";
+
+    var applicationVersion =
+        ViewData["ApplicationVersion"]?.ToString() ?? "1.0.0";
+}
+
+@section Styles {
+    <style>
+        .system-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+        }
+
+            .system-page *,
+            .system-page *::before,
+            .system-page *::after {
+                box-sizing: border-box;
+            }
+
+        /* Giới thiệu */
+        .system-intro {
+            margin-bottom: 30px;
+        }
+
+            .system-intro h2 {
+                margin: 0 0 6px;
+                color: #25344c;
+                font-size: 21px;
+                font-weight: 700;
+                line-height: 1.4;
+                letter-spacing: -.4px;
+            }
+
+            .system-intro p {
+                margin: 0;
+                color: #6f7e95;
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+        /* Các khu vực */
+        .system-section {
+            padding: 0 0 28px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid #dfe5ee;
+        }
+
+            .system-section:last-of-type {
+                border-bottom: 0;
+            }
+
+        .system-section-title {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+            .system-section-title > i {
+                width: 22px;
+                flex-shrink: 0;
+                margin-top: 1px;
+                color: #315efb;
+                font-size: 19px;
+                line-height: 1.4;
+                text-align: center;
+            }
+
+            .system-section-title h3 {
+                margin: 0 0 4px;
+                color: #25344c;
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 1.5;
+            }
+
+            .system-section-title p {
+                margin: 0;
+                color: #75839a;
+                font-size: 12px;
+                line-height: 1.7;
+            }
+
+        /* Danh sách thao tác */
+        .system-list {
+            border-top: 1px solid #e3e8f0;
+        }
+
+        .system-row {
+            display: flex;
+            min-height: 88px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 17px 0;
+            border-bottom: 1px solid #e3e8f0;
+        }
+
+        .system-row-info {
+            min-width: 0;
+        }
+
+            .system-row-info h4 {
+                margin: 0 0 5px;
+                color: #34435b;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+            .system-row-info p {
+                max-width: 650px;
+                margin: 0;
+                color: #75839a;
+                font-size: 12px;
+                line-height: 1.7;
+            }
+
+        .system-action {
+            display: inline-flex;
+            min-height: 37px;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 8px 13px;
+            border: 1px solid #d2dbea;
+            border-radius: 6px;
+            background: #fff;
+            color: #405675;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color .18s ease, border-color .18s ease, background .18s ease;
+        }
+
+            .system-action:hover {
+                border-color: #b9caf3;
+                background: #f0f4ff;
+                color: #315efb;
+            }
+
+            .system-action i {
+                font-size: 14px;
+            }
+
+        .system-inline-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 14px 0 0;
+            color: #75839a;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+            .system-inline-note > i {
+                flex-shrink: 0;
+                margin-top: 1px;
+                color: #8298bd;
+                font-size: 14px;
+            }
+
+        /* Thông tin phiên bản */
+        .system-details {
+            margin: 0;
+            border-top: 1px solid #e3e8f0;
+        }
+
+            .system-details > div {
+                display: grid;
+                grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+                gap: 20px;
+                padding: 14px 0;
+                border-bottom: 1px solid #e3e8f0;
+            }
+
+            .system-details dt {
+                color: #75839a;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.6;
+            }
+
+            .system-details dd {
+                min-width: 0;
+                margin: 0;
+                color: #34435b;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.6;
+                overflow-wrap: anywhere;
+            }
+
+        .system-version-value {
+            color: #315efb;
+        }
+
+        .system-details a {
+            color: #315efb;
+            text-decoration: none;
+        }
+
+            .system-details a:hover {
+                text-decoration: underline;
+            }
+
+        /* Các bước cập nhật */
+        .system-steps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 25px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            counter-reset: system-step;
+        }
+
+            .system-steps li {
+                min-width: 0;
+                counter-increment: system-step;
+            }
+
+        .system-step-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 8px;
+        }
+
+            .system-step-title::before {
+                content: counter(system-step);
+                display: grid;
+                width: 24px;
+                height: 24px;
+                flex-shrink: 0;
+                place-items: center;
+                border: 1px solid #d6e0f6;
+                border-radius: 50%;
+                color: #5274bd;
+                font-size: 11px;
+                font-weight: 700;
+            }
+
+            .system-step-title strong {
+                color: #34435b;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.5;
+            }
+
+        .system-steps p {
+            margin: 0;
+            padding-left: 33px;
+            color: #75839a;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .system-page a:focus-visible {
+            outline: 2px solid #7192ff;
+            outline-offset: 3px;
+        }
+
+        @@media (max-width: 700px) {
+            .system-intro {
+                margin-bottom: 24px;
+            }
+
+                .system-intro h2 {
+                    font-size: 19px;
+                }
+
+            .system-section {
+                padding-bottom: 24px;
+                margin-bottom: 24px;
+            }
+
+            .system-row {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .system-action {
+                min-height: 36px;
+            }
+
+            .system-details > div {
+                grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
+                gap: 12px;
+            }
+
+            .system-steps {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 18px;
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .system-action {
+                transition: none;
+            }
+        }
+    </style>
+}
+
+<div class="system-page">
+
+    <div class="system-intro">
+        <h2>Quản lý hệ thống</h2>
+        <p>
+            Sao lưu dữ liệu và theo dõi phiên bản cửa hàng EMUA.
+        </p>
+    </div>
+
+    <!-- SAO LƯU DỮ LIỆU -->
+    <section class="system-section"
+             aria-labelledby="backupTitle">
+
+        <div class="system-section-title">
+            <i class="bi bi-database-down" aria-hidden="true"></i>
+
+            <div>
+                <h3 id="backupTitle">Sao lưu dữ liệu</h3>
+                <p>
+                    Lưu bản dự phòng trước khi cập nhật hoặc thay đổi hệ thống.
+                </p>
+            </div>
+        </div>
+
+        <div class="system-list">
+
+            <div class="system-row">
+                <div class="system-row-info">
+                    <h4>Cơ sở dữ liệu</h4>
+                    <p>
+                        Sao lưu dữ liệu sản phẩm, tài khoản, đơn hàng
+                        và cấu trúc các bảng trên Supabase.
+                    </p>
+                </div>
+
+                <a href="https://supabase.com/dashboard"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="system-action">
+                    Mở Supabase
+                    <i class="bi bi-box-arrow-up-right"
+                       aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <div class="system-row">
+                <div class="system-row-info">
+                    <h4>Hình ảnh và tệp tải lên</h4>
+                    <p>
+                        Sao lưu riêng ảnh sản phẩm, ảnh đại diện và
+                        các tệp đang lưu trên hosting.
+                    </p>
+                </div>
+
+                <a href="https://somee.com/"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="system-action">
+                    Mở Somee
+                    <i class="bi bi-box-arrow-up-right"
+                       aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+
+        <p class="system-inline-note">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            <span>
+                Các nút mở trang quản lý để bạn tự thực hiện sao lưu.
+                EMUA hiện chưa tự tạo bản sao.
+            </span>
+        </p>
+    </section>
+
+    <!-- THÔNG TIN PHIÊN BẢN -->
+    <section class="system-section"
+             aria-labelledby="versionTitle">
+
+        <div class="system-section-title">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+
+            <div>
+                <h3 id="versionTitle">Thông tin ứng dụng</h3>
+                <p>Thông tin phiên bản EMUA đang hoạt động.</p>
+            </div>
+        </div>
+
+        <dl class="system-details">
+            <div>
+                <dt>Phiên bản</dt>
+                <dd>
+                    <span class="system-version-value">
+                        v@(applicationVersion)
+                    </span>
+                </dd>
+            </div>
+
+            <div>
+                <dt>Ứng dụng</dt>
+                <dd>EMUA</dd>
+            </div>
+
+            <div>
+                <dt>Cơ sở dữ liệu</dt>
+                <dd>Supabase</dd>
+            </div>
+
+            <div>
+                <dt>Hosting</dt>
+                <dd>Somee</dd>
+            </div>
+
+            <div>
+                <dt>Website</dt>
+                <dd>
+                    <a href="https://emua-shop.somee.com"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        emua-shop.somee.com
+                    </a>
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <!-- CẬP NHẬT -->
+    <section class="system-section"
+             aria-labelledby="updateTitle">
+
+        <div class="system-section-title">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+
+            <div>
+                <h3 id="updateTitle">Cập nhật website</h3>
+                <p>Các bước thực hiện khi có phiên bản mới.</p>
+            </div>
+        </div>
+
+        <ol class="system-steps">
+            <li>
+                <div class="system-step-title">
+                    <strong>Sao lưu</strong>
+                </div>
+                <p>
+                    Lưu database, ảnh và bản website hiện tại.
+                </p>
+            </li>
+
+            <li>
+                <div class="system-step-title">
+                    <strong>Chuẩn bị bản mới</strong>
+                </div>
+                <p>
+                    Kiểm tra ứng dụng trên máy và tạo bản phát hành.
+                </p>
+            </li>
+
+            <li>
+                <div class="system-step-title">
+                    <strong>Triển khai</strong>
+                </div>
+                <p>
+                    Upload lên Somee, giữ lại cấu hình và tệp tải lên,
+                    sau đó kiểm tra các chức năng chính.
+                </p>
+            </li>
+        </ol>
+    </section>
+</div>
