@@ -31,86 +31,6 @@
 
 @section Styles {
     <style>
-        /* NỀN NỘI DUNG — GIỮ SIDEBAR XANH ĐEN */
-        .staff-shell .admin-main,
-        .staff-shell .staff-content {
-            background: #f4f6fa;
-            color: #182238;
-        }
-
-        .staff-shell .admin-header {
-            background: #fff;
-            border-bottom: 1px solid #e4e9f1;
-            color: #182238;
-        }
-
-            .staff-shell .admin-header h1 {
-                color: #182238;
-                font-size: 20px;
-                letter-spacing: -.5px;
-            }
-
-            .staff-shell .admin-header p {
-                color: #78859a;
-            }
-
-        .staff-shell .admin-menu-toggle,
-        .staff-shell .admin-header-link,
-        .staff-shell .staff-notification {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            min-height: 40px;
-            padding: 8px 12px;
-            border: 1px solid #e1e7f0;
-            border-radius: 9px;
-            background: #fff;
-            color: #53627a;
-            text-decoration: none;
-        }
-
-            .staff-shell .admin-menu-toggle:hover,
-            .staff-shell .admin-header-link:hover,
-            .staff-shell .staff-notification:hover {
-                background: #eff4ff;
-                border-color: #cbd8fb;
-                color: #315efb;
-            }
-
-        .staff-shell .staff-notification {
-            width: 40px;
-            padding: 0;
-        }
-
-        .staff-shell .staff-notification-badge {
-            border-color: #fff;
-        }
-
-        .staff-shell .admin-user,
-        .staff-shell .staff-user-name {
-            color: #26344c;
-        }
-
-            .staff-shell .admin-user > i {
-                color: #8490a4;
-            }
-
-        /* LOGO */
-        .staff-shell .staff-brand {
-            min-height: 104px;
-        }
-
-        .staff-brand .staff-brand-wordmark {
-            width: 174px;
-            height: 64px;
-            object-fit: contain;
-        }
-
-        .staff-brand .admin-logo-text small {
-            display: none;
-        }
-
         /* DASHBOARD */
         .emua-dashboard {
             --dash-blue: #315efb;
@@ -155,7 +75,7 @@
             gap: 10px;
             padding: 8px 10px;
             border: 1px solid #e1e7f0;
-            border-radius: 10px;
+            border-radius: 0 !important;
             background: #fff;
         }
 
@@ -168,7 +88,7 @@
                 min-height: 32px;
                 padding: 4px 24px 4px 7px;
                 border: 0;
-                border-radius: 5px;
+                border-radius: 0 !important;
                 background-color: #fff;
                 color: #34435b;
                 font: inherit;
@@ -182,7 +102,7 @@
                 height: 34px;
                 place-items: center;
                 border: 0;
-                border-radius: 7px;
+                border-radius: 0 !important;
                 background: #315efb;
                 color: #fff;
                 cursor: pointer;
@@ -204,9 +124,9 @@
             min-width: 0;
             padding: 22px;
             border: 1px solid var(--dash-border);
-            border-radius: 12px;
+            border-radius: 0 !important;
             background: #fff;
-            box-shadow: 0 3px 12px rgba(23, 42, 79, .025);
+            box-shadow: none;
         }
 
         .dash-kpi-top {
@@ -246,7 +166,7 @@
             height: 42px;
             flex-shrink: 0;
             place-items: center;
-            border-radius: 10px;
+            border-radius: 0 !important;
             background: #edf2ff;
             color: #315efb;
             font-size: 19px;
@@ -309,9 +229,9 @@
         .dash-panel {
             min-width: 0;
             border: 1px solid var(--dash-border);
-            border-radius: 12px;
+            border-radius: 0 !important;
             background: #fff;
-            box-shadow: 0 3px 12px rgba(23, 42, 79, .025);
+            box-shadow: none;
         }
 
         .dash-panel-heading {
@@ -367,7 +287,7 @@
             .dash-chart-key i {
                 width: 7px;
                 height: 7px;
-                border-radius: 50%;
+                border-radius: 0 !important;
                 background: #315efb;
             }
 
@@ -490,7 +410,7 @@
             flex-shrink: 0;
             place-items: center;
             border: 1px solid #e7edf7;
-            border-radius: 8px;
+            border-radius: 0 !important;
             background: #f4f7fc;
             color: #6b82b0;
             font-size: 17px;
@@ -524,7 +444,7 @@
         .dash-stock-count {
             flex-shrink: 0;
             padding: 4px 7px;
-            border-radius: 5px;
+            border-radius: 0 !important;
             background: #fff4e7;
             color: #b77a28;
             font-size: 10px;
@@ -539,7 +459,7 @@
             margin: 17px 24px 22px;
             padding: 11px;
             border: 1px solid #dfe7f6;
-            border-radius: 7px;
+            border-radius: 0 !important;
             background: #f5f8ff;
             color: #315efb;
             font-size: 12px;
@@ -613,7 +533,7 @@
             height: 33px;
             flex-shrink: 0;
             place-items: center;
-            border-radius: 50%;
+            border-radius: 0 !important;
             background: #edf2ff;
             color: #5274ca;
             font-size: 11px;
@@ -651,7 +571,7 @@
             display: inline-block;
             padding: 5px 9px;
             border: 1px solid #e0e8fa;
-            border-radius: 5px;
+            border-radius: 0 !important;
             background: #f1f5ff;
             color: #5574bd;
             font-size: 10px;
@@ -665,7 +585,7 @@
             height: 31px;
             place-items: center;
             border: 1px solid #e6ebf2;
-            border-radius: 6px;
+            border-radius: 0 !important;
             color: #7183a1;
             text-decoration: none;
         }
@@ -795,13 +715,7 @@
 
     <!-- HEADER TRANG -->
     <div class="dash-heading">
-        <div>
-            <h2>Hiệu suất cửa hàng</h2>
-            <p>
-                Theo dõi doanh thu, đơn hàng và tình trạng kho trong
-                tháng @Model.SelectedMonth/@Model.SelectedYear.
-            </p>
-        </div>
+        
 
         <form method="get" class="dash-period">
             <i class="bi bi-calendar3"></i>

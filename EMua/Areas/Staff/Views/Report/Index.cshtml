@@ -9,10 +9,7 @@
     var selectedYear = (int?)ViewBag.SelectedYear ?? DateTime.Today.Year;
 }
 <div class="report-heading">
-    <div><span class="report-eyebrow"><i class="bi bi-bar-chart-line"></i> BÁO CÁO NHÂN VIÊN</span>
-        <h1>Hiệu suất kinh doanh</h1>
-        <p>Tổng quan vận hành và doanh thu tháng @month.</p>
-    </div>
+    
     <div class="report-actions">
         <form method="get" class="report-period-form">
             <i class="bi bi-calendar3"></i><select name="month" aria-label="Chọn tháng">@for (var option = 1; option <=

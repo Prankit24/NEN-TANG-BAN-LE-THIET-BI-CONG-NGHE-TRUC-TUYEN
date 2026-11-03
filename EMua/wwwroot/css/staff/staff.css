@@ -3,7 +3,7 @@
   width: 140px;
   height: 100px;
   margin: 8px 0;
-  border-radius: 8px;
+  border-radius: 0 !important;
   object-fit: contain;
   background: #f5f5fb;
 }
@@ -24,7 +24,7 @@
     align-items: center;
     gap: 5px;
     border: 1px solid #dfe3e8;
-    border-radius: 6px;
+    border-radius: 0 !important;
     padding: 4px 6px;
     background: #fff;
     color: #475467;
@@ -44,10 +44,10 @@
     justify-content: center;
     gap: 6px;
     min-height: 35px;
-    border: 1px solid #1c1c1c;
-    border-radius: 6px;
-    padding: 7px 10px;
-    background: #1c1c1c;
+    border: 1px solid #315efb;
+    border-radius: 0 !important;
+    padding: 7px 12px;
+    background: #315efb;
     color: #fff;
     font-size: 0.76rem;
     text-decoration: none;
@@ -69,14 +69,14 @@
 }
 
 .admin-content .btn-primary {
-    border-color: #1c1c1c !important;
-    background: #1c1c1c !important;
+    border-color: #315efb !important;
+    background: #315efb !important;
     color: #fff !important;
 }
 
     .admin-content .btn-primary:hover {
-        border-color: #3f3f3f !important;
-        background: #3f3f3f !important;
+        border-color: #244bd6 !important;
+        background: #244bd6 !important;
     }
 
 @media print {
@@ -146,7 +146,7 @@
     .staff-card {
         background: #fff;
         border: 1px solid #e7eaf0;
-        border-radius: 14px;
+        border-radius: 0 !important;
         box-shadow: 0 3px 14px rgba(23, 43, 77, 0.04);
     }
 
@@ -252,7 +252,7 @@
     background: #eaf2ff;
     color: #175cd3;
     padding: 4px 8px;
-    border-radius: 99px;
+    border-radius: 0 !important;
     font-size: 0.78rem;
     white-space: nowrap;
 }
@@ -273,7 +273,7 @@
 
     .staff-search input {
         border: 1px solid #d0d5dd;
-        border-radius: 7px;
+        border-radius: 0 !important;
         padding: 8px 10px;
         min-width: 245px;
     }
@@ -281,7 +281,7 @@
     .staff-search button,
     .staff-status-form button {
         border: 0;
-        border-radius: 7px;
+        border-radius: 0 !important;
         background: #1769e0;
         color: white;
         padding: 8px 12px;
@@ -314,7 +314,7 @@
         text-decoration: none;
         padding: 8px 12px;
         border: 1px solid #d0d5dd;
-        border-radius: 7px;
+        border-radius: 0 !important;
         font-size: 0.87rem;
     }
 
@@ -332,7 +332,7 @@
     .staff-status-form select {
         max-width: 130px;
         border: 1px solid #d0d5dd;
-        border-radius: 6px;
+        border-radius: 0 !important;
         padding: 5px;
         font-size: 0.8rem;
     }
@@ -372,7 +372,7 @@
 
     .staff-card,
     .staff-stat-grid article {
-        border-radius: 10px;
+        border-radius: 0 !important;
         padding: 15px;
     }
 }
@@ -414,7 +414,7 @@
 
 .staff-period {
     border: 1px solid #dfe3e8;
-    border-radius: 6px;
+    border-radius: 0 !important;
     padding: 9px 11px;
     font-size: 0.82rem;
     color: #475467;
@@ -442,7 +442,7 @@
     position: relative;
     background: #fff;
     border: 1px solid #e1e4e8;
-    border-radius: 6px;
+    border-radius: 0 !important;
     padding: 16px 15px 12px;
     min-height: 126px;
 }
@@ -472,7 +472,7 @@
         right: 14px;
         top: 15px;
         border: 1px solid #e2e5e9;
-        border-radius: 5px;
+        border-radius: 0 !important;
         background: #f9fafb;
         padding: 7px 8px;
         font-size: 1.14rem;
@@ -499,7 +499,7 @@
             color: #262a31;
             background: #f2f4f7;
             padding: 3px 5px;
-            border-radius: 3px;
+            border-radius: 0 !important;
             margin-right: 5px;
         }
 
@@ -549,7 +549,7 @@
         width: 7px;
         height: 7px;
         background: #16181d;
-        border-radius: 50%;
+        border-radius: 0 !important;
         margin-right: 5px;
     }
 
@@ -595,7 +595,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     border: 1px solid #e3e6eb;
-    border-radius: 4px;
+    border-radius: 0 !important;
     margin-top: 13px;
 }
 
@@ -632,7 +632,7 @@
     .staff-stock-card .staff-card-title a {
         font-size: 0.72rem;
         border: 1px solid #dfe3e8;
-        border-radius: 4px;
+        border-radius: 0 !important;
         padding: 5px 7px;
         color: #344054;
     }
@@ -653,7 +653,7 @@
 
 .staff-stock-item {
     border: 1px solid #e4e7ec;
-    border-radius: 5px;
+    border-radius: 0 !important;
     padding: 7px;
     display: flex;
     align-items: center;
@@ -662,7 +662,7 @@
 
     .staff-stock-item > i {
         padding: 7px;
-        border-radius: 4px;
+        border-radius: 0 !important;
         background: #f1f3f5;
         color: #475467;
     }
@@ -702,7 +702,7 @@
     background: #1c1c1c;
     color: #fff !important;
     text-align: center;
-    border-radius: 4px;
+    border-radius: 0 !important;
     padding: 10px 6px;
     margin-top: auto;
     padding-top: 10px;
@@ -751,7 +751,7 @@
     place-items: center;
     width: 25px;
     height: 25px;
-    border-radius: 50%;
+    border-radius: 0 !important;
     background: #edf0f2;
     color: #475467;
     font-size: 0.67rem;
@@ -785,7 +785,7 @@
 
 .staff-action-icon {
     border: 1px solid #dde1e5;
-    border-radius: 4px;
+    border-radius: 0 !important;
     padding: 4px 6px;
     color: #475467;
 }
@@ -878,7 +878,7 @@
 
 .report-period {
     border: 1px solid #dfe3e8;
-    border-radius: 6px;
+    border-radius: 0 !important;
     padding: 9px 11px;
     background: #fff;
     color: #475467;
@@ -902,7 +902,7 @@
     min-height: 132px;
     padding: 16px;
     border: 1px solid #e1e4e8;
-    border-radius: 7px;
+    border-radius: 0 !important;
     background: #fff;
     overflow: hidden;
 }
@@ -913,7 +913,7 @@
         bottom: -38px;
         width: 105px;
         height: 105px;
-        border-radius: 50%;
+        border-radius: 0 !important;
         background: #f5f6f8;
         content: "";
     }
@@ -923,7 +923,7 @@
     width: 31px;
     height: 31px;
     place-items: center;
-    border-radius: 5px;
+    border-radius: 0 !important;
     margin-bottom: 12px;
     font-size: 0.95rem;
 }
@@ -1039,7 +1039,7 @@
         display: block;
         width: 100%;
         min-height: 3px;
-        border-radius: 4px 4px 0 0;
+        border-radius: 0 !important;
         background: linear-gradient(180deg, #30343a, #747b83);
         transition: height 0.25s ease;
     }
@@ -1090,7 +1090,7 @@
 .report-ranking-track {
     height: 7px;
     overflow: hidden;
-    border-radius: 99px;
+    border-radius: 0 !important;
     background: #edf0f2;
 }
 
@@ -1098,7 +1098,7 @@
     .report-ranking-track i {
         display: block;
         height: 100%;
-        border-radius: 99px;
+        border-radius: 0 !important;
         background: #8f98a3;
     }
 
@@ -1134,7 +1134,7 @@
     gap: 12px;
     padding: 13px 16px;
     border: 1px solid #e1e4e8;
-    border-radius: 7px;
+    border-radius: 0 !important;
     background: #fff;
 }
 
@@ -1143,7 +1143,7 @@
         width: 32px;
         height: 32px;
         place-items: center;
-        border-radius: 5px;
+        border-radius: 0 !important;
         background: #f1f3f5;
         color: #46515f;
     }
@@ -1322,7 +1322,7 @@
     .staff-filter input,
     .staff-filter select {
         border: 1px solid #d0d5dd;
-        border-radius: 7px;
+        border-radius: 0 !important;
         padding: 8px 10px;
         background: #fff;
         font-size: 0.86rem;
@@ -1334,7 +1334,7 @@
 
     .staff-filter button {
         border: 0;
-        border-radius: 7px;
+        border-radius: 0 !important;
         padding: 8px 12px;
     }
 
@@ -1441,7 +1441,7 @@
 .report-status-card,
 .report-ranking-card {
     border: 1px solid var(--admin-border) !important;
-    border-radius: 8px !important;
+    border-radius: 0 !important;
     background: var(--admin-card) !important;
     box-shadow: none !important;
 }
@@ -1458,7 +1458,7 @@
     .staff-kpi-card > i,
     .report-kpi-icon,
     .staff-stock-item > i {
-        border-radius: 6px !important;
+        border-radius: 0 !important;
         background: var(--admin-purple-pale) !important;
         color: var(--admin-purple) !important;
     }
@@ -1488,7 +1488,7 @@
 .staff-filter button,
 .staff-stock-action {
     border: 1px solid var(--admin-purple) !important;
-    border-radius: 6px !important;
+    border-radius: 0 !important;
     background: var(--admin-purple) !important;
     color: #fff !important;
     box-shadow: none !important;
@@ -1524,7 +1524,7 @@
 .admin-content .form-control,
 .admin-content .form-select {
     border-color: var(--admin-border) !important;
-    border-radius: 6px !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
 }
 
@@ -1582,7 +1582,7 @@
 
 .staff-action-icon {
     border-color: var(--admin-border) !important;
-    border-radius: 5px !important;
+    border-radius: 0 !important;
     color: var(--admin-purple) !important;
     background: #fff !important;
 }
@@ -1596,7 +1596,7 @@
 /* Badge trạng thái vẫn bo nhẹ để phân biệt trạng thái, không dùng pill quá lớn */
 .staff-badge {
     border: 1px solid #d7d6ef;
-    border-radius: 5px !important;
+    border-radius: 0 !important;
     background: var(--admin-purple-pale) !important;
     color: var(--admin-purple) !important;
     font-weight: 700;
@@ -1624,7 +1624,7 @@
 .staff-stock-item,
 .staff-stock-action,
 .report-insight {
-    border-radius: 6px !important;
+    border-radius: 0 !important;
 }
 
 .staff-stock-item {
@@ -1639,7 +1639,7 @@
 
 /* Alert */
 .staff-alert {
-    border-radius: 6px;
+    border-radius: 0 !important;
 }
 
 /* Khi sidebar Staff thu gọn: dùng chính cơ chế Admin để header chạy dài
@@ -1654,4 +1654,757 @@
     .staff-header-actions .admin-header-link span {
         display: none;
     }
+}
+
+
+/* =========================================================
+   EMUA UNIFIED DESIGN SYSTEM (ADMIN & STAFF)
+   Theme: Dark Sidebar #141827 | Light Page #F4F6FA | White Cards #FFFFFF | Accent #315EFB
+   ========================================================= */
+
+:root {
+    --emua-blue: #315efb;
+    --emua-blue-hover: #244bd6;
+    --emua-blue-pale: #edf2ff;
+    --emua-blue-border: #cad7fa;
+    --emua-sidebar: #141827;
+    --emua-bg: #f4f6fa;
+    --emua-card: #ffffff;
+    --emua-border: #e5eaf2;
+    --emua-text: #26344c;
+    --emua-muted: #7b879a;
+}
+
+/* Thống nhất nút bấm Primary */
+.admin-content .btn-primary,
+.staff-filter button,
+.staff-search button,
+.staff-status-form button,
+.report-control-button,
+.staff-stock-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    border: 1px solid var(--emua-blue) !important;
+    border-radius: 0 !important;
+    background: var(--emua-blue) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    box-shadow: none !important;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease !important;
+}
+
+.admin-content .btn-primary:hover,
+.admin-content .btn-primary:focus,
+.staff-filter button:hover,
+.staff-search button:hover,
+.staff-status-form button:hover,
+.report-control-button:hover,
+.staff-stock-action:hover {
+    border-color: var(--emua-blue-hover) !important;
+    background: var(--emua-blue-hover) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(49, 94, 251, 0.25) !important;
+}
+
+/* Thống nhất Card container */
+.staff-card,
+.staff-stat-grid article,
+.staff-kpi-card,
+.report-kpi,
+.report-insight,
+.report-chart-card,
+.report-status-card,
+.report-ranking-card {
+    background: var(--emua-card) !important;
+    border: 1px solid var(--emua-border) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.staff-card {
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+}
+
+/* Thống nhất Form / Toolbar & Inputs */
+.staff-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.staff-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.staff-filter input,
+.staff-filter select,
+.staff-search input,
+.staff-status-form select,
+.staff-form-card .form-control,
+.staff-form-card .form-select,
+.admin-content .form-control,
+.admin-content .form-select {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    box-shadow: none !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.staff-filter input:focus,
+.staff-filter select:focus,
+.staff-search input:focus,
+.staff-status-form select:focus,
+.staff-form-card .form-control:focus,
+.staff-form-card .form-select:focus,
+.admin-content .form-control:focus,
+.admin-content .form-select:focus {
+    border-color: var(--emua-blue) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(49, 94, 251, 0.15) !important;
+}
+
+/* Thống nhất Bảng dữ liệu */
+.staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff !important;
+    border: 1px solid var(--emua-border) !important;
+    border-radius: 0 !important;
+    overflow: hidden;
+    font-size: 13px;
+}
+
+.staff-table th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid var(--emua-border) !important;
+    white-space: nowrap;
+}
+
+.staff-table td {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #334155 !important;
+    vertical-align: middle;
+}
+
+.staff-table tbody tr:hover {
+    background: #f8fafc !important;
+}
+
+.staff-table tbody tr:last-child td {
+    border-bottom: 0 !important;
+}
+
+/* Thống nhất Badges trạng thái */
+.staff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px !important;
+    border-radius: 0 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border: 1px solid #dbeafe !important;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.staff-badge.muted {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Thống nhất icon action */
+.staff-action-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    margin-right: 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.staff-action-icon:hover {
+    border-color: var(--emua-blue-border) !important;
+    background: var(--emua-blue-pale) !important;
+    color: var(--emua-blue) !important;
+}
+
+.staff-row-actions {
+    white-space: nowrap;
+}
+
+.staff-row-actions form {
+    display: inline-block;
+}
+
+/* KPI Cards đồng bộ */
+.staff-kpi-card strong {
+    color: #1e293b !important;
+}
+
+.staff-card-title h2 {
+    color: #1e293b !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+}
+
+.staff-card-title span,
+.staff-toolbar > span {
+    color: #64748b !important;
+    font-size: 13px !important;
+}
+
+
+/* =========================================================
+   EMUA UNIFIED ACTION LINKS (YÊU CẦU 4 & 5)
+   Các thao tác điều hướng (Xem, Chi tiết, Sửa) hiển thị dạng
+   liên kết chữ + icon, không nền, không viền, không bo góc,
+   click vào chuyển trực tiếp đến đúng trang.
+   Các thao tác nguy hiểm (Xóa, Hủy, Khóa) giữ cảnh báo.
+   ========================================================= */
+
+/* Action links chung cho cả Admin & Staff */
+.staff-row-actions,
+.staff-table td.text-end,
+.admin-table-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Biến action icons & button điều hướng thành link chữ + icon thanh lịch */
+.staff-row-actions a,
+.staff-action-icon,
+.staff-table td.text-end a,
+.table td .btn-outline-info,
+.table td .btn-outline-secondary,
+.table td a.btn-outline-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: var(--emua-blue, #315efb) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease, opacity 0.15s ease !important;
+}
+
+.staff-row-actions a:hover,
+.staff-action-icon:hover,
+.staff-table td.text-end a:hover,
+.table td .btn-outline-info:hover,
+.table td .btn-outline-secondary:hover,
+.table td a.btn-outline-secondary:hover {
+    color: var(--emua-blue-hover, #1d4ed8) !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.staff-row-actions a i,
+.staff-action-icon i,
+.staff-table td.text-end a i,
+.table td a i {
+    font-size: 14px !important;
+}
+
+/* Nút dạng form như xuất hóa đơn, ẩn/hiển thị, bật/tắt trong dòng bảng */
+.staff-row-actions form {
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.staff-row-actions form button.staff-action-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: #4b5563 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease !important;
+}
+
+.staff-row-actions form button.staff-action-icon:hover {
+    color: var(--emua-blue, #315efb) !important;
+    background: transparent !important;
+    text-decoration: underline !important;
+}
+
+/* Cập nhật nhanh trạng thái đơn hàng trong bảng */
+.staff-status-form {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-left: 6px !important;
+}
+
+.staff-status-form select {
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+}
+
+.staff-status-form button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 3px 7px !important;
+    border: 1px solid var(--emua-blue, #315efb) !important;
+    border-radius: 0 !important;
+    background: var(--emua-blue, #315efb) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+}
+
+/* Thao tác xóa / khóa nguy hiểm: giữ phân biệt rõ ràng nhưng gọn gàng */
+.table td form button.btn-outline-danger {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: #dc2626 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+
+.table td form button.btn-outline-danger:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+.table td form button.btn-outline-success {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: #16a34a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+
+.table td form button.btn-outline-success:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Thu gọn khoảng cách khoảng trắng thừa (Yêu cầu 3) */
+.admin-content,
+.staff-content {
+    padding: 20px 24px !important;
+}
+
+.staff-toolbar,
+.staff-filter,
+.brand-page-actions,
+.category-page-actions {
+    margin-bottom: 14px !important;
+}
+
+.staff-card,
+.card,
+.brand-list-card,
+.category-list-card {
+    margin-bottom: 18px !important;
+}
+
+.brand-page-heading,
+.category-page-heading,
+.report-heading {
+    margin-bottom: 14px !important;
+}
+
+/* =========================================================
+   EMUA UNIFIED RULES: KHÔNG BO GÓC, TIÊU ĐỀ <= 18PX/15PX,
+   PHẲNG, GỌN GÀNG, ACTION LINKS DẠNG CHỮ + ICON
+   ========================================================= */
+
+/* 1. KHÔNG BO GÓC TOÀN DIỆN CHO ADMIN & STAFF */
+.emua-admin,
+.emua-admin *,
+.emua-admin *::before,
+.emua-admin *::after,
+.emua-staff,
+.emua-staff *,
+.emua-staff *::before,
+.emua-staff *::after,
+.staff-shell,
+.staff-shell *,
+.staff-shell *::before,
+.staff-shell *::after {
+    border-radius: 0 !important;
+}
+
+/* 2. TIÊU ĐỀ: HEADER <= 18PX, TIÊU ĐỀ PHỤ / CARD <= 15PX */
+.emua-admin .admin-header h1,
+.emua-staff .admin-header h1,
+.staff-shell .admin-header h1 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+.emua-admin h2, .emua-admin h3, .emua-admin h4,
+.emua-staff h2, .emua-staff h3, .emua-staff h4,
+.staff-shell h2, .staff-shell h3, .staff-shell h4,
+.admin-card h2, .staff-card h2,
+.brand-list-heading h3, .category-list-heading h3,
+.report-card-heading h2 {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+/* 3. BỎ GRADIENT VÀ SHADOW NẶNG CHO CARD / BADGE / NÚT */
+.emua-admin .card,
+.emua-admin .mini-stat,
+.emua-admin .btn,
+.emua-admin .badge,
+.emua-staff .card,
+.emua-staff .staff-card,
+.emua-staff .btn,
+.emua-staff .badge,
+.emua-staff .staff-badge {
+    box-shadow: none !important;
+    background-image: none !important;
+}
+
+/* 4. KHOẢNG CÁCH GỌN GÀNG (8-16px) */
+.admin-content,
+.staff-content {
+    padding: 16px 20px !important;
+}
+
+.admin-toolbar,
+.staff-toolbar,
+.admin-filter,
+.staff-filter,
+.filter-bar,
+.report-filter-card {
+    margin-bottom: 12px !important;
+    gap: 10px !important;
+}
+
+.card,
+.staff-card,
+.admin-card,
+.brand-workspace,
+.category-workspace {
+    margin-bottom: 14px !important;
+}
+
+/* 5. HÀNH ĐỘNG BẢNG: TEXT LINK + ICON PHẲNG */
+.table td a.btn,
+.table td a.staff-btn,
+.table td a.staff-action-icon,
+.table td a.btn-sm,
+.table td a[class*="btn-outline-"],
+.table td a:has(i),
+.staff-row-actions a,
+.staff-row-actions button,
+.table td form button.btn-outline-primary,
+.table td form button.btn-outline-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #315efb !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    line-height: 1.4 !important;
+    cursor: pointer !important;
+}
+
+.table td a.btn:hover,
+.table td a.staff-btn:hover,
+.table td a.staff-action-icon:hover,
+.table td a.btn-sm:hover,
+.staff-row-actions a:hover,
+.staff-row-actions button:hover {
+    color: #244bd6 !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Nút xóa / khóa / tắt nguy hiểm */
+.table td form button.btn-outline-danger,
+.table td form button[class*="danger"],
+.staff-row-actions form button[class*="danger"],
+.table td button.btn-outline-danger {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #dc2626 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.table td form button.btn-outline-danger:hover,
+.table td form button[class*="danger"]:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Nút mở khóa / bật thành công */
+.table td form button.btn-outline-success,
+.table td form button[class*="success"],
+.staff-row-actions form button[class*="success"],
+.table td button.btn-outline-success {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #16a34a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.table td form button.btn-outline-success:hover,
+.table td form button[class*="success"]:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* =========================================================
+   EMUA FINAL CLEANUP — vuông vức, phẳng, gọn
+   ========================================================= */
+
+/* Modal phẳng */
+.emua-admin .modal-content,
+.emua-staff .modal-content,
+.staff-shell .modal-content {
+    border-radius: 0 !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,.15) !important;
+    border: 1px solid #e5eaf2 !important;
+}
+
+/* Bỏ hết rounded Bootstrap utility classes trong admin/staff */
+.emua-admin [class*="rounded"],
+.emua-staff [class*="rounded"],
+.staff-shell [class*="rounded"] {
+    border-radius: 0 !important;
+}
+
+/* Phân trang phẳng */
+.emua-admin .page-link,
+.emua-staff .page-link,
+.staff-shell .page-link {
+    border-radius: 0 !important;
+}
+.emua-admin .page-item.active .page-link,
+.emua-staff .page-item.active .page-link,
+.staff-shell .page-item.active .page-link {
+    background: #315efb !important;
+    border-color: #315efb !important;
+    color: #fff !important;
+}
+
+/* Nút hành động trong bảng: Sửa link style, không nền không viền */
+.emua-admin .table .btn-sm,
+.emua-staff .table .btn-sm,
+.staff-shell .table .btn-sm {
+    padding: 2px 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* Sửa/Chi tiết = link style, KHÔNG frame */
+.emua-admin .table a.btn-outline-secondary,
+.emua-admin .table a[class*="btn-outline"],
+.emua-staff .table a.btn-outline-secondary,
+.emua-staff .table a[class*="btn-outline"],
+.staff-shell .table a.btn-outline-secondary,
+.staff-shell .table a[class*="btn-outline"] {
+    background: transparent !important;
+    border: none !important;
+    color: #315efb !important;
+    text-decoration: none !important;
+}
+.emua-admin .table a.btn-outline-secondary:hover,
+.emua-admin .table a[class*="btn-outline"]:hover,
+.emua-staff .table a.btn-outline-secondary:hover,
+.staff-shell .table a[class*="btn-outline"]:hover {
+    color: #244bd6 !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Khóa/Mở khóa buttons = link style */
+.emua-admin .table form button,
+.emua-staff .table form button,
+.staff-shell .table form button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+}
+.emua-admin .table form .btn-outline-danger,
+.emua-staff .table form .btn-outline-danger,
+.staff-shell .table form .btn-outline-danger {
+    color: #dc2626 !important;
+}
+.emua-admin .table form .btn-outline-danger:hover,
+.emua-staff .table form .btn-outline-danger:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+}
+.emua-admin .table form .btn-outline-success,
+.emua-staff .table form .btn-outline-success,
+.staff-shell .table form .btn-outline-success {
+    color: #16a34a !important;
+}
+.emua-admin .table form .btn-outline-success:hover,
+.emua-staff .table form .btn-outline-success:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+}
+
+/* Khoảng trắng page toolbar/filter gọn */
+.emua-admin .container-fluid,
+.emua-staff .container-fluid {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+.emua-admin .container-fluid.py-4,
+.emua-staff .container-fluid.py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+.emua-admin .mb-4,
+.emua-staff .mb-4,
+.staff-shell .mb-4 {
+    margin-bottom: 14px !important;
+}
+.emua-admin .g-3,
+.emua-staff .g-3,
+.staff-shell .g-3 {
+    --bs-gutter-y: 10px;
+    --bs-gutter-x: 10px;
+}
+
+/* Tiêu đề phần (h3/h4 trong section/card) */
+.emua-admin .system-section-title h3,
+.emua-admin .system-row-info h4 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+.emua-staff .dash-heading h2,
+.emua-staff .report-card-heading h2,
+.emua-staff .staff-card h2,
+.emua-staff .staff-card h3 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Admin brand/category workspace headings */
+.brand-list-heading h3,
+.category-list-heading h3 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* Không cần back-button rounded */
+.emua-admin .btn.btn-outline-secondary,
+.emua-staff .btn.btn-outline-secondary {
+    border-radius: 0 !important;
+}
+
+/* Dashboard stat cards phẳng */
+.emua-admin .dashboard-stat-card,
+.emua-admin .admin-card,
+.emua-staff .emua-dashboard .dash-kpi-card {
+    border-radius: 0 !important;
+}
+
+/* Bỏ shadow stat cards */
+.emua-admin .dashboard-stat-card,
+.emua-staff .emua-dashboard [class*="card"] {
+    box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
+}
+
+/* Report filter phẳng */
+.emua-admin .report-filter-card .form-select,
+.emua-admin .report-filter-card .btn-primary,
+.staff-shell .report-period-form,
+.emua-staff .report-period-form {
+    border-radius: 0 !important;
 }

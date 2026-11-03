@@ -1,4 +1,4 @@
-﻿@model EMua.Areas.Admin.Models.ViewModels.TaskProgressViewModel
+@model EMua.Areas.Admin.Models.ViewModels.TaskProgressViewModel
 @{
     ViewData["Title"] = "Tiến độ chức năng Admin";
 }
@@ -6,12 +6,9 @@
 <div class="container-fluid py-4">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h1 class="h4 mb-1 text-gray-800 fw-bold">
-                <i class="bi bi-kanban me-2 text-primary"></i>Tiến độ thực hiện chức năng
-            </h1>
-            <p class="text-muted small mb-0">Quản lý checklist các hạng mục phát triển hệ thống Admin.</p>
+            
         </div>
-        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+        <button type="button" class="btn btn-primary btn-sm  px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
             <i class="bi bi-plus-lg me-1"></i> Thêm hạng mục mới
         </button>
     </div>
@@ -42,7 +39,7 @@
 <!-- Modal thêm task/card mới (Phục vụ mở rộng tương lai) -->
 <div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-content border-0">
             <div class="modal-header border-bottom-0 pb-0">
                 <h5 class="modal-title fw-bold">Thêm thẻ công việc mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -58,8 +55,8 @@
                         <input type="number" class="form-control" value="5" min="1" required />
                     </div>
                     <div class="text-end">
-                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4">Thêm thẻ</button>
+                        <button type="button" class="btn btn-light  px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary  px-4">Thêm thẻ</button>
                     </div>
                 </form>
             </div>
@@ -76,16 +73,16 @@
         width: 340px;
         background-color: #f1f2f4;
         padding: 14px;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border-radius: 0 !important;
+        box-shadow: none;
     }
 
     /* Từng thẻ card */
     .trello-card {
         background: #ffffff;
-        border-radius: 12px;
+        border-radius: 0 !important;
         padding: 12px 14px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        box-shadow: none;
         cursor: pointer;
         transition: all 0.2s ease;
         border: 1px solid transparent;
@@ -94,7 +91,7 @@
         .trello-card:hover {
             background-color: #fafbfc;
             border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: none;
             transform: translateY(-2px);
         }
 
@@ -136,7 +133,7 @@
         color: #626f84;
         text-align: left;
         padding: 8px 10px;
-        border-radius: 8px;
+        border-radius: 0 !important;
         font-size: 0.9rem;
         font-weight: 600;
         display: flex;

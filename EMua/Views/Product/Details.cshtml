@@ -148,7 +148,25 @@
             </div>
 
             <div class="detail-price" id="displayPrice">@Model.Price.ToString("N0") đ</div>
-            <p>@Model.Description</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="emua-description">
+                    <p id="productDescription"
+                       class="emua-description-text is-collapsed">
+                        @Model.Description
+                    </p>
+
+                    <button type="button"
+                            id="descriptionToggle"
+                            class="emua-description-toggle"
+                            hidden
+                            aria-expanded="false"
+                            aria-controls="productDescription">
+                        Xem thêm
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+            }
 
             <form asp-controller="Cart" asp-action="AddFromProduct" method="post" class="buy-box" id="productBuyForm">
                 @Html.AntiForgeryToken()
@@ -362,4 +380,29 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
         else init();
     })();
+        const description = document.getElementById("productDescription");
+    const toggle = document.getElementById("descriptionToggle");
+
+    if (description && toggle) {
+        const isOverflowing =
+            description.scrollHeight > description.clientHeight + 2;
+
+        if (isOverflowing) {
+            toggle.hidden = false;
+        }
+
+        toggle.addEventListener("click", () => {
+            const collapsed =
+                description.classList.toggle("is-collapsed");
+
+            toggle.innerHTML = collapsed
+                ? 'Xem thêm <i class="bi bi-chevron-down"></i>'
+                : 'Thu gọn <i class="bi bi-chevron-up"></i>';
+
+            toggle.setAttribute(
+                "aria-expanded",
+                String(!collapsed)
+            );
+        });
+    }
 </script>

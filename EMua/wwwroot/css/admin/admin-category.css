@@ -1,13 +1,13 @@
 :root {
-    --ui-purple: #51479b;
-    --ui-purple-dark: #403887;
-    --ui-purple-pale: #eeecff;
+    --ui-purple: #315efb;
+    --ui-purple-dark: #244bd6;
+    --ui-purple-pale: #edf2ff;
     --ui-ink: #151839;
     --ui-muted: #737699;
     --ui-line: #dcdcf1;
-    --ui-radius: 10px;
-    --ui-radius-sm: 8px;
-    --ui-radius-pill: 99px;
+    --ui-radius: 0;
+    --ui-radius-sm: 0;
+    --ui-radius-pill: 0;
     /* kept for backward compatibility with any inline/legacy references */
     --admin-purple: var(--ui-purple);
     --admin-purple-pale: var(--ui-purple-pale);
@@ -64,7 +64,7 @@
     justify-content: center;
     gap: 8px;
     padding: 0 15px;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     font: inherit;
     font-size: 13px;
     font-weight: 800;
@@ -100,7 +100,7 @@
 .category-list-card,
 .category-detail-card {
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius);
+    border-radius: 0 !important;
     background: #fff;
 }
 
@@ -128,7 +128,7 @@
 
 .category-count {
     padding: 5px 8px;
-    border-radius: var(--ui-radius-pill);
+    border-radius: 0 !important;
     background: var(--ui-purple-pale);
     color: var(--ui-purple);
     font-size: 12px;
@@ -144,7 +144,7 @@
     margin: 18px 0 12px;
     padding: 0 13px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fbfbff;
     color: #7773a1;
 }
@@ -186,7 +186,7 @@
     gap: 10px;
     padding: 9px;
     border: 1px solid transparent;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fafaff;
     color: var(--ui-ink);
     font: inherit;
@@ -211,7 +211,7 @@
     height: 42px;
     flex: 0 0 42px;
     place-items: center;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: var(--ui-purple-pale);
     color: var(--ui-purple);
     font-size: 17px;
@@ -306,7 +306,7 @@
     align-items: center;
     gap: 6px;
     padding: 7px 10px;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #e8fff0;
     color: #168953;
     font-size: 12px;
@@ -354,7 +354,7 @@
         width: 100%;
         padding: 11px 12px;
         border: 1px solid var(--ui-line);
-        border-radius: var(--ui-radius-sm);
+        border-radius: 0 !important;
         outline: none;
         background: #fff;
         color: var(--ui-ink);
@@ -382,7 +382,7 @@
     margin-bottom: 18px;
     padding: 14px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fafaff;
 }
 
@@ -392,7 +392,7 @@
     height: 38px;
     flex: 0 0 38px;
     place-items: center;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: var(--ui-purple-pale);
     color: var(--ui-purple);
 }
@@ -560,7 +560,7 @@
 .admin-dialog {
     width: min(100%, 360px);
     padding: 25px 24px 22px;
-    border-radius: var(--ui-radius);
+    border-radius: 0 !important;
     background: #fff;
     box-shadow: 0 20px 50px rgba(23, 20, 66, .25);
     text-align: center;
@@ -578,7 +578,7 @@
     height: 46px;
     margin: 0 auto 15px;
     place-items: center;
-    border-radius: 50%;
+    border-radius: 0 !important;
     background: #e8fff0;
     color: #168953;
     font-size: 24px;
@@ -620,7 +620,7 @@
     min-height: 38px;
     min-width: 110px;
     padding: 0 15px;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     font: inherit;
     font-size: 13px;
     font-weight: 800;
