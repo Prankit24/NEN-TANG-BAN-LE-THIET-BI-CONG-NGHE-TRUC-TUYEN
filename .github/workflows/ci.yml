@@ -1,37 +1,88 @@
-name: EMUA CI/CD
+
+name: EMUA CI/CD Docker
 
 on:
   push:
-    branches: [ "main", "PhuongAnh" ]
+    branches:
+      - main
+      - PhuongAnh
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    name: Build and check
+    name: Build EMUA
     runs-on: ubuntu-latest
 
     steps:
-      - name: Lay source code
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Cai .NET 8
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
       - name: Restore packages
-        run: dotnet restore
+        run: dotnet restore EMua/EMua.csproj
 
-      - name: Build project
-        run: dotnet build --configuration Release --no-restore
+      - name: Build Release
+        run: |
+          dotnet build EMua/EMua.csproj \
+            --configuration Release \
+            --no-restore
 
-  deploy:
-    name: Deploy to Render
+  docker:
+    name: Verify Docker Image
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger Render deploy
-        run: curl --fail --silent --show-error --request POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: emua:ci
+
+  deploy:
+    name: Deploy EMUA to Render
+    needs:
+      - build
+      - docker
+
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Deploy
+        env:
+          RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+        shell: bash
+
+        run: |
+          if [ -z "$RENDER_HOOK" ]; then
+            echo "Missing RENDER_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST "$RENDER_HOOK"
+
+          echo "Render deploy requested."
