@@ -1,9 +1,11 @@
+
 using System.Diagnostics;
 using EMua.Data;
 using EMua.Models.ViewModels;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace EMua.Controllers
 {
@@ -11,19 +13,51 @@ namespace EMua.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly EMuaDbContext _db;
+        private readonly IMemoryCache _cache;
+
+        private const string HomeCacheKey = "EMUA_HOME_V1";
 
         public HomeController(
             ILogger<HomeController> logger,
-            EMuaDbContext db)
+            EMuaDbContext db,
+            IMemoryCache cache)
         {
             _logger = logger;
             _db = db;
+            _cache = cache;
         }
 
         public async Task<IActionResult> Index()
         {
+            var stopwatch = Stopwatch.StartNew();
+
+            var model = await _cache.GetOrCreateAsync(
+                HomeCacheKey,
+                async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow =
+                        TimeSpan.FromSeconds(60);
+
+                    _logger.LogInformation(
+                        "EMUA HOME: Loading data from Supabase");
+
+                    return await LoadHomeDataAsync();
+                });
+
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "EMUA HOME: Data loaded in {Elapsed}ms",
+                stopwatch.ElapsedMilliseconds);
+
+            return View(model);
+        }
+
+        private async Task<HomeViewModel> LoadHomeDataAsync()
+        {
             var baseQuery = _db.SanPhams
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(x => x.MaDanhMucNavigation)
                 .Include(x => x.MaThuongHieuNavigation)
                 .Include(x => x.BienTheSanPhams)
@@ -32,62 +66,69 @@ namespace EMua.Controllers
                     x.TrangThaiSanPham == null ||
                     x.TrangThaiSanPham != "Ẩn");
 
-            var model = new HomeViewModel
-            {
-                // 8 sản phẩm mới nhất
-                SanPhamMoi = await baseQuery
-                    .OrderByDescending(x => x.MaSanPham)
-                    .Take(8)
-                    .ToListAsync(),
+            // 8 sản phẩm mới nhất
+            var sanPhamMoi = await baseQuery
+                .OrderByDescending(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
 
-                // Tạm thời lấy 8 sản phẩm có hàng làm nổi bật
-                SanPhamNoiBat = await baseQuery
-                    .Where(x =>
-                        x.BienTheSanPhams.Any(v =>
-                            v.SoLuong > 0 &&
-                            v.TrangThai == "Còn hàng"))
-                    .OrderByDescending(x => x.BienTheSanPhams.Sum(v => v.SoLuong))
-                    .Take(8)
-                    .ToListAsync(),
+            // Sản phẩm còn hàng
+            var sanPhamNoiBat = await baseQuery
+                .Where(x =>
+                    x.BienTheSanPhams.Any(v =>
+                        v.SoLuong > 0 &&
+                        v.TrangThai == "Còn hàng"))
+                .OrderByDescending(x =>
+                    x.BienTheSanPhams.Sum(v => v.SoLuong))
+                .Take(8)
+                .ToListAsync();
 
-                // Tạm thời dùng sản phẩm mới cho Flash Sale.
-                // Sau này có bảng khuyến mãi thì đổi query này.
-                FlashSale = await baseQuery
-                    .Where(x =>
-                        x.BienTheSanPhams.Any(v =>
-                            v.SoLuong > 0 &&
-                            v.TrangThai == "Còn hàng"))
-                    .OrderBy(x => x.BienTheSanPhams
-                        .Where(v => v.TrangThai == "Còn hàng")
+            // Flash Sale
+            var flashSale = await baseQuery
+                .Where(x =>
+                    x.BienTheSanPhams.Any(v =>
+                        v.SoLuong > 0 &&
+                        v.TrangThai == "Còn hàng"))
+                .OrderBy(x =>
+                    x.BienTheSanPhams
+                        .Where(v =>
+                            v.TrangThai == "Còn hàng")
                         .Min(v => v.Gia))
-                    .Take(8)
-                    .ToListAsync(),
+                .Take(8)
+                .ToListAsync();
 
-                // Tạm thời lấy 8 sản phẩm làm Best Choice.
-                // Sau này có cột nhân viên set Best Choice thì lọc tại đây.
-                BestChoice = await baseQuery
-                    .Where(x =>
-                        x.BienTheSanPhams.Any(v =>
-                            v.SoLuong > 0 &&
-                            v.TrangThai == "Còn hàng"))
-                    .OrderByDescending(x => x.MaSanPham)
-                    .Take(8)
-                    .ToListAsync(),
+            // Best Choice hiện dùng cùng tiêu chí với sản phẩm mới
+            // nhưng vẫn có điều kiện còn hàng.
+            var bestChoice = await baseQuery
+                .Where(x =>
+                    x.BienTheSanPhams.Any(v =>
+                        v.SoLuong > 0 &&
+                        v.TrangThai == "Còn hàng"))
+                .OrderByDescending(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
 
-                DanhMucs = await _db.DanhMucSanPhams
-                    .AsNoTracking()
-                    .Where(x =>
-                        x.TrangThaiDanhMuc == null ||
-                        x.TrangThaiDanhMuc != "Ẩn")
-                    .ToListAsync(),
+            var danhMucs = await _db.DanhMucSanPhams
+                .AsNoTracking()
+                .Where(x =>
+                    x.TrangThaiDanhMuc == null ||
+                    x.TrangThaiDanhMuc != "Ẩn")
+                .ToListAsync();
 
-                ThuongHieus = await _db.ThuongHieus
-                    .AsNoTracking()
-                    .Where(x => x.TrangThai)
-                    .ToListAsync()
+            var thuongHieus = await _db.ThuongHieus
+                .AsNoTracking()
+                .Where(x => x.TrangThai)
+                .ToListAsync();
+
+            return new HomeViewModel
+            {
+                SanPhamMoi = sanPhamMoi,
+                SanPhamNoiBat = sanPhamNoiBat,
+                FlashSale = flashSale,
+                BestChoice = bestChoice,
+                DanhMucs = danhMucs,
+                ThuongHieus = thuongHieus
             };
-
-            return View(model);
         }
 
         public IActionResult Privacy()
@@ -107,13 +148,12 @@ namespace EMua.Controllers
                             ?? HttpContext.TraceIdentifier
             });
         }
-        // Action cho Landing Page Bản đồ Hệ thống Cửa hàng
+
         public IActionResult StoreLocations()
         {
             return View();
         }
 
-        // Action Trang Nhượng quyền (nếu chưa có)
         public IActionResult Franchise()
         {
             return View();
