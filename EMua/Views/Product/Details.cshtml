@@ -39,30 +39,105 @@
     }
 
     <div class="product-detail">
-        <div class="detail-gallery">
-            <div class="detail-main-image">
+
+        @{
+            var galleryImages = new List<string>();
+
+            if (Model.ImageUrls != null)
+            {
+                foreach (var path in Model.ImageUrls)
+                {
+                    var url = FixImageUrl(path);
+                    if (url != "/images/no-image.png" &&
+                    !galleryImages.Contains(url, StringComparer.OrdinalIgnoreCase))
+                    {
+                        galleryImages.Add(url);
+                    }
+                }
+            }
+
+            var mainImageUrl = FixImageUrl(Model.ImageUrl);
+
+            if (mainImageUrl != "/images/no-image.png" &&
+            !galleryImages.Contains(mainImageUrl, StringComparer.OrdinalIgnoreCase))
+            {
+                galleryImages.Insert(0, mainImageUrl);
+            }
+
+            // Bao gồm ảnh của các phiên bản để không phải thêm thumbnail bằng JavaScript.
+            foreach (var variantImage in Model.Variants)
+            {
+                var variantUrl = FixImageUrl(variantImage.ImageUrl);
+                if (variantUrl != "/images/no-image.png" &&
+                !galleryImages.Contains(variantUrl, StringComparer.OrdinalIgnoreCase))
+                {
+                    galleryImages.Add(variantUrl);
+                }
+            }
+
+            if (galleryImages.Count == 0)
+            {
+                galleryImages.Add("/images/no-image.png");
+            }
+        }
+
+        <div class="detail-gallery" id="productGallery">
+
+            <div class="detail-main-image product-gallery-main">
+
                 <img id="mainProductImg"
-                     src="@FixImageUrl(Model.ImageUrl)"
+                     src="@galleryImages[0]"
                      alt="@Model.Name"
-                     onerror="this.onerror=null; this.src='/images/no-image.png';" />
+                     loading="eager"
+                     fetchpriority="high"
+                     decoding="async"
+                     width="600" height="600"
+                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                @if (galleryImages.Count > 1)
+                {
+                    <button type="button"
+                            class="gallery-arrow gallery-prev"
+                            onclick="moveGallery(-1)"
+                            aria-label="Ảnh trước">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    <button type="button"
+                            class="gallery-arrow gallery-next"
+                            onclick="moveGallery(1)"
+                            aria-label="Ảnh tiếp theo">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+
+                    <div class="gallery-counter">
+                        <span id="galleryCurrent">1</span> / @galleryImages.Count
+                    </div>
+                }
             </div>
 
-            <!-- THƯ VIỆN NHIỀU ẢNH THU NHỎ (THUMBNAILS) -->
-            @if (Model.ImageUrls != null && Model.ImageUrls.Count > 1)
+            @if (galleryImages.Count > 1)
             {
-                <div class="detail-thumbnails d-flex gap-2 mt-3 overflow-auto">
-                    @foreach (var imgPath in Model.ImageUrls)
+                <div class="detail-thumbnails product-gallery-thumbs"
+                     id="galleryThumbnails">
+
+                    @for (int i = 0; i < galleryImages.Count; i++)
                     {
-                        var fullUrl = FixImageUrl(imgPath);
-                        <div class="thumb-item border rounded p-1"
-                             style="width: 65px; height: 65px; cursor: pointer; flex-shrink: 0;"
-                             onclick="changeMainImage('@fullUrl', this)">
-                            <img src="@fullUrl" alt="Thumbnail" class="w-100 h-100" style="object-fit: contain;" />
-                        </div>
+                        <button type="button"
+                                class="thumb-item @(i == 0 ? "active" : "")"
+                                data-index="@i"
+                                aria-label="Xem ảnh @(i + 1)">
+
+                            <img src="@galleryImages[i]"
+                                 alt="@Model.Name - ảnh @(i + 1)"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                        </button>
                     }
                 </div>
             }
         </div>
+
 
         <div class="detail-copy">
             <span class="eyebrow">@Model.Brand · @Model.Category</span>
@@ -165,39 +240,126 @@
     </section>
 </div>
 
+
 <script>
-    function changeMainImage(src, element) {
-        document.getElementById('mainProductImg').src = src;
-        if (element) {
-            document.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('border-primary'));
-            element.classList.add('border-primary');
-        }
-    }
+    (() => {
+        "use strict";
+        const images = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(galleryImages));
+        const main = document.getElementById('mainProductImg');
+        const thumbs = document.getElementById('galleryThumbnails');
+        const current = document.getElementById('galleryCurrent');
+        const fallback = '/images/no-image.png';
+        let selected = 0;
+        let sequence = 0;
+        const cache = new Map();
 
-    function onVariantChange(selectEl) {
-        const selectedOption = selectEl.options[selectEl.selectedIndex];
-        if (!selectedOption) return;
-        const price = selectedOption.getAttribute('data-price');
-        const img = selectedOption.getAttribute('data-image');
-        const stock = Number(selectedOption.getAttribute('data-stock') || 0);
-        const quantity = document.getElementById('productQuantity');
-        if (quantity) {
-            quantity.max = Math.max(1, stock);
-            if (Number(quantity.value) > stock) quantity.value = Math.max(1, stock);
+        // Hai lop anh: anh cu luon hien thi cho den khi anh moi tai xong.
+        const stage = main?.parentElement;
+        const incoming = main ? document.createElement('img') : null;
+        if (incoming) {
+            incoming.className = 'gallery-incoming';
+            incoming.alt = main.alt;
+            incoming.decoding = 'async';
+            incoming.setAttribute('aria-hidden', 'true');
+            stage.appendChild(incoming);
         }
-        document.querySelectorAll('.buy-box button[type="submit"]').forEach(button => {
-            button.disabled = stock <= 0 || !Number.isFinite(Number(price)) || Number(price) <= 0;
-        });
 
-        if (price && Number.isFinite(Number(price))) {
-            document.getElementById('displayPrice').innerText = Number(price).toLocaleString('vi-VN') + ' đ';
+        function load(url) {
+            if (cache.has(url)) return cache.get(url);
+            const result = new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(url);
+                img.onerror = () => resolve(fallback);
+                img.src = url;
+                if (img.complete) resolve(img.naturalWidth > 0 ? url : fallback);
+            });
+            cache.set(url, result);
+            return result;
         }
-        if (img && img !== '/images/no-image.png') {
-            changeMainImage(img, null);
+
+        function mark(index) {
+            selected = index;
+            if (current) current.textContent = String(index + 1);
+            thumbs?.querySelectorAll('.thumb-item').forEach((button, i) => {
+                button.classList.toggle('active', i === index);
+                button.setAttribute('aria-pressed', String(i === index));
+            });
         }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-        const variants = document.getElementById('variantSelect');
-        if (variants) onVariantChange(variants);
-    });
+
+        async function choose(index) {
+            if (!main || !images.length) return;
+            const target = ((index % images.length) + images.length) % images.length;
+            const token = ++sequence;
+            mark(target); // Phan hoi ngay khi bam, khong doi mang.
+            const url = images[target];
+            if (main.getAttribute('src') === url && main.complete && main.naturalWidth > 0) return;
+            const ready = await load(url);
+            if (token !== sequence) return;
+            if (ready === fallback && url !== fallback) {
+                // Anh hong: hien placeholder, khong de trang trang.
+                main.src = fallback;
+                return;
+            }
+            if (!incoming) { main.src = ready; return; }
+            incoming.src = ready;
+            incoming.classList.add('visible');
+            // Swap o frame tiep theo de khong nhay trang.
+            requestAnimationFrame(() => {
+                if (token !== sequence) return;
+                main.src = ready;
+                incoming.classList.remove('visible');
+            });
+            // Preload duy nhat anh ke tiep sau khi da chon.
+            if (images.length > 1) load(images[(target + 1) % images.length]);
+        }
+
+        window.showGalleryImage = choose;
+        window.moveGallery = step => choose(selected + step);
+        window.changeMainImage = src => {
+            if (!src || src === fallback) return;
+            const index = images.findIndex(x => x.toLowerCase() === src.toLowerCase());
+            if (index !== -1) choose(index);
+        };
+
+        window.onVariantChange = select => {
+            const option = select.options[select.selectedIndex];
+            if (!option) return;
+            const price = Number(option.dataset.price);
+            const stock = Number(option.dataset.stock || 0);
+            const qty = document.getElementById('productQuantity');
+            if (qty) {
+                qty.max = String(Math.max(1, stock));
+                if (Number(qty.value) > stock) qty.value = String(Math.max(1, stock));
+            }
+            document.querySelectorAll('.buy-box button[type="submit"]').forEach(btn => {
+                btn.disabled = stock <= 0 || !Number.isFinite(price) || price <= 0;
+            });
+            const priceEl = document.getElementById('displayPrice');
+            if (priceEl && Number.isFinite(price)) priceEl.textContent = price.toLocaleString('vi-VN') + ' đ';
+            if (option.dataset.image && option.dataset.image !== fallback) {
+                window.changeMainImage(option.dataset.image);
+            }
+        };
+
+        function init() {
+            thumbs?.querySelectorAll('.thumb-item').forEach((button, i) => {
+                button.onclick = () => choose(i);
+            });
+            const select = document.getElementById('variantSelect');
+            if (select) window.onVariantChange(select);
+            // Cho phep vuot tren dien thoai.
+            let touchX = null;
+            stage?.addEventListener('touchstart', e => {
+                touchX = e.changedTouches[0]?.screenX ?? null;
+            }, { passive: true });
+            stage?.addEventListener('touchend', e => {
+                if (touchX === null) return;
+                const diff = (e.changedTouches[0]?.screenX ?? touchX) - touchX;
+                if (Math.abs(diff) > 45) choose(selected + (diff < 0 ? 1 : -1));
+                touchX = null;
+            }, { passive: true });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+        else init();
+    })();
 </script>

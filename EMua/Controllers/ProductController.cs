@@ -239,7 +239,7 @@ namespace EMua.Controllers
 
             // 1. Lấy chuỗi đường dẫn thô
             var rawImageUrl = defaultVariant?.HinhAnh
-                ?? product.SanPhamHinhAnhs.FirstOrDefault()?.DuongDanAnh;
+                ?? product.SanPhamHinhAnhs.OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).FirstOrDefault()?.DuongDanAnh;
 
             // 2. Hàm xử lý đường dẫn tuyệt đối chuẩn ASP.NET Core
             string FixImage(string? url)
@@ -258,6 +258,44 @@ namespace EMua.Controllers
                 return url;
             }
 
+            // 3. Gom toàn bộ ảnh từ SanPhamHinhAnhs và các biến thể, bảo đảm không trùng lặp
+            var allImages = new List<string>();
+
+            // Ưu tiên các ảnh được thiết lập trong SanPhamHinhAnhs theo thứ tự (LaAnhChinh trước, ThuTu tăng dần)
+            var productImages = product.SanPhamHinhAnhs
+                .OrderByDescending(x => x.LaAnhChinh)
+                .ThenBy(x => x.ThuTu)
+                .Select(x => FixImage(x.DuongDanAnh))
+                .Where(x => x != "/images/no-image.png");
+
+            foreach (var img in productImages)
+            {
+                if (!allImages.Contains(img, StringComparer.OrdinalIgnoreCase))
+                {
+                    allImages.Add(img);
+                }
+            }
+
+            // Bổ sung ảnh từ các biến thể nếu có
+            foreach (var v in variants)
+            {
+                var vImg = FixImage(v.HinhAnh);
+                if (vImg != "/images/no-image.png" && !allImages.Contains(vImg, StringComparer.OrdinalIgnoreCase))
+                {
+                    allImages.Add(vImg);
+                }
+            }
+
+            // Nếu allImages vẫn trống thì dùng rawImageUrl
+            if (allImages.Count == 0 && !string.IsNullOrWhiteSpace(rawImageUrl))
+            {
+                var fixedRaw = FixImage(rawImageUrl);
+                if (fixedRaw != "/images/no-image.png")
+                {
+                    allImages.Add(fixedRaw);
+                }
+            }
+
             // Map dữ liệu từ Entity SanPham sang ProductDetailsViewModel
             var viewModel = new ProductDetailsViewModel
             {
@@ -270,6 +308,9 @@ namespace EMua.Controllers
 
                 // Gán đường dẫn đã được thêm dấu / tuyệt đối ở đầu
                 ImageUrl = FixImage(rawImageUrl),
+
+                // Gán danh sách toàn bộ ảnh đã lưu
+                ImageUrls = allImages,
 
                 DefaultVariantId = defaultVariant?.MaBienThe ?? 0,
                 Description = product.MoTa,

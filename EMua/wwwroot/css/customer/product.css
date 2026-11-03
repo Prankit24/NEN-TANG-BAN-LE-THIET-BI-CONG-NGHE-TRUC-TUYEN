@@ -360,3 +360,159 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== EMUA PRODUCT GALLERY — optimized ===== */
+.product-gallery-main {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+}
+
+    .product-gallery-main > #mainProductImg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        object-position: center;
+    }
+
+.gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgba(255,255,255,.94);
+    color: var(--ink);
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+    .gallery-arrow:hover {
+        background: var(--accent);
+        color: #fff;
+    }
+
+.gallery-prev {
+    left: 12px;
+}
+
+.gallery-next {
+    right: 12px;
+}
+
+.gallery-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(0,0,0,.65);
+    color: #fff;
+    font-size: 13px;
+}
+
+.product-gallery-thumbs {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 3px 2px 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+.detail-thumbnails.product-gallery-thumbs .thumb-item {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    padding: 4px;
+    border: 2px solid var(--line) !important;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+    .detail-thumbnails.product-gallery-thumbs .thumb-item.active {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 1px var(--accent);
+    }
+
+.product-gallery-thumbs .thumb-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .detail-main-image {
+        padding: 14px;
+    }
+
+    .gallery-arrow {
+        width: 34px;
+        height: 34px;
+    }
+
+    .detail-thumbnails.product-gallery-thumbs .thumb-item {
+        flex-basis: 60px;
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Gallery tabs: two-layer image switching */
+.product-gallery-main {
+    position: relative;
+}
+
+    .product-gallery-main > img.gallery-incoming {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 28px;
+        object-fit: contain;
+        opacity: 0;
+        pointer-events: none;
+        background: #fff;
+        z-index: 1;
+    }
+
+        .product-gallery-main > img.gallery-incoming.visible {
+            opacity: 1;
+        }
+
+    .product-gallery-main > img#mainProductImg {
+        width: 100%;
+        object-fit: contain;
+    }
+
+.product-gallery-thumbs .thumb-item.active {
+    border-color: #5b4fe0 !important;
+    box-shadow: 0 0 0 1px #5b4fe0;
+}
+
+.product-gallery-thumbs .thumb-item:focus-visible {
+    outline: 2px solid #5b4fe0;
+    outline-offset: 2px;
+}
+
+.gallery-arrow {
+    z-index: 3;
+}
+
+.gallery-counter {
+    z-index: 3;
+}
