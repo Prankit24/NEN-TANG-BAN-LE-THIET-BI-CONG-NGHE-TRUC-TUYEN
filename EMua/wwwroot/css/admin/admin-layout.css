@@ -141,7 +141,7 @@ body {
     gap: 13px;
     padding: 0 12px;
     border: 1px solid transparent;
-    border-radius: 11px;
+    border-radius: 0 !important;
     color: rgba(255, 255, 255, .88);
     font-size: 13px;
     font-weight: 700;
@@ -201,7 +201,7 @@ body {
     gap: 13px;
     padding: 0 12px;
     border: 0;
-    border-radius: 9px;
+    border-radius: 0 !important;
     background: transparent;
     color: rgba(255, 255, 255, .9);
     font: inherit;
@@ -273,7 +273,7 @@ body {
     margin-right: 13px;
     place-items: center;
     border: 1px solid #deddf1;
-    border-radius: 10px;
+    border-radius: 0 !important;
     background: #fff;
     box-shadow: 0 2px 7px rgba(56, 52, 118, .05);
     color: var(--admin-purple);
@@ -342,7 +342,7 @@ body {
         width: 6px;
         height: 6px;
         border: 1px solid #fff;
-        border-radius: 50%;
+        border-radius: 0 !important;
         background: var(--admin-danger);
     }
 
@@ -365,7 +365,7 @@ body {
     height: 33px;
     place-items: center;
     border: 2px solid #eeedfa;
-    border-radius: 50%;
+    border-radius: 0 !important;
     background: var(--admin-purple);
     color: #fff;
     font-size: 13px;
@@ -446,7 +446,7 @@ body {
         top: 50%;
         left: 73px;
         padding: 8px 11px;
-        border-radius: 8px;
+        border-radius: 0 !important;
         background: #292754;
         box-shadow: 0 8px 20px rgba(20, 18, 62, .2);
         color: #fff;
@@ -531,4 +531,527 @@ body {
     .admin-header-left p {
         font-size: 10px;
     }
+}
+
+
+/* =========================================================
+   EMUA UNIFIED ACTION LINKS (YÊU CẦU 4 & 5)
+   Các thao tác điều hướng (Xem, Chi tiết, Sửa) hiển thị dạng
+   liên kết chữ + icon, không nền, không viền, không bo góc,
+   click vào chuyển trực tiếp đến đúng trang.
+   Các thao tác nguy hiểm (Xóa, Hủy, Khóa) giữ cảnh báo.
+   ========================================================= */
+
+/* Action links chung cho cả Admin & Staff */
+.staff-row-actions,
+.staff-table td.text-end,
+.admin-table-actions {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Biến action icons & button điều hướng thành link chữ + icon thanh lịch */
+.staff-row-actions a,
+.staff-action-icon,
+.staff-table td.text-end a,
+.table td .btn-outline-info,
+.table td .btn-outline-secondary,
+.table td a.btn-outline-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: var(--emua-blue, #315efb) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease, opacity 0.15s ease !important;
+}
+
+.staff-row-actions a:hover,
+.staff-action-icon:hover,
+.staff-table td.text-end a:hover,
+.table td .btn-outline-info:hover,
+.table td .btn-outline-secondary:hover,
+.table td a.btn-outline-secondary:hover {
+    color: var(--emua-blue-hover, #1d4ed8) !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.staff-row-actions a i,
+.staff-action-icon i,
+.staff-table td.text-end a i,
+.table td a i {
+    font-size: 14px !important;
+}
+
+/* Nút dạng form như xuất hóa đơn, ẩn/hiển thị, bật/tắt trong dòng bảng */
+.staff-row-actions form {
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.staff-row-actions form button.staff-action-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: #4b5563 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: color 0.15s ease !important;
+}
+
+.staff-row-actions form button.staff-action-icon:hover {
+    color: var(--emua-blue, #315efb) !important;
+    background: transparent !important;
+    text-decoration: underline !important;
+}
+
+/* Cập nhật nhanh trạng thái đơn hàng trong bảng */
+.staff-status-form {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-left: 6px !important;
+}
+
+.staff-status-form select {
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+}
+
+.staff-status-form button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 3px 7px !important;
+    border: 1px solid var(--emua-blue, #315efb) !important;
+    border-radius: 0 !important;
+    background: var(--emua-blue, #315efb) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+}
+
+/* Thao tác xóa / khóa nguy hiểm: giữ phân biệt rõ ràng nhưng gọn gàng */
+.table td form button.btn-outline-danger {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: #dc2626 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+
+.table td form button.btn-outline-danger:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+.table td form button.btn-outline-success {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: #16a34a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+}
+
+.table td form button.btn-outline-success:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Thu gọn khoảng cách khoảng trắng thừa (Yêu cầu 3) */
+.admin-content,
+.staff-content {
+    padding: 20px 24px !important;
+}
+
+.staff-toolbar,
+.staff-filter,
+.brand-page-actions,
+.category-page-actions {
+    margin-bottom: 14px !important;
+}
+
+.staff-card,
+.card,
+.brand-list-card,
+.category-list-card {
+    margin-bottom: 18px !important;
+}
+
+.brand-page-heading,
+.category-page-heading,
+.report-heading {
+    margin-bottom: 14px !important;
+}
+
+/* =========================================================
+   EMUA UNIFIED RULES: KHÔNG BO GÓC, TIÊU ĐỀ <= 18PX/15PX,
+   PHẲNG, GỌN GÀNG, ACTION LINKS DẠNG CHỮ + ICON
+   ========================================================= */
+
+/* 1. KHÔNG BO GÓC TOÀN DIỆN CHO ADMIN & STAFF */
+.emua-admin,
+.emua-admin *,
+.emua-admin *::before,
+.emua-admin *::after,
+.emua-staff,
+.emua-staff *,
+.emua-staff *::before,
+.emua-staff *::after,
+.staff-shell,
+.staff-shell *,
+.staff-shell *::before,
+.staff-shell *::after {
+    border-radius: 0 !important;
+}
+
+/* 2. TIÊU ĐỀ: HEADER <= 18PX, TIÊU ĐỀ PHỤ / CARD <= 15PX */
+.emua-admin .admin-header h1,
+.emua-staff .admin-header h1,
+.staff-shell .admin-header h1 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+.emua-admin h2, .emua-admin h3, .emua-admin h4,
+.emua-staff h2, .emua-staff h3, .emua-staff h4,
+.staff-shell h2, .staff-shell h3, .staff-shell h4,
+.admin-card h2, .staff-card h2,
+.brand-list-heading h3, .category-list-heading h3,
+.report-card-heading h2 {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+/* 3. BỎ GRADIENT VÀ SHADOW NẶNG CHO CARD / BADGE / NÚT */
+.emua-admin .card,
+.emua-admin .mini-stat,
+.emua-admin .btn,
+.emua-admin .badge,
+.emua-staff .card,
+.emua-staff .staff-card,
+.emua-staff .btn,
+.emua-staff .badge,
+.emua-staff .staff-badge {
+    box-shadow: none !important;
+    background-image: none !important;
+}
+
+/* 4. KHOẢNG CÁCH GỌN GÀNG (8-16px) */
+.admin-content,
+.staff-content {
+    padding: 16px 20px !important;
+}
+
+.admin-toolbar,
+.staff-toolbar,
+.admin-filter,
+.staff-filter,
+.filter-bar,
+.report-filter-card {
+    margin-bottom: 12px !important;
+    gap: 10px !important;
+}
+
+.card,
+.staff-card,
+.admin-card,
+.brand-workspace,
+.category-workspace {
+    margin-bottom: 14px !important;
+}
+
+/* 5. HÀNH ĐỘNG BẢNG: TEXT LINK + ICON PHẲNG */
+.table td a.btn,
+.table td a.staff-btn,
+.table td a.staff-action-icon,
+.table td a.btn-sm,
+.table td a[class*="btn-outline-"],
+.table td a:has(i),
+.staff-row-actions a,
+.staff-row-actions button,
+.table td form button.btn-outline-primary,
+.table td form button.btn-outline-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #315efb !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    line-height: 1.4 !important;
+    cursor: pointer !important;
+}
+
+.table td a.btn:hover,
+.table td a.staff-btn:hover,
+.table td a.staff-action-icon:hover,
+.table td a.btn-sm:hover,
+.staff-row-actions a:hover,
+.staff-row-actions button:hover {
+    color: #244bd6 !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Nút xóa / khóa / tắt nguy hiểm */
+.table td form button.btn-outline-danger,
+.table td form button[class*="danger"],
+.staff-row-actions form button[class*="danger"],
+.table td button.btn-outline-danger {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #dc2626 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.table td form button.btn-outline-danger:hover,
+.table td form button[class*="danger"]:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Nút mở khóa / bật thành công */
+.table td form button.btn-outline-success,
+.table td form button[class*="success"],
+.staff-row-actions form button[class*="success"],
+.table td button.btn-outline-success {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2px 6px !important;
+    color: #16a34a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+.table td form button.btn-outline-success:hover,
+.table td form button[class*="success"]:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* =========================================================
+   EMUA FINAL CLEANUP — vuông vức, phẳng, gọn
+   ========================================================= */
+
+/* Modal phẳng */
+.emua-admin .modal-content,
+.emua-staff .modal-content,
+.staff-shell .modal-content {
+    border-radius: 0 !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,.15) !important;
+    border: 1px solid #e5eaf2 !important;
+}
+
+/* Bỏ hết rounded Bootstrap utility classes trong admin/staff */
+.emua-admin [class*="rounded"],
+.emua-staff [class*="rounded"],
+.staff-shell [class*="rounded"] {
+    border-radius: 0 !important;
+}
+
+/* Phân trang phẳng */
+.emua-admin .page-link,
+.emua-staff .page-link,
+.staff-shell .page-link {
+    border-radius: 0 !important;
+}
+.emua-admin .page-item.active .page-link,
+.emua-staff .page-item.active .page-link,
+.staff-shell .page-item.active .page-link {
+    background: #315efb !important;
+    border-color: #315efb !important;
+    color: #fff !important;
+}
+
+/* Nút hành động trong bảng: Sửa link style, không nền không viền */
+.emua-admin .table .btn-sm,
+.emua-staff .table .btn-sm,
+.staff-shell .table .btn-sm {
+    padding: 2px 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* Sửa/Chi tiết = link style, KHÔNG frame */
+.emua-admin .table a.btn-outline-secondary,
+.emua-admin .table a[class*="btn-outline"],
+.emua-staff .table a.btn-outline-secondary,
+.emua-staff .table a[class*="btn-outline"],
+.staff-shell .table a.btn-outline-secondary,
+.staff-shell .table a[class*="btn-outline"] {
+    background: transparent !important;
+    border: none !important;
+    color: #315efb !important;
+    text-decoration: none !important;
+}
+.emua-admin .table a.btn-outline-secondary:hover,
+.emua-admin .table a[class*="btn-outline"]:hover,
+.emua-staff .table a.btn-outline-secondary:hover,
+.staff-shell .table a[class*="btn-outline"]:hover {
+    color: #244bd6 !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Khóa/Mở khóa buttons = link style */
+.emua-admin .table form button,
+.emua-staff .table form button,
+.staff-shell .table form button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+}
+.emua-admin .table form .btn-outline-danger,
+.emua-staff .table form .btn-outline-danger,
+.staff-shell .table form .btn-outline-danger {
+    color: #dc2626 !important;
+}
+.emua-admin .table form .btn-outline-danger:hover,
+.emua-staff .table form .btn-outline-danger:hover {
+    color: #b91c1c !important;
+    text-decoration: underline !important;
+}
+.emua-admin .table form .btn-outline-success,
+.emua-staff .table form .btn-outline-success,
+.staff-shell .table form .btn-outline-success {
+    color: #16a34a !important;
+}
+.emua-admin .table form .btn-outline-success:hover,
+.emua-staff .table form .btn-outline-success:hover {
+    color: #15803d !important;
+    text-decoration: underline !important;
+}
+
+/* Khoảng trắng page toolbar/filter gọn */
+.emua-admin .container-fluid,
+.emua-staff .container-fluid {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+.emua-admin .container-fluid.py-4,
+.emua-staff .container-fluid.py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+.emua-admin .mb-4,
+.emua-staff .mb-4,
+.staff-shell .mb-4 {
+    margin-bottom: 14px !important;
+}
+.emua-admin .g-3,
+.emua-staff .g-3,
+.staff-shell .g-3 {
+    --bs-gutter-y: 10px;
+    --bs-gutter-x: 10px;
+}
+
+/* Tiêu đề phần (h3/h4 trong section/card) */
+.emua-admin .system-section-title h3,
+.emua-admin .system-row-info h4 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+.emua-staff .dash-heading h2,
+.emua-staff .report-card-heading h2,
+.emua-staff .staff-card h2,
+.emua-staff .staff-card h3 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Admin brand/category workspace headings */
+.brand-list-heading h3,
+.category-list-heading h3 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+/* Không cần back-button rounded */
+.emua-admin .btn.btn-outline-secondary,
+.emua-staff .btn.btn-outline-secondary {
+    border-radius: 0 !important;
+}
+
+/* Dashboard stat cards phẳng */
+.emua-admin .dashboard-stat-card,
+.emua-admin .admin-card,
+.emua-staff .emua-dashboard .dash-kpi-card {
+    border-radius: 0 !important;
+}
+
+/* Bỏ shadow stat cards */
+.emua-admin .dashboard-stat-card,
+.emua-staff .emua-dashboard [class*="card"] {
+    box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
+}
+
+/* Report filter phẳng */
+.emua-admin .report-filter-card .form-select,
+.emua-admin .report-filter-card .btn-primary,
+.staff-shell .report-period-form,
+.emua-staff .report-period-form {
+    border-radius: 0 !important;
 }

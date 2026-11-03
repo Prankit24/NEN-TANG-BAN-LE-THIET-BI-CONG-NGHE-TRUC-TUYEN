@@ -1,13 +1,13 @@
 :root {
-    --ui-purple: #51479b;
-    --ui-purple-dark: #403887;
-    --ui-purple-pale: #eeecff;
+    --ui-purple: #315efb;
+    --ui-purple-dark: #244bd6;
+    --ui-purple-pale: #edf2ff;
     --ui-ink: #151839;
     --ui-muted: #737699;
     --ui-line: #dcdcf1;
-    --ui-radius: 10px;
-    --ui-radius-sm: 8px;
-    --ui-radius-pill: 99px;
+    --ui-radius: 0;
+    --ui-radius-sm: 0;
+    --ui-radius-pill: 0;
     /* kept for backward compatibility with any inline/legacy references */
     --brand-purple: var(--ui-purple);
     --brand-purple-dark: var(--ui-purple-dark);
@@ -66,7 +66,7 @@
 .brand-save-button {
     min-height: 44px;
     border: 1px solid var(--ui-purple);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: var(--ui-purple);
     color: #fff;
     box-shadow: 0 8px 16px rgba(81, 71, 155, .17);
@@ -104,7 +104,7 @@
 .brand-detail-card {
     min-height: 0;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius);
+    border-radius: 0 !important;
     background: #fff;
 }
 
@@ -137,7 +137,7 @@
 
     .brand-list-heading b {
         padding: 5px 8px;
-        border-radius: var(--ui-radius-pill);
+        border-radius: 0 !important;
         background: var(--ui-purple-pale);
         color: var(--ui-purple);
         font-size: 12px;
@@ -152,7 +152,7 @@
     margin: 18px 0 12px;
     padding: 0 13px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     color: #7773a1;
 }
 
@@ -188,7 +188,7 @@
     min-height: 65px;
     padding: 9px;
     border: 1px solid transparent;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fafaff;
     color: inherit;
     font: inherit;
@@ -231,7 +231,7 @@
     height: 42px;
     place-items: center;
     overflow: hidden;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: var(--ui-purple-pale);
     color: var(--ui-purple);
     font-weight: 800;
@@ -246,7 +246,7 @@
 
 .brand-item em {
     padding: 4px 6px;
-    border-radius: 5px;
+    border-radius: 0 !important;
     font-size: 10px;
     font-style: normal;
     font-weight: 700;
@@ -269,7 +269,7 @@
     flex: 0 0 auto;
     margin-top: 14px;
     border: 1px dashed #aaa6dd;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fff;
     color: var(--ui-purple);
     font: inherit;
@@ -302,7 +302,7 @@
 .brand-state {
     height: max-content;
     padding: 7px 10px;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #e8fff0;
     color: #168953;
     font-size: 12px;
@@ -322,7 +322,7 @@
     margin-bottom: 18px;
     padding: 14px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fafaff;
 }
 
@@ -367,7 +367,7 @@
     .brand-description textarea {
         width: 100%;
         border: 1px solid var(--ui-line);
-        border-radius: var(--ui-radius-sm);
+        border-radius: 0 !important;
         outline: none;
         padding: 11px 12px;
         background: #fff;
@@ -391,7 +391,7 @@
     margin: 18px 0;
     padding: 16px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
 }
 
 .brand-logo-preview {
@@ -402,7 +402,7 @@
     place-items: center;
     overflow: hidden;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     color: #7b77ab;
     font-size: 25px;
 }
@@ -422,7 +422,7 @@
     display: inline-block;
     padding: 7px 10px;
     border: 1px solid var(--ui-purple);
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     color: var(--ui-purple);
     font-size: 12px;
     font-weight: 800;
@@ -455,7 +455,7 @@
     min-height: 40px;
     padding: 0 14px;
     border: 1px solid #ea9ba3;
-    border-radius: var(--ui-radius-sm);
+    border-radius: 0 !important;
     background: #fff;
     color: #cf3948;
     font: inherit;
@@ -494,7 +494,7 @@
     width: min(360px, 100%);
     padding: 25px;
     border: 1px solid var(--ui-line);
-    border-radius: var(--ui-radius);
+    border-radius: 0 !important;
     background: #fff;
     text-align: center;
 }
@@ -525,7 +525,7 @@
 
     .brand-dialog button {
         padding: 9px 14px;
-        border-radius: var(--ui-radius-sm);
+        border-radius: 0 !important;
         font: inherit;
         font-size: 13px;
         font-weight: 800;

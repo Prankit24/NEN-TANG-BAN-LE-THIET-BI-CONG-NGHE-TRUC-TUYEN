@@ -9,7 +9,7 @@
 .dashboard-stat-card,
 .admin-card {
     border: 1px solid var(--admin-border);
-    border-radius: 15px;
+    border-radius: 0 !important;
     background: var(--admin-card);
 }
 
@@ -63,7 +63,7 @@
     width: 37px;
     height: 37px;
     place-items: center;
-    border-radius: 50%;
+    border-radius: 0 !important;
     font-size: 16px;
 }
 
@@ -132,14 +132,14 @@
     height: 205px;
     align-items: flex-end;
     overflow: hidden;
-    border-radius: 6px 6px 0 0;
+    border-radius: 0 !important;
     background: #f0effa;
 }
 
     .revenue-column-area span {
         width: 100%;
         min-height: 4px;
-        border-radius: 6px 6px 0 0;
+        border-radius: 0 !important;
         background: linear-gradient(180deg, #6864b2, #48458b);
     }
 
@@ -181,14 +181,14 @@
     .actual-category-row > div {
         height: 20px;
         overflow: hidden;
-        border-radius: 4px;
+        border-radius: 0 !important;
         background: #efeff9;
     }
 
     .actual-category-row i {
         display: block;
         height: 100%;
-        border-radius: 4px;
+        border-radius: 0 !important;
         background: linear-gradient(90deg, #48458b, #6b67b4);
     }
 
@@ -273,7 +273,7 @@
 .status {
     display: inline-block;
     padding: 6px 10px;
-    border-radius: 99px;
+    border-radius: 0 !important;
     font-size: 10.5px;
     font-weight: 700;
 }

@@ -28,7 +28,7 @@
             right: 0;
             height: 4px;
             background: #e9ecef;
-            border-radius: 2px;
+            border-radius: 0 !important;
             z-index: 0;
         }
 
@@ -37,8 +37,8 @@
             top: 22px;
             left: 0;
             height: 4px;
-            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
-            border-radius: 2px;
+            background: #315efb;
+            border-radius: 0 !important;
             z-index: 1;
             transition: width .6s ease;
         }
@@ -56,7 +56,7 @@
         .tracker-step .icon-circle {
             width: 46px;
             height: 46px;
-            border-radius: 50%;
+            border-radius: 0 !important;
             background: #fff;
             border: 3px solid #e9ecef;
             display: flex;
@@ -77,7 +77,7 @@
             background: #fff;
             border-color: #0d6efd;
             color: #0d6efd;
-            box-shadow: 0 0 0 4px rgba(13,110,253,.15);
+            box-: 0 0 0 4px rgba(13,110,253,.15);
             animation: pulse 1.6s infinite;
         }
 
@@ -89,15 +89,15 @@
 
     @@keyframes pulse {
         0% {
-            box-shadow: 0 0 0 0 rgba(13,110,253,.35);
+            box-: 0 0 0 0 rgba(13,110,253,.35);
         }
 
         70% {
-            box-shadow: 0 0 0 8px rgba(13,110,253,0);
+            box-: 0 0 0 8px rgba(13,110,253,0);
         }
 
         100% {
-            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+            box-: 0 0 0 0 rgba(13,110,253,0);
         }
     }
 
@@ -137,7 +137,7 @@
     .eta-banner {
         background: #e7f1ff;
         border: 1px dashed #0d6efd;
-        border-radius: .5rem;
+        border-radius: 0 !important;
         padding: .75rem 1rem;
         display: flex;
         align-items: center;
@@ -150,7 +150,7 @@
         width: 100%;
         max-height: 220px;
         object-fit: cover;
-        border-radius: .5rem;
+        border-radius: 0 !important;
         border: 1px solid #dee2e6;
     }
 
@@ -161,7 +161,7 @@
 
 <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold m-0"><i class="bi bi-truck me-2 text-primary"></i>Theo dõi & Quản lý giao nhận #DH-@Model.OrderId.ToString("D5")</h3>
+        
         <a asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách</a>
     </div>
 
@@ -174,7 +174,7 @@
     }
 
     <!-- ===== Thanh tiến trình trực quan ===== -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card border-0   mb-4">
         <div class="card-body p-4">
             @if (isCancelled)
             {
@@ -222,7 +222,7 @@
         <!-- Cột trái: Thông tin & Tiến trình (Tracking) -->
         <div class="col-lg-8">
             <!-- Thẻ Thông tin người nhận -->
-            <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card border-0   mb-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold border-bottom pb-2 mb-3">Thông tin giao hàng</h5>
                     <div class="row g-2">
@@ -245,7 +245,7 @@
             </div>
 
             <!-- Thẻ Lịch sử vận chuyển (Timeline / Stepper) -->
-            <div class="card border-0 shadow-sm rounded-3">
+            <div class="card border-0  ">
                 <div class="card-body p-4">
                     <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-clock-history me-2"></i>Lịch sử vận chuyển</h5>
 
@@ -253,13 +253,13 @@
                         @foreach (var log in Model.TrackingLogs)
                         {
                             <li class="list-group-item bg-transparent border-0 ps-0 pb-3 position-relative">
-                                <span class="position-absolute top-0 start-0 translate-middle p-1 bg-primary border border-light rounded-circle" style="left: -16px !important;"></span>
+                                <span class="position-absolute top-0 start-0 translate-middle p-1 bg-primary border border-light " style="left: -16px !important;"></span>
                                 <div class="fw-bold text-dark">@log.Status</div>
                                 <div class="small text-muted">@log.LocationOrNote</div>
                                 <div class="extra-small text-secondary">@log.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                                 @if (!string.IsNullOrEmpty(log.ImageUrl))
                                 {
-                                    <img src="@log.ImageUrl" alt="Ảnh cập nhật" class="mt-2 rounded" style="max-width:160px;max-height:120px;object-fit:cover;" />
+                                    <img src="@log.ImageUrl" alt="Ảnh cập nhật" class="mt-2 " style="max-width:160px;max-height:120px;object-fit:cover;" />
                                 }
                             </li>
                         }
@@ -270,7 +270,7 @@
 
         <!-- Cột phải: Quản lý giao nhận (Cập nhật trạng thái) -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3">
+            <div class="card border-0  ">
                 <div class="card-body p-4">
                     <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-pencil-square me-2"></i>Cập nhật giao nhận</h5>
 
@@ -307,7 +307,7 @@
                         </div>
 
                         <!-- Ảnh xác nhận: chỉ hiện & bắt buộc khi chọn "Đã giao hàng" -->
-                        <div class="mb-3 border rounded-3 p-3 bg-light-subtle d-none" id="proofPhotoField">
+                        <div class="mb-3 border  p-3 bg-light-subtle d-none" id="proofPhotoField">
                             <label class="form-label fw-semibold text-success">
                                 <i class="bi bi-camera-fill me-1"></i>Ảnh xác nhận đã giao hàng <span class="text-danger">*</span>
                             </label>

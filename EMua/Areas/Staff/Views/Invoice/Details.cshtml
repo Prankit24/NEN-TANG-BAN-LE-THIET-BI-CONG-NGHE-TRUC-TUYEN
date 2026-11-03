@@ -7,7 +7,7 @@
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2>Chi tiết hóa đơn #HD-@Model.MaHoaDon.ToString("D5")</h2>
+            
             <span class="text-muted">Thuộc đơn hàng: <strong>#DH-@Model.MaDonHang.ToString("D5")</strong></span>
         </div>
         <a asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="btn btn-secondary">
@@ -18,7 +18,7 @@
     <div class="row">
         <!-- Thông tin hóa đơn & thanh toán -->
         <div class="col-md-4">
-            <div class="staff-card mb-4 p-4 shadow-sm bg-white rounded">
+            <div class="staff-card mb-4 p-4  bg-white ">
                 <h4 class="mb-3">Thông tin hóa đơn</h4>
                 <p><strong>Ngày lập:</strong> @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</p>
                 <p><strong>Trạng thái hóa đơn:</strong> <span class="badge bg-success">@(Model.TrangThaiHoaDon ?? "Đã lập")</span></p>
@@ -27,7 +27,7 @@
                 <h5 class="text-danger fw-bold">Tổng tiền: @((Model.TongTien ?? 0).ToString("N0")) đ</h5>
             </div>
 
-            <div class="staff-card p-4 shadow-sm bg-white rounded">
+            <div class="staff-card p-4  bg-white ">
                 <h4 class="mb-3">Thông tin nhận hàng</h4>
                 <p><strong>Họ tên:</strong> @order?.HoTenNhanHang</p>
                 <p><strong>Điện thoại:</strong> @order?.SoDienThoaiNhanHang</p>
@@ -38,7 +38,7 @@
 
         <!-- Danh sách sản phẩm trong hóa đơn -->
         <div class="col-md-8">
-            <div class="staff-card p-4 shadow-sm bg-white rounded">
+            <div class="staff-card p-4  bg-white ">
                 <h4 class="mb-3">Sản phẩm mua</h4>
                 <div class="table-responsive">
                     <table class="table align-middle">
@@ -60,7 +60,7 @@
                                             <div class="d-flex align-items-center">
                                                 @if (!string.IsNullOrEmpty(item.MaBienTheNavigation?.HinhAnh))
                                                 {
-                                                    <img src="@item.MaBienTheNavigation.HinhAnh" alt="img" style="width: 50px; height: 50px; object-fit: cover;" class="rounded me-2" />
+                                                    <img src="@item.MaBienTheNavigation.HinhAnh" alt="img" style="width: 50px; height: 50px; object-fit: cover;" class=" me-2" />
                                                 }
                                                 <div>
                                                     <h6 class="mb-0">@(item.MaBienTheNavigation?.MaSanPhamNavigation?.TenSanPham ?? "Sản phẩm")</h6>

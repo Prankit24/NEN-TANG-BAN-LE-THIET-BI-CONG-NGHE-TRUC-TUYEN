@@ -1,0 +1,86 @@
+@model IEnumerable<EMua.Models.Database.SanPham>
+@{
+    var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    string FixImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
+        path = path.Trim().Replace("\\", "/");
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//")) return path;
+        return path.StartsWith("/") ? path : "/" + path;
+    }
+}
+@if (products.Count == 0)
+{
+    <div class="emua-empty-product">
+        <div class="emua-empty-icon"><i class="bi bi-box-seam"></i></div>
+        <h3>Không tìm thấy sản phẩm</h3>
+        <p>Hãy thử từ khóa, danh mục hoặc thương hiệu khác.</p>
+    </div>
+}
+else
+{
+    <div class="emua-product-grid">
+        @foreach (var item in products)
+        {
+            var variant = item.BienTheSanPhams
+                .Where(x => x.SoLuong > 0 &&
+                    (string.IsNullOrWhiteSpace(x.TrangThai) || x.TrangThai == "Còn hàng"))
+                .OrderBy(x => x.Gia).FirstOrDefault();
+            variant ??= item.BienTheSanPhams.Where(x => x.SoLuong > 0)
+                .OrderBy(x => x.Gia).FirstOrDefault();
+            var mainImage = item.SanPhamHinhAnhs
+                .OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu)
+                .FirstOrDefault();
+            var image = FixImage(mainImage?.DuongDanAnh ?? variant?.HinhAnh);
+            var price = variant?.Gia ?? item.GiaGoc ?? 0;
+            <article class="emua-product-card">
+                <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"
+                   class="emua-product-image">
+                    <img src="@image" alt="@item.TenSanPham" loading="lazy" decoding="async"
+                         onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                </a>
+                <div class="emua-product-body">
+                    <div class="emua-product-brand">@(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</div>
+                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"
+                       class="emua-product-name">@item.TenSanPham</a>
+                    <div class="emua-product-variant">
+                        @if (variant != null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(variant.PhienBan)) { <span>@variant.PhienBan</span> }
+                            if (!string.IsNullOrWhiteSpace(variant.MauSac)) { <span>@variant.MauSac</span> }
+                        }
+                    </div>
+                    <div class="emua-product-price">@price.ToString("N0") <span class="emua-currency">đ</span></div>
+                    @if (variant != null && variant.SoLuong > 0)
+                    {
+                        <div class="emua-stock in-stock"><i class="bi bi-check-circle-fill"></i> Còn hàng</div>
+                    }
+                    else
+                    {
+                        <div class="emua-stock out-stock"><i class="bi bi-x-circle-fill"></i> Hết hàng</div>
+                    }
+                    <div class="emua-product-actions">
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"
+                           class="emua-detail-btn">Xem chi tiết</a>
+                        @if (variant != null && variant.SoLuong > 0)
+                        {
+                            <button type="button" class="emua-cart-btn"
+                                    onclick="addProductToCart(this, @variant.MaBienThe)"
+                                    aria-label="Thêm @item.TenSanPham vào giỏ hàng" title="Thêm vào giỏ hàng">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="emua-cart-btn disabled" disabled title="Hết hàng">
+                                <i class="bi bi-cart-x"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}

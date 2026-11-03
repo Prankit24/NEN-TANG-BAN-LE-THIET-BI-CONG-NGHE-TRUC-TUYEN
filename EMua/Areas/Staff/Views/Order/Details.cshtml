@@ -36,7 +36,7 @@
             right: 0;
             height: 4px;
             background: #e9ecef;
-            border-radius: 2px;
+            border-radius: 0 !important;
             z-index: 0;
         }
 
@@ -45,8 +45,8 @@
         top: 22px;
         left: 0;
         height: 4px;
-        background: linear-gradient(90deg, #4f46e5, #38bdf8);
-        border-radius: 2px;
+        background: #315efb;
+        border-radius: 0 !important;
         z-index: 1;
         transition: width .6s ease;
     }
@@ -64,7 +64,7 @@
         .staff-tracker-step .icon-circle {
             width: 44px;
             height: 44px;
-            border-radius: 50%;
+            border-radius: 0 !important;
             background: #fff;
             border: 3px solid #e9ecef;
             display: flex;
@@ -85,21 +85,21 @@
             background: #fff;
             border-color: #4f46e5;
             color: #4f46e5;
-            box-shadow: 0 0 0 4px rgba(79,70,229,.15);
+            box-: 0 0 0 4px rgba(79,70,229,.15);
             animation: staff-pulse 1.6s infinite;
         }
 
     @@keyframes staff-pulse {
         0% {
-            box-shadow: 0 0 0 0 rgba(79,70,229,.35);
+            box-: 0 0 0 0 rgba(79,70,229,.35);
         }
 
         70% {
-            box-shadow: 0 0 0 8px rgba(79,70,229,0);
+            box-: 0 0 0 8px rgba(79,70,229,0);
         }
 
         100% {
-            box-shadow: 0 0 0 0 rgba(79,70,229,0);
+            box-: 0 0 0 0 rgba(79,70,229,0);
         }
     }
 
@@ -138,7 +138,7 @@
     .staff-eta-banner {
         background: #eef2ff;
         border: 1px dashed #4f46e5;
-        border-radius: .5rem;
+        border-radius: 0 !important;
         padding: .65rem 1rem;
         display: flex;
         align-items: center;
@@ -152,7 +152,7 @@
         max-width: 260px;
         max-height: 200px;
         object-fit: cover;
-        border-radius: .5rem;
+        border-radius: 0 !important;
         border: 1px solid #dee2e6;
         margin-top: 8px;
     }
@@ -160,7 +160,7 @@
     .return-request-alert {
         background-color: #fff5f5;
         border: 2px solid #fecaca;
-        border-radius: 0.75rem;
+        border-radius: 0 !important;
         padding: 1.25rem;
         margin-bottom: 1.5rem;
     }
@@ -184,14 +184,14 @@
         width: 100%;
         padding: 8px 10px;
         border: 1px solid #d1d5db;
-        border-radius: .4rem;
+        border-radius: 0 !important;
         font-size: .9rem;
     }
 
     .staff-delivery-form .proof-box {
         border: 1px solid #d1fae5;
         background: #ecfdf5;
-        border-radius: .5rem;
+        border-radius: 0 !important;
         padding: 12px;
         display: none;
     }
@@ -203,7 +203,7 @@
     .staff-return-chat {
         margin-top: 14px;
         border: 1px solid #e5e7eb;
-        border-radius: 14px;
+        border-radius: 0 !important;
         overflow: hidden;
         background: #fff;
     }
@@ -218,7 +218,7 @@
     .staff-chat-wait-icon {
         width: 42px;
         height: 42px;
-        border-radius: 12px;
+        border-radius: 0 !important;
         display: grid;
         place-items: center;
         background: #f1f5f9;
@@ -230,7 +230,7 @@
     .staff-chat-header {
         padding: 12px 15px;
         color: #fff;
-        background: linear-gradient(135deg,#2563eb,#3b82f6);
+        background: #315efb;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -253,11 +253,11 @@
     }
 
         .staff-chat-composer input {
-            border-radius: 10px;
+            border-radius: 0 !important;
         }
 
         .staff-chat-composer button {
-            border-radius: 10px;
+            border-radius: 0 !important;
         }
 
     @@media(max-width:640px) {
@@ -294,7 +294,7 @@
 <!-- KHỐI BÁO CÁO YÊU CẦU ĐỔI TRẢ & KHUNG CHAT TRỰC TIẾP VỚI KHÁCH HÀNG -->
 @if (isReturnRequested)
 {
-    <div class="return-request-alert shadow-sm">
+    <div class="return-request-alert ">
         <div class="d-flex align-items-center justify-content-between mb-2">
             <h3 class="text-danger fs-5 mb-0 fw-bold">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> ĐƠN HÀNG CÓ YÊU CẦU ĐỔI TRẢ / HOÀN TIỀN
@@ -305,7 +305,7 @@
 
         @if (returnLog != null)
         {
-            <div class="p-3 bg-white rounded border mb-3">
+            <div class="p-3 bg-white  border mb-3">
                 <div class="small mb-1"><strong>Thời gian gửi:</strong> @returnLog.ThoiGian.ToString("dd/MM/yyyy HH:mm")</div>
                 <div class="small text-dark whitespace-pre-line" style="white-space: pre-line;">@returnLog.MoTa</div>
             </div>
@@ -332,7 +332,7 @@
         </div>
 
         <div class="collapse mb-3" id="rejectReturnBox">
-            <form asp-action="ProcessReturnAction" method="post" class="p-3 bg-white rounded border border-danger">
+            <form asp-action="ProcessReturnAction" method="post" class="p-3 bg-white  border border-danger">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.MaDonHang" />
                 <input type="hidden" name="actionType" value="Reject" />
@@ -556,7 +556,7 @@
             const isMe = msg.isStaff;
             const wrapper = document.createElement('div');
             wrapper.className = `d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'} mb-3`;
-            wrapper.innerHTML = `<small class="text-muted mb-1">${escapeStaffHtml(msg.senderName)} • ${escapeStaffHtml(msg.time)}</small><div class="p-2 px-3 ${isMe ? 'bg-primary text-white' : 'bg-white border text-dark'} rounded-3 shadow-sm" style="max-width:80%;word-break:break-word;">${escapeStaffHtml(msg.message)}</div>`;
+            wrapper.innerHTML = `<small class="text-muted mb-1">${escapeStaffHtml(msg.senderName)} • ${escapeStaffHtml(msg.time)}</small><div class="p-2 px-3 ${isMe ? 'bg-primary text-white' : 'bg-white border text-dark'}  " style="max-width:80%;word-break:break-word;">${escapeStaffHtml(msg.message)}</div>`;
             staffChatBox.appendChild(wrapper);
         }
         async function loadStaffChat() {

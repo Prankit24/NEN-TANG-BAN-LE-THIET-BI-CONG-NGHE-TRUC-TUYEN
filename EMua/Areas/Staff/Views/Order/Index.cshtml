@@ -31,11 +31,9 @@
                     <td>@(order.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
                     <td>@((order.TongTien ?? 0).ToString("N0")) đ</td>
                     <td><span class="staff-badge">@(order.TrangThaiDonHang ?? "Chờ xử lý")</span></td>
-                    <td class="staff-row-actions"><a asp-action="Details" asp-route-id="@order.MaDonHang"
-                                                         class="staff-action-icon" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
+                    <td class="staff-row-actions"><a asp-action="Details" asp-route-id="@order.MaDonHang" class="staff-action-icon" title="Xem chi tiết"><i class="bi bi-eye"></i> Chi tiết</a>
                         <form asp-action="CreateInvoice" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                                          name="id" value="@order.MaDonHang" /><button class="staff-action-icon"
-                                                                         title="Xuất hóa đơn"><i class="bi bi-printer"></i></button></form>
+                                                                                                          name="id" value="@order.MaDonHang" /><button class="staff-action-icon" title="Xuất hóa đơn"><i class="bi bi-printer"></i> Hóa đơn</button></form>
                             <form asp-action="UpdateStatus" method="post" class="staff-status-form">
                                 @Html.AntiForgeryToken()<input type="hidden" name="id" value="@order.MaDonHang" /><select
                                 name="status">@foreach(var status in statuses){

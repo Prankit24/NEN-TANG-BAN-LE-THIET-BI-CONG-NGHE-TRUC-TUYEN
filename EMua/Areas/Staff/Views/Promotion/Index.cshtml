@@ -37,8 +37,7 @@
                         <td><span class="staff-badge @(item.TrangThai ? "" : "muted")">@(item.TrangThai ? "Đang bật" : "Đã tắt")</span></td>
                         <td class="staff-row-actions">
                             <form asp-action="Toggle" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id"
-                                                                                                       value="@item.MaKhuyenMai" /><button class="staff-action-icon"
-                                                                    title="@(item.TrangThai ? "Tắt" : "Bật")"><i class="bi bi-power"></i></button></form>
+                                                                                                       value="@item.MaKhuyenMai" /><button class="staff-action-icon" title="@(item.TrangThai ? "Tắt" : "Bật")"><i class="bi bi-power"></i> @(item.TrangThai ? "Tắt" : "Bật")</button></form>
                             </td>
                         </tr>
                     }

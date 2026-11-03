@@ -45,12 +45,9 @@
                     <td><span
                         class="staff-badge @(product.TrangThaiSanPham == "Ẩn" ? "muted" : "")">@(product.TrangThaiSanPham
                             ?? "—")</span></td>
-                        <td class="staff-row-actions"><a asp-action="Edit" asp-route-id="@product.MaSanPham"
-                                                             class="staff-action-icon" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                        <td class="staff-row-actions"><a asp-action="Edit" asp-route-id="@product.MaSanPham" class="staff-action-icon" title="Chỉnh sửa"><i class="bi bi-pencil"></i> Sửa</a>
                             <form asp-action="ToggleVisibility" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                                                 name="id" value="@product.MaSanPham" /><button class="staff-action-icon"
-                                                                           title="@(product.TrangThaiSanPham == "Ẩn" ? "Hiển thị sản phẩm" : "Ẩn sản phẩm")"><i
-                                class="bi @(product.TrangThaiSanPham == "Ẩn" ? "bi-eye" : "bi-eye-slash")"></i></button>
+                                                                                                                 name="id" value="@product.MaSanPham" /><button class="staff-action-icon" title="@(product.TrangThaiSanPham == "Ẩn" ? "Hiển thị sản phẩm" : "Ẩn sản phẩm")"><i class="bi @(product.TrangThaiSanPham == "Ẩn" ? "bi-eye" : "bi-eye-slash")"></i> @(product.TrangThaiSanPham == "Ẩn" ? "Hiện" : "Ẩn")</button>
                             </form>
                         </td>
                     </tr>
