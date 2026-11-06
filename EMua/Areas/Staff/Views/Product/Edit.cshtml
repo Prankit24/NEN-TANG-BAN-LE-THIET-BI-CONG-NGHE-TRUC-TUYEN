@@ -53,15 +53,15 @@
 
             @if (Model.CurrentImageUrls != null && Model.CurrentImageUrls.Any())
             {
-                <div class="d-flex flex-wrap gap-3 p-3 border bg-light" id="imageGallery">
+                <div class="d-flex flex-wrap gap-3 p-3 border rounded bg-light" id="imageGallery">
                     @foreach (var imgUrl in Model.CurrentImageUrls)
                     {
                         var isMain = (imgUrl == Model.CurrentImageUrl) || (imgUrl == Model.SelectedMainImageUrl);
-                        <div class="gallery-item position-relative text-center border p-1 bg-white @(isMain ? "border-primary border-2" : "")"
+                        <div class="gallery-item position-relative text-center border rounded p-1 bg-white @(isMain ? "border-primary border-2 shadow-sm" : "")"
                              style="width: 110px; cursor: pointer; transition: all 0.2s;"
                              onclick="quickSelectMainImage('@imgUrl', this, '@productId')">
 
-                            <img src="@imgUrl" class="img-fluid mb-1" style="height: 80px; object-fit: contain;" />
+                            <img src="@imgUrl" class="img-fluid rounded mb-1" style="height: 80px; object-fit: contain;" />
 
                             <!-- Badge Ảnh chính -->
                             <span class="main-badge badge bg-primary position-absolute top-0 start-0 m-1 @(isMain ? "" : "d-none")" style="font-size: 9px;">Ảnh chính</span>
@@ -75,8 +75,8 @@
             }
             else if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
             {
-                <div class="p-2 border bg-light d-inline-block">
-                    <img src="@Model.CurrentImageUrl" class="img-fluid" style="height: 80px; object-fit: contain;" />
+                <div class="p-2 border rounded bg-light d-inline-block">
+                    <img src="@Model.CurrentImageUrl" class="img-fluid rounded" style="height: 80px; object-fit: contain;" />
                 </div>
             }
             else
