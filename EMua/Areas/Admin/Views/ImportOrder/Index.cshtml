@@ -1,0 +1,155 @@
+@model IEnumerable<EMua.Models.Database.PhieuNhapHang>
+@{
+    ViewData["Title"] = "Duyệt đề nghị nhập hàng";
+    string status = ViewBag.Status as string ?? "all";
+    string search = ViewBag.Search as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-box-arrow-in-down me-2"></i>Quản lý &amp; Phê duyệt nhập hàng</h4>
+        <span class="text-muted small">Kiểm tra các đề nghị nhập hàng từ nhân viên, phê duyệt hoặc từ chối và ghi nhận nhập kho.</span>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-check-circle-fill"></i>
+        <div>@TempData["Success"]</div>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>@TempData["Error"]</div>
+    </div>
+}
+
+<div class="card border shadow-sm p-3 mb-3 bg-white">
+    <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+        <div style="flex: 1; min-width: 220px;">
+            <input name="search" value="@search" class="form-control form-control-sm" placeholder="Tìm theo mã chứng từ, nhà cung cấp, lý do..." />
+        </div>
+        <div style="width: 180px;">
+            <select name="status" class="form-select form-select-sm">
+                <option value="all" selected="@(status == "all")">Tất cả trạng thái</option>
+                <option value="Chờ duyệt" selected="@(status == "Chờ duyệt")">Chờ duyệt</option>
+                <option value="Đã duyệt" selected="@(status == "Đã duyệt")">Đã duyệt (Chờ nhận)</option>
+                <option value="Đã nhập kho" selected="@(status == "Đã nhập kho")">Đã nhập kho</option>
+                <option value="Từ chối" selected="@(status == "Từ chối")">Từ chối</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">
+            <i class="bi bi-funnel me-1"></i> Lọc
+        </button>
+        @if (!string.IsNullOrWhiteSpace(search) || status != "all")
+        {
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại</a>
+        }
+    </form>
+</div>
+
+<div class="card border shadow-sm p-0 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 140px;">Mã chứng từ</th>
+                    <th style="min-width: 200px;">Nhà cung cấp</th>
+                    <th style="min-width: 200px;">Lý do nhập</th>
+                    <th style="width: 120px;" class="text-center">Số dòng</th>
+                    <th style="width: 150px;" class="text-end">Tổng tiền dự kiến</th>
+                    <th style="width: 130px;" class="text-center">Trạng thái</th>
+                    <th style="width: 150px;">Người lập / Ngày</th>
+                    <th style="width: 120px;" class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        var itemCount = item.ChiTietPhieuNhapHangs?.Count ?? 0;
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-primary border font-monospace">@item.MaChungTu</span>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.NhaCungCap</div>
+                            </td>
+                            <td>
+                                <div class="text-dark">@item.LyDoNhap</div>
+                                @if (!string.IsNullOrWhiteSpace(item.LyDoTuChoi))
+                                {
+                                    <div class="small text-danger"><i class="bi bi-info-circle me-1"></i>Lý do từ chối: @item.LyDoTuChoi</div>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">@itemCount dòng</span>
+                            </td>
+                            <td class="text-end fw-bold text-dark">
+                                @item.TongTienDuKien.ToString("N0") ₫
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrangThai == "Chờ duyệt")
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</span>
+                                }
+                                else if (item.TrangThai == "Đã duyệt")
+                                {
+                                    <span class="badge bg-info text-dark"><i class="bi bi-check2-circle me-1"></i>Đã duyệt</span>
+                                }
+                                else if (item.TrangThai == "Đã nhập kho")
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-box-seam me-1"></i>Đã nhập kho</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>@item.TrangThai</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-semibold small">@(item.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</div>
+                                <div class="text-muted small">@item.NgayTao.ToString("dd/MM/yyyy HH:mm")</div>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@item.MaPhieuNhap" class="btn btn-sm btn-primary py-1 px-2" title="Xem xét và duyệt">
+                                    <i class="bi bi-pencil-square me-1"></i> Xử lý
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Chưa có phiếu nhập hàng nào.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <div class="d-flex align-items-center justify-content-between p-3 border-top">
+            <span class="small text-muted">Trang @currentPage / @totalPages (Tổng @totalItems phiếu)</span>
+            <ul class="pagination pagination-sm mb-0">
+                @for (int p = 1; p <= totalPages; p++)
+                {
+                    <li class="page-item @(p == currentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-status="@status" asp-route-search="@search">@p</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

@@ -1,64 +1,430 @@
 @model IEnumerable<SanPham>
 @{
-    ViewData["Title"] = "Danh sách sản phẩm"; var brands = (IEnumerable<ThuongHieu>)ViewBag.Brands; var statuses =
-    (IEnumerable<string>)ViewBag.Statuses;
-}
-<div class="staff-toolbar">
-    <form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
-                                                       placeholder="Tìm tên sản phẩm..." /><select name="status">
-        <option value="all">Tất cả trạng thái</option>@foreach(var item in statuses){
-        <option value="@item"
-                selected="@(ViewBag.Status == item)">@item</option>
+    ViewData["Title"] = "Quản lý sản phẩm";
+    var brands = (IEnumerable<ThuongHieu>)(ViewBag.Brands ?? Enumerable.Empty<ThuongHieu>());
+    var categories = (IEnumerable<DanhMucSanPham>)(ViewBag.Categories ?? Enumerable.Empty<DanhMucSanPham>());
+    var statuses = (IEnumerable<string>)(ViewBag.Statuses ?? Enumerable.Empty<string>());
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? Model.Count();
+    string search = ViewBag.Search as string ?? "";
+    string status = ViewBag.Status as string ?? "all";
+    int? brandId = ViewBag.BrandId as int?;
+    int? categoryId = ViewBag.CategoryId as int?;
+    string stockFilter = ViewBag.StockFilter as string ?? "all";
+
+    string FixImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
+        path = path.Trim().Replace("\\", "/");
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//")) return path;
+        return path.StartsWith("/") ? path : "/" + path;
     }
-</select><select name="brandId">
-<option value="">Tất cả thương hiệu</option>@foreach(var brand in brands){
-<option
-    value="@brand.MaThuongHieu" selected="@(ViewBag.BrandId == brand.MaThuongHieu)">@brand.TenThuongHieu
-</option>
-            }
-</select><button><i class="bi bi-funnel"></i> Lọc</button></form><a class="btn btn-primary"
-                                                                    asp-action="Create"><i class="bi bi-plus-lg"></i> Thêm sản phẩm</a>
-</div>
-<section class="staff-card">
-    <div class="table-responsive">
-        <table class="staff-table">
-            <thead>
-                <tr>
-                    <th>Mã</th>
-                    <th>Sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>Thương hiệu</th>
-                    <th>Giá gốc</th>
-                    <th>Số lượng tồn</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>@foreach(var product in Model){
-                <tr>
-                    <td>#SP-@product.MaSanPham.ToString("D5")</td>
-                    <td><strong>@product.TenSanPham</strong><small>@product.BaoHanh</small></td>
-                    <td>@(product.MaDanhMucNavigation?.TenDanhMuc ?? "—")</td>
-                    <td>@product.MaThuongHieuNavigation.TenThuongHieu</td>
-                    <td>@((product.GiaGoc ?? 0).ToString("N0")) đ</td>
-                    <td>@product.BienTheSanPhams.Sum(variant => variant.SoLuong)</td>
-                    <td><span
-                        class="staff-badge @(product.TrangThaiSanPham == "Ẩn" ? "muted" : "")">@(product.TrangThaiSanPham
-                            ?? "—")</span></td>
-                        <td class="staff-row-actions"><a asp-action="Edit" asp-route-id="@product.MaSanPham" class="staff-action-icon" title="Chỉnh sửa"><i class="bi bi-pencil"></i> Sửa</a>
-                            <form asp-action="ToggleVisibility" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                                                 name="id" value="@product.MaSanPham" /><button class="staff-action-icon" title="@(product.TrangThaiSanPham == "Ẩn" ? "Hiển thị sản phẩm" : "Ẩn sản phẩm")"><i class="bi @(product.TrangThaiSanPham == "Ẩn" ? "bi-eye" : "bi-eye-slash")"></i> @(product.TrangThaiSanPham == "Ẩn" ? "Hiện" : "Ẩn")</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="text-center">Không tìm thấy sản phẩm.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+}
+
+<style>
+    .staff-product-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .staff-filter-card {
+        background: #ffffff;
+        border: 1px solid #e5eaf2;
+        border-radius: 8px;
+        padding: 16px 20px;
+    }
+
+    .staff-filter-form {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .staff-table-card {
+        background: #ffffff;
+        border: 1px solid #e5eaf2;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .staff-product-table {
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .staff-product-table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .staff-product-table tbody td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 13px;
+        color: #1e293b;
+    }
+
+    .staff-product-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .staff-product-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .prod-thumb-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        object-fit: contain;
+        flex-shrink: 0;
+        padding: 2px;
+    }
+
+    .stock-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .stock-pill.in-stock {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .stock-pill.low-stock {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .stock-pill.out-of-stock {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .status-badge.hidden {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .staff-pagination-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: #ffffff;
+        border-top: 1px solid #e5eaf2;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+</style>
+
+<div class="staff-product-wrapper">
+    <!-- Thanh thao tác trên cùng: Thống kê & Nút thêm mới -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <div class="text-muted small">
+                Có tất cả <strong>@totalItems</strong> sản phẩm trong danh mục quản lý
+            </div>
+        </div>
+        <div>
+            <a class="btn btn-primary d-inline-flex align-items-center gap-2" asp-action="Create">
+                <i class="bi bi-plus-lg"></i>
+                <span>Thêm sản phẩm</span>
+            </a>
+        </div>
     </div>
-</section>
+
+    <!-- Thanh lọc & tìm kiếm -->
+    <div class="staff-filter-card">
+        <form method="get" class="staff-filter-form">
+            <!-- Tìm kiếm tên, mã, mô tả -->
+            <div style="flex: 1; min-width: 240px;">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input name="q" value="@search" class="form-control form-control-sm border-start-0" placeholder="Tìm kiếm tên sản phẩm, mã, thông số..." />
+                </div>
+            </div>
+
+            <!-- Lọc Danh mục -->
+            <div style="width: 170px;">
+                <select name="categoryId" class="form-select form-select-sm">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var c in categories)
+                    {
+                        <option value="@c.MaDanhMuc" selected="@(categoryId == c.MaDanhMuc)">@c.TenDanhMuc</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Lọc Thương hiệu -->
+            <div style="width: 170px;">
+                <select name="brandId" class="form-select form-select-sm">
+                    <option value="">Tất cả thương hiệu</option>
+                    @foreach (var b in brands)
+                    {
+                        <option value="@b.MaThuongHieu" selected="@(brandId == b.MaThuongHieu)">@b.TenThuongHieu</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Lọc Tồn kho -->
+            <div style="width: 150px;">
+                <select name="stockFilter" class="form-select form-select-sm">
+                    <option value="all" selected="@(stockFilter == "all")">Tất cả kho</option>
+                    <option value="in" selected="@(stockFilter == "in")">Còn hàng (&gt;10)</option>
+                    <option value="low" selected="@(stockFilter == "low")">Sắp hết (&le;10)</option>
+                    <option value="out" selected="@(stockFilter == "out")">Hết hàng (0)</option>
+                </select>
+            </div>
+
+            <!-- Lọc Trạng thái hiển thị -->
+            <div style="width: 150px;">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="all" selected="@(status == "all")">Tất cả trạng thái</option>
+                    @foreach (var s in statuses)
+                    {
+                        <option value="@s" selected="@(status == s)">@s</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+                <i class="bi bi-funnel"></i> Lọc
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(search) || status != "all" || brandId.HasValue || categoryId.HasValue || stockFilter != "all")
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary" title="Đặt lại bộ lọc">
+                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+                </a>
+            }
+        </form>
+    </div>
+
+    <!-- Bảng danh sách sản phẩm -->
+    <div class="staff-table-card">
+        <div class="table-responsive">
+            <table class="table staff-product-table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">Mã SP</th>
+                        <th style="min-width: 300px;">Sản phẩm</th>
+                        <th style="min-width: 150px;">Phân loại</th>
+                        <th style="min-width: 130px;" class="text-end">Giá niêm yết</th>
+                        <th style="min-width: 160px;" class="text-center">Biến thể &amp; Tồn kho</th>
+                        <th style="min-width: 120px;" class="text-center">Trạng thái</th>
+                        <th style="min-width: 150px;" class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var product in Model)
+                        {
+                            var totalStock = product.BienTheSanPhams?.Sum(v => v.SoLuong) ?? 0;
+                            var variantCount = product.BienTheSanPhams?.Count ?? 0;
+                            var rawImg = product.SanPhamHinhAnhs?
+                                .OrderByDescending(x => x.LaAnhChinh)
+                                .ThenBy(x => x.ThuTu)
+                                .Select(x => x.DuongDanAnh)
+                                .FirstOrDefault()
+                                ?? product.BienTheSanPhams?
+                                .Where(b => !string.IsNullOrEmpty(b.HinhAnh))
+                                .Select(b => b.HinhAnh)
+                                .FirstOrDefault();
+
+                            var imgSrc = FixImage(rawImg);
+
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-secondary border font-monospace">#SP-@product.MaSanPham.ToString("D4")</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@imgSrc" alt="@product.TenSanPham" class="prod-thumb-box"
+                                             loading="lazy" decoding="async"
+                                             onerror="this.onerror=null; this.src='/images/no-image.png';" />
+                                        <div>
+                                            <a asp-action="Edit" asp-route-id="@product.MaSanPham" class="fw-bold text-dark text-decoration-none d-block mb-1">
+                                                @product.TenSanPham
+                                            </a>
+                                            <div class="text-muted small">
+                                                @(string.IsNullOrWhiteSpace(product.BaoHanh) ? "Bảo hành: Tiêu chuẩn" : $"BH: {product.BaoHanh}")
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@(product.MaThuongHieuNavigation?.TenThuongHieu ?? "—")</div>
+                                    <div class="text-muted small">@(product.MaDanhMucNavigation?.TenDanhMuc ?? "Chưa phân loại")</div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-dark">@((product.GiaGoc ?? 0).ToString("N0")) <small>₫</small></span>
+                                </td>
+                                <td class="text-center">
+                                    @if (totalStock == 0)
+                                    {
+                                        <span class="stock-pill out-of-stock" title="Tất cả biến thể đã hết hàng trong kho">
+                                            <i class="bi bi-x-circle-fill"></i> Hết hàng (0)
+                                        </span>
+                                    }
+                                    else if (totalStock <= 10)
+                                    {
+                                        <span class="stock-pill low-stock" title="Cần nhập hàng bổ sung">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Còn @totalStock (@variantCount mẫu)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="stock-pill in-stock">
+                                            <i class="bi bi-check-circle-fill"></i> Còn @totalStock (@variantCount mẫu)
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (product.TrangThaiSanPham == "Ẩn")
+                                    {
+                                        <span class="status-badge hidden">
+                                            <i class="bi bi-eye-slash me-1"></i> Đang ẩn
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge active">
+                                            <i class="bi bi-check-circle me-1"></i> @(product.TrangThaiSanPham ?? "Còn hàng")
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a asp-action="Edit" asp-route-id="@product.MaSanPham" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" title="Chỉnh sửa thông tin &amp; biến thể">
+                                            <i class="bi bi-pencil"></i>
+                                            <span>Sửa</span>
+                                        </a>
+                                        <form asp-action="ToggleVisibility" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@product.MaSanPham" />
+                                            <button type="submit" class="btn btn-sm @(product.TrangThaiSanPham == "Ẩn" ? "btn-outline-success" : "btn-outline-secondary")" title="@(product.TrangThaiSanPham == "Ẩn" ? "Cho phép hiển thị ra cửa hàng" : "Ẩn sản phẩm khỏi khách hàng")">
+                                                <i class="bi @(product.TrangThaiSanPham == "Ẩn" ? "bi-eye" : "bi-eye-slash")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                <span class="fw-semibold">Không tìm thấy sản phẩm nào phù hợp.</span>
+                                <p class="small text-muted mt-1">Vui lòng thử tìm kiếm với từ khóa khác hoặc xóa bớt bộ lọc.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        @if (totalPages > 1)
+        {
+            <div class="staff-pagination-wrapper">
+                <div class="text-muted small">
+                    Trang <strong>@currentPage</strong> / <strong>@totalPages</strong> (Tổng cộng <strong>@totalItems</strong> sản phẩm)
+                </div>
+                <nav aria-label="Phân trang sản phẩm">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@(currentPage - 1)"
+                               asp-route-q="@search"
+                               asp-route-status="@status"
+                               asp-route-brandId="@brandId"
+                               asp-route-categoryId="@categoryId"
+                               asp-route-stockFilter="@stockFilter">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (int p = 1; p <= totalPages; p++)
+                        {
+                            if (p == 1 || p == totalPages || (p >= currentPage - 2 && p <= currentPage + 2))
+                            {
+                                <li class="page-item @(p == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@p"
+                                       asp-route-q="@search"
+                                       asp-route-status="@status"
+                                       asp-route-brandId="@brandId"
+                                       asp-route-categoryId="@categoryId"
+                                       asp-route-stockFilter="@stockFilter">@p</a>
+                                </li>
+                            }
+                            else if (p == currentPage - 3 || p == currentPage + 3)
+                            {
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            }
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@(currentPage + 1)"
+                               asp-route-q="@search"
+                               asp-route-status="@status"
+                               asp-route-brandId="@brandId"
+                               asp-route-categoryId="@categoryId"
+                               asp-route-stockFilter="@stockFilter">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>

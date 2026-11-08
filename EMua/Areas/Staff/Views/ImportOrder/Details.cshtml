@@ -1,0 +1,150 @@
+@model EMua.Models.Database.PhieuNhapHang
+@{
+    ViewData["Title"] = $"Chi tiết phiếu nhập {Model.MaChungTu}";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Phiếu đề nghị nhập hàng: @Model.MaChungTu</h4>
+        <span class="text-muted small">Ngày lập: @Model.NgayTao.ToString("dd/MM/yyyy HH:mm") | Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong></span>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Thông tin chung -->
+    <div class="col-lg-4">
+        <div class="staff-card bg-white border p-3">
+            <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin chứng từ</h6>
+            <div class="mb-2">
+                <span class="text-muted small d-block">Trạng thái phiếu:</span>
+                @if (Model.TrangThai == "Chờ duyệt")
+                {
+                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-hourglass-split me-1"></i>Chờ duyệt</span>
+                }
+                else if (Model.TrangThai == "Đã duyệt")
+                {
+                    <span class="badge bg-info text-dark fs-6"><i class="bi bi-check2-circle me-1"></i>Đã duyệt (Chờ nhận hàng)</span>
+                }
+                else if (Model.TrangThai == "Đã nhập kho")
+                {
+                    <span class="badge bg-success fs-6"><i class="bi bi-box-seam me-1"></i>Đã nhập kho thành công</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>@Model.TrangThai</span>
+                }
+            </div>
+
+            <div class="mb-2">
+                <span class="text-muted small d-block">Nhà cung cấp:</span>
+                <span class="fw-bold text-dark">@Model.NhaCungCap</span>
+            </div>
+
+            <div class="mb-2">
+                <span class="text-muted small d-block">Lý do nhập hàng:</span>
+                <span class="text-dark">@Model.LyDoNhap</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.DienGiai))
+            {
+                <div class="mb-2">
+                    <span class="text-muted small d-block">Diễn giải:</span>
+                    <span class="text-muted">@Model.DienGiai</span>
+                </div>
+            }
+
+            <div class="mb-2 border-top pt-2">
+                <span class="text-muted small d-block">Tổng giá trị dự kiến:</span>
+                <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N0") ₫</span>
+            </div>
+
+            @if (Model.MaNguoiDuyetNavigation != null)
+            {
+                <div class="mb-2 border-top pt-2">
+                    <span class="text-muted small d-block">Người phê duyệt:</span>
+                    <span class="fw-semibold">@Model.MaNguoiDuyetNavigation.TenNguoiDung</span>
+                    <div class="small text-muted">@Model.NgayDuyet?.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.LyDoTuChoi))
+            {
+                <div class="alert alert-danger mt-2 mb-0 p-2 small">
+                    <strong>Lý do từ chối:</strong> @Model.LyDoTuChoi
+                </div>
+            }
+
+            @if (Model.NgayNhapKho.HasValue)
+            {
+                <div class="mb-2 border-top pt-2">
+                    <span class="text-muted small d-block">Xác nhận nhập kho lúc:</span>
+                    <span class="text-success fw-bold">@Model.NgayNhapKho.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                    @if (Model.MaNguoiNhapKhoNavigation != null)
+                    {
+                        <div class="small text-muted">Bởi: @Model.MaNguoiNhapKhoNavigation.TenNguoiDung</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Danh sách mặt hàng -->
+    <div class="col-lg-8">
+        <div class="staff-card bg-white border p-0">
+            <div class="p-3 border-bottom">
+                <h6 class="fw-bold mb-0">Danh sách sản phẩm &amp; biến thể yêu cầu nhập</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm / Biến thể</th>
+                            <th class="text-center" style="width: 120px;">Tồn hiện tại</th>
+                            <th class="text-center" style="width: 120px;">SL Đề nghị</th>
+                            <th class="text-end" style="width: 150px;">Đơn giá dự kiến</th>
+                            <th class="text-end" style="width: 160px;">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ChiTietPhieuNhapHangs)
+                        {
+                            var variant = item.MaBienTheNavigation;
+                            var prod = variant?.MaSanPhamNavigation;
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">@(prod?.TenSanPham ?? "Sản phẩm")</div>
+                                    <small class="text-muted">Phân loại: @(variant?.MauSac ?? "—") - @(variant?.PhienBan ?? "—")</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(variant?.SoLuong == 0 ? "bg-danger" : (variant?.SoLuong <= 10 ? "bg-warning text-dark" : "bg-secondary"))">
+                                        @(variant?.SoLuong ?? 0)
+                                    </span>
+                                </td>
+                                <td class="text-center fw-bold text-primary">
+                                    +@item.SoLuongNhap
+                                </td>
+                                <td class="text-end">
+                                    @item.DonGiaNhapDuKien.ToString("N0") ₫
+                                </td>
+                                <td class="text-end fw-bold text-dark">
+                                    @((item.SoLuongNhap * item.DonGiaNhapDuKien).ToString("N0")) ₫
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                            <td class="text-end fw-bold text-primary fs-6">@Model.TongTienDuKien.ToString("N0") ₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

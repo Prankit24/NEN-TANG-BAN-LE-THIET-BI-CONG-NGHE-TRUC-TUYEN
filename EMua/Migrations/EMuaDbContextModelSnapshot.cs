@@ -26,92 +26,110 @@ namespace EMua.Migrations
                 {
                     b.Property<int>("MaBaoCao")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mabaocao");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaBaoCao"));
 
                     b.Property<string>("DuLieu")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("dulieu");
 
                     b.Property<string>("LoaiBaoCao")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("loaibaocao");
 
                     b.Property<DateTime?>("NgayBaoCao")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaybaocao");
 
                     b.HasKey("MaBaoCao")
                         .HasName("PK__BaoCao__25A9188CF7650BAA");
 
-                    b.ToTable("BaoCao");
+                    b.ToTable("baocao", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.BienTheSanPham", b =>
                 {
                     b.Property<int>("MaBienThe")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mabienthe");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaBienThe"));
 
                     b.Property<decimal>("Gia")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("gia");
 
                     b.Property<string>("HinhAnh")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("hinhanh");
 
                     b.Property<int>("MaSanPham")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("masanpham");
 
                     b.Property<string>("MauSac")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("mausac");
 
                     b.Property<string>("PhienBan")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("phienban");
 
                     b.Property<int>("SoLuong")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("soluong");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Còn hàng");
+                        .HasDefaultValue("Còn hàng")
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaBienThe")
                         .HasName("PK__BienTheS__3987CEF598B5B7D6");
 
                     b.HasIndex(new[] { "MaSanPham" }, "IX_BienTheSanPham_MaSanPham");
 
-                    b.ToTable("BienTheSanPham");
+                    b.ToTable("bienthesanpham", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.ChiTietDonHang", b =>
                 {
                     b.Property<int>("MaChiTietDonHang")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("machitietdonhang");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaChiTietDonHang"));
 
                     b.Property<decimal>("DonGia")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("dongia");
 
                     b.Property<int>("MaBienThe")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mabienthe");
 
                     b.Property<int>("MaDonHang")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     b.Property<int>("SoLuong")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("soluong");
 
                     b.Property<decimal>("ThanhTien")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("thanhtien");
 
                     b.HasKey("MaChiTietDonHang")
                         .HasName("PK__ChiTietD__835ED13B4D53BB16");
@@ -120,32 +138,37 @@ namespace EMua.Migrations
 
                     b.HasIndex(new[] { "MaBienThe" }, "IX_ChiTietDonHang_MaBienThe");
 
-                    b.ToTable("ChiTietDonHang");
+                    b.ToTable("chitietdonhang", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.ChiTietGioHang", b =>
                 {
                     b.Property<int>("MaChiTietGioHang")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("machitietgiohang");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaChiTietGioHang"));
 
                     b.Property<int>("MaBienThe")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mabienthe");
 
                     b.Property<int>("MaNguoiDung")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     b.Property<DateTime>("NgayThem")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaythem")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("SoLuong")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasDefaultValue(1)
+                        .HasColumnName("soluong");
 
                     b.HasKey("MaChiTietGioHang")
                         .HasName("PK__ChiTietG__BBF4749877F09C5C");
@@ -155,73 +178,86 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "MaNguoiDung", "MaBienThe" }, "UQ_ChiTietGioHang")
                         .IsUnique();
 
-                    b.ToTable("ChiTietGioHang");
+                    b.ToTable("chitietgiohang", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.CuocHoiThoaiAi", b =>
                 {
                     b.Property<int>("MaCuocHoiThoai")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("macuochoithoai");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaCuocHoiThoai"));
 
                     b.Property<int>("MaNguoiDung")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     b.Property<DateTime?>("NgayCapNhat")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaycapnhat");
 
                     b.Property<DateTime>("NgayTao")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaytao")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("TieuDe")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("tieude");
 
                     b.HasKey("MaCuocHoiThoai")
                         .HasName("PK__CuocHoiT__3707D875B03839C0");
 
                     b.HasIndex("MaNguoiDung");
 
-                    b.ToTable("CuocHoiThoaiAI");
+                    b.ToTable("cuochoithoaiai", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.DanhGiaSanPham", b =>
                 {
                     b.Property<int>("MaDanhGia")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madanhgia");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaDanhGia"));
 
                     b.Property<string>("BinhLuan")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("binhluan");
 
                     b.Property<int?>("MaDonHang")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     b.Property<int?>("MaNguoiDung")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     b.Property<int?>("MaSanPham")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("masanpham");
 
                     b.Property<DateTime?>("NgayDanhGia")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaydanhgia")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int?>("SoLuongSao")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("soluongsao");
 
                     b.Property<bool?>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(true)
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaDanhGia")
                         .HasName("PK__DanhGiaS__AA9515BFCBF70C5B");
@@ -232,88 +268,105 @@ namespace EMua.Migrations
 
                     b.HasIndex(new[] { "MaNguoiDung", "MaSanPham" }, "UQ_DanhGia_User_Product")
                         .IsUnique()
-                        .HasFilter("\"MaNguoiDung\" IS NOT NULL AND \"MaSanPham\" IS NOT NULL");
+                        .HasFilter("manguoidung IS NOT NULL AND masanpham IS NOT NULL");
 
-                    b.ToTable("DanhGiaSanPham");
+                    b.ToTable("danhgiasanpham", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.DanhMucSanPham", b =>
                 {
                     b.Property<int>("MaDanhMuc")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madanhmuc");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaDanhMuc"));
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("mota");
 
                     b.Property<string>("TenDanhMuc")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tendanhmuc");
 
                     b.Property<string>("TrangThaiDanhMuc")
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("trangthaidanhmuc");
 
                     b.HasKey("MaDanhMuc")
                         .HasName("PK__DanhMucS__B37508871346CE70");
 
-                    b.ToTable("DanhMucSanPham");
+                    b.ToTable("danhmucsanpham", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.DonHang", b =>
                 {
                     b.Property<int>("MaDonHang")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaDonHang"));
 
                     b.Property<string>("AnhXacNhanGiao")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("anhxacnhangiao");
 
                     b.Property<string>("DiaChiNhanHang")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("diachinhanhang");
 
                     b.Property<string>("GhiChu")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("ghichu");
 
                     b.Property<string>("HoTenNhanHang")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("hotennhanhang");
 
                     b.Property<int?>("MaKhuyenMai")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("makhuyenmai");
 
                     b.Property<int?>("MaNguoiDung")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     b.Property<DateTime?>("NgayDat")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaydat");
 
                     b.Property<DateTime?>("NgayDuKienGiao")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ngaydukiengiao");
 
                     b.Property<string>("PhuongThucVanChuyen")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phuongthucvanchuyen");
 
                     b.Property<string>("SoDienThoaiNhanHang")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("sodienthoainhanhang");
 
                     b.Property<decimal?>("TongTien")
-                        .HasColumnType("decimal(12, 2)");
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tongtien");
 
                     b.Property<string>("TrangThaiDonHang")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Chờ xử lý");
+                        .HasDefaultValue("Chờ xử lý")
+                        .HasColumnName("trangthaidonhang");
 
                     b.HasKey("MaDonHang")
                         .HasName("PK__DonHang__129584AD88A83EF4");
@@ -322,33 +375,38 @@ namespace EMua.Migrations
 
                     b.HasIndex("MaNguoiDung");
 
-                    b.ToTable("DonHang");
+                    b.ToTable("donhang", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.HoaDon", b =>
                 {
                     b.Property<int>("MaHoaDon")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mahoadon");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaHoaDon"));
 
                     b.Property<int>("MaDonHang")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     b.Property<DateTime?>("NgayLapHoaDon")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaylaphoadon")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<decimal?>("TongTien")
-                        .HasColumnType("decimal(12, 2)");
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tongtien");
 
                     b.Property<string>("TrangThaiHoaDon")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Đã lập");
+                        .HasDefaultValue("Đã lập")
+                        .HasColumnName("trangthaihoadon");
 
                     b.HasKey("MaHoaDon")
                         .HasName("PK__HoaDon__835ED13BE1E4A10D");
@@ -356,55 +414,66 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "MaDonHang" }, "UQ_HoaDon_MaDonHang")
                         .IsUnique();
 
-                    b.ToTable("HoaDon");
+                    b.ToTable("hoadon", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.KhuyenMai", b =>
                 {
                     b.Property<int>("MaKhuyenMai")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("makhuyenmai");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaKhuyenMai"));
 
                     b.Property<decimal?>("GiaTriDonHangToiThieu")
-                        .HasColumnType("decimal(12, 2)");
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("giatridonhangtoithieu");
 
                     b.Property<decimal>("GiaTriGiam")
-                        .HasColumnType("decimal(12, 2)");
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("giatrigiam");
 
                     b.Property<string>("LoaiGiamGia")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("loaigiamgia");
 
                     b.Property<string>("MaCode")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("macode");
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("mota");
 
                     b.Property<DateTime?>("NgayBatDau")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaybatdau");
 
                     b.Property<DateTime?>("NgayKetThuc")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngayketthuc");
 
                     b.Property<int?>("SoLuong")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("soluong");
 
                     b.Property<string>("TenKhuyenMai")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("tenkhuyenmai");
 
                     b.Property<bool>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(true)
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaKhuyenMai")
                         .HasName("PK__KhuyenMa__6F56B3BD8771E9E5");
@@ -412,99 +481,117 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "MaCode" }, "UQ__KhuyenMa__152C7C5CF41E5F9B")
                         .IsUnique();
 
-                    b.ToTable("KhuyenMai");
+                    b.ToTable("khuyenmai", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.LichSuVanChuyen", b =>
                 {
                     b.Property<int>("MaLichSu")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("malichsu");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaLichSu"));
 
                     b.Property<string>("DiaDiem")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("diadiem");
 
                     b.Property<string>("HinhAnhNguoiNhan")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("hinhanhnguoinhan");
 
                     b.Property<int>("MaDonHang")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("mota");
 
                     b.Property<DateTime>("ThoiGian")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("thoigian")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaLichSu")
                         .HasName("PK__LichSuVa__C443222A60038AB5");
 
                     b.HasIndex("MaDonHang");
 
-                    b.ToTable("LichSuVanChuyen");
+                    b.ToTable("lichsuvanchuyen", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.NguoiDung", b =>
                 {
                     b.Property<int>("MaNguoiDung")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaNguoiDung"));
 
                     b.Property<string>("AnhDaiDien")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("anhdaidien");
 
                     b.Property<string>("DiaChi")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("diachi");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("email");
 
                     b.Property<int>("MaQuyen")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(3);
+                        .HasDefaultValue(3)
+                        .HasColumnName("maquyen");
 
                     b.Property<string>("MatKhau")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("matkhau");
 
                     b.Property<DateTime?>("NgayTao")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaytao")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("SoDienThoai")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("sodienthoai");
 
                     b.Property<string>("TenDangNhap")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tendangnhap");
 
                     b.Property<string>("TenNguoiDung")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tennguoidung");
 
                     b.Property<bool>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(true)
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaNguoiDung")
                         .HasName("PK__NguoiDun__C539D76221D1D8FC");
@@ -517,31 +604,34 @@ namespace EMua.Migrations
 
                     b.HasIndex(new[] { "Email" }, "UQ_NguoiDung_Email")
                         .IsUnique()
-                        .HasFilter("\"Email\" IS NOT NULL");
+                        .HasFilter("email IS NOT NULL");
 
                     b.HasIndex(new[] { "TenDangNhap" }, "UQ_NguoiDung_TenDangNhap")
                         .IsUnique()
-                        .HasFilter("\"TenDangNhap\" IS NOT NULL");
+                        .HasFilter("tendangnhap IS NOT NULL");
 
-                    b.ToTable("NguoiDung");
+                    b.ToTable("nguoidung", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.PhanQuyen", b =>
                 {
                     b.Property<int>("MaQuyen")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("maquyen");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaQuyen"));
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("mota");
 
                     b.Property<string>("TenQuyen")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tenquyen");
 
                     b.HasKey("MaQuyen")
                         .HasName("PK__PhanQuye__1D4B7ED47D31A58F");
@@ -549,46 +639,55 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "TenQuyen" }, "UQ__PhanQuye__5637EE792105E491")
                         .IsUnique();
 
-                    b.ToTable("PhanQuyen");
+                    b.ToTable("phanquyen", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.SanPham", b =>
                 {
                     b.Property<int>("MaSanPham")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("masanpham");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaSanPham"));
 
                     b.Property<string>("BaoHanh")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("baohanh");
 
                     b.Property<decimal?>("GiaGoc")
-                        .HasColumnType("decimal(12, 2)");
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("giagoc");
 
                     b.Property<int?>("MaDanhMuc")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madanhmuc");
 
                     b.Property<int>("MaThuongHieu")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mathuonghieu");
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("mota");
 
                     b.Property<string>("TenSanPham")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tensanpham");
 
                     b.Property<string>("ThongSoKyThuat")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("thongsokythuat");
 
                     b.Property<string>("TrangThaiSanPham")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Còn hàng");
+                        .HasDefaultValue("Còn hàng")
+                        .HasColumnName("trangthaisanpham");
 
                     b.HasKey("MaSanPham")
                         .HasName("PK__SanPham__FAC7442D8E7CBCF5");
@@ -597,112 +696,130 @@ namespace EMua.Migrations
 
                     b.HasIndex(new[] { "MaThuongHieu" }, "IX_SanPham_MaThuongHieu");
 
-                    b.ToTable("SanPham");
+                    b.ToTable("sanpham", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.SanPhamHinhAnh", b =>
                 {
                     b.Property<int>("MaAnh")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("maanh");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaAnh"));
 
                     b.Property<string>("DuongDanAnh")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("duongdananh");
 
                     b.Property<bool>("LaAnhChinh")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("laanhchinh");
 
                     b.Property<int>("MaSanPham")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("masanpham");
 
                     b.Property<int>("ThuTu")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasDefaultValue(1)
+                        .HasColumnName("thutu");
 
                     b.HasKey("MaAnh")
                         .HasName("PK__SanPhamH__356240DF6D083CA7");
 
                     b.HasIndex("MaSanPham");
 
-                    b.ToTable("SanPhamHinhAnh");
+                    b.ToTable("sanphamhinhanh", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.ThanhToan", b =>
                 {
                     b.Property<int>("MaThanhToan")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mathanhtoan");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaThanhToan"));
 
                     b.Property<int>("MaDonHang")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("madonhang");
 
                     b.Property<string>("MaGiaoDich")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("magiaodich");
 
                     b.Property<DateTime>("NgayTao")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaytao")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("NgayThanhToan")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaythanhtoan");
 
                     b.Property<string>("PhuongThuc")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phuongthuc");
 
                     b.Property<decimal>("SoTien")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("sotien");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Chờ thanh toán");
+                        .HasDefaultValue("Chờ thanh toán")
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaThanhToan")
                         .HasName("PK__ThanhToa__D4B25844E085DA97");
 
                     b.HasIndex("MaDonHang");
 
-                    b.ToTable("ThanhToan");
+                    b.ToTable("thanhtoan", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.ThuongHieu", b =>
                 {
                     b.Property<int>("MaThuongHieu")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mathuonghieu");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaThuongHieu"));
 
                     b.Property<string>("Logo")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("logo");
 
                     b.Property<string>("MoTa")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("mota");
 
                     b.Property<string>("TenThuongHieu")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tenthuonghieu");
 
                     b.Property<bool>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(true)
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaThuongHieu")
                         .HasName("PK__ThuongHi__A3733E2C0EF3AC57");
@@ -710,64 +827,73 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "TenThuongHieu" }, "UQ__ThuongHi__98D6A834D059DBAD")
                         .IsUnique();
 
-                    b.ToTable("ThuongHieu");
+                    b.ToTable("thuonghieu", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.TinNhanAi", b =>
                 {
                     b.Property<int>("MaTinNhan")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("matinnhan");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaTinNhan"));
 
                     b.Property<int>("MaCuocHoiThoai")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("macuochoithoai");
 
                     b.Property<DateTime>("NgayGui")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaygui")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("noidung");
 
                     b.Property<string>("VaiTro")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("vaitro");
 
                     b.HasKey("MaTinNhan")
                         .HasName("PK__TinNhanA__E5B3062ACADFFD71");
 
                     b.HasIndex("MaCuocHoiThoai");
 
-                    b.ToTable("TinNhanAI");
+                    b.ToTable("tinnhanai", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.TuCam", b =>
                 {
                     b.Property<int>("MaTuCam")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("matucam");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaTuCam"));
 
                     b.Property<DateTime>("NgayTao")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaytao")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("noidung");
 
                     b.Property<bool>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(true)
+                        .HasColumnName("trangthai");
 
                     b.HasKey("MaTuCam")
                         .HasName("PK__TuCam__B89513110632111A");
@@ -775,26 +901,30 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "NoiDung" }, "UQ__TuCam__C69AFF423679873D")
                         .IsUnique();
 
-                    b.ToTable("TuCam");
+                    b.ToTable("tucam", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.YeuThich", b =>
                 {
                     b.Property<int>("MaYeuThich")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("mayeuthich");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaYeuThich"));
 
                     b.Property<int>("MaNguoiDung")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoidung");
 
                     b.Property<int>("MaSanPham")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("masanpham");
 
                     b.Property<DateTime>("NgayThem")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaythem")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("MaYeuThich")
@@ -805,7 +935,54 @@ namespace EMua.Migrations
                     b.HasIndex(new[] { "MaNguoiDung", "MaSanPham" }, "UQ_YeuThich")
                         .IsUnique();
 
-                    b.ToTable("YeuThich");
+                    b.ToTable("yeuthich", "public");
+                });
+
+            modelBuilder.Entity("EMua.Models.EmailVerification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("Email");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ExpiresAtUtc");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("TokenHash");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("UserId");
+
+                    b.Property<DateTime?>("VerifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("VerifiedAtUtc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmailVerifications", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.BienTheSanPham", b =>
@@ -1010,6 +1187,15 @@ namespace EMua.Migrations
                     b.Navigation("MaNguoiDungNavigation");
 
                     b.Navigation("MaSanPhamNavigation");
+                });
+
+            modelBuilder.Entity("EMua.Models.EmailVerification", b =>
+                {
+                    b.HasOne("EMua.Models.Database.NguoiDung", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EMua.Models.Database.BienTheSanPham", b =>

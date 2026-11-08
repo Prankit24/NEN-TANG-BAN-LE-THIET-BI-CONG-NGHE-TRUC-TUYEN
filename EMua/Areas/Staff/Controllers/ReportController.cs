@@ -2,6 +2,10 @@ using EMua.Areas.Staff.Models;
 using EMua.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EMua.Areas.Staff.Controllers;
 
@@ -9,18 +13,37 @@ public class ReportController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
     public ReportController(EMuaDbContext db) => _db = db;
+
+    private static DateTime GetVietnamNow()
+    {
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+        }
+        catch
+        {
+            return DateTime.UtcNow.AddHours(7);
+        }
+    }
+
     public async Task<IActionResult> Index(int? month, int? year)
     {
-        var selectedMonth = month is >= 1 and <= 12 ? month.Value : DateTime.Today.Month;
-        var selectedYear = year is >= 2000 and <= 2100 ? year.Value : DateTime.Today.Year;
+        var vnNow = GetVietnamNow();
+        var selectedMonth = month is >= 1 and <= 12 ? month.Value : vnNow.Month;
+        var selectedYear = year is >= 2000 and <= 2100 ? year.Value : vnNow.Year;
         var firstDayOfMonth = new DateTime(selectedYear, selectedMonth, 1);
         var firstDayOfNextMonth = firstDayOfMonth.AddMonths(1);
+
         var monthlyOrders = await _db.DonHangs.AsNoTracking()
             .Where(x => x.NgayDat >= firstDayOfMonth && x.NgayDat < firstDayOfNextMonth)
             .ToListAsync();
 
         var successfulStatuses = new[] { "Đã hoàn thành", "Đã giao" };
-        var returnedStatuses = new[] { "Đã hủy", "Đã huỷ", "Đã hoàn" };
+        var cancelledStatuses = new[] { "Đã hủy", "Đã huỷ" };
+        var returnStatuses = new[] { "Yêu cầu đổi trả", "Đang đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền", "Đã hoàn" };
+        var pendingStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Chờ xác nhận" };
+
         var successfulOrderIds = monthlyOrders
             .Where(x => successfulStatuses.Contains(x.TrangThaiDonHang ?? string.Empty))
             .Select(x => x.MaDonHang)
@@ -40,28 +63,34 @@ public class ReportController : StaffControllerBase
                 Revenue = productGroup.Sum(x => x.ThanhTien)
             }).Take(5).ToListAsync();
 
-        var favoriteProducts = await _db.YeuThiches.AsNoTracking()
-            .Where(x => x.NgayThem >= firstDayOfMonth && x.NgayThem < firstDayOfNextMonth)
-            .GroupBy(x => x.MaSanPhamNavigation.TenSanPham)
-            .OrderByDescending(group => group.Count())
-            .Take(5)
-            .Select(group => new ReportProductItem
+        var favoriteProducts = await (
+            from fav in _db.YeuThiches.AsNoTracking()
+            join sp in _db.SanPhams.AsNoTracking() on fav.MaSanPham equals sp.MaSanPham
+            where fav.NgayThem >= firstDayOfMonth && fav.NgayThem < firstDayOfNextMonth
+            group fav by sp.TenSanPham into g
+            orderby g.Count() descending
+            select new ReportProductItem
             {
-                Name = group.Key ?? "Chưa đặt tên",
-                Quantity = group.Count()
-            })
-            .ToListAsync();
+                Name = g.Key ?? "Chưa đặt tên",
+                Quantity = g.Count()
+            }).Take(5).ToListAsync();
 
         var totalOrders = monthlyOrders.Count;
         var successfulOrders = monthlyOrders.Count(x => successfulStatuses.Contains(x.TrangThaiDonHang ?? string.Empty));
+        var cancelledOrders = monthlyOrders.Count(x => cancelledStatuses.Contains(x.TrangThaiDonHang ?? string.Empty));
+        var returnedOrders = monthlyOrders.Count(x => returnStatuses.Contains(x.TrangThaiDonHang ?? string.Empty));
+        var pendingOrders = monthlyOrders.Count(x => string.IsNullOrWhiteSpace(x.TrangThaiDonHang) || pendingStatuses.Contains(x.TrangThaiDonHang));
+
         var revenue = monthlyOrders
             .Where(x => successfulStatuses.Contains(x.TrangThaiDonHang ?? string.Empty))
             .Sum(x => x.TongTien ?? 0);
+
         var orderStatuses = monthlyOrders
-            .GroupBy(x => string.IsNullOrWhiteSpace(x.TrangThaiDonHang) ? "Chưa xác định" : x.TrangThaiDonHang!)
+            .GroupBy(x => string.IsNullOrWhiteSpace(x.TrangThaiDonHang) ? "Chờ xử lý" : x.TrangThaiDonHang!)
             .OrderByDescending(group => group.Count())
             .Select(group => new ReportOrderStatusItem { Status = group.Key, Count = group.Count() })
             .ToList();
+
         var dailyRevenueRaw = monthlyOrders
             .Where(x => successfulStatuses.Contains(x.TrangThaiDonHang ?? string.Empty) && x.NgayDat.HasValue)
             .GroupBy(x => x.NgayDat!.Value.Day)
@@ -70,11 +99,12 @@ public class ReportController : StaffControllerBase
         var report = new ReportViewModel
         {
             Revenue = revenue,
-            AverageOrderValue = successfulOrders == 0 ? 0 : revenue / successfulOrders,
+            AverageOrderValue = successfulOrders == 0 ? 0 : Math.Round(revenue / successfulOrders, 0),
             TotalOrders = totalOrders,
             SuccessfulOrders = successfulOrders,
-            ReturnedOrders = monthlyOrders.Count(x => returnedStatuses.Contains(x.TrangThaiDonHang ?? string.Empty)),
-            PendingOrders = monthlyOrders.Count(x => x.TrangThaiDonHang is "Chờ xử lý" or "Đang xử lý"),
+            CancelledOrders = cancelledOrders,
+            ReturnedOrders = returnedOrders,
+            PendingOrders = pendingOrders,
             FavoriteCount = await _db.YeuThiches.AsNoTracking()
                 .CountAsync(x => x.NgayThem >= firstDayOfMonth && x.NgayThem < firstDayOfNextMonth),
             LowStockCount = await _db.BienTheSanPhams.AsNoTracking().CountAsync(x => x.SoLuong <= 10),
@@ -86,6 +116,7 @@ public class ReportController : StaffControllerBase
             BestSellingProducts = bestSellingProducts,
             FavoriteProducts = favoriteProducts
         };
+
         ViewBag.SelectedMonth = selectedMonth;
         ViewBag.SelectedYear = selectedYear;
         return View(report);
@@ -104,14 +135,20 @@ public class ReportController : StaffControllerBase
             $"Tong so don;{report.TotalOrders}",
             $"Don thanh cong;{report.SuccessfulOrders}",
             $"Ti le thanh cong;{report.SuccessRate.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}%",
-            $"Don hoan huy;{report.ReturnedOrders}",
+            $"Don huy;{report.CancelledOrders}",
+            $"Don doi tra;{report.ReturnedOrders}",
+            $"Don cho xu ly;{report.PendingOrders}",
             "",
             "Mat hang ban chay;So luong;Doanh thu"
         };
         rows.AddRange(report.BestSellingProducts.Select(x => $"{EscapeCsv(x.Name)};{x.Quantity};{x.Revenue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"));
         rows.Add("\nSan pham yeu thich;Luot yeu thich");
         rows.AddRange(report.FavoriteProducts.Select(x => $"{EscapeCsv(x.Name)};{x.Quantity}"));
-        return File(System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, rows))).ToArray(), "text/csv", $"bao-cao-{year ?? DateTime.Today.Year}-{month ?? DateTime.Today.Month:00}.csv");
+
+        var vnNow = GetVietnamNow();
+        var exportYear = year ?? vnNow.Year;
+        var exportMonth = month ?? vnNow.Month;
+        return File(System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, rows))).ToArray(), "text/csv", $"bao-cao-{exportYear}-{exportMonth:00}.csv");
     }
 
     private static string EscapeCsv(string value) => $"\"{value.Replace("\"", "\"\"")}\"";

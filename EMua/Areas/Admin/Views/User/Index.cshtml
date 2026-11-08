@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EMua.Models.Database.NguoiDung>
+@model IEnumerable<EMua.Models.Database.NguoiDung>
 @using EMua.Models.Database
 @{
     ViewData["Title"] = "Quản lý người dùng";
@@ -19,36 +19,10 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
-    <style>
-        /* Hiệu ứng tinh tế cho nút thêm mới */
-        .btn-add-user {
-            background: #315efb;
-            border: none;
-            transition: all 0.25s ease-in-out;
-        }
 
-            .btn-add-user:hover {
-                transform: translateY(-2px);
-                box-: 0 0.5rem 1rem rgba(13, 110, 253, 0.25) !important;
-                background: #315efb;
-            }
-    </style>
 }
 
-<div class="users-page container-fluid py-4 px-lg-4">
-
-    <!-- Header & Nút thêm tài khoản (Đã gộp chung 1 hàng chuẩn chỉnh, không bị trùng lặp) -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        
-
-        <!-- Nút Thêm tài khoản mới -->
-        <a asp-action="Create" class="btn btn-add-user text-white  px-4 py-2.5  d-flex align-items-center gap-2 fw-medium">
-            <span class="bg-white bg-opacity-25  d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                <i class="bi bi-plus-lg fs-xs text-white"></i>
-            </span>
-            Thêm tài khoản mới
-        </a>
-    </div>
+<div class="users-page">
 
     <!-- THỐNG KÊ NHANH -->
     <div class="row g-3 mb-4">
@@ -91,12 +65,19 @@
     </div>
 
     <!-- BỘ LỌC -->
-    <div class="filter-bar bg-white p-3   border-0 mb-4">
+    <div class="filter-bar bg-white p-3 border-0 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">Danh sách tài khoản</h5>
+                <span class="text-muted small">Tìm kiếm, lọc và quản lý tài khoản người dùng</span>
+            </div>
+
+        </div>
         <form method="get" asp-action="Index" class="row g-2 align-items-center" onsubmit="return false;">
             <div class="col-md-4">
                 <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 -start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0 -end-pill py-2" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
+                    <span class="input-group-text bg-light border-end-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0 py-2" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
                 </div>
             </div>
             <div class="col-md-3">
@@ -126,7 +107,14 @@
     <!-- KHU VỰC BẢNG DỮ LIỆU (Cập nhật AJAX) -->
     <div id="userTableContainer">
         <div class="card border-0   overflow-hidden mb-4">
-            <div class="table-responsive">
+            <div class="card-header bg-white p-3 d-flex justify-content-end">
+                <a asp-action="Create" class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2">
+                    <i class="bi bi-plus-lg"></i>
+                    Thêm tài khoản mới
+                </a>
+            </div>
+
+
                 <table class="table align-middle mb-0">
                     <thead class="table-light text-secondary small text-uppercase fw-semibold">
                         <tr>
@@ -263,11 +251,11 @@
             // Hiển thị Modal Dialog nếu có TempData["SuccessMessage"]
             @if (TempData["SuccessMessage"] != null)
             {
-                    <text>
-                    document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
-                    var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
-                    successModal.show();
-                    </text>
+                        <text>
+                        document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
+                        var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
+                        successModal.show();
+                        </text>
             }
 
             const searchInput = document.getElementById("searchString");

@@ -1,137 +1,150 @@
+@model EMua.Areas.Admin.Controllers.DashboardViewModel
 @{
     ViewData["Title"] = "Tổng quan";
-
-    var monthlyRevenue = (List<decimal>)ViewBag.MonthlyRevenue;
-    var maxMonthlyRevenue = monthlyRevenue.Any()
-        ? Math.Max(monthlyRevenue.Max(), 1)
-        : 1;
-
-    var categorySales = (System.Collections.IEnumerable)ViewBag.CategorySales;
-    var recentOrders = (System.Collections.IEnumerable)ViewBag.RecentOrders;
-
-    var monthNames = new[]
-    {
-        "T1", "T2", "T3", "T4", "T5", "T6",
-        "T7", "T8", "T9", "T10", "T11", "T12"
-    };
+    var monthlyRevenue = Model.MonthlyRevenue;
+    var maxMonthlyRevenue = monthlyRevenue.Any() ? Math.Max(monthlyRevenue.Max(), 1) : 1;
+    var categorySales = (System.Collections.IEnumerable)Model.CategorySales;
+    var recentOrders = (System.Collections.IEnumerable)Model.RecentOrders;
+    var lowStock = (System.Collections.IEnumerable)Model.LowStock;
+    var staffTotal = Model.StaffTotal;
+    var staffActive = Model.StaffActive;
+    var staffLocked = Model.StaffLocked;
+    var recentAccounts = (System.Collections.IEnumerable)Model.RecentAccounts;
+    var pendingOrders = Model.PendingOrders;
+    var monthNames = new[] { "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12" };
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/admin-dashboard.css" asp-append-version="true" />
 }
 
+<div class="dashboard-filter d-flex align-items-center gap-3 mb-3">
+    <form method="get" class="d-flex align-items-center gap-3">
+        <label class="form-label mb-0" for="filterMonth">Tháng</label>
+        <select class="form-select form-select-sm" id="filterMonth" name="month">
+            @foreach (var i in Enumerable.Range(1, 12)) {
+                <option value="@i" selected="@(i == (Model.SelectedMonth ?? DateTime.Now.Month))">Tháng @i</option>
+            }
+        </select>
+        <label class="form-label mb-0" for="filterYear">Năm</label>
+        <select class="form-select form-select-sm" id="filterYear" name="year">
+            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year; y++) {
+                <option value="@y" selected="@(y == (Model.SelectedYear ?? DateTime.Now.Year))">@y</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm">Lọc</button>
+    </form>
+</div>
+
+<div class="dashboard-header d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0" style="color: var(--admin-text);">Tổng quan</h2>
+</div>
+
 <div class="dashboard-stat-grid">
     <article class="dashboard-stat-card">
-        <div class="stat-card-icon revenue">
-            <i class="bi bi-graph-up-arrow"></i>
-        </div>
+        <div class="stat-card-icon revenue"><i class="bi bi-graph-up-arrow"></i></div>
         <span>Doanh thu tháng</span>
-        <strong>@(((decimal)ViewBag.RevenueThisMonth).ToString("N0")) đ</strong>
-        <small class="up">
-            +@ViewBag.RevenueGrowth% so với tháng trước
-        </small>
+        <strong>@Model.RevenueThisMonth.ToString("N0") đ</strong>
+        <small class="up">+@Model.RevenueGrowth% so với tháng trước</small>
     </article>
-
     <article class="dashboard-stat-card">
-        <div class="stat-card-icon orders">
-            <i class="bi bi-bag-check"></i>
-        </div>
+        <div class="stat-card-icon orders"><i class="bi bi-bag-check"></i></div>
         <span>Đơn hàng</span>
-        <strong>@ViewBag.OrderCountThisMonth</strong>
-        <small class="up">
-            +@ViewBag.OrderGrowth% so với tháng trước
-        </small>
+        <strong>@Model.OrderCountThisMonth</strong>
+        <small class="up">+@Model.OrderGrowth% so với tháng trước</small>
     </article>
-
     <article class="dashboard-stat-card">
-        <div class="stat-card-icon customers">
-            <i class="bi bi-people"></i>
-        </div>
+        <div class="stat-card-icon customers"><i class="bi bi-people"></i></div>
         <span>Khách hàng mới</span>
-        <strong>@ViewBag.NewCustomersThisMonth</strong>
-        <small class="up">
-            +@ViewBag.CustomerGrowth% so với tháng trước
-        </small>
+        <strong>@Model.NewCustomersThisMonth</strong>
+        <small class="up">+@Model.CustomerGrowth% so với tháng trước</small>
     </article>
-
     <article class="dashboard-stat-card">
-        <div class="stat-card-icon returns">
-            <i class="bi bi-arrow-repeat"></i>
-        </div>
-        <span>Tỉ lệ hoàn trả</span>
-        <strong class="no-data">@ViewBag.ReturnRate</strong>
-        <small>Thêm bảng đổi trả để thống kê.</small>
+        <div class="stat-card-icon stock"><i class="bi bi-exclamation-triangle"></i></div>
+        <span>Tồn kho thấp</span>
+        <strong>@(lowStock != null ? ((IEnumerable<dynamic>)lowStock).Count() : 0)</strong>
+        <small class="up">Sản phẩm ≤5</small>
+    </article>
+    <article class="dashboard-stat-card">
+        <div class="stat-card-icon pending"><i class="bi bi-clock"></i></div>
+        <span>Đơn đang xử lý</span>
+        <strong>@pendingOrders</strong>
+        <small class="up">Trong tháng đã chọn</small>
     </article>
 </div>
 
 <div class="dashboard-chart-grid">
-    <section class="admin-card">
-        <h2>Doanh thu theo tháng năm @DateTime.Now.Year</h2>
-
+    <section class="admin-card" style="flex: 2;">
+        <h2>Doanh thu theo tháng @DateTime.Now.Year</h2>
         <div class="actual-revenue-chart">
-            @for (var i = 0; i < monthlyRevenue.Count; i++)
-            {
-                var height = monthlyRevenue[i] <= 0
-                ? 3
-                : Math.Max(
-                8,
-                (int)(monthlyRevenue[i] / maxMonthlyRevenue * 100));
-
+            @for (int i = 0; i < monthlyRevenue.Count; i++) {
+                var height = monthlyRevenue[i] <= 0 ? 3 : Math.Max(8, (int)(monthlyRevenue[i] / maxMonthlyRevenue * 100));
                 <div class="revenue-column">
-                    <div class="revenue-value">
-                        @monthlyRevenue[i].ToString("N0")
-                    </div>
-
-                    <div class="revenue-column-area">
-                        <span style="height: @height%"></span>
-                    </div>
-
+                    <div class="revenue-value">@monthlyRevenue[i].ToString("N0")</div>
+                    <div class="revenue-column-area"><span style="height: @height%"></span></div>
                     <small>@monthNames[i]</small>
                 </div>
             }
         </div>
     </section>
-
-    <section class="admin-card">
+    <section class="admin-card" style="flex: 1;">
         <h2>Bán hàng theo danh mục</h2>
-
-        @if ((bool)ViewBag.HasCategorySales)
-        {
+        @if (Model.HasCategorySales) {
             <div class="actual-category-chart">
-                @foreach (dynamic category in categorySales)
-                {
+                @foreach (dynamic category in categorySales) {
                     decimal total = category.Total;
-                    decimal maxTotal = ViewBag.MaxCategorySales;
-                    var width = Math.Max(
-                    4,
-                    (int)(total / maxTotal * 100));
-
+                    decimal maxTotal = Model.MaxCategorySales;
+                    var width = Math.Max(4, (int)(total / maxTotal * 100));
                     <div class="actual-category-row">
                         <span title="@category.Name">@category.Name</span>
-
-                        <div>
-                            <i style="width: @width%"></i>
-                        </div>
-
+                        <div><i style="width: @width%"></i></div>
                         <strong>@total.ToString("N0") đ</strong>
                     </div>
                 }
             </div>
-        }
-        else
-        {
-            <p class="dashboard-empty">
-                Chưa có chi tiết đơn hàng để thống kê danh mục.
-            </p>
+        } else {
+            <p class="dashboard-empty">Chưa có chi tiết đơn hàng để thống kê danh mục.</p>
         }
     </section>
 </div>
 
-<section class="admin-card recent-orders-card">
+<h3 class="mt-4">Thống kê nhân viên</h3>
+<div class="admin-card staff-summary">
+    <ul class="list-unstyled">
+        <li>Tổng nhân viên: <strong>@staffTotal</strong></li>
+        <li>Đang hoạt động: <strong>@staffActive</strong></li>
+        <li>Khoá: <strong>@staffLocked</strong></li>
+    </ul>
+</div>
+
+<h3 class="mt-4">Tài khoản mới (không phải khách)</h3>
+<div class="admin-card recent-accounts-card">
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Ngày tạo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (dynamic acc in recentAccounts) {
+                    <tr>
+                        <td>@acc.TenNguoiDung</td>
+                        <td>@acc.Email</td>
+                        <td>@acc.Created</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<section class="admin-card recent-orders-card mt-4">
     <div class="card-title-row">
         <h2>Đơn hàng gần đây</h2>
         <span>Dữ liệu trực tiếp từ hệ thống</span>
     </div>
-
     <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
@@ -143,14 +156,10 @@
                     <th>Ngày đặt</th>
                 </tr>
             </thead>
-
             <tbody>
-                @foreach (dynamic order in recentOrders)
-                {
-                    string status = order.Status;
-
-                    string statusClass = status switch
-                    {
+                @foreach (dynamic order in recentOrders) {
+                    var status = order.Status;
+                    var statusClass = status switch {
                         "Đã giao" => "done",
                         "Đang giao" => "shipping",
                         "Chờ xử lý" => "pending",
@@ -159,16 +168,11 @@
                         "Đã huỷ" => "cancelled",
                         _ => "shipping"
                     };
-
                     <tr>
                         <td><strong>@order.OrderCode</strong></td>
                         <td>@order.CustomerName</td>
                         <td class="table-price">@order.TotalText</td>
-                        <td>
-                            <span class="status @statusClass">
-                                @status
-                            </span>
-                        </td>
+                        <td><span class="status @statusClass">@status</span></td>
                         <td>@order.OrderDateText</td>
                     </tr>
                 }
@@ -176,3 +180,14 @@
         </table>
     </div>
 </section>
+
+<h3 class="mt-4">Điều hướng nhanh</h3>
+<div class="admin-card quick-links">
+    <ul class="list-inline">
+        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-sm btn-outline-primary">Dashboard</a></li>
+        <li class="list-inline-item"><a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-sm btn-outline-primary">Người dùng</a></li>
+        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Brand" asp-action="Index" class="btn btn-sm btn-outline-primary">Thương hiệu</a></li>
+        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Category" asp-action="Index" class="btn btn-sm btn-outline-primary">Danh mục</a></li>
+        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Report" asp-action="Index" class="btn btn-sm btn-outline-primary">Báo cáo</a></li>
+    </ul>
+</div>

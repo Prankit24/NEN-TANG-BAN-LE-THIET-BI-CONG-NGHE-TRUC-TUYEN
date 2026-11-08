@@ -39,6 +39,9 @@ public partial class EMuaDbContext : DbContext
     public virtual DbSet<TinNhanAi> TinNhanAis { get; set; }
     public virtual DbSet<TuCam> TuCams { get; set; }
     public virtual DbSet<YeuThich> YeuThiches { get; set; }
+    public virtual DbSet<PhieuNhapHang> PhieuNhapHangs { get; set; }
+    public virtual DbSet<ChiTietPhieuNhapHang> ChiTietPhieuNhapHangs { get; set; }
+    public virtual DbSet<ChiTietHoaDon> ChiTietHoaDons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -182,6 +185,21 @@ public partial class EMuaDbContext : DbContext
                 .WithOne(p => p.HoaDon)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_HoaDon_DonHang");
+
+            entity.HasOne(d => d.MaNguoiLapNavigation)
+                .WithMany(p => p.HoaDons)
+                .HasForeignKey(d => d.MaNguoiLap)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ChiTietHoaDon>(entity =>
+        {
+            entity.HasKey(e => e.MaChiTietHoaDon);
+
+            entity.HasOne(d => d.MaHoaDonNavigation)
+                .WithMany(p => p.ChiTietHoaDons)
+                .HasForeignKey(d => d.MaHoaDon)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<KhuyenMai>(entity =>
@@ -364,6 +382,39 @@ public partial class EMuaDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<PhieuNhapHang>(entity =>
+        {
+            entity.ToTable("PhieuNhapHang", "public");
+            entity.HasKey(e => e.MaPhieuNhap);
+            entity.HasIndex(e => e.MaChungTu).IsUnique();
+            entity.HasOne(d => d.MaNguoiTaoNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaNguoiTao)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.MaNguoiDuyetNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaNguoiDuyet)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.MaNguoiNhapKhoNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaNguoiNhapKho)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ChiTietPhieuNhapHang>(entity =>
+        {
+            entity.ToTable("ChiTietPhieuNhapHang", "public");
+            entity.HasKey(e => e.MaChiTietPhieuNhap);
+            entity.HasOne(d => d.MaPhieuNhapNavigation)
+                .WithMany(p => p.ChiTietPhieuNhapHangs)
+                .HasForeignKey(d => d.MaPhieuNhap)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.MaBienTheNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaBienThe)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         OnModelCreatingPartial(modelBuilder);
 
         // PostgreSQL: tên bảng/cột trong database đã chuyển thành chữ thường.
@@ -377,7 +428,9 @@ public partial class EMuaDbContext : DbContext
                 continue;
 
             // Giữ nguyên tên bảng/cột có phân biệt chữ hoa đã tạo bằng SQL.
-            if (entityType.ClrType == typeof(EmailVerification))
+            if (entityType.ClrType == typeof(EmailVerification) ||
+                entityType.ClrType == typeof(PhieuNhapHang) ||
+                entityType.ClrType == typeof(ChiTietPhieuNhapHang))
                 continue;
 
             // Lấy mapping cột từ tên bảng gốc trước khi thay đổi metadata.

@@ -842,6 +842,8 @@ public class AuthController : Controller
             new AuthenticationProperties
             {
                 IsPersistent = rememberMe,
+                // Khi rememberMe = true: Cookie tồn tại tối đa 7 ngày, kèm trượt 30 phút không hoạt động (ExpireTimeSpan = 30m trong Program.cs)
+                // Khi rememberMe = false: Session cookie (ExpiresUtc = null), đóng trình duyệt sẽ mất
                 ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : null
             });
     }

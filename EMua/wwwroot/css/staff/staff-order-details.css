@@ -1,0 +1,450 @@
+/* ================================================================
+   EMUA STAFF — Order Details Redesign
+   Modern, balanced, full-width delivery card, square corners, responsive
+   ================================================================ */
+
+.staff-toolbar {
+    margin-bottom: 20px;
+}
+
+.staff-toolbar .btn,
+.staff-toolbar .badge {
+    border-radius: 0 !important;
+}
+
+/* ── TRACKER CARD ────────────────────────────────────────────────── */
+.staff-tracker-card {
+    padding: 24px;
+    margin-bottom: 20px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0 !important;
+}
+
+.staff-tracker-card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.staff-tracker {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 28px 10px 16px 10px;
+}
+
+.staff-tracker-line {
+    position: absolute;
+    top: 22px;
+    left: 20px;
+    right: 20px;
+    height: 4px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.staff-tracker-progress {
+    position: absolute;
+    top: 22px;
+    left: 20px;
+    height: 4px;
+    background: #2563eb;
+    z-index: 1;
+    transition: width 0.4s ease;
+}
+
+.staff-tracker-step {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    text-align: center;
+}
+
+.staff-tracker-step .icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 0 !important;
+    background: #ffffff;
+    border: 2px solid #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    color: #9ca3af;
+    transition: all 0.25s ease;
+}
+
+.staff-tracker-step .step-label {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1.3;
+    max-width: 140px;
+}
+
+/* Đã hoàn thành (Done) */
+.staff-tracker-step.done .icon-circle {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+.staff-tracker-step.done .step-label {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Đang diễn ra (Active) */
+.staff-tracker-step.active .icon-circle {
+    background: #ffffff;
+    border-color: #2563eb;
+    color: #2563eb;
+    border-width: 2.5px;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.staff-tracker-step.active .step-label {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+/* Hoàn thành thành công (Completed Success - Xanh lá) */
+.staff-tracker-step.completed-success .icon-circle {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+    font-size: 1.3rem;
+}
+
+.staff-tracker-step.completed-success .step-label {
+    color: #16a34a !important;
+    font-weight: 700 !important;
+}
+
+.staff-truck-runner {
+    position: absolute;
+    top: -2px;
+    transform: translateX(-50%);
+    font-size: 1.25rem;
+    color: #2563eb;
+    z-index: 3;
+    transition: left 0.4s ease;
+}
+
+.staff-eta-banner {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0 !important;
+    padding: 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #166534;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 14px;
+}
+
+/* ── THÔNG TIN ĐƠN HÀNG VÀ BẢNG SẢN PHẨM (2 CỘT CÂN ĐỐI) ───────── */
+.staff-order-detail {
+    display: grid;
+    grid-template-columns: 4.5fr 5.5fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.staff-order-detail .staff-card {
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    border: 1px solid #e5e7eb;
+    padding: 22px;
+    background: #ffffff;
+}
+
+.staff-order-detail h2,
+.staff-delivery-card-full h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.staff-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 18px;
+}
+
+.staff-info-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.staff-info-grid span {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.staff-info-grid strong {
+    font-size: 0.92rem;
+    color: #1f2937;
+    word-break: break-word;
+}
+
+.staff-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 0 !important;
+}
+
+/* ── BẢNG SẢN PHẨM ──────────────────────────────────────────────── */
+.staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.staff-table th {
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.staff-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #1f2937;
+    vertical-align: middle;
+}
+
+.staff-order-total {
+    margin-top: 16px;
+    text-align: right;
+    font-size: 1rem;
+    color: #374151;
+}
+
+.staff-order-total strong {
+    color: #dc2626;
+    font-size: 1.15rem;
+    margin-left: 6px;
+}
+
+/* ── CẬP NHẬT GIAO NHẬN (CARD NGANG FULL-WIDTH) ──────────────────── */
+.staff-delivery-card-full {
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0 !important;
+    margin-bottom: 24px;
+}
+
+.staff-delivery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.staff-delivery-grid .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+.staff-delivery-grid input[type="text"],
+.staff-delivery-grid input[type="datetime-local"],
+.staff-delivery-grid input[type="file"],
+.staff-delivery-grid textarea,
+.staff-delivery-grid select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 0 !important;
+    font-size: 0.88rem;
+    background-color: #ffffff;
+    color: #111827;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.staff-delivery-grid input:focus,
+.staff-delivery-grid textarea:focus,
+.staff-delivery-grid select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+.staff-delivery-grid textarea {
+    resize: vertical;
+    min-height: 42px;
+}
+
+.staff-delivery-grid .proof-box {
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    border-radius: 0 !important;
+    padding: 10px;
+    display: none;
+}
+
+.staff-delivery-grid .proof-box.show {
+    display: block;
+}
+
+.staff-proof-photo {
+    max-width: 160px;
+    max-height: 120px;
+    object-fit: cover;
+    border-radius: 0 !important;
+    border: 1px solid #d1d5db;
+    margin-top: 6px;
+    display: block;
+}
+
+.staff-delivery-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.staff-delivery-actions button {
+    border-radius: 0 !important;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── ALERT & CHAT ĐỔI TRẢ ────────────────────────────────────────── */
+.return-request-alert {
+    background-color: #fffaf0;
+    border: 1px solid #fed7aa;
+    border-radius: 0 !important;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+
+.staff-return-chat {
+    margin-top: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 0 !important;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.staff-chat-waiting {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 0 !important;
+}
+
+.staff-chat-wait-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0 !important;
+    display: grid;
+    place-items: center;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 1.1rem;
+    flex: 0 0 40px;
+}
+
+.staff-chat-header {
+    padding: 10px 14px;
+    color: #ffffff;
+    background: #2563eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-radius: 0 !important;
+}
+
+.staff-chat-messages {
+    min-height: 200px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+}
+
+.staff-chat-composer {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+.staff-chat-composer input,
+.staff-chat-composer button {
+    border-radius: 0 !important;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .staff-delivery-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 992px) {
+    .staff-order-detail {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .staff-delivery-grid {
+        grid-template-columns: 1fr;
+    }
+    .staff-delivery-actions {
+        justify-content: stretch;
+    }
+    .staff-delivery-actions button {
+        width: 100%;
+    }
+    .staff-tracker {
+        margin: 20px 0 10px 0;
+    }
+    .staff-tracker-step .icon-circle {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+    .staff-tracker-step .step-label {
+        font-size: 0.72rem;
+    }
+    .staff-info-grid {
+        grid-template-columns: 1fr;
+    }
+}

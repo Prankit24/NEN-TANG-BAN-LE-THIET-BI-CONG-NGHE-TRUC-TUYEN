@@ -2,6 +2,16 @@
 @{
     ViewData["Title"] = "Chỉnh sửa sản phẩm";
     var productId = ViewContext.RouteData.Values["id"];
+
+    string FixImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
+        path = path.Trim().Replace("\\", "/");
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//")) return path;
+        return path.StartsWith("/") ? path : "/" + path;
+    }
 }
 
 <section class="staff-card staff-form-card">
@@ -43,13 +53,9 @@
             <input asp-for="BaoHanh" class="form-control" placeholder="VD: 12 tháng" />
         </div>
 
-        <!-- BỘ SƯU TẬP ẢNH HIỆN CÓ - CLICK ĐỂ LƯU & ĐỔI ẢNH CHÍNH NGAY LẬP TỨC -->
+        <!-- BỘ SƯU TẬP ẢNH HIỆN CÓ - CLICK ĐỔI ẢNH CHÍNH & NÚT XÓA ẢNH -->
         <div class="col-12">
-            <label class="form-label fw-bold">Bộ sưu tập ảnh hiện tại <small class="text-primary fw-normal">(Click vào ảnh để đổi làm Ảnh chính ngay lập tức)</small></label>
-
-            <div id="saveToast" class="alert alert-success d-none py-2 px-3 mb-2 small" role="alert">
-                <i class="bi bi-check-circle-fill me-1"></i> <span id="toastMsg">Đã lưu ảnh chính thành công!</span>
-            </div>
+            <label class="form-label fw-bold">Bộ sưu tập ảnh hiện tại <small class="text-primary fw-normal">(Click vào ảnh để đặt làm Ảnh chính)</small></label>
 
             @if (Model.CurrentImageUrls != null && Model.CurrentImageUrls.Any())
             {
@@ -57,17 +63,29 @@
                     @foreach (var imgUrl in Model.CurrentImageUrls)
                     {
                         var isMain = (imgUrl == Model.CurrentImageUrl) || (imgUrl == Model.SelectedMainImageUrl);
+                        var fixedUrl = FixImage(imgUrl);
                         <div class="gallery-item position-relative text-center border rounded p-1 bg-white @(isMain ? "border-primary border-2 shadow-sm" : "")"
-                             style="width: 110px; cursor: pointer; transition: all 0.2s;"
-                             onclick="quickSelectMainImage('@imgUrl', this, '@productId')">
+                             data-img-url="@imgUrl"
+                             style="width: 120px; transition: all 0.2s;">
 
-                            <img src="@imgUrl" class="img-fluid rounded mb-1" style="height: 80px; object-fit: contain;" />
+                            <!-- Nút xóa ảnh -->
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 p-0 rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 22px; height: 22px; z-index: 10;"
+                                    title="Xóa hình ảnh này"
+                                    onclick="event.stopPropagation(); deleteGalleryImage('@imgUrl', '@productId', this)">
+                                <i class="bi bi-x" style="font-size: 14px; line-height: 1;"></i>
+                            </button>
 
-                            <!-- Badge Ảnh chính -->
-                            <span class="main-badge badge bg-primary position-absolute top-0 start-0 m-1 @(isMain ? "" : "d-none")" style="font-size: 9px;">Ảnh chính</span>
+                            <div style="cursor: pointer;" onclick="quickSelectMainImage('@imgUrl', this.parentElement, '@productId')">
+                                <img src="@fixedUrl" class="img-fluid rounded mb-1" style="height: 80px; width: 100%; object-fit: contain;"
+                                     onerror="this.onerror=null; this.src='/images/no-image.png';" />
 
-                            <div class="small text-muted status-text" style="font-size: 11px;">
-                                @(isMain ? "Đang chọn" : "Bấm để chọn")
+                                <!-- Badge Ảnh chính -->
+                                <span class="main-badge badge bg-primary position-absolute top-0 start-0 m-1 @(isMain ? "" : "d-none")" style="font-size: 9px;">Ảnh chính</span>
+
+                                <div class="small text-muted status-text" style="font-size: 11px;">
+                                    @(isMain ? "Ảnh chính" : "Bấm để chọn")
+                                </div>
                             </div>
                         </div>
                     }
@@ -75,8 +93,10 @@
             }
             else if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
             {
+                var singleFixedUrl = FixImage(Model.CurrentImageUrl);
                 <div class="p-2 border rounded bg-light d-inline-block">
-                    <img src="@Model.CurrentImageUrl" class="img-fluid rounded" style="height: 80px; object-fit: contain;" />
+                    <img src="@singleFixedUrl" class="img-fluid rounded" style="height: 80px; object-fit: contain;"
+                         onerror="this.onerror=null; this.src='/images/no-image.png';" />
                 </div>
             }
             else
@@ -118,17 +138,24 @@
                             <th>Màu sắc</th>
                             <th>Phiên bản</th>
                             <th>Giá bán</th>
-                            <th>Số lượng</th>
+                            <th style="min-width: 170px;">Tồn kho &amp; Nhập hàng</th>
                             <th>Trạng thái</th>
                             <th style="width: 50px;"></th>
                         </tr>
                     </thead>
                     <tbody id="variantTableBody">
+                        @{
+                            var pendingDict = (ViewBag.PendingImports as Dictionary<int, string>) ?? new Dictionary<int, string>();
+                        }
                         @for (var i = 0; i < Model.BienThe.Count; i++)
                         {
+                            var bId = Model.BienThe[i].MaBienThe;
+                            var qty = Model.BienThe[i].SoLuong;
+                            var hasPending = bId > 0 && pendingDict.ContainsKey(bId);
+
                             <tr class="variant-row">
                                 <td>
-                                    <input asp-for="BienThe[i].MauSac" class="form-control" placeholder="VD: Chery" />
+                                    <input asp-for="BienThe[i].MauSac" class="form-control" placeholder="VD: Titan Sa Mạc" />
                                     <input asp-for="BienThe[i].MaBienThe" type="hidden" />
                                 </td>
                                 <td>
@@ -138,7 +165,50 @@
                                     <input asp-for="BienThe[i].Gia" type="number" step="1" min="0" value="@Convert.ToInt64(Model.BienThe[i].Gia)" class="form-control" />
                                 </td>
                                 <td>
-                                    <input asp-for="BienThe[i].SoLuong" type="number" min="0" class="form-control" />
+                                    @if (bId > 0)
+                                    {
+                                        <div class="d-flex flex-column gap-1">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input asp-for="BienThe[i].SoLuong" type="number" readonly class="form-control form-control-sm bg-light fw-bold" style="width: 80px;" title="Tồn kho thực tế (cần lập phiếu nhập hàng để tăng tồn)" />
+                                                @if (qty == 0)
+                                                {
+                                                    <span class="badge bg-danger">Hết hàng</span>
+                                                }
+                                                else if (qty <= 10)
+                                                {
+                                                    <span class="badge bg-warning text-dark">Sắp hết (@qty)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Còn hàng (@qty)</span>
+                                                }
+                                            </div>
+
+                                            @if (hasPending)
+                                            {
+                                                <div class="small text-primary fw-semibold" style="font-size: 11px;">
+                                                    <i class="bi bi-clock-history"></i> Đang chờ duyệt: @pendingDict[bId]
+                                                </div>
+                                            }
+
+                                            <div>
+                                                <a asp-area="Staff" asp-controller="ImportOrder" asp-action="Create" asp-route-productId="@productId" asp-route-variantId="@bId"
+                                                   class="btn btn-xs @(qty == 0 ? "btn-danger fw-bold" : (qty <= 10 ? "btn-warning text-dark fw-semibold" : "btn-outline-primary")) mt-1 py-1 px-2 d-inline-flex align-items-center gap-1"
+                                                   style="font-size: 11px;"
+                                                   title="Lập phiếu đề nghị nhập hàng cho biến thể này">
+                                                    <i class="bi bi-box-arrow-in-down"></i>
+                                                    <span>Đề nghị nhập hàng</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input asp-for="BienThe[i].SoLuong" type="number" min="0" class="form-control" placeholder="Tồn khởi tạo" />
+                                            <small class="text-muted">(Mới)</small>
+                                        </div>
+                                    }
                                 </td>
                                 <td>
                                     <select asp-for="BienThe[i].TrangThai" class="form-select">
@@ -171,7 +241,6 @@
     <script>
         // Xử lý tự động lưu & đổi ảnh chính ngay lập tức qua AJAX
         function quickSelectMainImage(imgUrl, element, productId) {
-            // Update UI ngay trên màn hình
             document.getElementById('selectedMainImageUrl').value = imgUrl;
 
             document.querySelectorAll('#imageGallery .gallery-item').forEach(item => {
@@ -188,7 +257,6 @@
             const selectedText = element.querySelector('.status-text');
             if (selectedText) selectedText.innerText = 'Ảnh chính';
 
-            // Gửi request AJAX lưu vào Database tức thì
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const formData = new FormData();
             formData.append('productId', productId);
@@ -203,21 +271,69 @@
             })
             .then(response => response.json())
             .then(data => {
-                const toast = document.getElementById('saveToast');
-                const toastMsg = document.getElementById('toastMsg');
                 if (data.success) {
-                    toastMsg.innerText = data.message;
-                    toast.classList.remove('d-none', 'alert-danger');
-                    toast.classList.add('alert-success');
+                    StaffDialog.success('Đã cập nhật', data.message || 'Đã đặt làm ảnh chính.');
                 } else {
-                    toastMsg.innerText = data.message || 'Lưu thất bại';
-                    toast.classList.remove('d-none', 'alert-success');
-                    toast.classList.add('alert-danger');
+                    StaffDialog.error('Không thể đặt ảnh chính', data.message || 'Thao tác không thành công.');
                 }
-                setTimeout(() => { toast.classList.add('d-none'); }, 3000);
             })
             .catch(error => {
-                console.error('Error:', error);
+                StaffDialog.error('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+            });
+        }
+
+        // Xử lý xóa hình ảnh sản phẩm với Confirmation Dialog
+        async function deleteGalleryImage(imgUrl, productId, btn) {
+            const confirmed = await StaffDialog.confirm({
+                title: 'Xóa hình ảnh sản phẩm?',
+                message: 'Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập? Thao tác này không thể hoàn tác.',
+                confirmText: 'Xóa ảnh',
+                cancelText: 'Hủy',
+                isDanger: true
+            });
+
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('imageUrl', imgUrl);
+
+            fetch('/Staff/Product/DeleteImage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const galleryItem = btn.closest('.gallery-item');
+                    if (galleryItem) {
+                        galleryItem.remove();
+                    }
+                    if (data.newMainImageUrl) {
+                        document.getElementById('selectedMainImageUrl').value = data.newMainImageUrl;
+                        const newMainItem = document.querySelector(`.gallery-item[data-img-url="${data.newMainImageUrl}"]`);
+                        if (newMainItem) {
+                            newMainItem.classList.add('border-primary', 'border-2', 'shadow-sm');
+                            const b = newMainItem.querySelector('.main-badge');
+                            if (b) b.classList.remove('d-none');
+                            const t = newMainItem.querySelector('.status-text');
+                            if (t) t.innerText = 'Ảnh chính';
+                        }
+                    }
+                    StaffDialog.success('Xóa thành công', data.message || 'Đã xóa hình ảnh khỏi sản phẩm.');
+                } else {
+                    btn.disabled = false;
+                    StaffDialog.error('Không thể xóa ảnh', data.message || 'Không thể xóa hình ảnh lúc này.');
+                }
+            })
+            .catch(error => {
+                btn.disabled = false;
+                StaffDialog.error('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra và thử lại.');
             });
         }
 
@@ -256,14 +372,24 @@
             tbody.appendChild(row);
         }
 
-        function removeVariantRow(button) {
+        async function removeVariantRow(button) {
             const tbody = document.getElementById('variantTableBody');
             const rows = tbody.querySelectorAll('.variant-row');
 
             if (rows.length <= 1) {
-                alert('Sản phẩm phải có ít nhất 1 biến thể.');
+                StaffDialog.warning('Không thể xóa', 'Sản phẩm phải duy trì ít nhất 1 biến thể.');
                 return;
             }
+
+            const confirmed = await StaffDialog.confirm({
+                title: 'Xóa biến thể này?',
+                message: 'Bạn có chắc chắn muốn bỏ biến thể này khỏi danh sách?',
+                confirmText: 'Xóa',
+                cancelText: 'Giữ lại',
+                isDanger: true
+            });
+
+            if (!confirmed) return;
 
             button.closest('tr').remove();
             reIndexVariantRows();

@@ -1,3 +1,6 @@
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject EMua.Data.EMuaDbContext DbContext
 @{
     var displayName = User.Identity?.Name ?? "Tài khoản";
 
@@ -6,6 +9,20 @@
         : displayName.Trim()[..1].ToUpperInvariant();
 
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    string? avatarUrl = null;
+    if (isAuthenticated)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(userIdClaim, out var custUserId))
+        {
+            var custUser = DbContext.NguoiDungs.AsNoTracking().FirstOrDefault(u => u.MaNguoiDung == custUserId);
+            if (custUser != null && !string.IsNullOrWhiteSpace(custUser.AnhDaiDien))
+            {
+                avatarUrl = custUser.AnhDaiDien;
+            }
+        }
+    }
 
     var isAdmin = User.IsInRole("Admin")
         || User.IsInRole("Quản trị viên");
@@ -246,7 +263,17 @@
                                 aria-expanded="false">
                             @if (isAuthenticated)
                             {
-                                <span class="header-avatar-circle" aria-hidden="true">@avatarLetter</span>
+                                <span class="header-avatar-circle" aria-hidden="true">
+                                    @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                                    {
+                                        <img src="@avatarUrl" alt="@displayName" class="header-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                                        <span class="header-avatar-fallback" style="display: none;">@avatarLetter</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="header-avatar-fallback">@avatarLetter</span>
+                                    }
+                                </span>
                             }
                             else
                             {
@@ -265,7 +292,17 @@
                             @if (isAuthenticated)
                             {
                                 <li class="dropdown-user-card">
-                                    <span class="dropdown-user-avatar">@avatarLetter</span>
+                                    <span class="dropdown-user-avatar">
+                                        @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                                        {
+                                            <img src="@avatarUrl" alt="@displayName" class="header-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                                            <span class="header-avatar-fallback" style="display: none;">@avatarLetter</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="header-avatar-fallback">@avatarLetter</span>
+                                        }
+                                    </span>
                                     <div class="dropdown-user-details">
                                         <strong>@displayName</strong>
                                         <small>Thành viên EMUA</small>
@@ -451,7 +488,17 @@
                 @if (isAuthenticated)
                 {
                     <div class="mobile-user-header">
-                        <span class="dropdown-user-avatar">@avatarLetter</span>
+                        <span class="dropdown-user-avatar">
+                            @if (!string.IsNullOrWhiteSpace(avatarUrl))
+                            {
+                                <img src="@avatarUrl" alt="@displayName" class="header-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                                <span class="header-avatar-fallback" style="display: none;">@avatarLetter</span>
+                            }
+                            else
+                            {
+                                <span class="header-avatar-fallback">@avatarLetter</span>
+                            }
+                        </span>
                         <div>
                             <strong>@displayName</strong>
                             <small class="d-block text-muted">Thành viên EMUA</small>

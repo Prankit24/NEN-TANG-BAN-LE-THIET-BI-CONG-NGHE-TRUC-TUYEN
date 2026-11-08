@@ -513,3 +513,9 @@ button:active,
     .service-bar { grid-template-columns: repeat(2, 1fr); }
     .footer-content { grid-template-columns: repeat(2, 1fr); }
 }
+
+
+/* === EXTRACTED FROM _Layout.cshtml === */
+.emua-floating-cart[hidden] {
+            display: none !important;
+        }

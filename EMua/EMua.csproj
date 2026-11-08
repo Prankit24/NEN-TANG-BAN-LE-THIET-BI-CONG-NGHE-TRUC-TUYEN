@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Staff\Models\" />
     <Folder Include="MLModels\" />
     <Folder Include="Views\Shared\Components\CartSummary\" />
     <Folder Include="wwwroot\images\banner\" />

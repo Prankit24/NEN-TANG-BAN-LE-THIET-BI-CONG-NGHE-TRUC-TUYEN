@@ -87,32 +87,29 @@ public class OrderController : StaffControllerBase
         return order == null ? NotFound() : View(order);
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpGet]
     public async Task<IActionResult> CreateInvoice(int id)
     {
         var invoice = await _db.HoaDons.FirstOrDefaultAsync(x => x.MaDonHang == id);
-        if (invoice == null)
+        if (invoice != null)
         {
-            var order = await _db.DonHangs.FindAsync(id);
-            if (order == null) return NotFound();
-            invoice = new EMua.Models.Database.HoaDon { MaDonHang = id, NgayLapHoaDon = DateTime.Now, TongTien = order.TongTien, TrangThaiHoaDon = "Đã lập" };
-            _db.HoaDons.Add(invoice);
-            await _db.SaveChangesAsync();
+            return RedirectToAction("Details", "Invoice", new { id = invoice.MaHoaDon });
         }
-        return RedirectToAction(nameof(PrintInvoice), new { id = invoice.MaHoaDon });
+        return RedirectToAction("Create", "Invoice", new { orderId = id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CreateInvoicePost(int id)
+    {
+        return RedirectToAction("Create", "Invoice", new { orderId = id });
     }
 
     [HttpGet]
-    public async Task<IActionResult> PrintInvoice(int id)
+    public IActionResult PrintInvoice(int id)
     {
-        var invoice = await _db.HoaDons.AsNoTracking()
-            .Include(x => x.MaDonHangNavigation).ThenInclude(x => x.ChiTietDonHangs)
-                .ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
-            .FirstOrDefaultAsync(x => x.MaHoaDon == id);
-        return invoice == null ? NotFound() : View(invoice);
+        return RedirectToAction("Print", "Invoice", new { id });
     }
-
     // =========================================================
     // QUẢN LÝ GIAO NHẬN
     // =========================================================

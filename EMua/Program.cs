@@ -436,7 +436,7 @@ builder.Services
             options.AccessDeniedPath = "/Auth/Login";
 
             options.ExpireTimeSpan =
-                TimeSpan.FromDays(7);
+                TimeSpan.FromMinutes(30);
 
             options.SlidingExpiration = true;
 

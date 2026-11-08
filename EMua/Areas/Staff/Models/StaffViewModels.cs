@@ -14,6 +14,12 @@ public class StaffDashboardViewModel
     public int SoldUnits { get; set; }
     public int NewCustomers { get; set; }
     public int LowStockCount { get; set; }
+    
+    // Nhiệm vụ cần xử lý ngay
+    public int PendingOrderCount { get; set; }
+    public int ReturnRequestCount { get; set; }
+    public int ProcessingOrderCount { get; set; }
+
     public List<decimal> RevenueByMonth { get; set; } = [];
     public List<StockAlertItem> LowStockItems { get; set; } = [];
     public List<DashboardOrderItem> RecentOrders { get; set; } = [];
@@ -43,6 +49,7 @@ public class ReportViewModel
     public decimal AverageOrderValue { get; set; }
     public int TotalOrders { get; set; }
     public int SuccessfulOrders { get; set; }
+    public int CancelledOrders { get; set; }
     public int ReturnedOrders { get; set; }
     public int PendingOrders { get; set; }
     public int FavoriteCount { get; set; }
@@ -58,6 +65,7 @@ public class ReportDailyRevenueItem
 {
     public int Day { get; set; }
     public decimal Revenue { get; set; }
+    public decimal NetProfit { get; set; }
 }
 
 public class ReportOrderStatusItem
@@ -196,13 +204,12 @@ public class ShippingHistoryViewModel
 public class OrderTrackingViewModel
 {
     public int OrderId { get; set; }
+    public string CurrentStatus { get; set; } = string.Empty;
+    public DateTime? EstimatedDeliveryDate { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
-    public string CurrentStatus { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
-    public DateTime OrderDate { get; set; }
-    public DateTime? EstimatedDeliveryDate { get; set; }
     public string? DeliveryProofImageUrl { get; set; }
-    public List<ShippingHistoryViewModel> TrackingLogs { get; set; } = new();
+    public List<ShippingHistoryViewModel> TrackingLogs { get; set; } = [];
 }

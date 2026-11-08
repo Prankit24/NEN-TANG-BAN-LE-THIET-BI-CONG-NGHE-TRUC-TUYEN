@@ -1,0 +1,53 @@
+@{
+    var successMsg = TempData["Success"] as string 
+        ?? TempData["SuccessMessage"] as string;
+    var errorMsg = TempData["Error"] as string 
+        ?? TempData["ErrorMessage"] as string;
+    var warningMsg = TempData["Warning"] as string 
+        ?? TempData["WarningMessage"] as string;
+}
+
+<!-- Hidden element carrying TempData into client script -->
+<div id="staffTempDataPayload"
+     data-success="@successMsg"
+     data-error="@errorMsg"
+     data-warning="@warningMsg"
+     style="display:none;"
+     aria-hidden="true"></div>
+
+<!-- Staff Alert Modal (Success, Error, Warning, Info) -->
+<div class="modal fade staff-dialog-modal" id="staffAlertModal" tabindex="-1" aria-labelledby="staffAlertTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="staff-dialog-icon-wrapper">
+                    <i id="staffAlertIcon" class="bi bi-info-lg"></i>
+                </div>
+                <h5 class="staff-dialog-title" id="staffAlertTitle">Thông báo</h5>
+                <p class="staff-dialog-message" id="staffAlertMessage"></p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="staffAlertBtn" data-bs-dismiss="modal">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Confirm Modal -->
+<div class="modal fade staff-dialog-modal staff-dialog-confirm" id="staffConfirmModal" tabindex="-1" aria-labelledby="staffConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="staff-dialog-icon-wrapper">
+                    <i id="staffConfirmIcon" class="bi bi-question-lg"></i>
+                </div>
+                <h5 class="staff-dialog-title" id="staffConfirmTitle">Xác nhận thao tác</h5>
+                <p class="staff-dialog-message" id="staffConfirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border text-muted" id="staffConfirmCancelBtn" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="staffConfirmSubmitBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
