@@ -1,0 +1,234 @@
+@model EMua.Areas.Staff.Models.ImportOrderCreateViewModel
+@{
+    ViewData["Title"] = "Lập phiếu đề nghị nhập hàng";
+    var allVariants = ViewBag.AllVariants as IEnumerable<dynamic>;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-box-arrow-in-down me-2"></i>Lập phiếu đề nghị nhập hàng</h4>
+        <span class="text-muted small">Phiếu sẽ được chuyển sang trạng thái <strong>Chờ duyệt</strong> và gửi Admin phê duyệt trước khi nhập kho.</span>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách phiếu
+        </a>
+    </div>
+</div>
+
+@if (ViewBag.PendingWarning != null)
+{
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>@ViewBag.PendingWarning</div>
+    </div>
+}
+
+<form asp-action="Create" method="post" id="createImportOrderForm" class="staff-card staff-form-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="NhaCungCap" class="form-label fw-bold">Nhà cung cấp <span class="text-danger">*</span></label>
+            <input asp-for="NhaCungCap" class="form-control" placeholder="VD: Công ty TNHH Apple Việt Nam, FPT Synnex..." />
+            <span asp-validation-for="NhaCungCap" class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="LyDoNhap" class="form-label fw-bold">Lý do đề nghị nhập hàng <span class="text-danger">*</span></label>
+            <input asp-for="LyDoNhap" class="form-control" placeholder="VD: Bổ sung tồn kho hết hàng / Khách đặt số lượng lớn..." />
+            <span asp-validation-for="LyDoNhap" class="text-danger small"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="DienGiai" class="form-label fw-bold">Diễn giải chi tiết kế hoạch nhập</label>
+            <textarea asp-for="DienGiai" class="form-control" rows="2" placeholder="Ghi chú thêm về lô hàng, hạn chót cần hàng..."></textarea>
+        </div>
+
+        <!-- DANH SÁCH MẶT HÀNG / BIẾN THỂ CẦN NHẬP -->
+        <div class="col-12 mt-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="fw-bold mb-0">Danh sách sản phẩm / biến thể cần nhập</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariantRow()">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm dòng sản phẩm
+                </button>
+            </div>
+
+            <div class="table-responsive border rounded">
+                <table class="table table-hover align-middle mb-0" id="importItemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="min-width: 280px;">Sản phẩm &amp; Biến thể</th>
+                            <th style="width: 120px;" class="text-center">Tồn hiện tại</th>
+                            <th style="width: 140px;">SL Đề nghị</th>
+                            <th style="width: 180px;">Đơn giá dự kiến (₫)</th>
+                            <th style="width: 180px;" class="text-end">Thành tiền (₫)</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="importItemsBody">
+                        @for (int i = 0; i < Model.Items.Count; i++)
+                        {
+                            <tr class="item-row">
+                                <td>
+                                    <input type="hidden" name="Items[@i].MaBienThe" value="@Model.Items[i].MaBienThe" class="variant-id-input" />
+                                    <div class="fw-bold text-dark">@Model.Items[i].TenSanPham</div>
+                                    <small class="text-muted">Phân loại: @Model.Items[i].MauSac - @Model.Items[i].PhienBan</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(Model.Items[i].TonKhoHienTai == 0 ? "bg-danger" : (Model.Items[i].TonKhoHienTai <= 10 ? "bg-warning text-dark" : "bg-secondary"))">
+                                        @Model.Items[i].TonKhoHienTai
+                                    </span>
+                                </td>
+                                <td>
+                                    <input name="Items[@i].SoLuongNhap" type="number" min="1" value="@Model.Items[i].SoLuongNhap" class="form-control form-control-sm qty-input" oninput="calculateTotal()" />
+                                </td>
+                                <td>
+                                    <input name="Items[@i].DonGiaNhapDuKien" type="number" step="1000" min="0" value="@Convert.ToInt64(Model.Items[i].DonGiaNhapDuKien)" class="form-control form-control-sm price-input" oninput="calculateTotal()" />
+                                </td>
+                                <td class="text-end fw-bold text-dark row-subtotal">
+                                    @((Model.Items[i].SoLuongNhap * Model.Items[i].DonGiaNhapDuKien).ToString("N0")) ₫
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItemRow(this)" title="Xóa dòng">&times;</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Tổng tiền dự kiến:</td>
+                            <td class="text-end fw-bold text-primary fs-6" id="totalExpectedAmount">0 ₫</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-12 mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-primary" onclick="submitImportOrder()">
+                <i class="bi bi-send-check me-1"></i> Gửi phiếu đề nghị nhập hàng
+            </button>
+            <a asp-action="Index" class="btn btn-light border">Hủy bỏ</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const allVariantsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AllVariants ?? new List<object>()));
+
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('#importItemsBody .item-row').forEach(row => {
+                const qty = parseFloat(row.querySelector('.qty-input')?.value || 0);
+                const price = parseFloat(row.querySelector('.price-input')?.value || 0);
+                const sub = qty * price;
+                total += sub;
+                const subEl = row.querySelector('.row-subtotal');
+                if (subEl) subEl.innerText = sub.toLocaleString('vi-VN') + ' ₫';
+            });
+            document.getElementById('totalExpectedAmount').innerText = total.toLocaleString('vi-VN') + ' ₫';
+        }
+
+        function removeItemRow(btn) {
+            const rows = document.querySelectorAll('#importItemsBody .item-row');
+            if (rows.length <= 1) {
+                StaffDialog.warning('Không thể xóa', 'Phiếu nhập hàng cần ít nhất một dòng sản phẩm.');
+                return;
+            }
+            btn.closest('tr').remove();
+            reIndexRows();
+            calculateTotal();
+        }
+
+        function reIndexRows() {
+            document.querySelectorAll('#importItemsBody .item-row').forEach((row, idx) => {
+                row.querySelectorAll('input, select').forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace(/Items\[\d+\]/, `Items[${idx}]`));
+                    }
+                });
+            });
+        }
+
+        function addVariantRow() {
+            const tbody = document.getElementById('importItemsBody');
+            const idx = tbody.querySelectorAll('.item-row').length;
+
+            let optionsHtml = '<option value="">-- Chọn biến thể sản phẩm --</option>';
+            if (Array.isArray(allVariantsData)) {
+                allVariantsData.forEach(v => {
+                    optionsHtml += `<option value="${v.MaBienThe}" data-price="${v.Gia}" data-stock="${v.SoLuong}">${v.Display}</option>`;
+                });
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = 'item-row';
+            tr.innerHTML = `
+                <td>
+                    <select name="Items[${idx}].MaBienThe" class="form-select form-select-sm" onchange="onVariantSelectChange(this)">
+                        ${optionsHtml}
+                    </select>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-secondary selected-stock">—</span>
+                </td>
+                <td>
+                    <input name="Items[${idx}].SoLuongNhap" type="number" min="1" value="10" class="form-control form-control-sm qty-input" oninput="calculateTotal()" />
+                </td>
+                <td>
+                    <input name="Items[${idx}].DonGiaNhapDuKien" type="number" step="1000" min="0" value="0" class="form-control form-control-sm price-input" oninput="calculateTotal()" />
+                </td>
+                <td class="text-end fw-bold text-dark row-subtotal">0 ₫</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItemRow(this)" title="Xóa dòng">&times;</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function onVariantSelectChange(select) {
+            const opt = select.options[select.selectedIndex];
+            const price = parseFloat(opt.getAttribute('data-price') || 0);
+            const stock = opt.getAttribute('data-stock') || '0';
+            const row = select.closest('tr');
+            if (row) {
+                const stockBadge = row.querySelector('.selected-stock');
+                if (stockBadge) stockBadge.innerText = stock;
+                const priceInput = row.querySelector('.price-input');
+                if (priceInput && (!priceInput.value || priceInput.value === '0')) {
+                    priceInput.value = Math.round(price * 0.7);
+                }
+                calculateTotal();
+            }
+        }
+
+        async function submitImportOrder() {
+            const ncc = document.getElementById('NhaCungCap').value.trim();
+            const lydo = document.getElementById('LyDoNhap').value.trim();
+            if (!ncc || !lydo) {
+                StaffDialog.warning('Thông tin bắt buộc', 'Vui lòng điền đầy đủ Tên nhà cung cấp và Lý do nhập hàng.');
+                return;
+            }
+
+            const confirmed = await StaffDialog.confirm({
+                title: 'Gửi phiếu đề nghị nhập hàng?',
+                message: 'Phiếu sẽ được gửi đến Admin để phê duyệt. Tồn kho chỉ được ghi nhận sau khi hàng được kiểm nhận hợp lệ.',
+                confirmText: 'Gửi phiếu',
+                cancelText: 'Xem lại',
+                isDanger: false
+            });
+
+            if (confirmed) {
+                document.getElementById('createImportOrderForm').submit();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', calculateTotal);
+    </script>
+}

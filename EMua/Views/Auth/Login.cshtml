@@ -1,4 +1,4 @@
-﻿@model EMua.ViewModels.LoginViewModel
+@model EMua.ViewModels.LoginViewModel
 @inject IConfiguration Configuration
 
 @{
@@ -13,37 +13,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
 <section class="auth-section">
-    <div class="auth-page">
-
-        <!-- LEFT -->
-        <div class="auth-brand">
-            <div class="brand-logo">EMUA</div>
-            <p>
-                Công nghệ trong<br />
-                tầm tay bạn.
-            </p>
-            <span>
-                Khám phá sản phẩm công nghệ chính hãng,
-                giá tốt và trải nghiệm mua sắm hiện đại.
-            </span>
-
-            <ul class="auth-benefits">
-                <li>
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                    Sản phẩm chính hãng
-                </li>
-                <li>
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                    Thanh toán an toàn
-                </li>
-                <li>
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                    Giao hàng nhanh chóng
-                </li>
-            </ul>
-        </div>
-
-        <!-- RIGHT -->
+    <div class="auth-page auth-page--single">
+        <!-- FORM AREA -->
         <div class="auth-form-area">
             <form asp-controller="Auth"
                   asp-action="Login"
@@ -63,10 +34,12 @@
                 <input type="hidden" id="genTime" name="genTime" />
 
                 <!-- TITLE -->
-                <h1>Đăng nhập</h1>
-                <p class="form-subtitle">
-                    Đăng nhập để tiếp tục mua sắm tại EMUA
-                </p>
+                <div class="auth-header">
+                    <h1 class="auth-title">ĐĂNG NHẬP</h1>
+                    <p class="form-subtitle">
+                        Đăng nhập để tiếp tục mua sắm tại EMUA
+                    </p>
+                </div>
 
                 <!-- SOCIAL LOGIN -->
                 <div class="social-auth">
@@ -96,6 +69,10 @@
                         </span>
                         <span>Facebook</span>
                     </a>
+                </div>
+
+                <div class="auth-divider">
+                    <span>hoặc</span>
                 </div>
 
                 <!-- SUCCESS -->

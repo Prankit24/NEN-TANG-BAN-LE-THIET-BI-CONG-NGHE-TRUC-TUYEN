@@ -352,16 +352,26 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             if (!response.ok) {
-                addMessage(
-                    "Mình đang gặp một chút sự cố khi xử lý câu hỏi. Bạn thử lại nhé.",
-                    "bot"
-                );
+                let errorMessage = "Mình đang gặp một chút sự cố khi xử lý câu hỏi. Bạn thử lại nhé.";
+                try {
+                    const errData = await response.json();
+                    if (errData && errData.message) {
+                        errorMessage = errData.message;
+                    }
+                } catch (e) {
+                    // response không có JSON body
+                }
+
+                // Giữ lại nội dung câu hỏi trong ô nhập để người dùng không phải gõ lại
+                input.value = text;
+                addMessage(errorMessage, "bot");
                 return;
             }
 
             const data = await response.json();
 
             if (!data || !data.message) {
+                input.value = text;
                 addMessage(
                     "Mình chưa hiểu rõ câu hỏi. Bạn có thể nói cụ thể hơn một chút nhé.",
                     "bot"
@@ -373,6 +383,8 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             console.error("EMUA AI Error:", error);
 
+            // Giữ lại nội dung câu hỏi trong ô nhập khi gặp lỗi kết nối
+            input.value = text;
             addMessage(
                 "Mình chưa thể kết nối tới hệ thống lúc này. Bạn thử lại sau nhé.",
                 "bot"

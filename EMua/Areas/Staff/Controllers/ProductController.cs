@@ -1,10 +1,16 @@
 using EMua.Data;
 using EMua.Models.Database;
-using EMua.ViewModels; // Dùng duy nhất ViewModel tại đây
+using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EMua.Areas.Staff.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace EMua.Areas.Staff.Controllers;
 
 public class ProductController : StaffControllerBase
@@ -18,25 +24,90 @@ public class ProductController : StaffControllerBase
         _environment = environment;
     }
 
-    public async Task<IActionResult> Index(string? q, string? status, int? brandId)
+    public async Task<IActionResult> Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, int page = 1, int pageSize = 12)
     {
         var query = _db.SanPhams.AsNoTracking()
             .Include(x => x.MaDanhMucNavigation)
             .Include(x => x.MaThuongHieuNavigation)
             .Include(x => x.BienTheSanPhams)
+            .Include(x => x.SanPhamHinhAnhs)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(q)) query = query.Where(x => x.TenSanPham != null && x.TenSanPham.Contains(q.Trim()));
-        if (!string.IsNullOrWhiteSpace(status) && status != "all") query = query.Where(x => x.TrangThaiSanPham == status);
-        if (brandId.HasValue) query = query.Where(x => x.MaThuongHieu == brandId.Value);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var search = q.Trim().ToLower();
+            query = query.Where(x => (x.TenSanPham != null && x.TenSanPham.ToLower().Contains(search))
+                || x.MaSanPham.ToString().Contains(search)
+                || (x.MoTa != null && x.MoTa.ToLower().Contains(search)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && status != "all")
+        {
+            query = query.Where(x => x.TrangThaiSanPham == status);
+        }
+
+        if (brandId.HasValue && brandId.Value > 0)
+        {
+            query = query.Where(x => x.MaThuongHieu == brandId.Value);
+        }
+
+        if (categoryId.HasValue && categoryId.Value > 0)
+        {
+            query = query.Where(x => x.MaDanhMuc == categoryId.Value);
+        }
+
+        var allProducts = await query.OrderByDescending(x => x.MaSanPham).ToListAsync();
+
+        // Lọc tồn kho ở cấp độ sản phẩm
+        if (!string.IsNullOrWhiteSpace(stockFilter) && stockFilter != "all")
+        {
+            if (stockFilter == "out")
+            {
+                allProducts = allProducts.Where(p => p.BienTheSanPhams.Sum(b => b.SoLuong) == 0).ToList();
+            }
+            else if (stockFilter == "low")
+            {
+                allProducts = allProducts.Where(p => {
+                    var s = p.BienTheSanPhams.Sum(b => b.SoLuong);
+                    return s > 0 && s <= 10;
+                }).ToList();
+            }
+            else if (stockFilter == "in")
+            {
+                allProducts = allProducts.Where(p => p.BienTheSanPhams.Sum(b => b.SoLuong) > 10).ToList();
+            }
+        }
+
+        int totalItems = allProducts.Count;
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
+
+        var pagedItems = allProducts
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
 
         ViewBag.Search = q;
         ViewBag.Status = status ?? "all";
         ViewBag.BrandId = brandId;
-        ViewBag.Statuses = await _db.SanPhams.AsNoTracking().Select(x => x.TrangThaiSanPham ?? "Chưa xác định").Distinct().OrderBy(x => x).ToListAsync();
-        ViewBag.Brands = await _db.ThuongHieus.AsNoTracking().OrderBy(x => x.TenThuongHieu).ToListAsync();
+        ViewBag.CategoryId = categoryId;
+        ViewBag.StockFilter = stockFilter ?? "all";
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
+        ViewBag.PageSize = pageSize;
 
-        return View(await query.OrderByDescending(x => x.MaSanPham).ToListAsync());
+        ViewBag.Statuses = await _db.SanPhams.AsNoTracking()
+            .Where(x => !string.IsNullOrEmpty(x.TrangThaiSanPham))
+            .Select(x => x.TrangThaiSanPham!)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync();
+
+        ViewBag.Brands = await _db.ThuongHieus.AsNoTracking().OrderBy(x => x.TenThuongHieu).ToListAsync();
+        ViewBag.Categories = await _db.DanhMucSanPhams.AsNoTracking().OrderBy(x => x.TenDanhMuc).ToListAsync();
+
+        return View(pagedItems);
     }
 
     [HttpGet]
@@ -89,33 +160,18 @@ public class ProductController : StaffControllerBase
                 {
                     DuongDanAnh = savedPath,
                     LaAnhChinh = isMain,
-                    ThuTu = i
+                    ThuTu = i + 1
                 });
             }
         }
 
-        // 2. Gán đường dẫn ảnh chính vào các biến thể để tránh lỗi null
         AddVariants(product, model.BienThe, mainImagePath);
 
         _db.SanPhams.Add(product);
         await _db.SaveChangesAsync();
 
-        TempData["Success"] = "Đã thêm sản phẩm mới thành công.";
+        TempData["Success"] = "Đã tạo sản phẩm thành công.";
         return RedirectToAction(nameof(Index));
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Edit(int id)
-    {
-        var product = await _db.SanPhams
-            .Include(x => x.BienTheSanPhams)
-            .Include(x => x.SanPhamHinhAnhs)
-            .FirstOrDefaultAsync(x => x.MaSanPham == id);
-
-        if (product == null) return NotFound();
-
-        await LoadSelectionsAsync();
-        return View(ToEditModel(product));
     }
 
     [HttpPost]
@@ -132,14 +188,115 @@ public class ProductController : StaffControllerBase
         if (product == null)
             return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
 
-        // Cập nhật lại cờ LaAnhChinh trong CSDL
         foreach (var img in product.SanPhamHinhAnhs)
         {
             img.LaAnhChinh = (img.DuongDanAnh != null && img.DuongDanAnh.Equals(imageUrl, StringComparison.OrdinalIgnoreCase));
         }
 
         await _db.SaveChangesAsync();
-        return Json(new { success = true, message = "Đã cập nhật ảnh chính thành công!" });
+        return Json(new { success = true, message = "Đã cập nhật ảnh chính thành công." });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteImage(int productId, string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+            return Json(new { success = false, message = "Đường dẫn hình ảnh không hợp lệ." });
+
+        var product = await _db.SanPhams
+            .Include(x => x.SanPhamHinhAnhs)
+            .Include(x => x.BienTheSanPhams)
+            .FirstOrDefaultAsync(x => x.MaSanPham == productId);
+
+        if (product == null)
+            return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
+
+        var normalizedUrl = imageUrl.Trim().Replace("\\", "/");
+        var imgEntity = product.SanPhamHinhAnhs.FirstOrDefault(x =>
+            x.DuongDanAnh != null && (
+                x.DuongDanAnh.Equals(normalizedUrl, StringComparison.OrdinalIgnoreCase) ||
+                x.DuongDanAnh.EndsWith(normalizedUrl, StringComparison.OrdinalIgnoreCase) ||
+                normalizedUrl.EndsWith(x.DuongDanAnh, StringComparison.OrdinalIgnoreCase)
+            ));
+
+        bool wasMain = false;
+        if (imgEntity != null)
+        {
+            wasMain = imgEntity.LaAnhChinh;
+            _db.SanPhamHinhAnhs.Remove(imgEntity);
+        }
+
+        foreach (var variant in product.BienTheSanPhams)
+        {
+            if (!string.IsNullOrEmpty(variant.HinhAnh) && (
+                variant.HinhAnh.Equals(normalizedUrl, StringComparison.OrdinalIgnoreCase) ||
+                variant.HinhAnh.EndsWith(normalizedUrl, StringComparison.OrdinalIgnoreCase) ||
+                normalizedUrl.EndsWith(variant.HinhAnh, StringComparison.OrdinalIgnoreCase)))
+            {
+                variant.HinhAnh = null;
+            }
+        }
+
+        var remainingImages = product.SanPhamHinhAnhs.Where(x => x != imgEntity).OrderBy(x => x.ThuTu).ToList();
+        if (remainingImages.Count > 0 && (wasMain || !remainingImages.Any(x => x.LaAnhChinh)))
+        {
+            foreach (var r in remainingImages)
+            {
+                r.LaAnhChinh = false;
+            }
+            remainingImages[0].LaAnhChinh = true;
+        }
+
+        try
+        {
+            var relativePath = normalizedUrl.TrimStart('/');
+            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+            if (System.IO.File.Exists(physicalPath))
+            {
+                System.IO.File.Delete(physicalPath);
+            }
+        }
+        catch
+        {
+            // Bỏ qua lỗi xóa file vật lý
+        }
+
+        await _db.SaveChangesAsync();
+        return Json(new
+        {
+            success = true,
+            message = "Đã xóa hình ảnh thành công.",
+            newMainImageUrl = remainingImages.FirstOrDefault(x => x.LaAnhChinh)?.DuongDanAnh
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var product = await _db.SanPhams
+            .Include(x => x.BienTheSanPhams)
+            .Include(x => x.SanPhamHinhAnhs)
+            .FirstOrDefaultAsync(x => x.MaSanPham == id);
+
+        if (product == null) return NotFound();
+
+        await LoadSelectionsAsync();
+
+        // Lấy danh sách biến thể đang có phiếu đề nghị nhập hàng "Chờ duyệt"
+        var variantIds = product.BienTheSanPhams.Select(b => b.MaBienThe).ToList();
+        var pendingImports = await _db.ChiTietPhieuNhapHangs
+            .Include(ct => ct.MaPhieuNhapNavigation)
+            .Where(ct => variantIds.Contains(ct.MaBienThe) && ct.MaPhieuNhapNavigation.TrangThai == "Chờ duyệt")
+            .Select(ct => new { ct.MaBienThe, ct.MaPhieuNhapNavigation.MaChungTu, ct.SoLuongNhap })
+            .ToListAsync();
+
+        ViewBag.PendingImports = pendingImports.ToDictionary(
+            x => x.MaBienThe,
+            x => $"Phiếu {x.MaChungTu} (+{x.SoLuongNhap})"
+        );
+
+        return View(ToEditModel(product));
     }
 
     [HttpPost]
@@ -157,11 +314,6 @@ public class ProductController : StaffControllerBase
         ValidateImages(allFiles, false);
         ValidateBrand(model);
 
-        if (model.BienThe == null || model.BienThe.Count == 0)
-        {
-            ModelState.AddModelError(nameof(model.BienThe), "Sản phẩm phải có ít nhất một biến thể.");
-        }
-
         if (!ModelState.IsValid)
         {
             await LoadSelectionsAsync();
@@ -170,7 +322,6 @@ public class ProductController : StaffControllerBase
             return View(model);
         }
 
-        // 1. Cập nhật thông tin chung sản phẩm
         product.TenSanPham = model.TenSanPham.Trim();
         product.MaDanhMuc = model.MaDanhMuc;
         product.MaThuongHieu = model.MaThuongHieu!.Value;
@@ -183,6 +334,7 @@ public class ProductController : StaffControllerBase
         string? newUploadedMainPath = null;
         if (allFiles.Count > 0)
         {
+            int currentMaxOrder = product.SanPhamHinhAnhs.Any() ? product.SanPhamHinhAnhs.Max(x => x.ThuTu) : 0;
             for (int i = 0; i < allFiles.Count; i++)
             {
                 var savedPath = await SaveImageAsync(allFiles[i]);
@@ -193,66 +345,56 @@ public class ProductController : StaffControllerBase
                 {
                     DuongDanAnh = savedPath,
                     LaAnhChinh = isMain,
-                    ThuTu = product.SanPhamHinhAnhs.Count + i
+                    ThuTu = currentMaxOrder + i + 1
                 });
             }
         }
 
-        // 3. CẬP NHẬT ĐẶT LẠI CỜ "Ảnh chính" (LaAnhChinh) TRONG CSDL
-        string? targetMainImage = !string.IsNullOrEmpty(model.SelectedMainImageUrl)
-            ? model.SelectedMainImageUrl
-            : newUploadedMainPath;
-
-        if (!string.IsNullOrEmpty(targetMainImage))
+        // 3. Cập nhật cờ LaAnhChinh theo ảnh mà người dùng đã chọn
+        string? activeMainImg = model.SelectedMainImageUrl ?? newUploadedMainPath;
+        if (!string.IsNullOrEmpty(activeMainImg))
         {
             foreach (var img in product.SanPhamHinhAnhs)
             {
-                img.LaAnhChinh = (img.DuongDanAnh != null && img.DuongDanAnh.Equals(targetMainImage, StringComparison.OrdinalIgnoreCase));
+                img.LaAnhChinh = (img.DuongDanAnh != null && img.DuongDanAnh.Equals(activeMainImg, StringComparison.OrdinalIgnoreCase));
             }
         }
 
-        string defaultVariantImage = targetMainImage ?? CurrentImage(product) ?? "/images/no-image.png";
+        // Cập nhật biến thể
+        var incomingIds = model.BienThe.Where(b => b.MaBienThe > 0).Select(b => b.MaBienThe).ToList();
+        var toRemove = product.BienTheSanPhams.Where(b => !incomingIds.Contains(b.MaBienThe)).ToList();
+        _db.BienTheSanPhams.RemoveRange(toRemove);
 
-        // 4. XÓA các biến thể cũ không còn nằm trong danh sách truyền lên từ View
-        var submittedVariantIds = model.BienThe.Select(x => x.MaBienThe).Where(vId => vId > 0).ToList();
-        var variantsToRemove = product.BienTheSanPhams.Where(x => !submittedVariantIds.Contains(x.MaBienThe)).ToList();
-        if (variantsToRemove.Count > 0)
+        foreach (var vm in model.BienThe)
         {
-            _db.BienTheSanPhams.RemoveRange(variantsToRemove);
-        }
-
-        // 5. CẬP NHẬT hoặc THÊM MỚI biến thể
-        foreach (var variantModel in model.BienThe)
-        {
-            if (variantModel.MaBienThe > 0)
+            if (vm.MaBienThe > 0)
             {
-                var existingVariant = product.BienTheSanPhams.FirstOrDefault(x => x.MaBienThe == variantModel.MaBienThe);
-                if (existingVariant != null)
+                var existing = product.BienTheSanPhams.FirstOrDefault(b => b.MaBienThe == vm.MaBienThe);
+                if (existing != null)
                 {
-                    existingVariant.MauSac = variantModel.MauSac?.Trim();
-                    existingVariant.PhienBan = variantModel.PhienBan?.Trim();
-                    existingVariant.Gia = variantModel.Gia;
-                    existingVariant.SoLuong = variantModel.SoLuong;
-                    existingVariant.TrangThai = variantModel.TrangThai ?? (variantModel.SoLuong > 0 ? "Còn hàng" : "Hết hàng");
-                    if (!string.IsNullOrEmpty(defaultVariantImage)) existingVariant.HinhAnh = defaultVariantImage;
+                    existing.MauSac = vm.MauSac?.Trim();
+                    existing.PhienBan = vm.PhienBan?.Trim();
+                    existing.Gia = vm.Gia;
+                    // Không cho Staff sửa trực tiếp tồn kho của biến thể đã có để đảm bảo quy trình nhập hàng
+                    existing.TrangThai = string.IsNullOrEmpty(vm.TrangThai) ? (existing.SoLuong > 0 ? "Còn hàng" : "Hết hàng") : vm.TrangThai;
                 }
             }
             else
             {
                 product.BienTheSanPhams.Add(new BienTheSanPham
                 {
-                    MauSac = variantModel.MauSac?.Trim(),
-                    PhienBan = variantModel.PhienBan?.Trim(),
-                    Gia = variantModel.Gia,
-                    SoLuong = variantModel.SoLuong,
-                    HinhAnh = defaultVariantImage,
-                    TrangThai = variantModel.TrangThai ?? (variantModel.SoLuong > 0 ? "Còn hàng" : "Hết hàng")
+                    MauSac = vm.MauSac?.Trim(),
+                    PhienBan = vm.PhienBan?.Trim(),
+                    Gia = vm.Gia,
+                    SoLuong = vm.SoLuong,
+                    TrangThai = string.IsNullOrEmpty(vm.TrangThai) ? (vm.SoLuong > 0 ? "Còn hàng" : "Hết hàng") : vm.TrangThai,
+                    HinhAnh = activeMainImg ?? CurrentImage(product)
                 });
             }
         }
 
         await _db.SaveChangesAsync();
-        TempData["Success"] = "Đã cập nhật sản phẩm và danh sách biến thể thành công.";
+        TempData["Success"] = "Đã cập nhật sản phẩm thành công.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -263,58 +405,63 @@ public class ProductController : StaffControllerBase
         var product = await _db.SanPhams.FindAsync(id);
         if (product == null) return NotFound();
 
-        product.TrangThaiSanPham = product.TrangThaiSanPham == "Ẩn" ? "Còn hàng" : "Ẩn";
+        product.TrangThaiSanPham = (product.TrangThaiSanPham == "Ẩn") ? "Còn hàng" : "Ẩn";
         await _db.SaveChangesAsync();
 
-        TempData["Success"] = product.TrangThaiSanPham == "Ẩn" ? "Đã ẩn sản phẩm khỏi cửa hàng." : "Đã hiển thị lại sản phẩm.";
+        TempData["Success"] = $"Đã {(product.TrangThaiSanPham == "Ẩn" ? "ẩn" : "hiển thị")} sản phẩm #SP-{id:D4}.";
         return RedirectToAction(nameof(Index));
     }
 
-    private void ValidateBrand(ProductCreateViewModel model)
-    {
-        if (model.MaThuongHieu is null) ModelState.AddModelError(nameof(model.MaThuongHieu), "Vui lòng chọn thương hiệu.");
-    }
-
-    private static void AddVariants(SanPham product, IEnumerable<ProductVariantQuantityViewModel> variants, string? imageUrl = null)
-    {
-        foreach (var variant in variants)
-        {
-            product.BienTheSanPhams.Add(new BienTheSanPham
-            {
-                MauSac = variant.MauSac?.Trim(),
-                PhienBan = variant.PhienBan?.Trim(),
-                Gia = variant.Gia,
-                SoLuong = variant.SoLuong,
-                HinhAnh = imageUrl,
-                TrangThai = variant.TrangThai ?? (variant.SoLuong > 0 ? "Còn hàng" : "Hết hàng")
-            });
-        }
-    }
-
-    private List<IFormFile> GetUploadedFiles(ProductCreateViewModel model)
+    private static List<IFormFile> GetUploadedFiles(ProductCreateViewModel model)
     {
         var list = new List<IFormFile>();
         if (model.ImageFile != null && model.ImageFile.Length > 0)
-        {
             list.Add(model.ImageFile);
-        }
-        if (model.ImageFiles != null && model.ImageFiles.Count > 0)
+        if (model.ImageFiles != null)
         {
-            list.AddRange(model.ImageFiles.Where(x => x.Length > 0));
+            foreach (var f in model.ImageFiles)
+            {
+                if (f != null && f.Length > 0 && !list.Any(x => x.FileName == f.FileName && x.Length == f.Length))
+                    list.Add(f);
+            }
         }
         return list;
     }
 
-    private void ValidateImages(List<IFormFile> images, bool required)
+    private void ValidateBrand(ProductCreateViewModel model)
     {
-        if (required && images.Count == 0)
+        if (!model.MaThuongHieu.HasValue)
         {
-            ModelState.AddModelError(nameof(ProductCreateViewModel.ImageFile), "Vui lòng chọn ít nhất một ảnh sản phẩm.");
+            ModelState.AddModelError(nameof(ProductCreateViewModel.MaThuongHieu), "Vui lòng chọn thương hiệu.");
+        }
+    }
+
+    private static void AddVariants(SanPham product, List<ProductVariantQuantityViewModel> variants, string? mainImagePath)
+    {
+        foreach (var item in variants)
+        {
+            product.BienTheSanPhams.Add(new BienTheSanPham
+            {
+                MauSac = item.MauSac?.Trim(),
+                PhienBan = item.PhienBan?.Trim(),
+                Gia = item.Gia,
+                SoLuong = item.SoLuong,
+                TrangThai = item.SoLuong > 0 ? "Còn hàng" : "Hết hàng",
+                HinhAnh = mainImagePath
+            });
+        }
+    }
+
+    private void ValidateImages(List<IFormFile> files, bool isCreate)
+    {
+        if (isCreate && files.Count == 0)
+        {
+            ModelState.AddModelError(nameof(ProductCreateViewModel.ImageFile), "Vui lòng chọn ít nhất một ảnh cho sản phẩm.");
             return;
         }
 
         var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        foreach (var img in images)
+        foreach (var img in files)
         {
             var ext = Path.GetExtension(img.FileName).ToLowerInvariant();
             if (!allowed.Contains(ext))
@@ -359,6 +506,10 @@ public class ProductController : StaffControllerBase
         .OrderByDescending(x => x.LaAnhChinh)
         .ThenBy(x => x.ThuTu)
         .Select(x => x.DuongDanAnh)
+        .FirstOrDefault()
+        ?? product.BienTheSanPhams
+        .Where(x => !string.IsNullOrEmpty(x.HinhAnh))
+        .Select(x => x.HinhAnh)
         .FirstOrDefault();
 
     private async Task LoadSelectionsAsync()

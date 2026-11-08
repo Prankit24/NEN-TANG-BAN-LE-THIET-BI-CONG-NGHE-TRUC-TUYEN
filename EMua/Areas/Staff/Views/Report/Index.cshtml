@@ -1,147 +1,454 @@
-@model ReportViewModel
+@model EMua.Areas.Staff.Models.ReportViewModel
+@using System.Text.Json
 @{
-    ViewData["Title"] = "Thống kê doanh thu";
-    var month = DateTime.Today.ToString("MM/yyyy");
-    var maxDailyRevenue = Math.Max(Model.DailyRevenue.Max(x => x.Revenue), 1);
-    var maxProductQuantity = Math.Max(Model.BestSellingProducts.FirstOrDefault()?.Quantity ?? 0, 1);
-    var maxFavoriteQuantity = Math.Max(Model.FavoriteProducts.FirstOrDefault()?.Quantity ?? 0, 1);
-    var selectedMonth = (int?)ViewBag.SelectedMonth ?? DateTime.Today.Month;
-    var selectedYear = (int?)ViewBag.SelectedYear ?? DateTime.Today.Year;
+    ViewData["Title"] = "Báo cáo thống kê";
+    var currentMonth = (int)(ViewBag.SelectedMonth ?? DateTime.Today.Month);
+    var currentYear = (int)(ViewBag.SelectedYear ?? DateTime.Today.Year);
+    var daily = Model.DailyRevenue ?? new List<EMua.Areas.Staff.Models.ReportDailyRevenueItem>();
+    var statuses = Model.OrderStatuses ?? new List<EMua.Areas.Staff.Models.ReportOrderStatusItem>();
+    var bestSelling = Model.BestSellingProducts ?? new List<EMua.Areas.Staff.Models.ReportProductItem>();
+    var favorites = Model.FavoriteProducts ?? new List<EMua.Areas.Staff.Models.ReportProductItem>();
+    var daysJson = JsonSerializer.Serialize(daily.OrderBy(x => x.Day).Select(x => x.Day));
+    var revenuesJson = JsonSerializer.Serialize(daily.OrderBy(x => x.Day).Select(x => x.Revenue));
+    var statusLabelsJson = JsonSerializer.Serialize(statuses.Select(x => x.Status));
+    var statusCountsJson = JsonSerializer.Serialize(statuses.Select(x => x.Count));
 }
-<div class="report-heading">
-    
-    <div class="report-actions">
-        <form method="get" class="report-period-form">
-            <i class="bi bi-calendar3"></i><select name="month" aria-label="Chọn tháng">@for (var option = 1; option <=
-            12; option++) {
-                <option value="@option" selected="@(option == selectedMonth)">Tháng @option</option>
-            }
-        </select>
-        <select name="year" aria-label="Chọn năm">@for (var option = DateTime.Today.Year - 2; option <=
-            DateTime.Today.Year; option++) {
-                <option value="@option" selected="@(option == selectedYear)">@option
-                </option>
-            }
-        </select><button class="report-control-button" title="Xem báo cáo"><i
-        class="bi bi-arrow-right"></i></button>
-    </form>
-    <a class="report-control-button" asp-action="Export" asp-route-month="@selectedMonth"
-       asp-route-year="@selectedYear" title="Xuất file CSV"><i class="bi bi-download"></i><span>Xuất
-        file</span></a>
-        <button type="button" class="report-control-button" onclick="window.print()" title="In báo cáo"><i
-            class="bi bi-printer"></i><span>In</span></button>
+
+<style>
+    .emua-report {
+        color: #26344c;
+    }
+
+    .emua-report .report-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+
+    .emua-report .report-heading h2 {
+        font-size: 20px;
+        font-weight: 750;
+        margin: 0 0 4px;
+    }
+
+    .emua-report .report-heading p {
+        font-size: 13px;
+        color: #7b879a;
+        margin: 0;
+    }
+
+    .emua-report .report-filter-bar {
+        background: #fff;
+        border: 1px solid #e5eaf2;
+        border-radius: 10px;
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .emua-report .report-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .emua-report .report-card {
+        background: #fff;
+        border: 1px solid #e5eaf2;
+        border-radius: 12px;
+        padding: 20px;
+        min-width: 0;
+        box-shadow: 0 4px 18px rgba(27,45,78,.035);
+    }
+
+    .emua-report .stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .emua-report .stat-label {
+        font-size: 12px;
+        color: #7b879a;
+        font-weight: 600;
+    }
+
+    .emua-report .stat-icon {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        background: #eef2ff;
+        color: #315efb;
+        border-radius: 10px;
+        font-size: 18px;
+    }
+
+    .emua-report .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -.6px;
+        margin: 12px 0 4px;
+        overflow-wrap: anywhere;
+    }
+
+    .emua-report .stat-note {
+        font-size: 12px;
+        color: #8290a3;
+        margin: 0;
+    }
+
+    .emua-report .report-chart-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .emua-report .report-table-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .emua-report .card-title {
+        font-size: 15px;
+        font-weight: 750;
+        margin: 0 0 5px;
+    }
+
+    .emua-report .card-subtitle {
+        color: #8290a3;
+        font-size: 12px;
+        margin: 0 0 18px;
+    }
+
+    .emua-report .chart-holder {
+        position: relative;
+        height: 300px;
+    }
+
+    .emua-report .table {
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .emua-report .table th {
+        color: #7b879a;
+        font-weight: 700;
+        border-bottom-color: #e5eaf2;
+        white-space: nowrap;
+    }
+
+    .emua-report .table td {
+        color: #26344c;
+        border-bottom-color: #eef1f6;
+        vertical-align: middle;
+    }
+
+    .emua-report .table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .emua-report .empty-message {
+        color: #8290a3;
+        font-size: 13px;
+        padding: 22px 0;
+        text-align: center;
+    }
+
+    @@media(max-width:1100px) {
+        .emua-report .report-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media(max-width:800px) {
+        .emua-report .report-chart-grid, .emua-report .report-table-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media(max-width:520px) {
+        .emua-report .report-stat-grid {
+            grid-template-columns: 1fr;
+        }
+        .emua-report .report-card {
+            padding: 16px;
+        }
+        .emua-report .chart-holder {
+            height: 260px;
+        }
+    }
+</style>
+
+<div class="emua-report">
+    <div class="report-heading">
+        <div>
+            <h2><i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>Báo cáo thống kê kinh doanh</h2>
+            <p>Dữ liệu tổng hợp từ hệ thống đơn hàng và tương tác sản phẩm.</p>
+        </div>
+        <div>
+            <a asp-action="Export" asp-route-month="@currentMonth" asp-route-year="@currentYear" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download me-1"></i> Xuất CSV
+            </a>
         </div>
     </div>
-    <div class="report-kpi-grid">
-        <article class="report-kpi report-kpi-revenue">
-            <div class="report-kpi-icon"><i class="bi bi-cash-stack"></i></div><span>Doanh
-            thu</span><strong>@Model.Revenue.ToString("N0") <small>đ</small></strong><em>Đơn đã hoàn thành</em>
-        </article>
-        <article class="report-kpi report-kpi-success">
-            <div class="report-kpi-icon"><i class="bi bi-check2-circle"></i></div><span>Tỉ lệ thành
-            công</span><strong>@Model.SuccessRate.ToString("0.0")<small>%</small></strong><em>@Model.SuccessfulOrders
-            đơn thành công</em>
-        </article>
-        <article class="report-kpi report-kpi-orders">
-            <div class="report-kpi-icon"><i class="bi bi-receipt"></i></div><span>Tổng số
-            đơn</span><strong>@Model.TotalOrders</strong><em>@Model.PendingOrders đơn đang xử lý</em>
-        </article>
-        <article class="report-kpi report-kpi-return">
-            <div class="report-kpi-icon"><i class="bi bi-arrow-return-left"></i></div><span>Đơn hoàn /
-            hủy</span><strong>@Model.ReturnedOrders</strong><em>Cần được theo dõi</em>
-        </article>
-    </div>
-    <div class="report-chart-grid">
-        <section class="staff-card report-chart-card">
-            <div class="report-card-heading">
-                <div><span class="report-label">DOANH THU</span>
-                    <h2>Doanh thu theo ngày</h2>
-                </div><strong>@Model.Revenue.ToString("N0") đ</strong>
-            </div>
-            <div class="report-bar-chart">@foreach (var day in Model.DailyRevenue) { var height = day.Revenue <= 0 ? 4 :
-                Math.Max(8, (int)(day.Revenue / maxDailyRevenue * 100));
-                <div class="report-bar-column" title="Ngày @day.Day: @day.Revenue.ToString("N0") đ"><span
-                    class="report-bar-value">@(day.Revenue > 0 ?
-                            day.Revenue.ToString("N0") : "")</span><i style="height:@height%"></i><small>@day.Day</small></div>
+
+    <!-- Bộ lọc tháng và năm -->
+    <div class="report-filter-bar">
+        <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="fw-semibold text-muted small"><i class="bi bi-calendar3 me-1"></i> Kỳ báo cáo:</span>
+            <select name="month" class="form-select form-select-sm" style="width: auto;">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(m == currentMonth)">Tháng @m</option>
                 }
-            </div>
-        </section>
-        <section class="staff-card report-status-card">
-            <div class="report-card-heading">
-                <div><span class="report-label">ĐƠN HÀNG</span>
-                    <h2>Phân bổ trạng thái</h2>
-                </div><i class="bi bi-pie-chart"></i>
-            </div>
-            <div class="report-status-list">@foreach (var status in Model.OrderStatuses) { var width = Model.TotalOrders ==
-                0 ? 0 : Math.Max(5, (int)((decimal)status.Count / Model.TotalOrders * 100)); var statusClass =
-                status.Status.Contains("hủy") || status.Status.Contains("huỷ") ? "is-return" : status.Status.Contains("hoàn thành") || status.Status.Contains("giao") ? "is-success" : "is-pending";
-                <div class="report-status-row">
-                    <div><span>@status.Status</span><strong>@status.Count</strong></div>
-                    <div class="report-progress"><i class="@statusClass" style="width:@width%"></i></div>
-                </div>
-            }
-            @if (!Model.OrderStatuses.Any())
-            {
-                <p class="report-empty">Chưa có đơn hàng trong tháng.</p>
-            }
-        </div>
-    </section>
-</div>
-<div class="report-insight-grid">
-    <article class="report-insight"><i class="bi bi-wallet2"></i>
-        <div><span>Giá trị đơn trung bình</span><strong>@Model.AverageOrderValue.ToString("N0") đ</strong></div>
-    </article>
-    <article class="report-insight"><i class="bi bi-heart"></i>
-        <div><span>Lượt yêu thích trong tháng</span><strong>@Model.FavoriteCount</strong></div>
-    </article>
-    <article class="report-insight"><i class="bi bi-box-seam"></i>
-        <div><span>SKU tồn kho thấp</span><strong>@Model.LowStockCount</strong></div>
-    </article>
-</div>
-<div class="report-table-grid">
-    <section class="staff-card report-ranking-card">
-        <div class="report-card-heading">
-            <div><span class="report-label">TOP SẢN PHẨM</span>
-                <h2>Mặt hàng bán chạy</h2>
-            </div><i class="bi bi-trophy"></i>
-        </div>
-        <div class="report-ranking-list">@for (var i = 0; i < Model.BestSellingProducts.Count; i++) { var item =
-            Model.BestSellingProducts[i]; var width = Math.Max(8, (int)((decimal)item.Quantity / maxProductQuantity *
-            100));
-            <div class="report-ranking-row"><b class="report-rank">0@(i + 1)</b>
-                <div class="report-ranking-content">
-                    <div><strong>@item.Name</strong><span>@item.Quantity sản phẩm · @item.Revenue.ToString("N0")
-                        đ</span></div>
-                        <div class="report-ranking-track"><i style="width:@width%"></i></div>
-                    </div>
-                </div>
-            }
-            @if (!Model.BestSellingProducts.Any())
-            {
-                <p class="report-empty">Chưa có dữ liệu bán hàng.</p>
-            }
-        </div>
-    </section>
-    <section class="staff-card report-ranking-card">
-        <div class="report-card-heading">
-            <div><span class="report-label">TOP YÊU THÍCH</span>
-                <h2>Sản phẩm được quan tâm</h2>
-            </div><i class="bi bi-heart-fill"></i>
-        </div>
-        <div class="report-ranking-list">@for (var i = 0; i < Model.FavoriteProducts.Count; i++) { var item =
-            Model.FavoriteProducts[i]; var width = Math.Max(8, (int)((decimal)item.Quantity / maxFavoriteQuantity *
-            100));
-            <div class="report-ranking-row"><b class="report-rank">0@(i + 1)</b>
-                <div class="report-ranking-content">
-                    <div><strong>@item.Name</strong><span>@item.Quantity lượt yêu thích</span></div>
-                    <div class="report-ranking-track favorite"><i style="width:@width%"></i></div>
-                </div>
-            </div>
-        }
-        @if (!Model.FavoriteProducts.Any())
-        {
-            <p class="report-empty">Chưa có lượt yêu thích.</p>
-        }
+            </select>
+            <select name="year" class="form-select form-select-sm" style="width: auto;">
+                @for (int y = DateTime.Today.Year - 4; y <= DateTime.Today.Year + 1; y++)
+                {
+                    <option value="@y" selected="@(y == currentYear)">Năm @y</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-filter me-1"></i> Xem báo cáo
+            </button>
+        </form>
+        <span class="text-muted small">Thời gian: <strong>Tháng @currentMonth/@currentYear (Giờ Việt Nam GMT+7)</strong></span>
     </div>
-</section>
+
+    <!-- 8 thẻ KPI tổng quan tách bạch đơn hủy & đổi trả -->
+    <div class="report-stat-grid">
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Tổng doanh thu</span><span class="stat-icon"><i class="bi bi-cash-stack"></i></span></div>
+            <div class="stat-value">@Model.Revenue.ToString("N0") ₫</div>
+            <p class="stat-note">Từ các đơn hàng thành công</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Tổng đơn hàng</span><span class="stat-icon"><i class="bi bi-bag-check"></i></span></div>
+            <div class="stat-value">@Model.TotalOrders.ToString("N0")</div>
+            <p class="stat-note">Đơn thành công: @Model.SuccessfulOrders.ToString("N0")</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Giá trị đơn TB</span><span class="stat-icon"><i class="bi bi-receipt"></i></span></div>
+            <div class="stat-value">@Model.AverageOrderValue.ToString("N0") ₫</div>
+            <p class="stat-note">Doanh thu / đơn thành công</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Tỷ lệ thành công</span><span class="stat-icon"><i class="bi bi-check2-circle"></i></span></div>
+            <div class="stat-value">@Model.SuccessRate.ToString("N1")%</div>
+            <p class="stat-note">Thành công / tổng số đơn</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Đơn hủy</span><span class="stat-icon text-danger" style="background: #fef2f2; color: #ef4444;"><i class="bi bi-x-circle"></i></span></div>
+            <div class="stat-value text-danger">@Model.CancelledOrders.ToString("N0")</div>
+            <p class="stat-note">Đơn đã bị hủy trong kỳ</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Đơn đổi / hoàn trả</span><span class="stat-icon text-warning" style="background: #fffbeb; color: #f59e0b;"><i class="bi bi-arrow-counterclockwise"></i></span></div>
+            <div class="stat-value" style="color: #d97706;">@Model.ReturnedOrders.ToString("N0")</div>
+            <p class="stat-note">Yêu cầu & chu trình hoàn tiền</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Đơn chờ xử lý</span><span class="stat-icon"><i class="bi bi-hourglass-split"></i></span></div>
+            <div class="stat-value">@Model.PendingOrders.ToString("N0")</div>
+            <p class="stat-note">Cần nhân viên xử lý sớm</p>
+        </div>
+        <div class="report-card">
+            <div class="stat-top"><span class="stat-label">Cảnh báo tồn kho</span><span class="stat-icon"><i class="bi bi-exclamation-triangle"></i></span></div>
+            <div class="stat-value">@Model.LowStockCount.ToString("N0")</div>
+            <p class="stat-note">Biến thể có tồn kho &le; 10</p>
+        </div>
+    </div>
+
+    <!-- Biểu đồ doanh thu và trạng thái đơn hàng -->
+    <div class="report-chart-grid">
+        <section class="report-card" aria-labelledby="daily-revenue-heading">
+            <h3 class="card-title" id="daily-revenue-heading">Doanh thu theo ngày trong tháng</h3>
+            <p class="card-subtitle">Biến động doanh số bán hàng hàng ngày (VNĐ)</p>
+            @if (daily.Any(x => x.Revenue > 0))
+            {
+                <div class="chart-holder"><canvas id="emuaDailyRevenueChart" role="img" aria-label="Biểu đồ doanh thu"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-message py-5">
+                    <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                    Chưa có phát sinh doanh thu thành công trong tháng @currentMonth/@currentYear.
+                </div>
+            }
+        </section>
+        <section class="report-card" aria-labelledby="status-heading">
+            <h3 class="card-title" id="status-heading">Phân bổ trạng thái đơn</h3>
+            <p class="card-subtitle">Tỷ trọng các trạng thái đơn hàng trong kỳ</p>
+            @if (statuses.Count > 0)
+            {
+                <div class="chart-holder"><canvas id="emuaOrderStatusChart" role="img" aria-label="Biểu đồ trạng thái"></canvas></div>
+            }
+            else
+            {
+                <div class="empty-message py-5">
+                    <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                    Không có đơn hàng nào trong tháng này.
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- Bảng top bán chạy và sản phẩm yêu thích -->
+    <div class="report-table-grid">
+        <section class="report-card" aria-labelledby="best-selling-heading">
+            <h3 class="card-title" id="best-selling-heading">Top sản phẩm bán chạy</h3>
+            <p class="card-subtitle">Theo số lượng bán ra từ các đơn hoàn thành</p>
+            @if (bestSelling.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-end">Đã bán</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in bestSelling)
+                            {
+                                <tr>
+                                    <td><strong>@item.Name</strong></td>
+                                    <td class="text-end"><span class="badge bg-light text-dark border">@item.Quantity.ToString("N0")</span></td>
+                                    <td class="text-end fw-semibold text-primary">@item.Revenue.ToString("N0") ₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-message">Chưa có sản phẩm nào được bán trong tháng này.</div>
+            }
+        </section>
+
+        <section class="report-card" aria-labelledby="favorites-heading">
+            <h3 class="card-title" id="favorites-heading">Sản phẩm được yêu thích nhất</h3>
+            <p class="card-subtitle">Lượt khách hàng thêm vào danh sách yêu thích</p>
+            @if (favorites.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-end">Lượt yêu thích</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in favorites)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td class="text-end"><span class="badge bg-light text-danger border"><i class="bi bi-heart-fill me-1"></i>@item.Quantity.ToString("N0")</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-message">Chưa có lượt thêm yêu thích nào trong tháng này.</div>
+            }
+        </section>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            if (typeof Chart === 'undefined') {
+                return;
+            }
+            const dailyCanvas = document.getElementById('emuaDailyRevenueChart');
+            if (dailyCanvas) {
+                new Chart(dailyCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(daysJson),
+                        datasets: [{
+                            label: 'Doanh thu (₫)',
+                            data: @Html.Raw(revenuesJson),
+                            borderColor: '#315efb',
+                            backgroundColor: 'rgba(49,94,251,.08)',
+                            fill: true,
+                            tension: .3,
+                            pointRadius: 3,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(ctx.raw) + ' ₫';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Ngày trong tháng' }, grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (val) {
+                                        if (val >= 1000000) return (val / 1000000).toFixed(1) + ' tr';
+                                        if (val >= 1000) return (val / 1000).toFixed(0) + ' k';
+                                        return val;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const statusCanvas = document.getElementById('emuaOrderStatusChart');
+            if (statusCanvas) {
+                new Chart(statusCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: @Html.Raw(statusLabelsJson),
+                        datasets: [{
+                            data: @Html.Raw(statusCountsJson),
+                            backgroundColor: ['#315efb', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#94a3b8'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+}

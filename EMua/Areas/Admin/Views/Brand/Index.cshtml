@@ -12,19 +12,7 @@
 }
 
 <div class="brand-page">
-    <div class="brand-page-heading">
-        
 
-        <div class="brand-page-actions">
-            <button type="submit"
-                    form="brandForm"
-                    class="brand-save-button brand-save-top"
-                    id="saveBrandBtn">
-                <i class="bi bi-save"></i>
-                Lưu thương hiệu
-            </button>
-        </div>
-    </div>
 
     <div class="brand-workspace">
         <aside class="brand-list-card">
@@ -236,7 +224,11 @@
                         <b>*</b>&nbsp;là trường bắt buộc
                     </div>
 
-                    <div>
+                    <div class="brand-footer-actions" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+                        <button type="submit" id="saveBrandBtn" class="brand-save-button btn btn-primary" style="padding:10px 20px;font-weight:600">
+                            <i class="bi bi-save"></i>
+                            @(editor.MaThuongHieu == 0 ? "Thêm thương hiệu" : "Lưu thay đổi")
+                        </button>
                         <button type="button"
                                 class="brand-delete-button"
                                 id="deleteBrandBtn"
@@ -450,6 +442,7 @@
                     "thuộc thương hiệu này";
 
                 deleteBtn.hidden = false;
+                saveBtn.innerHTML = '<i class="bi bi-save"></i> Lưu thay đổi';
             }
             catch {
                 showDialog({
@@ -476,6 +469,7 @@
             document.getElementById("brandStateBadge").hidden = true;
             document.getElementById("brandSummary").hidden = true;
             deleteBtn.hidden = true;
+            saveBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Thêm thương hiệu';
 
             currentDeleteId = null;
             currentDeleteName = "";
@@ -528,8 +522,9 @@
             }
             finally {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML =
-                    '<i class="bi bi-save"></i> Lưu thương hiệu';
+                saveBtn.innerHTML = document.getElementById("MaThuongHieu").value === "0"
+                    ? '<i class="bi bi-plus-lg"></i> Thêm thương hiệu'
+                    : '<i class="bi bi-save"></i> Lưu thay đổi';
             }
         });
 

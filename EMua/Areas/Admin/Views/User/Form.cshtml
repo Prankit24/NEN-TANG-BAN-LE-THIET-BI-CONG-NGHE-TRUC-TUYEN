@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
 }
 
-<div class="users-page container-fluid py-4 px-lg-4">
-    <div class="d-flex align-items-center gap-2 mb-4">
-        <a asp-action="Index" class="btn btn-sm btn-outline-secondary  d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;"><i class="bi bi-arrow-left"></i></a>
-        
+<div class="users-page">
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+        </a>
     </div>
 
     @if (!ViewData.ModelState.IsValid)

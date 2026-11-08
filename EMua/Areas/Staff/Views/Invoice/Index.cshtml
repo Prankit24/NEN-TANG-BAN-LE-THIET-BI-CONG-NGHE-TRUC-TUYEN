@@ -1,21 +1,28 @@
 @model IEnumerable<EMua.Models.Database.HoaDon>
 @{
-    ViewData["Title"] = "Quản lý hóa đơn";
-    var currentPage = ViewBag.CurrentPage ?? 1;
-    var totalPages = ViewBag.TotalPages ?? 1;
+    ViewData["Title"] = "Quản lý hóa đơn bán hàng";
+    var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
     var search = ViewBag.Search as string;
     var selectedStatus = ViewBag.SelectedStatus as string;
     var statusList = ViewBag.StatusList as List<string> ?? new List<string>();
 }
 
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text text-primary me-2"></i>Hóa đơn bán hàng nội bộ</h4>
+        <p class="text-muted small mb-0">Chứng từ xuất kho và xác nhận thanh toán phát sinh từ đơn hàng hệ thống EMUA.</p>
+    </div>
+</div>
+
 <!-- Form tìm kiếm và lọc trạng thái -->
-<form method="get" class="staff-filter mb-4">
-    <div class="row g-2">
+<form method="get" class="staff-filter mb-4 bg-white p-3 border shadow-sm rounded">
+    <div class="row g-2 align-items-center">
         <div class="col-md-5">
-            <input type="text" name="q" value="@search" class="form-control" placeholder="Tìm mã hóa đơn hoặc mã đơn hàng..." />
+            <input type="text" name="q" value="@search" class="form-control form-control-sm" placeholder="Tìm theo mã HĐ (#HD-00001), mã ĐH (#DH-00001) hoặc tên khách..." />
         </div>
         <div class="col-md-4">
-            <select name="status" class="form-select">
+            <select name="status" class="form-select form-select-sm">
                 <option value="">-- Tất cả trạng thái --</option>
                 @foreach (var st in statusList)
                 {
@@ -23,23 +30,27 @@
                 }
             </select>
         </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Tìm kiếm</button>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-search me-1"></i> Tìm kiếm</button>
+            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus))
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại</a>
+            }
         </div>
     </div>
 </form>
 
-<section class="staff-card">
-    
-
-    <div class="table-responsive mt-3">
-        <table class="staff-table table table-hover align-middle">
-            <thead>
+<section class="staff-card bg-white border p-3 shadow-sm rounded">
+    <div class="table-responsive">
+        <table class="staff-table table table-hover align-middle mb-0">
+            <thead class="table-light">
                 <tr>
                     <th>Mã hóa đơn</th>
-                    <th>Mã đơn hàng</th>
+                    <th>Đơn hàng gốc</th>
+                    <th>Khách hàng</th>
+                    <th>Người lập</th>
                     <th>Ngày lập</th>
-                    <th>Tổng tiền</th>
+                    <th>Tổng thanh toán</th>
                     <th>Trạng thái</th>
                     <th class="text-end">Thao tác</th>
                 </tr>
@@ -51,26 +62,40 @@
                         <td>
                             <strong>#HD-@invoice.MaHoaDon.ToString("D5")</strong>
                         </td>
-                        <td>#DH-@invoice.MaDonHang.ToString("D5")</td>
+                        <td>
+                            <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@invoice.MaDonHang" class="text-decoration-none fw-semibold">
+                                #DH-@invoice.MaDonHang.ToString("D5")
+                            </a>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">@(invoice.HoTenKhachHang ?? invoice.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
+                            <small class="text-muted">@(invoice.SoDienThoai ?? invoice.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
+                        </td>
+                        <td>
+                            <small class="text-muted"><i class="bi bi-person-badge me-1"></i>@(invoice.TenNguoiLap ?? invoice.MaNguoiLapNavigation?.TenNguoiDung ?? invoice.MaNguoiLapNavigation?.TenDangNhap ?? "Chưa xác định")</small>
+                        </td>
                         <td>
                             @(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")
                         </td>
                         <td>
-                            <span class="text-success fw-bold">@((invoice.TongTien ?? 0).ToString("N0")) đ</span>
+                            <strong class="text-dark">@((invoice.TongTien ?? 0).ToString("N0")) đ</strong>
                         </td>
                         <td>
                             @if (invoice.TrangThaiHoaDon == "Đã thanh toán")
                             {
-                                <span class="staff-badge badge bg-success">@invoice.TrangThaiHoaDon</span>
+                                <span class="badge bg-success">@invoice.TrangThaiHoaDon</span>
                             }
                             else
                             {
-                                <span class="staff-badge badge bg-warning text-dark">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
+                                <span class="badge bg-warning text-dark">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
                             }
                         </td>
                         <td class="text-end">
-                            <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                            <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-info me-1" title="Xem chi tiết">
                                 <i class="bi bi-eye"></i> Chi tiết
+                            </a>
+                            <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@invoice.MaHoaDon" target="_blank" class="btn btn-sm btn-outline-secondary" title="In phiếu / PDF">
+                                <i class="bi bi-printer"></i> In
                             </a>
                         </td>
                     </tr>
@@ -78,7 +103,10 @@
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy hóa đơn nào phù hợp.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Không tìm thấy hóa đơn nào phù hợp.
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -88,21 +116,22 @@
     <!-- Phân trang -->
     @if (totalPages > 1)
     {
-        <nav class="d-flex justify-content-center mt-4">
-            <ul class="pagination">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span class="text-muted small">Trang @currentPage / @totalPages</span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
                     <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Trước</a>
                 </li>
                 @for (int i = 1; i <= totalPages; i++)
                 {
-                    <li class="page-item @(currentPage == i ? "active" : "")">
+                    <li class="page-item @(i == currentPage ? "active" : "")">
                         <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selectedStatus">@i</a>
                     </li>
                 }
-                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
                     <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Sau</a>
                 </li>
             </ul>
-        </nav>
+        </div>
     }
 </section>

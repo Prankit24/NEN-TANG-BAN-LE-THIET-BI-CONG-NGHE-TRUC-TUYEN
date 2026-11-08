@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#f1f5f9"/>
+  <rect x="1" y="1" width="198" height="198" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+  <g fill="#94a3b8" transform="translate(68, 60)">
+    <path d="M12 4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v40a2 2 0 0 0 2 2h52a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-4V6a2 2 0 0 0-2-2H12zm0 4h40v2H12V8zm-4 6h48v36H8V14zm14 8a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm-2 22 10-10 6 6 12-12 10 10H14l8-4z"/>
+  </g>
+  <text x="100" y="148" text-anchor="middle" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="12" font-weight="600">CHƯA CÓ ẢNH</text>
+</svg>

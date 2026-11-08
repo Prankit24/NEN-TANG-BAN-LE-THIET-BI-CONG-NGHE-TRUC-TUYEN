@@ -2408,3 +2408,960 @@
 .emua-staff .report-period-form {
     border-radius: 0 !important;
 }
+
+/* =========================================================
+   FIX OVERFLOW, CHỒNG CHỮ VÀ BẢNG ADMIN + STAFF
+   ========================================================= */
+
+/* Đảm bảo vùng chứa bảng luôn cuộn ngang mượt khi tràn, không ép cột */
+.table-responsive,
+.admin-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 0 !important;
+}
+
+/* Quy định độ rộng tối thiểu cho bảng để không bị ép chữ */
+.staff-table,
+.admin-table,
+.table-financial {
+    width: 100% !important;
+    min-width: 860px !important;
+    border-collapse: collapse !important;
+}
+
+/* Bảng đơn hàng đặc thù nhiều cột + cụm thao tác dài */
+.staff-order-table {
+    min-width: 1020px !important;
+}
+
+/* Tế bào bảng: căn chỉnh chuẩn, không vỡ layout */
+.staff-table th,
+.staff-table td,
+.admin-table th,
+.admin-table td {
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    padding: 10px 14px !important;
+}
+
+/* Cụm thao tác: đảm bảo không gian riêng, flex ngang không wrap ép chữ */
+.staff-action-cluster {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Thao tác link: phẳng, text link không khung */
+.staff-action-cluster a.staff-action-icon,
+.staff-action-cluster form button.staff-action-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: var(--emua-blue, #315efb) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+
+.staff-action-cluster a.staff-action-icon:hover,
+.staff-action-cluster form button.staff-action-icon:hover {
+    color: var(--emua-blue-hover, #1d4ed8) !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Form cập nhật trạng thái đơn hàng: không gian riêng biệt, không chồng lấn */
+.staff-action-cluster .staff-status-form {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 0 0 4px !important;
+    padding-left: 10px !important;
+    border-left: 1px solid #e2e8f0 !important;
+}
+
+.staff-action-cluster .staff-status-form select {
+    min-width: 120px !important;
+    max-width: 145px !important;
+    height: 28px !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: #26344c !important;
+    background-color: #fff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    outline: none !important;
+}
+
+.staff-action-cluster .staff-status-form button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    background: var(--emua-blue, #315efb) !important;
+    border: 1px solid var(--emua-blue, #315efb) !important;
+    border-radius: 0 !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+}
+
+.staff-action-cluster .staff-status-form button:hover {
+    background: var(--emua-blue-hover, #1d4ed8) !important;
+    border-color: var(--emua-blue-hover, #1d4ed8) !important;
+}
+
+/* Cột hành động ở các bảng User / Role / Product */
+.admin-table-actions,
+.staff-row-actions {
+    white-space: nowrap !important;
+}
+
+.admin-table-actions a,
+.admin-table-actions button,
+.table td.pe-4 .d-inline-flex {
+    white-space: nowrap !important;
+    gap: 8px !important;
+}
+
+/* FIX: STAFF ORDER ACTIONS */
+
+.staff-order-table {
+    width: 100%;
+    min-width: 1200px;
+    table-layout: auto;
+}
+
+    .staff-order-table th,
+    .staff-order-table td {
+        vertical-align: middle;
+    }
+
+        .staff-order-table th:last-child,
+        .staff-order-table td:last-child {
+            min-width: 240px;
+        }
+
+.staff-order-actions-cell {
+    text-align: left;
+    white-space: normal;
+}
+
+.staff-order-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+}
+
+.staff-order-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 18px;
+    white-space: nowrap;
+}
+
+.staff-order-inline-form {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.staff-order-table .staff-order-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #315efb;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+    .staff-order-table .staff-order-link:hover {
+        color: #1d42b8;
+        background: transparent;
+        text-decoration: underline;
+    }
+
+.staff-order-status-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+    .staff-order-status-form select {
+        flex: 1 1 auto;
+        width: 0;
+        min-width: 0;
+        height: 34px;
+        padding: 4px 8px;
+        border: 1px solid #d7dfeb;
+        border-radius: 0;
+        background: #fff;
+        font-size: 12px;
+    }
+
+    .staff-order-status-form .staff-order-update {
+        display: inline-flex;
+        flex: 0 0 32px;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid #d7dfeb;
+        border-radius: 0;
+        background: #fff;
+        color: #315efb;
+        cursor: pointer;
+    }
+
+        .staff-order-status-form .staff-order-update:hover {
+            background: #eef2ff;
+        }
+
+
+/* === EXTRACTED FROM STAFF _LAYOUT.CSHTML === */
+
+        /* =========================================
+           HỆ THỐNG THIẾT KẾ ĐỒNG BỘ EMUA (ADMIN & STAFF)
+           Sidebar: #141827 | Nền: #F4F6FA | Thẻ: #FFFFFF | Điểm nhấn: #315EFB
+        ========================================= */
+
+        html,
+        body {
+            min-height: 100%;
+            background: #f4f6fa;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .staff-shell {
+            --staff-bg: #f4f6fa;
+            --staff-sidebar: #141827;
+            --staff-surface: #ffffff;
+            --staff-border: #e5eaf2;
+            --staff-text: #26344c;
+            --staff-muted: #7b879a;
+            --staff-blue: #315efb;
+            --staff-blue-hover: #244bd6;
+            min-height: 100vh;
+            background: var(--staff-bg);
+            color: var(--staff-text);
+        }
+
+        .staff-shell .admin-main,
+        .staff-shell .staff-content {
+            min-width: 0;
+            background: var(--staff-bg);
+            color: var(--staff-text);
+        }
+
+        /* SIDEBAR (ĐỒNG BỘ ADMIN: #141827) */
+        .staff-shell .staff-sidebar {
+            background: #141827;
+            border-right: 1px solid #252c3e;
+            color: #c3cce0;
+            box-shadow: none;
+        }
+
+        .staff-shell .staff-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 104px;
+            padding: 18px 22px;
+            background: transparent;
+            border-bottom: 1px solid #252c3e;
+            text-decoration: none;
+        }
+
+        .staff-brand .admin-logo-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .staff-brand .staff-brand-wordmark {
+            display: block;
+            width: 156px;
+            max-width: 100%;
+            height: 56px;
+            object-fit: contain;
+            background: transparent;
+            border: 0;
+            border-radius: 0 !important;
+            box-shadow: none;
+        }
+
+        .staff-brand .admin-logo-text small {
+            margin: 0;
+            color: #8795b0;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.4;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .staff-brand .admin-logo-mini {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+        }
+
+        .staff-brand .staff-brand-icon {
+            display: block;
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            background: transparent;
+            border: 0;
+            border-radius: 0 !important;
+            box-shadow: none;
+        }
+
+        body.admin-sidebar-collapsed .staff-brand .admin-logo-text {
+            display: none;
+        }
+
+        body.admin-sidebar-collapsed .staff-brand .admin-logo-mini {
+            display: flex;
+        }
+
+        body.admin-sidebar-collapsed .staff-shell .staff-brand {
+            padding: 18px 8px;
+        }
+
+        /* MENU SIDEBAR */
+        .staff-shell .admin-nav-label {
+            display: block;
+            margin: 18px 0 5px;
+            padding: 0 12px;
+            color: #8795b0;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+        }
+
+        .staff-shell .admin-nav-label:first-child {
+            margin-top: 0;
+        }
+
+        .staff-shell .admin-nav > a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+            padding: 11px 13px;
+            background: transparent;
+            color: #bdc8dd;
+            border-radius: 0 !important;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .staff-shell .admin-nav > a > i {
+            width: 20px;
+            font-size: 17px;
+            color: #91a3c5;
+            text-align: center;
+        }
+
+        .staff-shell .admin-nav > a:hover {
+            background: #202a42;
+            color: #fff;
+        }
+
+        .staff-shell .admin-nav > a:hover > i {
+            color: #bfd0ff;
+        }
+
+        .staff-shell .admin-nav > a.active {
+            background: #263555;
+            color: #d3deff;
+            box-shadow: inset 3px 0 0 #315efb;
+            font-weight: 600;
+        }
+
+        .staff-shell .admin-nav > a.active > i {
+            color: #8bb2ff;
+        }
+
+        .staff-shell .admin-sidebar-bottom {
+            margin-top: auto;
+            padding: 12px 14px;
+            background: #141827;
+            border-top: 1px solid #252c3e;
+        }
+
+        .staff-shell .admin-bottom-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 42px;
+            padding: 10px 13px;
+            background: transparent;
+            color: #bdc8dd;
+            border: 0;
+            border-radius: 0 !important;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .staff-shell .admin-bottom-link:hover {
+            background: #202a42;
+            color: #fff;
+        }
+
+        .staff-shell .admin-bottom-link.logout {
+            color: #f6a1af;
+        }
+
+        .staff-shell .admin-bottom-link.logout:hover {
+            background: #34232e;
+            color: #ffc0cc;
+        }
+
+        /* HEADER (TRẮNG SẠCH: #FFFFFF, BORDER #E5EAF2) */
+        .staff-shell .admin-header {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            display: flex;
+            min-height: 84px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 28px;
+            border-bottom: 1px solid #e5eaf2;
+            background: #ffffff;
+            color: #26344c;
+            box-shadow: none;
+        }
+
+        .staff-shell .admin-header-left {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .staff-shell .admin-header h1 {
+            margin: 0 0 5px;
+            color: #26344c;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: -.5px;
+        }
+
+        .staff-shell .admin-header p {
+            margin: 0;
+            color: #7b879a;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .staff-shell .staff-header-actions {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .staff-shell .admin-menu-toggle {
+            display: grid;
+            box-sizing: border-box;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            place-items: center;
+            padding: 0;
+            border: 1px solid #e2e8f1;
+            border-radius: 0 !important;
+            background: #ffffff;
+            color: #66758e;
+            font-size: 21px;
+            cursor: pointer;
+            transition: all .18s ease;
+        }
+
+        .staff-shell .admin-header-link {
+            display: inline-flex;
+            box-sizing: border-box;
+            min-height: 37px;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 8px 12px;
+            border: 1px solid #e5eaf2;
+            border-radius: 0 !important;
+            background: #ffffff;
+            color: #71809a;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all .18s ease;
+        }
+
+        .staff-shell .admin-menu-toggle:hover,
+        .staff-shell .admin-header-link:hover,
+        .staff-shell .staff-notification:hover {
+            border-color: #cad7fa;
+            background: #f0f4ff;
+            color: #315efb;
+        }
+
+        /* THÔNG BÁO ĐỔI TRẢ */
+        .staff-notification {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 37px;
+            height: 37px;
+            flex-shrink: 0;
+            border: 1px solid #e5eaf2;
+            border-radius: 0 !important;
+            background: #ffffff;
+            color: #71809a;
+            text-decoration: none;
+            transition: all .18s ease;
+        }
+
+        .staff-notification > i {
+            font-size: 17px;
+        }
+
+        .staff-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            border: 2px solid #ffffff;
+            border-radius: 0 !important;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        /* TÀI KHOẢN */
+        .staff-shell .admin-user {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 10px;
+            margin-left: 6px;
+            padding: 0 0 0 14px;
+            border-left: 1px solid #e5eaf2;
+            background: transparent;
+            color: #34435b;
+        }
+
+        .staff-shell .admin-avatar {
+            display: grid;
+            box-sizing: border-box;
+            width: 37px;
+            height: 37px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dbe5ff;
+            border-radius: 0 !important;
+            background: #edf2ff;
+            color: #315efb;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: none;
+        }
+
+        .staff-shell .staff-user-name {
+            display: block;
+            max-width: 160px;
+            overflow: hidden;
+            color: #34435b;
+            font-size: 12px;
+            font-weight: 600;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .staff-shell .admin-user > i {
+            color: #8c98ac;
+            font-size: 11px;
+        }
+
+        /* NỘI DUNG */
+        .staff-shell .admin-content {
+            min-width: 0;
+            padding: 28px;
+            background: #f4f6fa;
+            color: #26344c;
+        }
+
+        .staff-shell .staff-alert.alert-success {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            border-radius: 0 !important;
+        }
+
+        /* FOCUS OUTLINE */
+        .staff-shell a:focus-visible,
+        .staff-shell button:focus-visible,
+        .staff-shell input:focus-visible,
+        .staff-shell select:focus-visible {
+            outline: 2px solid #315efb;
+            outline-offset: 2px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 850px) {
+            .staff-shell .admin-header {
+                padding: 14px 18px;
+                min-height: 72px;
+            }
+
+            .staff-shell .admin-content {
+                padding: 18px 14px;
+            }
+
+            .staff-shell .admin-header h1 {
+                font-size: 17px;
+            }
+
+            .staff-shell .staff-user-name {
+                max-width: 100px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .staff-shell .admin-header {
+                gap: 10px;
+                padding: 12px 14px;
+            }
+
+            .staff-shell .admin-header h1 {
+                font-size: 15px;
+            }
+
+            .staff-shell .admin-header p {
+                font-size: 10px;
+            }
+
+            .staff-shell .staff-header-actions {
+                gap: 6px;
+            }
+
+            .staff-shell .admin-header-link span,
+            .staff-shell .staff-user-name {
+                display: none;
+            }
+
+            .staff-shell .admin-user > i {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .staff-shell a,
+            .staff-shell button {
+                transition: none;
+            }
+        }
+    
+/* Bỏ gạch chân cho liên kết tên nhân viên trên header */
+.staff-shell a.admin-user,
+.staff-shell a.admin-user:link,
+.staff-shell a.admin-user:visited,
+.staff-shell a.admin-user:hover,
+.staff-shell a.admin-user:focus,
+.staff-shell a.admin-user:active {
+    text-decoration: none !important;
+}
+
+.staff-shell a.admin-user .staff-user-name,
+.staff-shell a.admin-user:hover .staff-user-name {
+    text-decoration: none !important;
+}
+
+
+/* =========================================================
+   STAFF NOTIFICATION DROPDOWN & AVATAR FIX
+   ========================================================= */
+
+/* Avatar tròn trên Header Staff */
+.staff-shell .admin-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1.5px solid #dbe5ff !important;
+    background: #edf2ff !important;
+    padding: 0 !important;
+}
+
+.staff-shell .admin-avatar .staff-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.staff-shell .admin-avatar .staff-avatar-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #315efb !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+/* Nút chuông thông báo */
+.staff-shell .staff-notification {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    border: 1px solid #e5eaf2 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #4b5563 !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+.staff-shell .staff-notification:hover {
+    border-color: #cad7fa !important;
+    background: #f0f4ff !important;
+    color: #315efb !important;
+}
+
+.staff-shell .staff-notification-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 4px !important;
+    border-radius: 9px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #ffffff !important;
+    z-index: 2 !important;
+}
+
+/* Menu Dropdown Thông Báo */
+.staff-shell .staff-notification-menu {
+    width: 340px !important;
+    min-width: 320px !important;
+    max-width: 92vw !important;
+    padding: 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+    margin-top: 8px !important;
+}
+
+.staff-shell .staff-notification-menu .dropdown-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 16px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    margin: 0 !important;
+}
+
+.staff-shell .staff-notification-menu .dropdown-header strong {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+}
+
+.staff-shell .staff-notification-menu .dropdown-header span {
+    font-size: 11px !important;
+    color: #64748b !important;
+}
+
+/* Từng mục thông báo: Flex rõ ràng, icon + copy + count, KHÔNG gạch chân */
+.staff-shell .staff-notification-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #334155 !important;
+    text-decoration: none !important;
+    transition: background 0.15s ease !important;
+    background: #ffffff !important;
+}
+
+.staff-shell .staff-notification-item:hover,
+.staff-shell .staff-notification-item:focus {
+    background: #f8fafc !important;
+    text-decoration: none !important;
+    color: #1e293b !important;
+}
+
+.staff-shell .staff-notification-item-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 0 !important;
+    background: #eff6ff !important;
+    color: #315efb !important;
+    font-size: 16px !important;
+}
+
+.staff-shell .staff-notification-item[data-notification="returns"] .staff-notification-item-icon {
+    background: #fef2f2 !important;
+    color: #ef4444 !important;
+}
+
+.staff-shell .staff-notification-item[data-notification="orders"] .staff-notification-item-icon {
+    background: #eff6ff !important;
+    color: #315efb !important;
+}
+
+.staff-shell .staff-notification-item[data-notification="stock"] .staff-notification-item-icon {
+    background: #fffbeb !important;
+    color: #f59e0b !important;
+}
+
+.staff-shell .staff-notification-item-copy {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-decoration: none !important;
+}
+
+.staff-shell .staff-notification-item-copy strong {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+}
+
+.staff-shell .staff-notification-item-copy small {
+    font-size: 11px !important;
+    color: #64748b !important;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.staff-shell .staff-notification-item-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 6px !important;
+    border-radius: 11px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+}
+
+.staff-shell .staff-notification-empty {
+    padding: 24px 16px !important;
+    margin: 0 !important;
+    text-align: center !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+}
+
+@media (max-width: 576px) {
+    .staff-shell .staff-notification-menu {
+        position: fixed !important;
+        top: 60px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+}

@@ -5,7 +5,7 @@
     --admin-purple: #48458b;
     --admin-purple-light: #6663ad;
     --admin-purple-pale: #efeffb;
-    --admin-page: #f6f6ff;
+    --admin-page: #F4F6FA;
     --admin-card: #ffffff;
     --admin-border: #dcdcf1;
     --admin-text: #18172d;
@@ -1054,4 +1054,819 @@ body {
 .staff-shell .report-period-form,
 .emua-staff .report-period-form {
     border-radius: 0 !important;
+}
+
+/* =========================================================
+   FIX OVERFLOW, CHỒNG CHỮ VÀ BẢNG ADMIN + STAFF
+   ========================================================= */
+
+/* Đảm bảo vùng chứa bảng luôn cuộn ngang mượt khi tràn, không ép cột */
+.table-responsive,
+.admin-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin-bottom: 0 !important;
+}
+
+/* Quy định độ rộng tối thiểu cho bảng để không bị ép chữ */
+.staff-table,
+.admin-table,
+.table-financial {
+    width: 100% !important;
+    min-width: 860px !important;
+    border-collapse: collapse !important;
+}
+
+/* Bảng đơn hàng đặc thù nhiều cột + cụm thao tác dài */
+.staff-order-table {
+    min-width: 1020px !important;
+}
+
+/* Tế bào bảng: căn chỉnh chuẩn, không vỡ layout */
+.staff-table th,
+.staff-table td,
+.admin-table th,
+.admin-table td {
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    padding: 10px 14px !important;
+}
+
+/* Cụm thao tác: đảm bảo không gian riêng, flex ngang không wrap ép chữ */
+.staff-action-cluster {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* Thao tác link: phẳng, text link không khung */
+.staff-action-cluster a.staff-action-icon,
+.staff-action-cluster form button.staff-action-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: var(--emua-blue, #315efb) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+}
+
+.staff-action-cluster a.staff-action-icon:hover,
+.staff-action-cluster form button.staff-action-icon:hover {
+    color: var(--emua-blue-hover, #1d4ed8) !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
+
+/* Form cập nhật trạng thái đơn hàng: không gian riêng biệt, không chồng lấn */
+.staff-action-cluster .staff-status-form {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 0 0 4px !important;
+    padding-left: 10px !important;
+    border-left: 1px solid #e2e8f0 !important;
+}
+
+.staff-action-cluster .staff-status-form select {
+    min-width: 120px !important;
+    max-width: 145px !important;
+    height: 28px !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: #26344c !important;
+    background-color: #fff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    outline: none !important;
+}
+
+.staff-action-cluster .staff-status-form button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    background: var(--emua-blue, #315efb) !important;
+    border: 1px solid var(--emua-blue, #315efb) !important;
+    border-radius: 0 !important;
+    color: #fff !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+}
+
+.staff-action-cluster .staff-status-form button:hover {
+    background: var(--emua-blue-hover, #1d4ed8) !important;
+    border-color: var(--emua-blue-hover, #1d4ed8) !important;
+}
+
+/* Cột hành động ở các bảng User / Role / Product */
+.admin-table-actions,
+.staff-row-actions {
+    white-space: nowrap !important;
+}
+
+.admin-table-actions a,
+.admin-table-actions button,
+.table td.pe-4 .d-inline-flex {
+    white-space: nowrap !important;
+    gap: 8px !important;
+}
+
+
+/* === EXTRACTED FROM ADMIN _LAYOUT.CSHTML === */
+
+        body.emua-admin {
+            margin: 0;
+            background: #f4f6fa;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .emua-admin .admin-shell {
+            --sidebar-width: 248px;
+            --sidebar-mini-width: 80px;
+            display: block;
+            min-height: 100vh;
+            background: #f4f6fa;
+        }
+
+        /* =====================================
+                   SIDEBAR
+                ===================================== */
+
+        .emua-admin .admin-sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            display: flex;
+            width: var(--sidebar-width);
+            height: 100vh;
+            height: 100dvh;
+            flex-direction: column;
+            overflow: hidden;
+            border-right: 1px solid #252c3e;
+            background: #141827;
+            color: #c3cce0;
+            box-shadow: none;
+            transition: width .2s ease, transform .2s ease;
+        }
+
+        /* =====================================
+                   LOGO
+                ===================================== */
+
+        .emua-admin .admin-logo {
+            position: relative;
+            display: flex;
+            flex: 0 0 auto;
+            min-height: 104px;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 18px 22px;
+            border-bottom: 1px solid #252c3e;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .emua-admin .admin-logo-text {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emua-admin .admin-brand-image {
+            display: block;
+            width: 164px;
+            height: 60px;
+            border: 0;
+            border-radius: 0 !important;
+            background: transparent;
+            object-fit: contain;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-logo-mini {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-brand-icon {
+            display: block;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 0 !important;
+            background: transparent;
+            object-fit: contain;
+        }
+
+        /* =====================================
+                   MENU
+                ===================================== */
+
+        .emua-admin .admin-nav {
+            position: relative;
+            display: flex;
+            flex: 1 1 0%;
+            min-height: 0;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 5px;
+            margin: 0;
+            padding: 18px 14px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #35405a transparent;
+        }
+
+            .emua-admin .admin-nav > .admin-nav-label {
+                position: static;
+                display: block;
+                flex: 0 0 auto;
+                width: auto;
+                height: auto;
+                min-height: 20px;
+                max-height: none;
+                margin: 20px 0 5px;
+                padding: 0 12px;
+                overflow: visible;
+                border: 0;
+                background: transparent;
+                color: #8795b0;
+                font-size: 10px;
+                font-weight: 700;
+                line-height: 20px;
+                letter-spacing: .8px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                opacity: 1;
+                transform: none;
+            }
+
+                .emua-admin .admin-nav > .admin-nav-label:first-child {
+                    margin-top: 0;
+                }
+
+            .emua-admin .admin-nav > a {
+                position: relative;
+                display: flex;
+                flex: 0 0 auto;
+                box-sizing: border-box;
+                width: 100%;
+                height: auto;
+                min-height: 45px;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 12px;
+                margin: 0;
+                padding: 11px 13px;
+                overflow: hidden;
+                border: 0;
+                border-radius: 0 !important;
+                background: transparent;
+                background-image: none;
+                color: #bdc8dd;
+                font-size: 13px;
+                font-weight: 500;
+                line-height: 22px;
+                text-align: left;
+                text-decoration: none;
+                opacity: 1;
+                filter: none;
+                transform: none;
+                box-shadow: none;
+                transition: background .18s ease, color .18s ease;
+            }
+
+                .emua-admin .admin-nav > a::before,
+                .emua-admin .admin-nav > a::after {
+                    display: none;
+                    content: none;
+                }
+
+                .emua-admin .admin-nav > a > i {
+                    display: grid;
+                    flex: 0 0 21px;
+                    width: 21px;
+                    height: 22px;
+                    margin: 0;
+                    padding: 0;
+                    place-items: center;
+                    border: 0;
+                    border-radius: 0 !important;
+                    background: transparent;
+                    color: #91a3c5;
+                    font-size: 18px;
+                    line-height: 1;
+                    box-shadow: none;
+                }
+
+                .emua-admin .admin-nav > a > span {
+                    display: block;
+                    flex: 1;
+                    min-width: 0;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                    color: inherit;
+                    line-height: 22px;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .emua-admin .admin-nav > a:hover {
+                    background: #202a42;
+                    color: #fff;
+                    filter: none;
+                    transform: none;
+                    box-shadow: none;
+                }
+
+                    .emua-admin .admin-nav > a:hover > i {
+                        color: #bfd0ff;
+                    }
+
+                .emua-admin .admin-nav > a.active {
+                    background: #263555;
+                    color: #d3deff;
+                    box-shadow: inset 3px 0 0 #6184ff;
+                }
+
+                    .emua-admin .admin-nav > a.active > i {
+                        color: #a5bcff;
+                    }
+
+        /* =====================================
+                   MENU DƯỚI
+                ===================================== */
+
+        .emua-admin .admin-sidebar-bottom {
+            position: static;
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            gap: 5px;
+            margin: 0;
+            padding: 12px 14px;
+            border-top: 1px solid #252c3e;
+            background: #141827;
+        }
+
+            .emua-admin .admin-sidebar-bottom form {
+                display: block;
+                margin: 0;
+            }
+
+        .emua-admin .admin-bottom-link {
+            display: flex;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 43px;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            margin: 0;
+            padding: 10px 13px;
+            border: 0;
+            border-radius: 0 !important;
+            background: transparent;
+            color: #bdc8dd;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 22px;
+            text-align: left;
+            text-decoration: none;
+            transform: none;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+            .emua-admin .admin-bottom-link > i {
+                display: grid;
+                flex: 0 0 21px;
+                width: 21px;
+                place-items: center;
+                font-size: 18px;
+            }
+
+            .emua-admin .admin-bottom-link > span {
+                white-space: nowrap;
+            }
+
+            .emua-admin .admin-bottom-link:hover {
+                background: #202a42;
+                color: #fff;
+            }
+
+            .emua-admin .admin-bottom-link.logout {
+                color: #f6a1af;
+            }
+
+                .emua-admin .admin-bottom-link.logout:hover {
+                    background: #34232e;
+                    color: #ffc0cc;
+                }
+
+        /* =====================================
+                   NỘI DUNG
+                ===================================== */
+
+        .emua-admin .admin-main {
+            display: block;
+            width: auto;
+            min-width: 0;
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            padding: 0;
+            background: #f4f6fa;
+            transition: margin-left .2s ease;
+        }
+
+        .emua-admin .admin-content {
+            min-width: 0;
+            padding: 28px;
+            background: #f4f6fa;
+            color: #26344c;
+        }
+
+        /* =====================================
+                   HEADER
+                ===================================== */
+
+        .emua-admin .admin-header {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            display: flex;
+            min-height: 84px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 28px;
+            border-bottom: 1px solid #e5eaf2;
+            background: #fff;
+            color: #26344c;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-header-left {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .emua-admin .admin-header-left > div {
+                min-width: 0;
+            }
+
+        .emua-admin .admin-menu-toggle {
+            display: grid;
+            box-sizing: border-box;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            place-items: center;
+            padding: 0;
+            border: 1px solid #e2e8f1;
+            border-radius: 0 !important;
+            background: #fff;
+            color: #66758e;
+            font-family: inherit;
+            font-size: 21px;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-header h1 {
+            margin: 0 0 5px;
+            color: #26344c;
+            font-family: "Inter", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            letter-spacing: -.5px;
+        }
+
+        .emua-admin .admin-header p {
+            margin: 0;
+            color: #7b879a;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .emua-admin .admin-header-actions {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .emua-admin .admin-header-link {
+            display: inline-flex;
+            box-sizing: border-box;
+            min-height: 37px;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 8px 11px;
+            border: 1px solid #e5eaf2;
+            border-radius: 0 !important;
+            background: #fff;
+            color: #71809a;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+            .emua-admin .admin-header-link > i {
+                font-size: 16px;
+            }
+
+            .emua-admin .admin-header-link:hover,
+            .emua-admin .admin-header-link.active,
+            .emua-admin .admin-menu-toggle:hover {
+                border-color: #cad7fa;
+                background: #f0f4ff;
+                color: #315efb;
+            }
+
+        /* =====================================
+                   TÀI KHOẢN
+                ===================================== */
+
+        .emua-admin .admin-user {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 10px;
+            margin-left: 5px;
+            padding: 0 0 0 15px;
+            border-left: 1px solid #e5eaf2;
+            border-radius: 0 !important;
+            background: transparent;
+            color: #34435b;
+        }
+
+        .emua-admin .admin-avatar {
+            display: grid;
+            box-sizing: border-box;
+            width: 37px;
+            height: 37px;
+            flex-shrink: 0;
+            place-items: center;
+            border: 1px solid #dbe5ff;
+            border-radius: 0 !important;
+            background: #edf2ff;
+            color: #315efb;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: none;
+        }
+
+        .emua-admin .admin-account-info {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+            .emua-admin .admin-account-info strong {
+                display: block;
+                max-width: 170px;
+                overflow: hidden;
+                color: #34435b;
+                font-size: 11px;
+                font-weight: 600;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .emua-admin .admin-account-info small {
+                color: #7b879a;
+                font-size: 10px;
+            }
+
+        /* =====================================
+                   THU GỌN SIDEBAR
+                ===================================== */
+
+        .emua-admin.admin-sidebar-collapsed .admin-sidebar {
+            width: var(--sidebar-mini-width);
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-main {
+            margin-left: var(--sidebar-mini-width);
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo {
+            padding: 18px 8px;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo-text {
+            display: none;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-logo-mini {
+            display: flex;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-nav {
+            gap: 7px;
+            padding: 18px 11px;
+        }
+
+            .emua-admin.admin-sidebar-collapsed
+            .admin-nav > .admin-nav-label {
+                display: none;
+            }
+
+            .emua-admin.admin-sidebar-collapsed .admin-nav > a {
+                justify-content: center;
+                gap: 0;
+                padding: 11px 8px;
+            }
+
+                .emua-admin.admin-sidebar-collapsed .admin-nav > a > span,
+                .emua-admin.admin-sidebar-collapsed .admin-bottom-link > span {
+                    display: none;
+                }
+
+        .emua-admin.admin-sidebar-collapsed .admin-sidebar-bottom {
+            padding: 12px 11px;
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-bottom-link {
+            justify-content: center;
+            gap: 0;
+            padding: 10px 8px;
+        }
+
+        /* =====================================
+                   BACKDROP / FOCUS
+                ===================================== */
+
+        .emua-admin .admin-sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1030;
+            display: block;
+            visibility: hidden;
+            background: rgba(10, 18, 35, .48);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease, visibility .2s ease;
+        }
+
+        .emua-admin a:focus-visible,
+        .emua-admin button:focus-visible {
+            outline: 2px solid #7192ff;
+            outline-offset: 3px;
+        }
+
+        /* =====================================
+                   RESPONSIVE
+                ===================================== */
+
+        @media (max-width: 1100px) {
+            .emua-admin .admin-header-link > span {
+                display: none;
+            }
+
+            .emua-admin .admin-header-link {
+                width: 37px;
+                padding: 0;
+            }
+
+            .emua-admin .admin-account-info strong {
+                max-width: 120px;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .emua-admin .admin-sidebar {
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+            }
+
+                .emua-admin .admin-sidebar.is-open {
+                    transform: translateX(0);
+                }
+
+            .emua-admin .admin-main {
+                margin-left: 0;
+            }
+
+            .emua-admin .admin-sidebar-backdrop.is-visible {
+                visibility: visible;
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .emua-admin .admin-header {
+                min-height: 76px;
+                padding: 14px 20px;
+            }
+
+            .emua-admin .admin-content {
+                padding: 22px 20px;
+            }
+
+            .emua-admin .admin-header h1 {
+                font-size: 17px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .emua-admin .admin-header {
+                gap: 10px;
+                padding: 12px 14px;
+            }
+
+            .emua-admin .admin-header-left {
+                gap: 10px;
+            }
+
+            .emua-admin .admin-header h1 {
+                font-size: 15px;
+            }
+
+            .emua-admin .admin-header p {
+                font-size: 10px;
+            }
+
+            .emua-admin .admin-content {
+                padding: 18px 14px;
+            }
+
+            .emua-admin .admin-user {
+                margin-left: 0;
+                padding-left: 8px;
+            }
+
+            .emua-admin .admin-account-info,
+            .emua-admin .admin-help-link,
+            .emua-admin .admin-notification-link {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .emua-admin .admin-sidebar,
+            .emua-admin .admin-main,
+            .emua-admin .admin-sidebar-backdrop,
+            .emua-admin .admin-nav > a {
+                transition: none;
+            }
+        }
+    
+/* Admin Avatar Image & Fallback */
+.admin-avatar {
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+.admin-avatar .admin-avatar-img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.admin-avatar .admin-avatar-fallback {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
 }

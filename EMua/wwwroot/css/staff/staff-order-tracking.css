@@ -1,0 +1,145 @@
+/* ===== Thanh tiến trình giao hàng ===== */
+    .delivery-tracker {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0 40px;
+    }
+
+        .delivery-tracker::before {
+            content: "";
+            position: absolute;
+            top: 22px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 0 !important;
+            z-index: 0;
+        }
+
+        .delivery-tracker .tracker-progress {
+            position: absolute;
+            top: 22px;
+            left: 0;
+            height: 4px;
+            background: #315efb;
+            border-radius: 0 !important;
+            z-index: 1;
+            transition: width .6s ease;
+        }
+
+    .tracker-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 25%;
+        text-align: center;
+    }
+
+        .tracker-step .icon-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 0 !important;
+            background: #fff;
+            border: 3px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #adb5bd;
+            transition: all .3s ease;
+        }
+
+        .tracker-step.done .icon-circle {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        .tracker-step.active .icon-circle {
+            background: #fff;
+            border-color: #0d6efd;
+            color: #0d6efd;
+            box-: 0 0 0 4px rgba(13,110,253,.15);
+            animation: pulse 1.6s infinite;
+        }
+
+        .tracker-step.cancelled .icon-circle {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #fff;
+        }
+
+    @keyframes pulse {
+        0% {
+            box-: 0 0 0 0 rgba(13,110,253,.35);
+        }
+
+        70% {
+            box-: 0 0 0 8px rgba(13,110,253,0);
+        }
+
+        100% {
+            box-: 0 0 0 0 rgba(13,110,253,0);
+        }
+    }
+
+    .tracker-step .step-label {
+        margin-top: 8px;
+        font-size: .8rem;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .tracker-step.done .step-label,
+    .tracker-step.active .step-label {
+        color: #212529;
+    }
+
+    /* Xe giao hàng chạy dọc thanh tiến trình khi đang giao */
+    .truck-runner {
+        position: absolute;
+        top: 2px;
+        transform: translateX(-50%);
+        font-size: 1.4rem;
+        color: #0d6efd;
+        transition: left .6s ease;
+        animation: bounce 1.2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-4px);
+        }
+    }
+
+    .eta-banner {
+        background: #e7f1ff;
+        border: 1px dashed #0d6efd;
+        border-radius: 0 !important;
+        padding: .75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        color: #0d47a1;
+        font-weight: 600;
+    }
+
+    .proof-photo-preview {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 0 !important;
+        border: 1px solid #dee2e6;
+    }
+
+    .extra-small {
+        font-size: .72rem;
+    }

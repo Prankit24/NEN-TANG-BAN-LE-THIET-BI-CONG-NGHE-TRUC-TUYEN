@@ -1,0 +1,19 @@
+/* Global admin base styles: square corners and light shadows */
+* {
+    border-radius: 0 !important;
+}
+.card, .btn, .form-control, .table, .modal-content, .badge, .sidebar, .dropdown-menu {
+    border-radius: 0 !important;
+}
+.card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+body {
+    background: #F4F6FA !important;
+    color: #18172d;
+}
+.btn-primary {
+    background-color: #315EFB !important;
+    border-color: #315EFB !important;
+    color: #FFFFFF !important;
+}

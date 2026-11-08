@@ -1,56 +1,220 @@
 @model IEnumerable<DonHang>
 @{
-    ViewData["Title"] = "Đơn hàng"; var statuses = (string[])ViewBag.Statuses; var selected = (string)ViewBag.Status;
+    ViewData["Title"] = "Quản lý đơn hàng";
+    var statuses = (string[])ViewBag.Statuses;
+    var selected = (string)(ViewBag.Status ?? "all");
+
+    // Thống kê nhanh theo tình trạng xử lý trong danh sách
+    var totalOrders = Model.Count();
+    var pendingCount = Model.Count(o => o.TrangThaiDonHang == "Chờ xử lý" || o.TrangThaiDonHang == "Chờ xác nhận" || string.IsNullOrWhiteSpace(o.TrangThaiDonHang));
+    var returnCount = Model.Count(o => o.TrangThaiDonHang != null && o.TrangThaiDonHang.Contains("đổi trả"));
+    var shippingCount = Model.Count(o => o.TrangThaiDonHang == "Đang xử lý" || o.TrangThaiDonHang == "Đang giao" || o.TrangThaiDonHang == "Đang giao hàng");
 }
-<form method="get" class="staff-filter"><input name="q" value="@ViewBag.Search"
-                                                   placeholder="Tìm mã đơn, tên khách, số điện thoại..." /><select name="status">
-    <option value="all">Tất cả trạng thái</option>@foreach(var status in statuses){
-    <option value="@status"
-            selected="@(selected == status)">@status</option>
-}
-</select><button><i class="bi bi-search"></i> Tìm kiếm</button></form>
-<section class="staff-card">
+
+<style>
+    .order-status-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin-bottom: 16px;
+    }
+    .order-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        color: #475569;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        white-space: nowrap;
+        transition: all .15s ease;
+    }
+    .order-tab-btn:hover {
+        background: #f8fafc;
+        color: #1e293b;
+        border-color: #cbd5e1;
+    }
+    .order-tab-btn.active {
+        background: #315efb;
+        color: #ffffff;
+        border-color: #315efb;
+    }
+    .order-tab-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #475569;
+    }
+    .order-tab-btn.active .order-tab-badge {
+        background: rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+    }
+    .staff-order-table th {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+    .staff-order-table td {
+        font-size: 13px;
+        vertical-align: middle;
+        padding: 12px 14px;
+        border-bottom: 1px solid #edf2f7;
+    }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-receipt me-2"></i>Quy trình xử lý đơn hàng</h4>
+        <span class="text-muted small">
+            Đang hiển thị: <strong>@totalOrders</strong> đơn | 
+            <span class="text-primary fw-semibold">Cần xử lý: @pendingCount</span> | 
+            <span class="text-warning fw-semibold">Đổi trả: @returnCount</span> | 
+            <span class="text-info fw-semibold">Đang giao: @shippingCount</span>
+        </span>
+    </div>
+</div>
+
+<!-- Tabs lọc trạng thái nhanh theo luồng công việc -->
+<div class="order-status-tabs">
+    <a asp-action="Index" asp-route-status="all" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "all" ? "active" : "")">
+        Tất cả đơn <span class="order-tab-badge">@totalOrders</span>
+    </a>
+    <a asp-action="Index" asp-route-status="Chờ xử lý" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "Chờ xử lý" ? "active" : "")">
+        <i class="bi bi-hourglass-split"></i> Chờ xử lý <span class="order-tab-badge">@pendingCount</span>
+    </a>
+    <a asp-action="Index" asp-route-status="Yêu cầu đổi trả" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "Yêu cầu đổi trả" ? "active" : "")">
+        <i class="bi bi-arrow-counterclockwise"></i> Yêu cầu đổi trả <span class="order-tab-badge">@returnCount</span>
+    </a>
+    <a asp-action="Index" asp-route-status="Đang xử lý" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "Đang xử lý" ? "active" : "")">
+        <i class="bi bi-box-seam"></i> Đang xử lý
+    </a>
+    <a asp-action="Index" asp-route-status="Đã hoàn thành" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "Đã hoàn thành" ? "active" : "")">
+        <i class="bi bi-check2-circle"></i> Đã hoàn thành
+    </a>
+    <a asp-action="Index" asp-route-status="Đã hủy" asp-route-q="@ViewBag.Search" class="order-tab-btn @(selected == "Đã hủy" ? "active" : "")">
+        <i class="bi bi-x-circle"></i> Đã hủy
+    </a>
+</div>
+
+<!-- Thanh tìm kiếm -->
+<form method="get" class="mb-3 bg-white p-3 border">
+    <input type="hidden" name="status" value="@selected" />
+    <div class="row g-2 align-items-center">
+        <div class="col-md-9">
+            <input name="q" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm kiếm theo mã đơn (#DH-00001), họ tên khách hàng, số điện thoại người nhận..." />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Tìm kiếm
+            </button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string))
+            {
+                <a asp-action="Index" asp-route-status="@selected" class="btn btn-sm btn-outline-secondary">Xóa</a>
+            }
+        </div>
+    </div>
+</form>
+
+<!-- Bảng danh sách đơn hàng -->
+<section class="staff-card bg-white border p-0">
     <div class="table-responsive">
-        <table class="staff-table">
+        <table class="table table-hover align-middle mb-0 staff-order-table">
             <thead>
                 <tr>
-                    <th>Mã đơn</th>
-                    <th>Khách hàng</th>
-                    <th>Liên hệ</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
+                    <th style="width: 100px;">Mã đơn</th>
+                    <th style="min-width: 180px;">Khách hàng</th>
+                    <th style="min-width: 120px;">Số điện thoại</th>
+                    <th style="min-width: 140px;">Thời gian đặt</th>
+                    <th style="min-width: 120px;" class="text-end">Tổng tiền</th>
+                    <th style="min-width: 140px;" class="text-center">Trạng thái</th>
+                    <th style="min-width: 250px;" class="text-end">Cập nhật nhanh &amp; Thao tác</th>
                 </tr>
             </thead>
-            <tbody>@foreach(var order in Model){
-                <tr>
-                    <td><strong>#DH-@order.MaDonHang.ToString("D5")</strong></td>
-                    <td>@(order.HoTenNhanHang ?? order.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</td>
-                    <td>@(order.SoDienThoaiNhanHang ?? "—")</td>
-                    <td>@(order.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
-                    <td>@((order.TongTien ?? 0).ToString("N0")) đ</td>
-                    <td><span class="staff-badge">@(order.TrangThaiDonHang ?? "Chờ xử lý")</span></td>
-                    <td class="staff-row-actions"><a asp-action="Details" asp-route-id="@order.MaDonHang" class="staff-action-icon" title="Xem chi tiết"><i class="bi bi-eye"></i> Chi tiết</a>
-                        <form asp-action="CreateInvoice" method="post">@Html.AntiForgeryToken()<input type="hidden"
-                                                                                                          name="id" value="@order.MaDonHang" /><button class="staff-action-icon" title="Xuất hóa đơn"><i class="bi bi-printer"></i> Hóa đơn</button></form>
-                            <form asp-action="UpdateStatus" method="post" class="staff-status-form">
-                                @Html.AntiForgeryToken()<input type="hidden" name="id" value="@order.MaDonHang" /><select
-                                name="status">@foreach(var status in statuses){
-                                <option
-                                selected="@(order.TrangThaiDonHang == status)" value="@status">@status</option>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    var isReturn = order.TrangThaiDonHang != null && order.TrangThaiDonHang.Contains("đổi trả");
+                    <tr class="@(isReturn ? "table-warning" : "")">
+                        <td>
+                            <strong class="text-primary">#DH-@order.MaDonHang.ToString("D5")</strong>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">@(order.HoTenNhanHang ?? order.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</div>
+                            <small class="text-muted">@(order.MaNguoiDungNavigation?.Email ?? "—")</small>
+                        </td>
+                        <td>
+                            <span class="text-muted">@(order.SoDienThoaiNhanHang ?? "—")</span>
+                        </td>
+                        <td>
+                            <span class="text-muted small">@(order.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</span>
+                        </td>
+                        <td class="text-end">
+                            <strong class="text-dark">@((order.TongTien ?? 0).ToString("N0")) đ</strong>
+                        </td>
+                        <td class="text-center">
+                            @if (order.TrangThaiDonHang == "Đã hoàn thành" || order.TrangThaiDonHang == "Đã giao")
+                            {
+                                <span class="badge bg-success">@order.TrangThaiDonHang</span>
                             }
-                        </select><button title="Cập nhật"><i class="bi bi-check2"></i></button></form>
-                    </td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="7" class="text-center">Không có đơn hàng phù hợp.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+                            else if (order.TrangThaiDonHang == "Đã hủy" || order.TrangThaiDonHang == "Đã huỷ")
+                            {
+                                <span class="badge bg-danger">@order.TrangThaiDonHang</span>
+                            }
+                            else if (isReturn)
+                            {
+                                <span class="badge bg-warning text-dark"><i class="bi bi-arrow-counterclockwise me-1"></i>@order.TrangThaiDonHang</span>
+                            }
+                            else if (order.TrangThaiDonHang == "Đang xử lý" || order.TrangThaiDonHang == "Đang giao")
+                            {
+                                <span class="badge bg-info text-dark">@order.TrangThaiDonHang</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-dark border">@(order.TrangThaiDonHang ?? "Chờ xử lý")</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <a asp-action="Details" asp-route-id="@order.MaDonHang" class="btn btn-sm btn-outline-primary" title="Xem chi tiết đơn và thông tin giao hàng">
+                                    <i class="bi bi-eye me-1"></i> Chi tiết
+                                </a>
+
+                                <form asp-action="UpdateStatus" method="post" class="d-inline-flex align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@order.MaDonHang" />
+                                    <select name="status" class="form-select form-select-sm" style="width: auto; min-width: 130px; font-size: 12px;" onchange="this.form.submit()" title="Đổi trạng thái">
+                                        @foreach (var st in statuses)
+                                        {
+                                            <option value="@st" selected="@(order.TrangThaiDonHang == st)">@st</option>
+                                        }
+                                    </select>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Không tìm thấy đơn hàng nào ở trạng thái này.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </section>

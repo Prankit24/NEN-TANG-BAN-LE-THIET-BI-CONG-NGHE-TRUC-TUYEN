@@ -3,13 +3,10 @@
     ViewData["Title"] = "Tiến độ chức năng Admin";
 }
 
-<div class="container-fluid py-4">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            
-        </div>
-        <button type="button" class="btn btn-primary btn-sm  px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-            <i class="bi bi-plus-lg me-1"></i> Thêm hạng mục mới
+<div class="admin-task-progress-page">
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="bi bi-plus-lg"></i> Thêm hạng mục mới
         </button>
     </div>
 
@@ -64,87 +61,6 @@
     </div>
 </div>
 
-<style>
-    /* Khung cột chứa các card (Phong cách Trello chuẩn) */
-    .trello-board-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        width: 340px;
-        background-color: #f1f2f4;
-        padding: 14px;
-        border-radius: 0 !important;
-        box-shadow: none;
-    }
-
-    /* Từng thẻ card */
-    .trello-card {
-        background: #ffffff;
-        border-radius: 0 !important;
-        padding: 12px 14px;
-        box-shadow: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-    }
-
-        .trello-card:hover {
-            background-color: #fafbfc;
-            border-color: #3b82f6;
-            box-shadow: none;
-            transform: translateY(-2px);
-        }
-
-        .trello-card.completed-card {
-            background-color: #f0fdf4;
-            border-color: #bbf7d0;
-        }
-
-    /* Dòng tiêu đề card */
-    .card-title-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #172b4d;
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    .card-status-icon {
-        font-size: 0.95rem;
-        color: #626f84;
-    }
-
-    /* Dòng tiến độ công việc bên dưới */
-    .card-meta-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 8px;
-        color: #626f84;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    /* Nút Add a card ở dưới cùng */
-    .trello-add-card-btn {
-        background: transparent;
-        border: none;
-        color: #626f84;
-        text-align: left;
-        padding: 8px 10px;
-        border-radius: 0 !important;
-        font-size: 0.9rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease;
-    }
-
-        .trello-add-card-btn:hover {
-            background-color: rgba(9, 30, 66, 0.08);
-            color: #172b4d;
-        }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/admin-task-progress.css" asp-append-version="true" />
+}

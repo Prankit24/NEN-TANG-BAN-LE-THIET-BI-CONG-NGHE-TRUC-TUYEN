@@ -40,34 +40,30 @@
 
     <!-- CSS chung -->
     <link rel="stylesheet"
-          href="~/css/site.css"
+          href="~/css/shared/site.css"
           asp-append-version="true" />
 
     <link rel="stylesheet"
-          href="~/css/home/header.css"
+          href="~/css/shared/header.css"
           asp-append-version="true" />
 
     <link rel="stylesheet"
-          href="~/css/home/footer.css"
+          href="~/css/shared/footer.css"
           asp-append-version="true" />
 
     <link rel="stylesheet"
-          href="~/css/ai-chat.css"
+          href="~/css/shared/ai-chat.css"
           asp-append-version="true" />
 
     <link rel="stylesheet"
-          href="~/css/home/categories.css"
+          href="~/css/shared/categories.css"
           asp-append-version="true" />
 
     <link rel="stylesheet"
-          href="~/css/auth.css"
+          href="~/css/shared/auth.css"
           asp-append-version="true" />
 
-    <style>
-        .emua-floating-cart[hidden] {
-            display: none !important;
-        }
-    </style>
+    
     @* CSS riêng của từng trang; trang chủ đăng ký trong Index.cshtml *@
     @await RenderSectionAsync("Styles", required: false)
 </head>
