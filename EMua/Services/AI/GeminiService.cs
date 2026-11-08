@@ -59,17 +59,16 @@ namespace EMua.Services.AI
             var generationConfig =
                 new System.Collections.Generic.Dictionary<string, object>
                 {
-                    ["maxOutputTokens"] = 2048,
-                    ["temperature"] = 0.5
+                    ["maxOutputTokens"] = 800,
+                    ["temperature"] = 0.3
                 };
 
-            // Gemini 2.5 sử dụng thinkingBudget.
-            // Không gửi thinkingLevel cho model 2.5.
+            // Tắt suy nghĩ kéo dài (thinking) không cần thiết để phản hồi tức thì
             if (model.StartsWith(
                 "gemini-2.5-", StringComparison.OrdinalIgnoreCase))
             {
                 generationConfig["thinkingConfig"] =
-                    new { thinkingBudget = 512 };
+                    new { thinkingBudget = 0 };
             }
             else if (model.StartsWith(
                 "gemini-3", StringComparison.OrdinalIgnoreCase))
@@ -87,13 +86,15 @@ namespace EMua.Services.AI
                         new
                         {
                             text =
-                                "Bạn là trợ lý tư vấn công nghệ của EMUA. " +
-                                "Trả lời bằng tiếng Việt, rõ ràng, ngắn gọn. " +
-                                "Chỉ hỗ trợ công nghệ và thiết bị. " +
-                                "Chỉ sử dụng giá, tồn kho và thông số " +
-                                "được cung cấp trong ngữ cảnh sản phẩm. " +
-                                "Không tự bịa sản phẩm, giá hoặc đơn hàng. " +
-                                "Nếu thiếu dữ liệu, hãy hỏi thêm nhu cầu."
+                                "Bạn là trợ lý tư vấn công nghệ thông minh, thân thiện của cửa hàng EMUA. " +
+                                "Nhiệm vụ của bạn là tư vấn mua hàng tự nhiên, đúng trọng tâm và bám sát nhu cầu, ngân sách của khách. " +
+                                "QUY TẮC BẮT BUỘC:\n" +
+                                "1. Chỉ đề xuất TỐI ĐA 3 SẢN PHẨM trong mỗi câu trả lời.\n" +
+                                "2. Mỗi sản phẩm đề xuất phải nêu rõ: Tên sản phẩm, Giá bán thực tế và 1-2 Lý do lựa chọn phù hợp nhất với nhu cầu khách.\n" +
+                                "3. TUYỆT ĐỐI chỉ sử dụng tên sản phẩm, giá bán, cấu hình và tình trạng tồn kho có trong mục [DỮ LIỆU SẢN PHẨM TỪ CỬA HÀNG].\n" +
+                                "4. Không tự ý bịa thêm sản phẩm, không bịa giá hoặc tồn kho.\n" +
+                                "5. Nếu khách chưa nói rõ ngân sách hoặc nhu cầu cụ thể, hãy gợi ý nhanh 1-2 mẫu tiêu biểu có sẵn và lịch sự hỏi thêm để tư vấn chính xác hơn.\n" +
+                                "6. Trả lời bằng tiếng Việt văn minh, ngắn gọn, súc tích, định dạng bullet point rõ ràng, dễ đọc."
                         }
                     }
                 },
