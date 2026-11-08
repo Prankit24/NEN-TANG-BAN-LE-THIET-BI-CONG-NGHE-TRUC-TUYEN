@@ -1,5 +1,10 @@
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using EMua.Data;
 using EMua.Models.ViewModels;
 using EMua.ViewModels;
@@ -15,7 +20,13 @@ namespace EMua.Controllers
         private readonly EMuaDbContext _db;
         private readonly IMemoryCache _cache;
 
-        private const string HomeCacheKey = "EMUA_HOME_V1";
+        private const string HomeCacheKey = "EMUA_HOME_V2";
+
+        private static readonly SemaphoreSlim HomeCacheLock =
+            new SemaphoreSlim(1, 1);
+
+        private static readonly TimeSpan CacheDuration =
+            TimeSpan.FromMinutes(3);
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -31,83 +42,161 @@ namespace EMua.Controllers
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var model = await _cache.GetOrCreateAsync(
+            if (!_cache.TryGetValue(
                 HomeCacheKey,
-                async entry =>
+                out HomeViewModel? model) || model == null)
+            {
+                await HomeCacheLock.WaitAsync(
+                    HttpContext.RequestAborted);
+
+                try
                 {
-                    entry.AbsoluteExpirationRelativeToNow =
-                        TimeSpan.FromSeconds(60);
+                    // Kiểm tra lần hai để tránh nhiều request
+                    // cùng truy vấn Supabase khi cache hết hạn.
+                    if (!_cache.TryGetValue(
+                        HomeCacheKey,
+                        out model) || model == null)
+                    {
+                        _logger.LogInformation(
+                            "EMUA HOME: Cache MISS, loading data.");
 
-                    _logger.LogInformation(
-                        "EMUA HOME: Loading data from Supabase");
+                        model = await LoadHomeDataAsync();
 
-                    return await LoadHomeDataAsync();
-                });
+                        _cache.Set(
+                            HomeCacheKey,
+                            model,
+                            new MemoryCacheEntryOptions
+                            {
+                                AbsoluteExpirationRelativeToNow =
+                                    CacheDuration
+                            });
+                    }
+                }
+                finally
+                {
+                    HomeCacheLock.Release();
+                }
+            }
+            else
+            {
+                _logger.LogDebug("EMUA HOME: Cache HIT.");
+            }
 
             stopwatch.Stop();
 
             _logger.LogInformation(
-                "EMUA HOME: Data loaded in {Elapsed}ms",
+                "EMUA HOME: Data ready in {Elapsed}ms",
                 stopwatch.ElapsedMilliseconds);
 
-            return View(model);
+            return View(model!);
         }
 
         private async Task<HomeViewModel> LoadHomeDataAsync()
         {
+            var totalTimer = Stopwatch.StartNew();
+
+            // Chỉ dùng truy vấn nhẹ để tìm ID.
+            // Không Include ảnh và biến thể ở bước này.
             var baseQuery = _db.SanPhams
+                .AsNoTracking()
+                .Where(x =>
+                    x.TrangThaiSanPham == null ||
+                    x.TrangThaiSanPham != "Ẩn");
+
+            var availableQuery = baseQuery
+                .Where(x =>
+                    x.BienTheSanPhams.Any(v =>
+                        v.SoLuong > 0 &&
+                        v.TrangThai == "Còn hàng"));
+
+            // 1. Sản phẩm mới nhất.
+            var sanPhamMoiIds = await baseQuery
+                .OrderByDescending(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
+
+            // 2. Sản phẩm nổi bật theo tổng tồn kho.
+            // Giữ nguyên tiêu chí trong code cũ.
+            var sanPhamNoiBatIds = await availableQuery
+                .OrderByDescending(x =>
+                    x.BienTheSanPhams.Sum(v => v.SoLuong))
+                .ThenBy(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
+
+            // 3. Flash Sale theo giá thấp nhất.
+            // Giữ nguyên logic chọn sản phẩm trước đây.
+            var flashSaleIds = await availableQuery
+                .OrderBy(x =>
+                    x.BienTheSanPhams
+                        .Where(v =>
+                            v.TrangThai == "Còn hàng")
+                        .Min(v => v.Gia))
+                .ThenBy(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
+
+            // 4. Best Choice theo sản phẩm mới còn hàng.
+            var bestChoiceIds = await availableQuery
+                .OrderByDescending(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
+
+            // Gộp các ID, loại bỏ ID trùng nhau.
+            var allProductIds = sanPhamMoiIds
+                .Concat(sanPhamNoiBatIds)
+                .Concat(flashSaleIds)
+                .Concat(bestChoiceIds)
+                .Distinct()
+                .ToList();
+
+            _logger.LogInformation(
+                "EMUA HOME: {Count} unique products selected.",
+                allProductIds.Count);
+
+            // 5. Chỉ tải chi tiết các sản phẩm cần thiết.
+            // Không tải lại cùng sản phẩm bốn lần.
+            var products = await _db.SanPhams
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(x => x.MaDanhMucNavigation)
                 .Include(x => x.MaThuongHieuNavigation)
                 .Include(x => x.BienTheSanPhams)
                 .Include(x => x.SanPhamHinhAnhs)
-                .Where(x =>
-                    x.TrangThaiSanPham == null ||
-                    x.TrangThaiSanPham != "Ẩn");
-
-            // 8 sản phẩm mới nhất
-            var sanPhamMoi = await baseQuery
-                .OrderByDescending(x => x.MaSanPham)
-                .Take(8)
+                .Where(x => allProductIds.Contains(x.MaSanPham))
                 .ToListAsync();
 
-            // Sản phẩm còn hàng
-            var sanPhamNoiBat = await baseQuery
-                .Where(x =>
-                    x.BienTheSanPhams.Any(v =>
-                        v.SoLuong > 0 &&
-                        v.TrangThai == "Còn hàng"))
-                .OrderByDescending(x =>
-                    x.BienTheSanPhams.Sum(v => v.SoLuong))
-                .Take(8)
-                .ToListAsync();
+            // Tạo Dictionary để lấy sản phẩm nhanh theo ID.
+            var productDictionary = products.ToDictionary(
+                x => x.MaSanPham);
 
-            // Flash Sale
-            var flashSale = await baseQuery
-                .Where(x =>
-                    x.BienTheSanPhams.Any(v =>
-                        v.SoLuong > 0 &&
-                        v.TrangThai == "Còn hàng"))
-                .OrderBy(x =>
-                    x.BienTheSanPhams
-                        .Where(v =>
-                            v.TrangThai == "Còn hàng")
-                        .Min(v => v.Gia))
-                .Take(8)
-                .ToListAsync();
+            // Giữ đúng thứ tự đã chọn từ database.
+            // Sử dụng ToList để View nhận danh sách.
+            var sanPhamMoi = sanPhamMoiIds
+                .Where(productDictionary.ContainsKey)
+                .Select(id => productDictionary[id])
+                .ToList();
 
-            // Best Choice hiện dùng cùng tiêu chí với sản phẩm mới
-            // nhưng vẫn có điều kiện còn hàng.
-            var bestChoice = await baseQuery
-                .Where(x =>
-                    x.BienTheSanPhams.Any(v =>
-                        v.SoLuong > 0 &&
-                        v.TrangThai == "Còn hàng"))
-                .OrderByDescending(x => x.MaSanPham)
-                .Take(8)
-                .ToListAsync();
+            var sanPhamNoiBat = sanPhamNoiBatIds
+                .Where(productDictionary.ContainsKey)
+                .Select(id => productDictionary[id])
+                .ToList();
 
+            var flashSale = flashSaleIds
+                .Where(productDictionary.ContainsKey)
+                .Select(id => productDictionary[id])
+                .ToList();
+
+            var bestChoice = bestChoiceIds
+                .Where(productDictionary.ContainsKey)
+                .Select(id => productDictionary[id])
+                .ToList();
+
+            // 6. Danh mục và thương hiệu.
             var danhMucs = await _db.DanhMucSanPhams
                 .AsNoTracking()
                 .Where(x =>
@@ -119,6 +208,14 @@ namespace EMua.Controllers
                 .AsNoTracking()
                 .Where(x => x.TrangThai)
                 .ToListAsync();
+
+            totalTimer.Stop();
+
+            _logger.LogInformation(
+                "EMUA HOME: DB load finished in {Elapsed}ms. " +
+                "Unique products: {Count}.",
+                totalTimer.ElapsedMilliseconds,
+                products.Count);
 
             return new HomeViewModel
             {
