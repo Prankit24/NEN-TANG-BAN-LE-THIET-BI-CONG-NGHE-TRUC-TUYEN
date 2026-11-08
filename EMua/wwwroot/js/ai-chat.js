@@ -287,7 +287,103 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function addMessage(text, sender) {
+    function isUserScrolledNearBottom() {
+        const threshold = 100;
+        return (messages.scrollHeight - messages.scrollTop - messages.clientHeight) <= threshold;
+    }
+
+    function scrollMessagesToBottom(force) {
+        if (force || isUserScrolledNearBottom()) {
+            messages.scrollTop = messages.scrollHeight;
+        }
+    }
+
+    function renderProductCards(products) {
+        if (!Array.isArray(products) || products.length === 0) {
+            return null;
+        }
+
+        const container = document.createElement("div");
+        container.classList.add("ai-products-container");
+
+        products.slice(0, 3).forEach(function (product) {
+            const card = document.createElement("div");
+            card.classList.add("ai-product-card");
+
+            const top = document.createElement("div");
+            top.classList.add("ai-product-top");
+
+            const img = document.createElement("img");
+            img.classList.add("ai-product-img");
+            img.src = product.image || "/images/sanpham/default.png";
+            img.alt = product.name || "Sản phẩm";
+            img.onerror = function () {
+                this.src = "/images/AI/CarrtoonAI.png";
+            };
+
+            const info = document.createElement("div");
+            info.classList.add("ai-product-info");
+
+            const title = document.createElement("a");
+            title.classList.add("ai-product-name");
+            title.href = product.url;
+            title.textContent = product.name;
+            title.title = product.name;
+
+            const meta = document.createElement("div");
+            meta.classList.add("ai-product-meta");
+
+            const price = document.createElement("span");
+            price.classList.add("ai-product-price");
+            price.textContent = product.price;
+
+            const badge = document.createElement("span");
+            badge.classList.add("ai-stock-badge", product.inStock ? "ai-stock-in" : "ai-stock-out");
+            badge.textContent = product.inStock ? "Còn hàng" : "Hết hàng";
+
+            meta.appendChild(price);
+            meta.appendChild(badge);
+
+            info.appendChild(title);
+            info.appendChild(meta);
+
+            top.appendChild(img);
+            top.appendChild(info);
+
+            const actions = document.createElement("div");
+            actions.classList.add("ai-product-actions");
+
+            const viewBtn = document.createElement("a");
+            viewBtn.classList.add("ai-action-btn", "ai-action-view");
+            viewBtn.href = product.url;
+            viewBtn.textContent = "Xem sản phẩm";
+
+            actions.appendChild(viewBtn);
+
+            if (product.inStock) {
+                const buyBtn = document.createElement("a");
+                buyBtn.classList.add("ai-action-btn", "ai-action-buy");
+                buyBtn.href = product.url;
+                buyBtn.textContent = "Mua ngay";
+                actions.appendChild(buyBtn);
+            } else {
+                const contactBtn = document.createElement("a");
+                contactBtn.classList.add("ai-action-btn", "ai-action-contact");
+                contactBtn.href = "/Home/Contact";
+                contactBtn.textContent = "Liên hệ";
+                actions.appendChild(contactBtn);
+            }
+
+            card.appendChild(top);
+            card.appendChild(actions);
+            container.appendChild(card);
+        });
+
+        return container;
+    }
+
+    function addMessage(text, sender, products) {
+        const wasNearBottom = isUserScrolledNearBottom();
         const message = document.createElement("div");
         message.classList.add("ai-message");
 
@@ -321,12 +417,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
             content.appendChild(bubble);
 
+            if (products && products.length > 0) {
+                const productCards = renderProductCards(products);
+                if (productCards) {
+                    content.appendChild(productCards);
+                }
+            }
+
             message.appendChild(avatar);
             message.appendChild(content);
         }
 
         messages.appendChild(message);
-        messages.scrollTop = messages.scrollHeight;
+
+        // Tin nhắn của user luôn tự cuộn xuống. Với bot, chỉ cuộn xuống nếu user đang ở gần đáy để tránh ngắt quãng đọc lịch sử.
+        if (sender === "user" || wasNearBottom) {
+            scrollMessagesToBottom(true);
+        }
     }
 
     async function sendMessage() {
@@ -379,7 +486,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            addMessage(data.message, "bot");
+            addMessage(data.message, "bot", data.products);
         } catch (error) {
             console.error("EMUA AI Error:", error);
 

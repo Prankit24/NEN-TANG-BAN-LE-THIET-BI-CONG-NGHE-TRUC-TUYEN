@@ -63,9 +63,9 @@ namespace EMua.Controllers
                 stage = "Lấy dữ liệu sản phẩm";
                 _logger.LogInformation("EMUA AI: {Stage}", stage);
 
-                var productContext =
+                var (productContext, recommendedProducts) =
                     await _recommendationService
-                        .GetProductContextAsync(request.Message);
+                        .GetProductRecommendationsAsync(request.Message);
 
                 var promptWithContext =
                     "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
@@ -95,10 +95,24 @@ namespace EMua.Controllers
                 _logger.LogInformation(
                     "EMUA AI: Đã nhận câu trả lời từ Gemini.");
 
+                var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+                var topProducts = recommendedProducts.Take(3).Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    price = p.MinPrice.HasValue && p.MinPrice.Value > 0
+                        ? p.MinPrice.Value.ToString("N0", culture) + " VNĐ"
+                        : "Liên hệ",
+                    inStock = p.InStock,
+                    image = p.ImageUrl,
+                    url = p.DetailUrl
+                }).ToList();
+
                 return Json(new
                 {
                     domain = "Technology",
                     message = answer,
+                    products = topProducts,
                     isLimitReached = false
                 });
             }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -11,6 +12,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace EMua.Services.AI;
+
+public record ProductRecommendationDto(
+    int Id,
+    string Name,
+    decimal? MinPrice,
+    bool InStock,
+    string? ImageUrl,
+    string DetailUrl
+);
 
 public class RecommendationService
 {
@@ -25,7 +35,7 @@ public class RecommendationService
         _logger = logger;
     }
 
-    public async Task<string> GetProductContextAsync(string query)
+    public async Task<(string ContextText, List<ProductRecommendationDto> Products)> GetProductRecommendationsAsync(string query)
     {
         var timer = Stopwatch.StartNew();
         var keyword = (query ?? "").Trim().ToLowerInvariant();
@@ -33,7 +43,6 @@ public class RecommendationService
         var source = _db.SanPhams.AsNoTracking();
 
         // Lọc cơ bản theo tên sản phẩm.
-        // Sau này nên dùng danh mục trong database để chính xác hơn.
         if (keyword.Contains("laptop") ||
             keyword.Contains("máy tính xách tay"))
         {
@@ -61,7 +70,7 @@ public class RecommendationService
                 ));
         }
 
-        var products = await source
+        var rawProducts = await source
             .OrderBy(p => p.MaSanPham)
             .Select(p => new
             {
@@ -79,11 +88,16 @@ public class RecommendationService
                     .Any(b => b.SoLuong > 0),
 
                 // Giá thấp nhất trong các biến thể còn hàng.
-                // Không có biến thể còn hàng thì giá là null.
                 MinPrice = p.BienTheSanPhams
                     .Where(b => b.SoLuong > 0)
                     .Select(b => (decimal?)b.Gia)
-                    .Min()
+                    .Min(),
+
+                ImageUrl = p.SanPhamHinhAnhs
+                    .OrderByDescending(img => img.LaAnhChinh)
+                    .ThenBy(img => img.ThuTu)
+                    .Select(img => img.DuongDanAnh)
+                    .FirstOrDefault()
             })
             .Take(5)
             .ToListAsync();
@@ -94,15 +108,25 @@ public class RecommendationService
             "EMUA AI: Truy vấn sản phẩm mất {ElapsedMs} ms; " +
             "lấy được {Count} sản phẩm.",
             timer.ElapsedMilliseconds,
-            products.Count);
+            rawProducts.Count);
 
-        if (products.Count == 0)
+        var productDtos = rawProducts.Select(p => new ProductRecommendationDto(
+            Id: p.MaSanPham,
+            Name: p.TenSanPham ?? "Sản phẩm EMUA",
+            MinPrice: p.MinPrice,
+            InStock: p.InStock,
+            ImageUrl: p.ImageUrl,
+            DetailUrl: $"/Product/Details/{p.MaSanPham}"
+        )).ToList();
+
+        if (rawProducts.Count == 0)
         {
-            return
+            var emptyContext =
                 "Không tìm thấy sản phẩm trong kết quả truy vấn này. " +
                 "Không kết luận toàn bộ cửa hàng không có sản phẩm. " +
                 "Hãy hỏi rõ tên hoặc loại thiết bị khách cần; " +
                 "không tự bịa sản phẩm hay giá.";
+            return (emptyContext, productDtos);
         }
 
         var context = new StringBuilder();
@@ -117,7 +141,7 @@ public class RecommendationService
 
         var culture = CultureInfo.GetCultureInfo("vi-VN");
 
-        foreach (var p in products)
+        foreach (var p in rawProducts)
         {
             var price = p.MinPrice.HasValue && p.MinPrice.Value > 0
                 ? p.MinPrice.Value.ToString("N0", culture) + " VNĐ"
@@ -137,7 +161,13 @@ public class RecommendationService
             "EMUA AI: Ngữ cảnh sản phẩm dài {Length} ký tự.",
             context.Length);
 
-        return context.ToString();
+        return (context.ToString(), productDtos);
+    }
+
+    public async Task<string> GetProductContextAsync(string query)
+    {
+        var result = await GetProductRecommendationsAsync(query);
+        return result.ContextText;
     }
 
     private static string ShortDescription(string? value)
