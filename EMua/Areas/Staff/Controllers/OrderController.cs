@@ -50,9 +50,18 @@ public class OrderController : StaffControllerBase
         ViewBag.Status = status ?? "all";
         ViewBag.Statuses = Statuses;
 
-        // Ưu tiên đưa các đơn "Yêu cầu đổi trả" lên đầu danh sách để nhân viên dễ xử lý
+        // Sắp xếp ưu tiên:
+        // 1: Yêu cầu đổi trả (nổi bật xử lý riêng)
+        // 2: Chờ xác nhận, Chờ xử lý, Giao thất bại
+        // 3: Đang xử lý, Đang giao
+        // 4: Đã hoàn thành, Đã hủy xuống dưới cùng
         var resultList = await orders
-            .OrderByDescending(x => x.TrangThaiDonHang != null && x.TrangThaiDonHang.Trim().ToLower() == "yêu cầu đổi trả")
+            .OrderBy(x => 
+                x.TrangThaiDonHang != null && x.TrangThaiDonHang.Contains("đổi trả") ? 1 :
+                (x.TrangThaiDonHang == "Chờ xác nhận" || x.TrangThaiDonHang == "Chờ xử lý" || x.TrangThaiDonHang == "Giao thất bại" || string.IsNullOrWhiteSpace(x.TrangThaiDonHang)) ? 2 :
+                (x.TrangThaiDonHang == "Đang xử lý" || x.TrangThaiDonHang == "Đang giao" || x.TrangThaiDonHang == "Đang giao hàng") ? 3 :
+                4
+            )
             .ThenByDescending(x => x.NgayDat)
             .ToListAsync();
 

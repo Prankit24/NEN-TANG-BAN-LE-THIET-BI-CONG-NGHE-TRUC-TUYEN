@@ -61,8 +61,9 @@ namespace EMua.Controllers
             }
             chatState ??= new ChatConversationState();
 
-            // Kiểm tra câu hỏi tiếp nối (Ví dụ: "dùng để lập trình liệu có ổn không", "con này pin thế nào")
-            var isFollowUp = RecommendationService.IsFollowUpQuery(request.Message) && chatState.LastProducts.Any();
+            // Kiểm tra câu hỏi tiếp nối (Ví dụ: "ram bao nhiêu", "con này pin thế nào", "dùng để lập trình liệu có ổn không")
+            var hasActiveProduct = chatState.LastProductId.HasValue || chatState.LastProducts.Any();
+            var isFollowUp = hasActiveProduct && RecommendationService.IsFollowUpQuery(request.Message);
 
             // 1. Phân loại câu hỏi
             DomainPrediction prediction;
@@ -111,7 +112,76 @@ namespace EMua.Controllers
                 });
             }
 
-            // 2. Truy vấn Supabase
+            // 2. Trả lời trực tiếp từ Supabase cho câu hỏi tiếp nối về thông số/giá/tồn kho (không cần gọi Gemini)
+            if (isFollowUp && hasActiveProduct)
+            {
+                var targetProductId = chatState.LastProductId;
+                if (chatState.LastProducts.Any())
+                {
+                    var qLower = request.Message.ToLowerInvariant();
+                    if ((qLower.Contains("thứ 2") || qLower.Contains("thứ hai") || qLower.Contains("máy 2")) && chatState.LastProducts.Count >= 2)
+                    {
+                        targetProductId = chatState.LastProducts[1].Id;
+                    }
+                    else if ((qLower.Contains("thứ 3") || qLower.Contains("thứ ba") || qLower.Contains("máy 3")) && chatState.LastProducts.Count >= 3)
+                    {
+                        targetProductId = chatState.LastProducts[2].Id;
+                    }
+                    else if (!targetProductId.HasValue)
+                    {
+                        targetProductId = chatState.LastProducts[0].Id;
+                    }
+                }
+
+                if (targetProductId.HasValue)
+                {
+                    var (handled, directAnswer, directProduct) = await _recommendationService.TryGetDirectProductAnswerAsync(
+                        targetProductId.Value,
+                        request.Message,
+                        cancellationToken);
+
+                    if (handled && directProduct != null)
+                    {
+                        var directCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+                        var verifiedDirect = new List<ChatProductItemDto>
+                        {
+                            new ChatProductItemDto(
+                                directProduct.Id,
+                                directProduct.Name,
+                                (directProduct.MinPrice ?? 0m).ToString("N0", directCulture) + " VNĐ",
+                                directProduct.InStock,
+                                directProduct.ImageUrl,
+                                directProduct.DetailUrl
+                            )
+                        };
+
+                        chatState.LastProductId = directProduct.Id;
+                        chatState.LastProducts = new List<ProductRecommendationDto> { directProduct };
+                        chatState.LastUpdatedAt = DateTimeOffset.UtcNow;
+                        try
+                        {
+                            HttpContext.Session.SetString(sessionKey, System.Text.Json.JsonSerializer.Serialize(chatState));
+                        }
+                        catch { }
+
+                        totalTimer.Stop();
+                        _logger.LogInformation(
+                            "EMUA AI: Câu hỏi tiếp nối về sản phẩm #{Id}. Trả lời trực tiếp từ Supabase trong {TotalMs} ms.",
+                            targetProductId.Value,
+                            totalTimer.ElapsedMilliseconds);
+
+                        return Json(new
+                        {
+                            domain = "Technology",
+                            message = directAnswer,
+                            products = verifiedDirect,
+                            isLimitReached = false
+                        });
+                    }
+                }
+            }
+
+            // 3. Truy vấn Supabase cho câu hỏi tìm kiếm mới hoặc câu hỏi cần Gemini
             var isShopping = isFollowUp || RecommendationService.IsShoppingQuery(request.Message);
             string productContext;
             List<ProductRecommendationDto> recommendedProducts;
@@ -225,10 +295,21 @@ namespace EMua.Controllers
             // Cập nhật lại Session ngữ cảnh nếu tìm thấy sản phẩm mới
             if (recommendedProducts.Any() && !isFollowUp)
             {
+                chatState.LastProductId = verifiedProducts.FirstOrDefault()?.id ?? recommendedProducts.FirstOrDefault()?.Id;
                 chatState.LastProducts = recommendedProducts;
                 chatState.LastBudget = budget;
                 chatState.LastLowestPrice = lowestExistingPrice;
                 chatState.LastQuery = request.Message;
+                chatState.LastUpdatedAt = DateTimeOffset.UtcNow;
+                try
+                {
+                    HttpContext.Session.SetString(sessionKey, System.Text.Json.JsonSerializer.Serialize(chatState));
+                }
+                catch { }
+            }
+            else if (isFollowUp && verifiedProducts.Any())
+            {
+                chatState.LastProductId = verifiedProducts.First().id;
                 chatState.LastUpdatedAt = DateTimeOffset.UtcNow;
                 try
                 {
@@ -510,6 +591,7 @@ namespace EMua.Controllers
 
     public class ChatConversationState
     {
+        public int? LastProductId { get; set; }
         public List<ProductRecommendationDto> LastProducts { get; set; } = new();
         public BudgetInfo? LastBudget { get; set; }
         public decimal? LastLowestPrice { get; set; }
