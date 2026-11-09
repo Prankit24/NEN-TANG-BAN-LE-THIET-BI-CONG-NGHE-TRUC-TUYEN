@@ -96,23 +96,29 @@ namespace EMua.Controllers
                     "EMUA AI: Đã nhận câu trả lời từ Gemini.");
 
                 var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
-                var topProducts = recommendedProducts.Take(3).Select(p => new
-                {
-                    id = p.Id,
-                    name = p.Name,
-                    price = p.MinPrice.HasValue && p.MinPrice.Value > 0
-                        ? p.MinPrice.Value.ToString("N0", culture) + " VNĐ"
-                        : "Liên hệ",
-                    inStock = p.InStock,
-                    image = p.ImageUrl,
-                    url = p.DetailUrl
-                }).ToList();
+                var budget = RecommendationService.ExtractBudget(request.Message);
+
+                // Hậu kiểm tra: Chỉ chấp nhận các sản phẩm thỏa mãn điều kiện ngân sách và tồn kho
+                var verifiedProducts = recommendedProducts
+                    .Where(p => p.InStock && p.MinPrice.HasValue && p.MinPrice.Value > 0)
+                    .Where(p => budget == null || (!budget.MaxPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value <= budget.MaxPrice.Value)))
+                    .Where(p => budget == null || (!budget.MinPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value >= budget.MinPrice.Value)))
+                    .Take(3)
+                    .Select(p => new
+                    {
+                        id = p.Id,
+                        name = p.Name,
+                        price = (p.MinPrice ?? 0m).ToString("N0", culture) + " VNĐ",
+                        inStock = p.InStock,
+                        image = p.ImageUrl,
+                        url = p.DetailUrl
+                    }).ToList();
 
                 return Json(new
                 {
                     domain = "Technology",
                     message = answer,
-                    products = topProducts,
+                    products = verifiedProducts,
                     isLimitReached = false
                 });
             }

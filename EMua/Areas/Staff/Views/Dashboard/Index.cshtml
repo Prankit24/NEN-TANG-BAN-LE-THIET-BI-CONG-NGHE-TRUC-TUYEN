@@ -12,17 +12,29 @@
 
 @section Styles {
     <style>
-        .emua-dashboard, .emua-dashboard * {
-            border-radius: 0 !important;
-            box-sizing: border-box;
+        .emua-dashboard {
+            --dash-blue: #2563eb;
+            --dash-text: #0f172a;
+            --dash-muted: #64748b;
+            --dash-border: #e2e8f0;
+            color: var(--dash-text);
         }
 
-        .emua-dashboard {
-            --dash-blue: #315efb;
-            --dash-text: #182238;
-            --dash-muted: #7b879a;
-            --dash-border: #e6ebf2;
-            color: var(--dash-text);
+        .dash-urgent-card,
+        .dash-period,
+        .dash-kpi,
+        .dash-panel,
+        .dash-stock-item {
+            border-radius: 8px !important;
+        }
+
+        .dash-kpi-icon,
+        .dash-period-icon {
+            border-radius: 6px !important;
+        }
+
+        .dash-period button {
+            border-radius: 6px !important;
         }
 
         .dash-heading {

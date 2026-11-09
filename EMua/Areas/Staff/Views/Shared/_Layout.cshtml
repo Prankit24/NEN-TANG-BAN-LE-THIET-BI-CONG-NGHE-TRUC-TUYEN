@@ -101,6 +101,10 @@
           href="~/css/staff/staff-dialog.css"
           asp-append-version="true" />
 
+    <link rel="stylesheet"
+          href="~/css/staff/staff-theme.css"
+          asp-append-version="true" />
+
     
 
     @await RenderSectionAsync("Styles", required: false)
@@ -269,9 +273,10 @@
 
                     <div>
                         <h1>@ViewData["Title"]</h1>
-                        <p>
-                            <span>EMUA Nhân viên — @vietnamNow.ToString("dd/MM/yyyy")</span>
-                            <span class="staff-greeting"> · @greetingMessage</span>
+                        <p class="staff-header-sub">
+                            <span>Kênh Nhân viên</span>
+                            <span class="staff-header-dot">·</span>
+                            <span>@vietnamNow.ToString("dd/MM/yyyy")</span>
                         </p>
                     </div>
                 </div>
