@@ -135,25 +135,37 @@ public class RecommendationService
 
         var q = query.Trim().ToLowerInvariant();
 
-        // 1. Chứa đại từ chỉ định hoặc từ tham chiếu sản phẩm
+        // 1. Chứa đại từ chỉ định hoặc từ tham chiếu trực tiếp đến sản phẩm đang thảo luận
         string[] referenceWords = new[]
         {
-            "con này", "máy này", "em này", "chiếc này", "bản này", "mẫu này", "sản phẩm này",
-            "máy đó", "con đó", "mẫu đó", "cái này", "cái đó", "thứ nhất", "thứ hai", "thứ 2",
-            "thứ ba", "thứ 3", "đầu tiên"
+            "máy này", "con này", "em này", "chiếc này", "bản này", "mẫu này", "sản phẩm này", "thiết bị này",
+            "máy đó", "con đó", "mẫu đó", "chiếc đó", "bản đó", "sản phẩm đó",
+            "cái này", "cái đó", "thứ nhất", "thứ hai", "thứ 2", "thứ ba", "thứ 3", "đầu tiên"
         };
         if (referenceWords.Any(w => q.Contains(w)))
             return true;
 
-        // 2. Câu hỏi hỏi tiếp về mục đích sử dụng hoặc thuộc tính của sản phẩm
-        string[] usagePhrases = new[]
+        // Nếu câu hỏi về ngành nghề, trường học, hướng nghiệp, học thuật mà không có đại từ tham chiếu sản phẩm -> KHÔNG phải follow-up sản phẩm
+        string[] nonProductTopics = new[]
         {
-            "dùng để", "dùng cho", "phù hợp", "ổn không", "tốt không", "mượt không",
-            "lập trình", "học lập trình", "chơi game", "làm đồ họa", "thiết kế", "văn phòng",
-            "học tập", "chạy máy ảo", "render", "pin thế nào", "pin dùng", "bao nhiêu kg",
-            "nặng không", "nâng cấp", "màu gì", "bảo hành mấy năm", "có nên mua"
+            "ngành", "học ngành", "nghề", "trường", "khoa học", "đại học", "cao đẳng",
+            "tuyển sinh", "việc làm", "xin việc", "mức lương", "lương bổng", "tương lai",
+            "thị trường", "xu hướng"
         };
-        if (usagePhrases.Any(w => q.Contains(w)))
+        if (nonProductTopics.Any(t => q.Contains(t)))
+            return false;
+
+        // 2. Câu hỏi hỏi tiếp về mục đích sử dụng hoặc thuộc tính của thiết bị phần cứng cụ thể
+        string[] specificDeviceUsage = new[]
+        {
+            "dùng để lập trình", "dùng để code", "dùng để render", "dùng để chơi game",
+            "dùng cho lập trình", "dùng cho đồ họa", "dùng cho văn phòng",
+            "chạy máy ảo", "chạy docker", "chạy giả lập",
+            "pin dùng", "pin thế nào", "pin được bao lâu", "nặng bao nhiêu kg", "bao nhiêu kg",
+            "nặng không", "nâng cấp ram", "nâng cấp ssd", "có nâng cấp được",
+            "bảo hành mấy năm", "có sẵn win", "có cổng type c", "màn hình mấy hz"
+        };
+        if (specificDeviceUsage.Any(w => q.Contains(w)))
             return true;
 
         return false;
@@ -166,9 +178,29 @@ public class RecommendationService
 
         var q = query.Trim().ToLowerInvariant();
 
-        // 0. Nhận diện câu hỏi tiếp nối về sản phẩm đã tư vấn
-        if (IsFollowUpQuery(q))
-            return true;
+        // 0. LOẠI TRỪ câu hỏi kiến thức chung, định hướng ngành nghề, học tập lý thuyết (không nhằm mục đích mua sắm)
+        // Ví dụ: "Học ngành AI ổn không?", "Trí tuệ nhân tạo là gì?", "Học CNTT ra trường làm gì?"
+        string[] generalKnowledgePhrases = new[]
+        {
+            "học ngành", "ngành học", "ngành trí tuệ nhân tạo", "ngành ai", "ngành công nghệ thông tin",
+            "ngành cntt", "ngành khoa học máy tính", "ngành phần mềm", "ngành hệ thống",
+            "định hướng ngành", "định hướng nghề", "cơ hội việc làm", "mức lương",
+            "là gì", "khái niệm", "lịch sử", "xu hướng phát triển", "tương lai ngành"
+        };
+
+        bool isGeneralKnowledge = generalKnowledgePhrases.Any(g => q.Contains(g));
+
+        // Kiểm tra xem có từ khóa thiết bị cụ thể đi kèm không (ví dụ "laptop học ngành ai", "máy tính học ai")
+        string[] deviceKeywords = new[]
+        {
+            "laptop", "máy tính", "macbook", "pc", "điện thoại", "smartphone", "iphone", "samsung",
+            "tai nghe", "chuột", "bàn phím", "màn hình", "ipad", "tablet", "mua máy"
+        };
+        bool hasDeviceKeyword = deviceKeywords.Any(d => q.Contains(d));
+
+        // Nếu là câu hỏi kiến thức chung mà KHÔNG nhắc đến thiết bị phần cứng cụ thể -> KHÔNG phải shopping
+        if (isGeneralKnowledge && !hasDeviceKeyword)
+            return false;
 
         // 1. Nhận diện có ngân sách
         if (ExtractBudget(q) != null)
@@ -178,7 +210,7 @@ public class RecommendationService
         string[] productKeywords = new[]
         {
             "laptop", "máy tính", "macbook", "xps", "thinkpad", "vivobook", "inspiron",
-            "zenbook", "asus", "dell", "hp", "lenovo", "acer", "msi",
+            "zenbook", "ideapad", "legion", "asus", "dell", "hp", "lenovo", "acer", "msi",
             "điện thoại", "dien thoai", "smartphone", "iphone", "samsung", "galaxy", "xiaomi", "oppo", "redmi",
             "tai nghe", "chuột", "bàn phím", "màn hình", "loa", "sạc", "cáp", "phụ kiện",
             "ipad", "tablet", "máy tính bảng", "linh kiện"
@@ -190,9 +222,9 @@ public class RecommendationService
         // 3. Từ khóa ý định mua sắm
         string[] shoppingKeywords = new[]
         {
-            "mua", "tìm", "tư vấn", "cần mua", "muốn mua", "chọn mua", "tầm giá",
-            "ngân sách", "bao nhiêu tiền", "giá bao nhiêu", "có bán", "còn hàng",
-            "đề xuất", "gợi ý", "mẫu nào", "loại nào", "hãng nào", "nên mua", "sản phẩm"
+            "mua", "tìm mua", "cần mua", "muốn mua", "chọn mua", "tư vấn mua", "tầm giá",
+            "ngân sách", "bao nhiêu tiền", "giá bao nhiêu", "báo giá", "có bán", "còn hàng",
+            "đề xuất", "gợi ý", "mẫu nào", "loại nào", "hãng nào", "nên mua"
         };
 
         return shoppingKeywords.Any(k => q.Contains(k));
@@ -213,10 +245,17 @@ public class RecommendationService
 
         var budget = ExtractBudget(rawQuery);
         var source = _db.SanPhams.AsNoTracking();
+        bool categoryFiltered = false;
 
         // 1. Lọc theo danh mục / loại thiết bị
-        if (keyword.Contains("laptop") || keyword.Contains("máy tính xách tay") || keyword.Contains("macbook"))
+        if (keyword.Contains("laptop") || keyword.Contains("máy tính") || keyword.Contains("macbook") ||
+            keyword.Contains("máy học ai") || keyword.Contains("học ai") || keyword.Contains("trí tuệ nhân tạo") ||
+            keyword.Contains("lập trình") || keyword.Contains("đồ họa") ||
+            keyword.Contains("xps") || keyword.Contains("thinkpad") || keyword.Contains("ideapad") ||
+            keyword.Contains("vivobook") || keyword.Contains("zenbook") || keyword.Contains("legion") ||
+            keyword.Contains("tuf") || keyword.Contains("rog"))
         {
+            categoryFiltered = true;
             source = source.Where(p =>
                 p.TenSanPham != null &&
                 (
@@ -226,12 +265,19 @@ public class RecommendationService
                     p.TenSanPham.ToLower().Contains("thinkpad") ||
                     p.TenSanPham.ToLower().Contains("inspiron") ||
                     p.TenSanPham.ToLower().Contains("vivobook") ||
+                    p.TenSanPham.ToLower().Contains("ideapad") ||
+                    p.TenSanPham.ToLower().Contains("legion") ||
+                    p.TenSanPham.ToLower().Contains("tuf") ||
+                    p.TenSanPham.ToLower().Contains("rog") ||
                     (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("laptop"))
                 ));
         }
-        else if (keyword.Contains("điện thoại") || keyword.Contains("dien thoai") || keyword.Contains("smartphone") || keyword.Contains("iphone") || keyword.Contains("galaxy"))
+        else if (keyword.Contains("điện thoại") || keyword.Contains("dien thoai") || keyword.Contains("smartphone") ||
+                 keyword.Contains("iphone") || keyword.Contains("galaxy") || keyword.Contains("samsung") ||
+                 keyword.Contains("xiaomi") || keyword.Contains("oppo") || keyword.Contains("redmi"))
         {
+            categoryFiltered = true;
             source = source.Where(p =>
                 p.TenSanPham != null &&
                 (
@@ -243,16 +289,62 @@ public class RecommendationService
                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("điện thoại"))
                 ));
         }
-        else if (keyword.Contains("tai nghe") || keyword.Contains("chuột") || keyword.Contains("bàn phím") || keyword.Contains("màn hình"))
+        else if (keyword.Contains("tai nghe") || keyword.Contains("chuột") || keyword.Contains("bàn phím") ||
+                 keyword.Contains("màn hình") || keyword.Contains("loa") || keyword.Contains("cáp") ||
+                 keyword.Contains("sạc") || keyword.Contains("phụ kiện"))
         {
+            categoryFiltered = true;
             source = source.Where(p =>
                 p.TenSanPham != null &&
                 (
                     (keyword.Contains("tai nghe") && p.TenSanPham.ToLower().Contains("tai nghe")) ||
                     (keyword.Contains("chuột") && p.TenSanPham.ToLower().Contains("chuột")) ||
                     (keyword.Contains("bàn phím") && p.TenSanPham.ToLower().Contains("bàn phím")) ||
-                    (keyword.Contains("màn hình") && p.TenSanPham.ToLower().Contains("màn hình"))
+                    (keyword.Contains("màn hình") && p.TenSanPham.ToLower().Contains("màn hình")) ||
+                    (keyword.Contains("loa") && p.TenSanPham.ToLower().Contains("loa")) ||
+                    (keyword.Contains("cáp") && p.TenSanPham.ToLower().Contains("cáp")) ||
+                    (keyword.Contains("sạc") && p.TenSanPham.ToLower().Contains("sạc")) ||
+                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                     (p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tai nghe") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("chuột") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("bàn phím")))
                 ));
+        }
+        else if (keyword.Contains("ipad") || keyword.Contains("tablet") || keyword.Contains("máy tính bảng"))
+        {
+            categoryFiltered = true;
+            source = source.Where(p =>
+                p.TenSanPham != null &&
+                (
+                    p.TenSanPham.ToLower().Contains("ipad") ||
+                    p.TenSanPham.ToLower().Contains("tablet") ||
+                    p.TenSanPham.ToLower().Contains("tab") ||
+                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                     p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tablet"))
+                ));
+        }
+
+        // Nếu không thuộc danh mục nhận diện được:
+        if (!categoryFiltered)
+        {
+            var stopWords = new HashSet<string> { "mua", "cần", "muốn", "tìm", "tư", "vấn", "giá", "tầm", "khoảng", "dưới", "trên", "triệu", "hàng", "còn", "không", "sản", "phẩm", "loại", "nào", "mẫu", "cho", "em", "mình" };
+            var searchTerms = rawQuery.Split(new[] { ' ', ',', '.', '?', '!', ':', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(w => w.Length >= 2 && !stopWords.Contains(w.ToLowerInvariant()))
+                .Select(w => w.ToLowerInvariant())
+                .ToList();
+
+            if (searchTerms.Any())
+            {
+                source = source.Where(p => p.TenSanPham != null &&
+                    searchTerms.Any(term => p.TenSanPham.ToLower().Contains(term)));
+            }
+            else
+            {
+                // Không nhận diện được danh mục hoặc sản phẩm -> Tuyệt đối không lấy 3 sản phẩm mặc định
+                _logger.LogInformation("EMUA AI: Không nhận diện được danh mục hoặc sản phẩm cụ thể. Bỏ qua gợi ý.");
+                return ("", new List<ProductRecommendationDto>(), null);
+            }
         }
 
         // 2. Chỉ lấy các sản phẩm CÓ BIẾN THỂ CÒN HÀNG (SoLuong > 0)
