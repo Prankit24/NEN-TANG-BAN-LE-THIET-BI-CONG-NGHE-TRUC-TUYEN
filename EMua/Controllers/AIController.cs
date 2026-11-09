@@ -29,7 +29,8 @@ namespace EMua.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Chat(
-            [FromBody] ChatRequest? request)
+            [FromBody] ChatRequest? request,
+            System.Threading.CancellationToken cancellationToken)
         {
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.Message))
@@ -40,15 +41,24 @@ namespace EMua.Controllers
                 });
             }
 
+            var totalTimer = System.Diagnostics.Stopwatch.StartNew();
             var stage = "Phân loại câu hỏi";
 
             try
             {
+                var classifyTimer = System.Diagnostics.Stopwatch.StartNew();
                 var prediction =
                     _domainClassifier.Predict(request.Message);
+                classifyTimer.Stop();
+
+                _logger.LogInformation(
+                    "EMUA AI: [Bước 1/4] Phân loại câu hỏi mất {ElapsedMs} ms. Kết quả: {IsTechnology}",
+                    classifyTimer.ElapsedMilliseconds,
+                    prediction.IsTechnology);
 
                 if (!prediction.IsTechnology)
                 {
+                    totalTimer.Stop();
                     return Json(new
                     {
                         domain = "NonTechnology",
@@ -61,39 +71,17 @@ namespace EMua.Controllers
                 }
 
                 stage = "Lấy dữ liệu sản phẩm";
-                _logger.LogInformation("EMUA AI: {Stage}", stage);
+                var dbTimer = System.Diagnostics.Stopwatch.StartNew();
 
                 var (productContext, recommendedProducts) =
                     await _recommendationService
-                        .GetProductRecommendationsAsync(request.Message);
-
-                var promptWithContext =
-                    "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
-                    productContext +
-                    "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
-                    request.Message;
-
-                stage = "Gọi Gemini";
-
-                // Chỉ ghi độ dài, không ghi API key hoặc nội dung khách.
-                _logger.LogInformation(
-                    "EMUA AI: {Stage}. Độ dài prompt: {Length} ký tự.",
-                    stage,
-                    promptWithContext.Length);
-
-                var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
-
-                var answer =
-                    await _geminiService.AskAsync(promptWithContext);
-
-                geminiTimer.Stop();
+                        .GetProductRecommendationsAsync(request.Message, cancellationToken);
+                dbTimer.Stop();
 
                 _logger.LogInformation(
-                    "EMUA AI: Gemini trả lời sau {ElapsedMs} ms.",
-                    geminiTimer.ElapsedMilliseconds);
-
-                _logger.LogInformation(
-                    "EMUA AI: Đã nhận câu trả lời từ Gemini.");
+                    "EMUA AI: [Bước 2/4] Truy vấn Supabase & lọc sản phẩm mất {ElapsedMs} ms. Tìm thấy: {Count} sản phẩm.",
+                    dbTimer.ElapsedMilliseconds,
+                    recommendedProducts.Count);
 
                 var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
                 var budget = RecommendationService.ExtractBudget(request.Message);
@@ -113,6 +101,46 @@ namespace EMua.Controllers
                         image = p.ImageUrl,
                         url = p.DetailUrl
                     }).ToList();
+
+                var promptWithContext =
+                    "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
+                    productContext +
+                    "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
+                    request.Message;
+
+                stage = "Gọi Gemini";
+                _logger.LogInformation(
+                    "EMUA AI: [Bước 3/4] Gọi Gemini. Độ dài prompt: {Length} ký tự.",
+                    promptWithContext.Length);
+
+                var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
+                string answer;
+
+                try
+                {
+                    answer = await _geminiService.AskAsync(promptWithContext, cancellationToken);
+                    geminiTimer.Stop();
+                    _logger.LogInformation(
+                        "EMUA AI: [Bước 3/4] Gemini trả lời thành công sau {ElapsedMs} ms.",
+                        geminiTimer.ElapsedMilliseconds);
+                }
+                catch (Exception ex) when (verifiedProducts.Count > 0 && !cancellationToken.IsCancellationRequested)
+                {
+                    geminiTimer.Stop();
+                    _logger.LogWarning(
+                        ex,
+                        "EMUA AI: Gọi Gemini thất bại/quá hạn sau {ElapsedMs} ms. Kích hoạt fallback sản phẩm database ({Count} sản phẩm).",
+                        geminiTimer.ElapsedMilliseconds,
+                        verifiedProducts.Count);
+
+                    var budgetText = budget?.RawDescription != null ? $" với ngân sách {budget.RawDescription}" : "";
+                    answer = $"Dịch vụ AI đang phản hồi chậm, nhưng EMUA đã tìm thấy ngay các mẫu sản phẩm phù hợp{budgetText} đang sẵn hàng tại cửa hàng cho bạn:";
+                }
+
+                totalTimer.Stop();
+                _logger.LogInformation(
+                    "EMUA AI: [Bước 4/4] Hoàn thành toàn bộ xử lý trong {TotalMs} ms.",
+                    totalTimer.ElapsedMilliseconds);
 
                 return Json(new
                 {

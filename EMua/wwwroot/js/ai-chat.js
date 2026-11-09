@@ -436,16 +436,63 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    let isSending = false;
+
+    function showLoadingIndicator() {
+        removeLoadingIndicator();
+
+        const loading = document.createElement("div");
+        loading.id = "aiLoadingIndicator";
+        loading.classList.add("ai-message", "ai-message-bot");
+
+        const avatar = document.createElement("div");
+        avatar.classList.add("ai-msg-avatar");
+        const image = document.createElement("img");
+        image.src = "/images/AI/CarrtoonAI.png";
+        image.alt = "EMUA AI";
+        avatar.appendChild(image);
+
+        const content = document.createElement("div");
+        content.classList.add("ai-msg-content");
+
+        const bubble = document.createElement("div");
+        bubble.classList.add("ai-bubble", "ai-bubble-bot");
+        bubble.style.fontStyle = "italic";
+        bubble.style.opacity = "0.85";
+        bubble.textContent = "EMUA AI đang tìm kiếm và tư vấn...";
+
+        content.appendChild(bubble);
+        loading.appendChild(avatar);
+        loading.appendChild(content);
+
+        messages.appendChild(loading);
+        scrollMessagesToBottom(true);
+    }
+
+    function removeLoadingIndicator() {
+        const loading = document.getElementById("aiLoadingIndicator");
+        if (loading) {
+            loading.remove();
+        }
+    }
+
     async function sendMessage() {
         const text = input.value.trim();
 
-        if (!text) {
+        if (!text || isSending) {
             return;
         }
 
+        isSending = true;
         addMessage(text, "user");
         input.value = "";
         sendButton.disabled = true;
+        showLoadingIndicator();
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(function () {
+            controller.abort();
+        }, 25000); // 25s client timeout
 
         try {
             const response = await fetch("/AI/Chat", {
@@ -455,8 +502,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify({
                     message: text
-                })
+                }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
+            removeLoadingIndicator();
 
             if (!response.ok) {
                 let errorMessage = "Mình đang gặp một chút sự cố khi xử lý câu hỏi. Bạn thử lại nhé.";
@@ -488,15 +539,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
             addMessage(data.message, "bot", data.products);
         } catch (error) {
+            clearTimeout(timeoutId);
+            removeLoadingIndicator();
             console.error("EMUA AI Error:", error);
 
             // Giữ lại nội dung câu hỏi trong ô nhập khi gặp lỗi kết nối
             input.value = text;
-            addMessage(
-                "Mình chưa thể kết nối tới hệ thống lúc này. Bạn thử lại sau nhé.",
-                "bot"
-            );
+            if (error.name === "AbortError") {
+                addMessage(
+                    "Hệ thống phản hồi lâu hơn thường lệ. Bạn vui lòng thử lại hoặc bấm vào các câu hỏi gợi ý bên dưới nhé.",
+                    "bot"
+                );
+            } else {
+                addMessage(
+                    "Mình chưa thể kết nối tới hệ thống lúc này. Bạn thử lại sau nhé.",
+                    "bot"
+                );
+            }
         } finally {
+            isSending = false;
             sendButton.disabled = false;
             input.focus();
         }

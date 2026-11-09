@@ -150,7 +150,11 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddSingleton<DomainClassifier>();
 
-builder.Services.AddHttpClient<GeminiService>();
+builder.Services.AddHttpClient<GeminiService>(client =>
+{
+    // Giới hạn timeout mỗi request Gemini là 15 giây để tránh treo 100s mặc định của HttpClient
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 
 builder.Services.AddScoped<RecommendationService>();
 

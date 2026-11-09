@@ -109,10 +109,24 @@ public class RecommendationService
             }
         }
 
+        // 5. Cụm từ chứa giá trực tiếp: "laptop 20 triệu", "20tr", "giá 20 triệu", "tầm 20 củ"
+        var directPattern = @"(?:giá|tầm|cỡ|khoảng)?\s*(\d+(?:\.\d+)?)\s*(?:tr|triệu|củ)\b";
+        var mDirect = Regex.Match(q, directPattern);
+        if (mDirect.Success)
+        {
+            if (decimal.TryParse(mDirect.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+            {
+                var target = v < 1000m ? v * 1_000_000m : v;
+                var min = target * 0.80m;
+                var max = target * 1.15m;
+                return new BudgetInfo(min, max, $"tầm {target:N0}đ (khoảng {min:N0}đ - {max:N0}đ)");
+            }
+        }
+
         return null;
     }
 
-    public async Task<(string ContextText, List<ProductRecommendationDto> Products)> GetProductRecommendationsAsync(string query)
+    public async Task<(string ContextText, List<ProductRecommendationDto> Products)> GetProductRecommendationsAsync(string query, System.Threading.CancellationToken cancellationToken = default)
     {
         var timer = Stopwatch.StartNew();
         var rawQuery = (query ?? "").Trim();
@@ -193,7 +207,7 @@ public class RecommendationService
         var rawProducts = await queryable
             .OrderBy(p => p.MinPrice)
             .Take(3)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         timer.Stop();
 
@@ -220,7 +234,7 @@ public class RecommendationService
                 .Select(p => p.BienTheSanPhams.Where(b => b.SoLuong > 0).Select(b => (decimal?)b.Gia).Min())
                 .Where(g => g.HasValue)
                 .OrderBy(g => g)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             var cultureVN = CultureInfo.GetCultureInfo("vi-VN");
             var minExistingStr = lowestExisting.HasValue && lowestExisting.Value > 0
@@ -283,9 +297,9 @@ public class RecommendationService
         return (context.ToString(), productDtos);
     }
 
-    public async Task<string> GetProductContextAsync(string query)
+    public async Task<string> GetProductContextAsync(string query, System.Threading.CancellationToken cancellationToken = default)
     {
-        var result = await GetProductRecommendationsAsync(query);
+        var result = await GetProductRecommendationsAsync(query, cancellationToken);
         return result.ContextText;
     }
 
