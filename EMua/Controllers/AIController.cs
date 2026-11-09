@@ -72,8 +72,9 @@ namespace EMua.Controllers
                 prediction = _domainClassifier.Predict(request.Message);
                 classifyTimer.Stop();
 
-                // Nếu là câu hỏi tiếp nối trong phiên chat công nghệ, bỏ qua từ chối nhầm
-                if (isFollowUp && !prediction.IsTechnology)
+                // Nếu là câu hỏi tiếp nối trong phiên chat công nghệ hoặc tương tác thông thường, bỏ qua từ chối nhầm
+                var isCommonInteraction = IsCommonStoreInteraction(request.Message);
+                if ((isFollowUp || isCommonInteraction) && !prediction.IsTechnology)
                 {
                     prediction = new DomainPrediction { IsTechnology = true };
                 }
@@ -335,6 +336,17 @@ namespace EMua.Controllers
             return "Dạ hiện tại hệ thống AI tư vấn đang tạm thời bận hoặc vượt giới hạn xử lý. Để được giải đáp nhanh và chi tiết nhất về thắc mắc này, bạn có thể nhắn tin trực tiếp với nhân viên hỗ trợ EMUA qua trang Liên hệ nhé!";
         }
 
+        private static bool IsCommonStoreInteraction(string? message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return false;
+            var q = message.Trim().ToLowerInvariant();
+            return q.Contains("chào") || q.Contains("hello") || q.Contains("hi ") || q.Equals("hi") ||
+                   q.Contains("cảm ơn") || q.Contains("thanks") || q.Contains("bạn là ai") ||
+                   q.Contains("địa chỉ") || q.Contains("ở đâu") || q.Contains("mở cửa") ||
+                   q.Contains("liên hệ") || q.Contains("hotline") || q.Contains("sđt") ||
+                   q.Contains("bảo hành") || q.Contains("đổi trả") || q.Contains("chính sách");
+        }
+
         private static string GenerateFollowUpAnswer(
             string message,
             ChatProductItemDto product,
@@ -345,6 +357,44 @@ namespace EMua.Controllers
             var specs = productDto?.Specs ?? "";
             var desc = productDto?.Description ?? "";
             var fullInfo = $"{specs} {desc}".ToLowerInvariant();
+
+            // 0. Nhu cầu học Trí tuệ nhân tạo (AI) / Machine Learning / Data Science
+            if (q.Contains("học ai") || q.Contains("trí tuệ nhân tạo") || q.Contains("máy học") ||
+                q.Contains("machine learning") || q.Contains("deep learning") || q.Contains("data science") ||
+                q.Contains("khoa học dữ liệu") || (q.Contains("ai") && (q.Contains("ổn không") || q.Contains("được không") || q.Contains("phù hợp") || q.Contains("mượt không"))))
+            {
+                bool has16GbOrMore = fullInfo.Contains("16gb") || fullInfo.Contains("16 gb") || fullInfo.Contains("32gb") || fullInfo.Contains("32 gb");
+                bool has8Gb = fullInfo.Contains("8gb") || fullInfo.Contains("8 gb");
+                bool hasDedicatedGpu = fullInfo.Contains("rtx") || fullInfo.Contains("gtx") || fullInfo.Contains("geforce") || fullInfo.Contains("radeon rx");
+
+                sb.AppendLine($"Dạ đối với nhu cầu học ngành Trí tuệ nhân tạo (AI) và Khoa học dữ liệu, mẫu **{product.name}** là một lựa chọn {(has16GbOrMore ? "**rất tốt và phù hợp**" : "**đáp ứng tốt giai đoạn đầu**")} bạn nhé!");
+
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Cấu hình phần cứng từ cửa hàng: {specs}");
+                }
+
+                if (has16GbOrMore)
+                {
+                    sb.AppendLine("• Đánh giá RAM: Dung lượng RAM 16GB trở lên giúp bạn thoải mái load các tập dữ liệu (dataset), chạy các mô hình Machine Learning, xử lý dữ liệu với thư viện Python (Pandas, NumPy, Scikit-learn) và chạy mượt mà Jupyter Notebook/VS Code.");
+                }
+                else if (has8Gb)
+                {
+                    sb.AppendLine("• Đánh giá RAM: Dung lượng 8GB RAM đáp ứng tốt các môn học thuật toán, lập trình Python và kiến thức nền tảng. Khi học lên các môn chuyên sâu về Deep Learning với tập dữ liệu lớn, bạn có thể cân nhắc nâng cấp thêm RAM hoặc kết hợp huấn luyện trên nền tảng đám mây (Google Colab, Kaggle).");
+                }
+
+                if (hasDedicatedGpu)
+                {
+                    sb.AppendLine("• Card đồ họa (GPU): Máy trang bị card đồ họa rời giúp tăng tốc độ huấn luyện mô hình mạng nơ-ron (Neural Networks) trên môi trường CUDA rất hiệu quả.");
+                }
+                else
+                {
+                    sb.AppendLine("• Khả năng huấn luyện: Đối với các mô hình Deep Learning phức tạp đòi hỏi GPU hạng nặng, sinh viên thường huấn luyện trên môi trường Cloud (Google Colab, Azure), do đó CPU mạnh mẽ và RAM ổn định của máy hoàn toàn phục vụ trọn vẹn chương trình học tập.");
+                }
+
+                sb.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem đầy đủ thông số chi tiết và ưu đãi tại EMUA nhé!");
+                return sb.ToString();
+            }
 
             // 1. Nhu cầu lập trình / code / IT / chạy máy ảo
             if (q.Contains("lập trình") || q.Contains("code") || q.Contains("coder") ||
