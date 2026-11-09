@@ -19,7 +19,9 @@ public record ProductRecommendationDto(
     decimal? MinPrice,
     bool InStock,
     string? ImageUrl,
-    string DetailUrl
+    string DetailUrl,
+    string? Description = null,
+    string? Specs = null
 );
 
 public record BudgetInfo(
@@ -126,12 +128,47 @@ public class RecommendationService
         return null;
     }
 
+    public static bool IsFollowUpQuery(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return false;
+
+        var q = query.Trim().ToLowerInvariant();
+
+        // 1. Chứa đại từ chỉ định hoặc từ tham chiếu sản phẩm
+        string[] referenceWords = new[]
+        {
+            "con này", "máy này", "em này", "chiếc này", "bản này", "mẫu này", "sản phẩm này",
+            "máy đó", "con đó", "mẫu đó", "cái này", "cái đó", "thứ nhất", "thứ hai", "thứ 2",
+            "thứ ba", "thứ 3", "đầu tiên"
+        };
+        if (referenceWords.Any(w => q.Contains(w)))
+            return true;
+
+        // 2. Câu hỏi hỏi tiếp về mục đích sử dụng hoặc thuộc tính của sản phẩm
+        string[] usagePhrases = new[]
+        {
+            "dùng để", "dùng cho", "phù hợp", "ổn không", "tốt không", "mượt không",
+            "lập trình", "học lập trình", "chơi game", "làm đồ họa", "thiết kế", "văn phòng",
+            "học tập", "chạy máy ảo", "render", "pin thế nào", "pin dùng", "bao nhiêu kg",
+            "nặng không", "nâng cấp", "màu gì", "bảo hành mấy năm", "có nên mua"
+        };
+        if (usagePhrases.Any(w => q.Contains(w)))
+            return true;
+
+        return false;
+    }
+
     public static bool IsShoppingQuery(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
             return false;
 
         var q = query.Trim().ToLowerInvariant();
+
+        // 0. Nhận diện câu hỏi tiếp nối về sản phẩm đã tư vấn
+        if (IsFollowUpQuery(q))
+            return true;
 
         // 1. Nhận diện có ngân sách
         if (ExtractBudget(q) != null)
@@ -231,6 +268,11 @@ public class RecommendationService
                 : p.MoTa.Length > 600
                     ? p.MoTa.Substring(0, 600)
                     : p.MoTa,
+            Specs = p.ThongSoKyThuat == null
+                ? ""
+                : p.ThongSoKyThuat.Length > 800
+                    ? p.ThongSoKyThuat.Substring(0, 800)
+                    : p.ThongSoKyThuat,
             InStock = p.BienTheSanPhams.Any(b => b.SoLuong > 0),
             MinPrice = p.BienTheSanPhams
                 .Where(b => b.SoLuong > 0)
@@ -276,7 +318,9 @@ public class RecommendationService
             MinPrice: p.MinPrice,
             InStock: p.InStock,
             ImageUrl: p.ImageUrl,
-            DetailUrl: $"/Product/Details/{p.MaSanPham}"
+            DetailUrl: $"/Product/Details/{p.MaSanPham}",
+            Description: p.Description,
+            Specs: p.Specs
         )).ToList();
 
         // 5. Trường hợp KHÔNG có sản phẩm nào thỏa mãn ngân sách
@@ -354,6 +398,36 @@ public class RecommendationService
     {
         var result = await GetProductRecommendationsAsync(query, cancellationToken);
         return result.ContextText;
+    }
+
+    public async Task<ProductRecommendationDto?> GetProductByIdAsync(int id, System.Threading.CancellationToken cancellationToken = default)
+    {
+        var p = await _db.SanPhams.AsNoTracking()
+            .Where(x => x.MaSanPham == id)
+            .Select(x => new
+            {
+                x.MaSanPham,
+                x.TenSanPham,
+                Description = x.MoTa == null ? "" : x.MoTa.Length > 600 ? x.MoTa.Substring(0, 600) : x.MoTa,
+                Specs = x.ThongSoKyThuat == null ? "" : x.ThongSoKyThuat.Length > 800 ? x.ThongSoKyThuat.Substring(0, 800) : x.ThongSoKyThuat,
+                InStock = x.BienTheSanPhams.Any(b => b.SoLuong > 0),
+                MinPrice = x.BienTheSanPhams.Where(b => b.SoLuong > 0).Select(b => (decimal?)b.Gia).Min(),
+                ImageUrl = x.SanPhamHinhAnhs.OrderByDescending(img => img.LaAnhChinh).ThenBy(img => img.ThuTu).Select(img => img.DuongDanAnh).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (p == null) return null;
+
+        return new ProductRecommendationDto(
+            Id: p.MaSanPham,
+            Name: p.TenSanPham ?? "Sản phẩm EMUA",
+            MinPrice: p.MinPrice,
+            InStock: p.InStock,
+            ImageUrl: p.ImageUrl,
+            DetailUrl: $"/Product/Details/{p.MaSanPham}",
+            Description: p.Description,
+            Specs: p.Specs
+        );
     }
 
     private static string ShortDescription(string? value)
