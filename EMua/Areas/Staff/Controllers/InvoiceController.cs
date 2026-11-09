@@ -25,24 +25,68 @@ public class InvoiceController : StaffControllerBase
             .Include(x => x.MaNguoiLapNavigation)
             .AsQueryable();
 
-        // Tìm kiếm theo mã hóa đơn, mã đơn hàng hoặc tên khách hàng
+        // Tìm kiếm theo mã hóa đơn, mã đơn hàng hoặc thông tin khách hàng
         if (!string.IsNullOrWhiteSpace(q))
         {
             var search = q.Trim();
-            var searchClean = search.Replace("#HD-", "").Replace("#DH-", "").Replace("HD-", "").Replace("DH-", "");
+            var searchUpper = search.ToUpperInvariant();
+
+            int? exactInvoiceId = null;
+            int? exactOrderId = null;
+
+            if (searchUpper.StartsWith("#HD-") || searchUpper.StartsWith("HD-"))
+            {
+                var numPart = searchUpper.Replace("#HD-", "").Replace("HD-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactInvoiceId = parsed;
+            }
+            else if (searchUpper.StartsWith("#DH-") || searchUpper.StartsWith("DH-"))
+            {
+                var numPart = searchUpper.Replace("#DH-", "").Replace("DH-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactOrderId = parsed;
+            }
+            else if (int.TryParse(search, out var parsedNum))
+            {
+                exactInvoiceId = parsedNum;
+                exactOrderId = parsedNum;
+            }
+
+            var pattern = $"%{search}%";
+
             invoicesQuery = invoicesQuery.Where(x =>
-                x.MaHoaDon.ToString().Contains(searchClean) ||
-                x.MaDonHang.ToString().Contains(searchClean) ||
-                (x.HoTenKhachHang != null && x.HoTenKhachHang.ToLower().Contains(search.ToLower())) ||
-                (x.SoDienThoai != null && x.SoDienThoai.Contains(search)));
+                (exactInvoiceId.HasValue && x.MaHoaDon == exactInvoiceId.Value) ||
+                (exactOrderId.HasValue && x.MaDonHang == exactOrderId.Value) ||
+                (x.HoTenKhachHang != null && EF.Functions.ILike(x.HoTenKhachHang, pattern)) ||
+                (x.SoDienThoai != null && EF.Functions.ILike(x.SoDienThoai, pattern)) ||
+                (x.MaDonHangNavigation != null && x.MaDonHangNavigation.HoTenNhanHang != null && EF.Functions.ILike(x.MaDonHangNavigation.HoTenNhanHang, pattern)) ||
+                (x.MaDonHangNavigation != null && x.MaDonHangNavigation.SoDienThoaiNhanHang != null && EF.Functions.ILike(x.MaDonHangNavigation.SoDienThoaiNhanHang, pattern)));
         }
 
-        var allInvoices = await invoicesQuery
-            .OrderByDescending(x => x.MaHoaDon)
+        // Lấy danh sách trạng thái thực tế từ CSDL để hiển thị vào dropdown
+        ViewBag.StatusList = await _db.HoaDons.AsNoTracking()
+            .Where(x => !string.IsNullOrWhiteSpace(x.TrangThaiHoaDon))
+            .Select(x => x.TrangThaiHoaDon!)
+            .Distinct()
+            .OrderBy(x => x)
             .ToListAsync();
 
-        // Đồng bộ trạng thái hiển thị
-        foreach (var inv in allInvoices)
+        // Lọc theo trạng thái
+        if (!string.IsNullOrWhiteSpace(status) && status != "all")
+        {
+            invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
+        }
+
+        int totalItems = await invoicesQuery.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
+
+        var items = await invoicesQuery
+            .OrderByDescending(x => x.MaHoaDon)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        // Đồng bộ trạng thái hiển thị cho danh sách phân trang
+        foreach (var inv in items)
         {
             var orderStatus = inv.MaDonHangNavigation?.TrangThaiDonHang;
             if (string.IsNullOrEmpty(inv.TrangThaiHoaDon) || inv.TrangThaiHoaDon == "Đã lập")
@@ -54,33 +98,11 @@ public class InvoiceController : StaffControllerBase
             }
         }
 
-        // Lấy danh sách các trạng thái có thật
-        ViewBag.StatusList = allInvoices
-            .Where(x => !string.IsNullOrWhiteSpace(x.TrangThaiHoaDon))
-            .Select(x => x.TrangThaiHoaDon!)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        // Lọc theo trạng thái
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            allInvoices = allInvoices.Where(x => x.TrangThaiHoaDon == status).ToList();
-        }
-
-        int totalItems = allInvoices.Count;
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
-
-        var items = allInvoices
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-
         ViewBag.Search = q;
         ViewBag.SelectedStatus = status;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
         ViewBag.PageSize = pageSize;
 
         return View(items);

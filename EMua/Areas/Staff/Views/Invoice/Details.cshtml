@@ -15,25 +15,79 @@
     decimal finalTotal = Model.TongTien ?? (order?.TongTien ?? 0m);
 
     // Tính tổng tiền các mặt hàng
-    decimal itemsTotal = hasSnapshot 
-        ? Model.ChiTietHoaDons.Sum(x => x.ThanhTien)
+    decimal itemsTotal = hasSnapshot
+        ? (Model.ChiTietHoaDons?.Sum(x => x.ThanhTien) ?? 0m)
         : (legacyDetails?.Sum(x => x.ThanhTien) ?? 0m);
 
     // Phí vận chuyển: nếu có snapshot PhiVanChuyen thì dùng, ngược lại đối soát từ đơn gốc
     decimal shippingFee = Model.PhiVanChuyen ?? Math.Max(0m, finalTotal - itemsTotal);
-    
+
     // Kiểm tra xem có dữ liệu thuế VAT xác thực hay không
     bool hasValidVat = hasSnapshot && Model.TienThueVat.HasValue && Model.TienThueVat > 0;
 }
 
-<div class="container-fluid px-0">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h4 class="fw-bold mb-1"><i class="bi bi-file-earmark-text text-primary me-2"></i>Hóa đơn bán hàng nội bộ #HD-@Model.MaHoaDon.ToString("D5")</h4>
-            <span class="text-muted small">
-                Thuộc đơn hàng: <strong>#DH-@Model.MaDonHang.ToString("D5")</strong> | 
-                <em>Chứng từ xuất kho &amp; hạch toán nội bộ EMUA</em>
-            </span>
+
+<style>
+    /* Staff EMUA: bo góc 0, bố cục nhất quán; không ảnh hưởng trang khác */
+    .emua-invoice-detail .card,
+    .emua-invoice-detail .btn,
+    .emua-invoice-detail .badge,
+    .emua-invoice-detail .form-control,
+    .emua-invoice-detail .form-select,
+    .emua-invoice-detail .alert,
+    .emua-invoice-detail .rounded {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .emua-invoice-detail .invoice-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border: 1px solid #e1e7ef;
+        background: #fff;
+    }
+
+        .emua-invoice-detail .invoice-page-actions .btn {
+            white-space: nowrap;
+        }
+
+    .emua-invoice-detail .card {
+        border: 1px solid #e1e7ef !important;
+    }
+
+    .emua-invoice-detail .card-header {
+        border-bottom: 1px solid #e1e7ef;
+    }
+
+    .emua-invoice-detail .table th {
+        background-color: #f7f9fc;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .emua-invoice-detail .table td {
+        font-size: 13px;
+    }
+
+    @@media (max-width: 575.98px) {
+        .emua-invoice-detail .invoice-page-actions {
+            align-items: flex-start;
+        }
+
+            .emua-invoice-detail .invoice-page-actions > div:last-child {
+                flex-wrap: wrap;
+            }
+    }
+</style>
+
+<div class="container-fluid px-0 emua-invoice-detail">
+    <div class="invoice-page-actions d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="text-muted small">
+            Đơn hàng tham chiếu: <strong class="text-primary">#DH-@Model.MaDonHang.ToString("D5")</strong> | Ngày lập: <strong>@(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong>
         </div>
         <div class="d-flex gap-2">
             <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@Model.MaHoaDon" target="_blank" class="btn btn-sm btn-primary">
@@ -43,7 +97,7 @@
                 <i class="bi bi-box-seam me-1"></i> Xem đơn hàng
             </a>
             <a asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Danh sách hóa đơn
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
             </a>
         </div>
     </div>
@@ -51,16 +105,16 @@
     <div class="row g-3">
         <!-- Thông tin hóa đơn & nhận hàng -->
         <div class="col-lg-4">
-            <div class="card mb-3 p-3 bg-white border shadow-sm">
+            <div class="card mb-3 p-3 bg-white border">
                 <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="bi bi-info-circle me-1"></i> Thông tin chứng từ</h6>
                 <div class="mb-2"><span class="text-muted small">Mã hóa đơn:</span> <strong>#HD-@Model.MaHoaDon.ToString("D5")</strong></div>
                 <div class="mb-2"><span class="text-muted small">Ngày lập:</span> <strong>@(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong></div>
                 <div class="mb-2">
-                    <span class="text-muted small">Người lập:</span> 
+                    <span class="text-muted small">Người lập:</span>
                     <strong><i class="bi bi-person-badge me-1"></i>@nguoiLap</strong>
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted small">Trạng thái HĐ:</span> 
+                    <span class="text-muted small">Trạng thái HĐ:</span>
                     @if (Model.TrangThaiHoaDon == "Đã thanh toán")
                     {
                         <span class="badge bg-success">@Model.TrangThaiHoaDon</span>
@@ -71,8 +125,8 @@
                     }
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted small">Phương thức TT:</span> 
-                    <span class="badge bg-light text-dark border">@(Model.PhuongThucThanhToan ?? order?.ThanhToans.FirstOrDefault()?.PhuongThuc ?? "COD")</span>
+                    <span class="text-muted small">Phương thức TT:</span>
+                    <span class="badge bg-light text-dark border">@(Model.PhuongThucThanhToan ?? order?.ThanhToans?.FirstOrDefault()?.PhuongThuc ?? "COD")</span>
                 </div>
                 <hr />
                 <div>
@@ -81,22 +135,22 @@
                 </div>
             </div>
 
-            <div class="card p-3 bg-white border shadow-sm">
+            <div class="card p-3 bg-white border">
                 <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="bi bi-geo-alt me-1"></i> Thông tin khách hàng &amp; Giao nhận</h6>
                 <div class="mb-2">
-                    <span class="text-muted small">Người nhận:</span> 
+                    <span class="text-muted small">Người nhận:</span>
                     <strong>@(Model.HoTenKhachHang ?? order?.HoTenNhanHang ?? "Khách hàng")</strong>
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted small">Điện thoại:</span> 
+                    <span class="text-muted small">Điện thoại:</span>
                     <strong>@(Model.SoDienThoai ?? order?.SoDienThoaiNhanHang ?? "—")</strong>
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted small">Địa chỉ:</span> 
+                    <span class="text-muted small">Địa chỉ:</span>
                     <span>@(Model.DiaChiGiaoHang ?? order?.DiaChiNhanHang ?? "—")</span>
                 </div>
                 <div>
-                    <span class="text-muted small">Ghi chú:</span> 
+                    <span class="text-muted small">Ghi chú:</span>
                     <span>@(string.IsNullOrEmpty(Model.GhiChu) ? (string.IsNullOrEmpty(order?.GhiChu) ? "Không có" : order.GhiChu) : Model.GhiChu)</span>
                 </div>
             </div>
@@ -104,7 +158,7 @@
 
         <!-- Danh sách sản phẩm trong hóa đơn -->
         <div class="col-lg-8">
-            <div class="card p-3 bg-white border shadow-sm">
+            <div class="card p-3 bg-white border">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                     <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-cart-check me-1"></i> Chi tiết mặt hàng</h6>
                     @if (hasSnapshot)
@@ -188,7 +242,7 @@
                             {
                                 <tr>
                                     <th colspan="4" class="text-end text-muted border-0 py-1">Tiền thuế VAT (đã gồm trong giá):</th>
-                                    <td class="text-end fw-semibold border-0 py-1">@(Model.TienThueVat.Value.ToString("N0")) đ</td>
+                                    <td class="text-end fw-semibold border-0 py-1">@(Model.TienThueVat.GetValueOrDefault().ToString("N0")) đ</td>
                                 </tr>
                             }
                             else
@@ -208,7 +262,7 @@
                             {
                                 <tr>
                                     <th colspan="4" class="text-end text-success border-0 py-1">Giảm giá Voucher (@(Model.MaKhm ?? "Áp dụng")):</th>
-                                    <td class="text-end text-success fw-semibold border-0 py-1">-@(Model.TienGiamGia.Value.ToString("N0")) đ</td>
+                                    <td class="text-end text-success fw-semibold border-0 py-1">-@(Model.TienGiamGia.GetValueOrDefault().ToString("N0")) đ</td>
                                 </tr>
                             }
                             <tr class="border-top">

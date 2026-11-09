@@ -14,8 +14,8 @@
 
     decimal finalTotal = Model.TongTien ?? (order?.TongTien ?? 0m);
 
-    decimal itemsTotal = hasSnapshot 
-        ? Model.ChiTietHoaDons.Sum(x => x.ThanhTien)
+    decimal itemsTotal = hasSnapshot
+        ? (Model.ChiTietHoaDons?.Sum(x => x.ThanhTien) ?? 0m)
         : (legacyDetails?.Sum(x => x.ThanhTien) ?? 0m);
 
     decimal shippingFee = Model.PhiVanChuyen ?? Math.Max(0m, finalTotal - itemsTotal);
@@ -44,7 +44,7 @@
             background: #fff;
             padding: 40px;
             border: 1px solid #dee2e6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: none;
         }
 
         .invoice-header {
@@ -80,15 +80,21 @@
                 background: #fff;
                 padding: 0;
             }
+
             .no-print {
                 display: none !important;
             }
+
             .invoice-card {
                 border: 0;
                 box-shadow: none;
                 padding: 0;
                 max-width: 100%;
             }
+        }
+
+        .btn, .badge, .invoice-card {
+            border-radius: 0 !important;
         }
     </style>
 </head>
@@ -125,7 +131,7 @@
         <!-- THÔNG TIN KHÁCH HÀNG & NGƯỜI LẬP -->
         <div class="row mb-4">
             <div class="col-6">
-                <div class="p-3 border bg-light h-100 rounded">
+                <div class="p-3 border bg-light h-100">
                     <h6 class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="bi bi-person me-1"></i> KHÁCH HÀNG / NGƯỜI NHẬN</h6>
                     <table class="w-100 small invoice-meta-table">
                         <tr>
@@ -144,7 +150,7 @@
                 </div>
             </div>
             <div class="col-6">
-                <div class="p-3 border bg-light h-100 rounded">
+                <div class="p-3 border bg-light h-100">
                     <h6 class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="bi bi-receipt me-1"></i> THÔNG TIN CHỨNG TỪ</h6>
                     <table class="w-100 small invoice-meta-table">
                         <tr>
@@ -153,7 +159,7 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Thanh toán:</td>
-                            <td><span class="badge bg-secondary">@(Model.PhuongThucThanhToan ?? order?.ThanhToans.FirstOrDefault()?.PhuongThuc ?? "COD")</span></td>
+                            <td><span class="badge bg-secondary">@(Model.PhuongThucThanhToan ?? order?.ThanhToans?.FirstOrDefault()?.PhuongThuc ?? "COD")</span></td>
                         </tr>
                         <tr>
                             <td class="text-muted">Trạng thái:</td>
@@ -240,7 +246,7 @@
                     {
                         <tr>
                             <td class="py-1 text-muted">Tiền thuế VAT (đã gồm trong giá):</td>
-                            <td class="py-1 text-end fw-semibold">@(Model.TienThueVat.Value.ToString("N0")) đ</td>
+                            <td class="py-1 text-end fw-semibold">@(Model.TienThueVat.GetValueOrDefault().ToString("N0")) đ</td>
                         </tr>
                     }
                     else
@@ -258,7 +264,7 @@
                     {
                         <tr>
                             <td class="py-1 text-success">Giảm giá Coupon (@(Model.MaKhm ?? "Áp dụng")):</td>
-                            <td class="py-1 text-end text-success fw-semibold">-@(Model.TienGiamGia.Value.ToString("N0")) đ</td>
+                            <td class="py-1 text-end text-success fw-semibold">-@(Model.TienGiamGia.GetValueOrDefault().ToString("N0")) đ</td>
                         </tr>
                     }
                     <tr class="border-top">
@@ -271,7 +277,7 @@
 
         @if (!string.IsNullOrEmpty(Model.GhiChu))
         {
-            <div class="p-2 border bg-light mb-4 rounded small">
+            <div class="p-2 border bg-light mb-4 small">
                 <strong>Ghi chú:</strong> @Model.GhiChu
             </div>
         }

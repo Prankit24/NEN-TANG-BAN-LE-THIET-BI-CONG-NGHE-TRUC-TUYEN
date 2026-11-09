@@ -192,20 +192,8 @@
 </style>
 
 <div class="emua-report">
-    <div class="report-heading">
-        <div>
-            <h2><i class="bi bi-bar-chart-line me-2" aria-hidden="true"></i>Báo cáo thống kê kinh doanh</h2>
-            <p>Dữ liệu tổng hợp từ hệ thống đơn hàng và tương tác sản phẩm.</p>
-        </div>
-        <div>
-            <a asp-action="Export" asp-route-month="@currentMonth" asp-route-year="@currentYear" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-download me-1"></i> Xuất CSV
-            </a>
-        </div>
-    </div>
-
-    <!-- Bộ lọc tháng và năm -->
-    <div class="report-filter-bar">
+    <!-- Bộ lọc tháng, năm và nút xuất dữ liệu -->
+    <div class="report-filter-bar mt-1">
         <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
             <span class="fw-semibold text-muted small"><i class="bi bi-calendar3 me-1"></i> Kỳ báo cáo:</span>
             <select name="month" class="form-select form-select-sm" style="width: auto;">
@@ -224,7 +212,12 @@
                 <i class="bi bi-filter me-1"></i> Xem báo cáo
             </button>
         </form>
-        <span class="text-muted small">Thời gian: <strong>Tháng @currentMonth/@currentYear (Giờ Việt Nam GMT+7)</strong></span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">Thời gian: <strong>Tháng @currentMonth/@currentYear (Giờ VN)</strong></span>
+            <a asp-action="Export" asp-route-month="@currentMonth" asp-route-year="@currentYear" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-download me-1"></i> Xuất CSV
+            </a>
+        </div>
     </div>
 
     <!-- 8 thẻ KPI tổng quan tách bạch đơn hủy & đổi trả -->
