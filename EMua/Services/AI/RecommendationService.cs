@@ -155,7 +155,18 @@ public class RecommendationService
         if (nonProductTopics.Any(t => q.Contains(t)))
             return false;
 
-        // 2. Câu hỏi hỏi tiếp về mục đích sử dụng hoặc thuộc tính của thiết bị phần cứng cụ thể
+        // 2. Hỏi trực tiếp về thông số phần cứng, giá bán, tồn kho hoặc cấu hình sản phẩm
+        string[] specKeywords = new[]
+        {
+            "ram", "cpu", "chip", "ổ cứng", "ssd", "hdd", "màn hình", "card", "vga", "gpu",
+            "pin", "trọng lượng", "bao nhiêu kg", "nặng bao nhiêu", "cấu hình", "thông số",
+            "giá bao nhiêu", "bao nhiêu tiền", "giá sao", "nhiêu tiền", "giá thế nào", "bao tiền",
+            "còn hàng", "tồn kho", "sẵn hàng", "còn mấy", "có sẵn", "bảo hành mấy năm", "bảo hành bao lâu"
+        };
+        if (specKeywords.Any(w => q.Contains(w)))
+            return true;
+
+        // 3. Câu hỏi hỏi tiếp về mục đích sử dụng hoặc thuộc tính của thiết bị phần cứng cụ thể
         string[] specificDeviceUsage = new[]
         {
             "dùng để lập trình", "dùng để code", "dùng để render", "dùng để chơi game",
@@ -520,6 +531,354 @@ public class RecommendationService
             Description: p.Description,
             Specs: p.Specs
         );
+    }
+
+    public async Task<(bool Handled, string Answer, ProductRecommendationDto? Product)> TryGetDirectProductAnswerAsync(
+        int productId,
+        string message,
+        System.Threading.CancellationToken cancellationToken = default)
+    {
+        var p = await _db.SanPhams
+            .AsNoTracking()
+            .Include(x => x.BienTheSanPhams)
+            .Include(x => x.SanPhamHinhAnhs)
+            .FirstOrDefaultAsync(x => x.MaSanPham == productId, cancellationToken);
+
+        if (p == null)
+            return (false, "", null);
+
+        var inStockVariants = p.BienTheSanPhams.Where(b => b.SoLuong > 0).ToList();
+        var minPrice = inStockVariants.Any()
+            ? inStockVariants.Min(b => (decimal?)b.Gia)
+            : p.GiaGoc;
+        var inStock = inStockVariants.Any() || p.BienTheSanPhams.Any(b => b.TrangThai == "Còn hàng");
+        var imageUrl = p.SanPhamHinhAnhs
+            .OrderByDescending(img => img.LaAnhChinh)
+            .ThenBy(img => img.ThuTu)
+            .Select(img => img.DuongDanAnh)
+            .FirstOrDefault();
+
+        var productDto = new ProductRecommendationDto(
+            Id: p.MaSanPham,
+            Name: p.TenSanPham ?? "Sản phẩm EMUA",
+            MinPrice: minPrice,
+            InStock: inStock,
+            ImageUrl: imageUrl,
+            DetailUrl: $"/Product/Details/{p.MaSanPham}",
+            Description: p.MoTa,
+            Specs: p.ThongSoKyThuat
+        );
+
+        var q = (message ?? "").ToLowerInvariant().Trim();
+        var specs = p.ThongSoKyThuat ?? "";
+        var culture = CultureInfo.GetCultureInfo("vi-VN");
+        var name = p.TenSanPham ?? "sản phẩm";
+
+        // Tách các dòng hoặc phân đoạn thông số từ CSDL
+        var specSegments = specs.Split(new[] { '\r', '\n', '|', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
+
+        // 1. Hỏi về RAM
+        if (q.Contains("ram") || q.Contains("bộ nhớ ram") || (q.Contains("bộ nhớ") && !q.Contains("lưu trữ") && !q.Contains("ssd") && !q.Contains("ổ cứng")))
+        {
+            string? ramValue = null;
+            foreach (var s in specSegments)
+            {
+                if (Regex.IsMatch(s, @"\b(?:RAM|Bộ nhớ RAM)\b", RegexOptions.IgnoreCase))
+                {
+                    var clean = Regex.Replace(s, @"^(?:RAM|Bộ nhớ RAM)\s*[:=-]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                    {
+                        ramValue = clean;
+                        break;
+                    }
+                }
+                else if (s.Contains("Unified Memory", StringComparison.OrdinalIgnoreCase))
+                {
+                    ramValue = s;
+                    break;
+                }
+            }
+
+            // Nếu chưa có trong ThongSoKyThuat, kiểm tra các phiên bản biến thể
+            if (string.IsNullOrWhiteSpace(ramValue))
+            {
+                var variantRams = p.BienTheSanPhams
+                    .Select(b => b.PhienBan)
+                    .Where(pb => !string.IsNullOrWhiteSpace(pb))
+                    .Select(pb => Regex.Match(pb!, @"\b\d+\s*GB\b", RegexOptions.IgnoreCase).Value)
+                    .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Distinct()
+                    .ToList();
+
+                if (variantRams.Any())
+                {
+                    ramValue = string.Join(" hoặc ", variantRams);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(ramValue))
+            {
+                var answer = $"Dạ mẫu **{name}** có thông số RAM là **{ramValue}** bạn nhé! Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem thêm thông tin chi tiết và ưu đãi tại EMUA.";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại trên hệ thống dữ liệu kỹ thuật của EMUA chưa có thông tin chi tiết về dung lượng RAM cho mẫu **{name}**. Bạn vui lòng bấm vào nút 'Xem sản phẩm' bên dưới để xem thêm catalogue chi tiết hoặc liên hệ nhân viên EMUA để kiểm tra trực tiếp máy nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 2. Hỏi về CPU / Chip / Vi xử lý
+        if (q.Contains("cpu") || q.Contains("chip") || q.Contains("vi xử lý") || q.Contains("core i") || q.Contains("ryzen") || q.Contains("bộ vi xử lý"))
+        {
+            string? cpuValue = null;
+            foreach (var s in specSegments)
+            {
+                if (Regex.IsMatch(s, @"\b(?:CPU|Bộ vi xử lý|Vi xử lý|Chip)\b", RegexOptions.IgnoreCase))
+                {
+                    var clean = Regex.Replace(s, @"^(?:CPU|Bộ vi xử lý|Vi xử lý|Chip)\s*[:=-]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                    {
+                        cpuValue = clean;
+                        break;
+                    }
+                }
+                else if (s.Contains("Intel", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("Ryzen", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("Core i", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("Apple M", StringComparison.OrdinalIgnoreCase))
+                {
+                    cpuValue = s;
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(cpuValue))
+            {
+                var answer = $"Dạ mẫu **{name}** được trang bị vi xử lý **{cpuValue}** bạn nhé! Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem chi tiết cấu hình và ưu đãi tại EMUA.";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại trên hệ thống của EMUA chưa có thông số chi tiết về CPU/Chip cho mẫu **{name}**. Bạn có thể bấm vào nút 'Xem sản phẩm' bên dưới để xem catalogue đầy đủ từ nhà sản xuất nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 3. Hỏi về Giá bán
+        if (q.Contains("giá") || q.Contains("bao nhiêu tiền") || q.Contains("nhiêu tiền") || q.Contains("bao tiền") || q.Contains("giá sao") || q.Contains("giá thế nào"))
+        {
+            var sbPrice = new StringBuilder();
+            var minPriceStr = minPrice.HasValue && minPrice.Value > 0
+                ? minPrice.Value.ToString("N0", culture) + " VNĐ"
+                : "Liên hệ cửa hàng";
+
+            sbPrice.AppendLine($"Dạ mẫu **{name}** hiện đang có giá bán tại EMUA khởi điểm từ **{minPriceStr}**.");
+            if (p.BienTheSanPhams.Count > 1)
+            {
+                sbPrice.AppendLine("Các phiên bản chi tiết đang sẵn hàng tại cửa hàng:");
+                foreach (var b in p.BienTheSanPhams.OrderBy(b => b.Gia))
+                {
+                    var label = string.Join(" - ", new[] { b.MauSac, b.PhienBan }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                    if (string.IsNullOrWhiteSpace(label)) label = "Bản tiêu chuẩn";
+                    var stockStr = b.SoLuong > 0 ? $"còn {b.SoLuong} máy" : "tạm hết";
+                    sbPrice.AppendLine($"• {label}: **{b.Gia:N0} VNĐ** ({stockStr})");
+                }
+            }
+            sbPrice.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem ưu đãi và đặt mua trực tiếp nhé!");
+            return (true, sbPrice.ToString(), productDto);
+        }
+
+        // 4. Hỏi về Tồn kho / Còn hàng không
+        if (q.Contains("còn hàng") || q.Contains("còn ko") || q.Contains("còn không") || q.Contains("tồn kho") || q.Contains("sẵn hàng") || q.Contains("còn mấy") || q.Contains("có sẵn"))
+        {
+            var totalStock = p.BienTheSanPhams.Where(b => b.SoLuong > 0).Sum(b => b.SoLuong);
+            var minPriceStr = minPrice.HasValue && minPrice.Value > 0
+                ? minPrice.Value.ToString("N0", culture) + " VNĐ"
+                : "";
+
+            if (totalStock > 0)
+            {
+                var answer = $"Dạ mẫu **{name}** hiện **còn hàng** tại EMUA (sẵn sàng giao ngay hoặc trải nghiệm tại showroom) với số lượng thực tế là **{totalStock} sản phẩm**, mức giá từ **{minPriceStr}** bạn nhé!";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ mẫu **{name}** hiện đang tạm hết hàng tại kho EMUA. Bạn có thể bấm 'Xem sản phẩm' bên dưới để nhận thông báo khi có hàng lại hoặc tham khảo các mẫu tương đương tại cửa hàng nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 5. Hỏi về Ổ cứng / SSD / Lưu trữ
+        if (q.Contains("ổ cứng") || q.Contains("ssd") || q.Contains("hdd") || (q.Contains("dung lượng") && !q.Contains("pin")) || q.Contains("lưu trữ"))
+        {
+            string? ssdValue = null;
+            foreach (var s in specSegments)
+            {
+                if (Regex.IsMatch(s, @"\b(?:Ổ cứng|SSD|HDD|Lưu trữ|Bộ nhớ lưu trữ)\b", RegexOptions.IgnoreCase))
+                {
+                    var clean = Regex.Replace(s, @"^(?:Ổ cứng|SSD|HDD|Lưu trữ|Bộ nhớ lưu trữ)\s*[:=-]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                    {
+                        ssdValue = clean;
+                        break;
+                    }
+                }
+                else if (Regex.IsMatch(s, @"\b\d+\s*(?:GB|TB)\s*(?:SSD|NVMe|PCIe|HDD)\b", RegexOptions.IgnoreCase))
+                {
+                    ssdValue = s;
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(ssdValue))
+            {
+                var answer = $"Dạ mẫu **{name}** được trang bị ổ cứng **{ssdValue}** bạn nhé! Ổ cứng tốc độ cao giúp máy khởi động và mở ứng dụng cực nhanh.";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại trên hệ thống của EMUA chưa có thông số chi tiết về ổ cứng/SSD cho mẫu **{name}**. Bạn vui lòng bấm vào nút 'Xem sản phẩm' bên dưới để xem thêm nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 6. Hỏi về Card đồ họa / GPU / VGA
+        if (q.Contains("card") || q.Contains("vga") || q.Contains("gpu") || (q.Contains("đồ họa") && !q.Contains("học đồ họa") && !q.Contains("làm đồ họa")))
+        {
+            string? vgaValue = null;
+            foreach (var s in specSegments)
+            {
+                if (Regex.IsMatch(s, @"\b(?:VGA|GPU|Card đồ họa|Card màn hình|Đồ họa)\b", RegexOptions.IgnoreCase))
+                {
+                    var clean = Regex.Replace(s, @"^(?:VGA|GPU|Card đồ họa|Card màn hình|Đồ họa)\s*[:=-]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                    {
+                        vgaValue = clean;
+                        break;
+                    }
+                }
+                else if (s.Contains("RTX", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("GTX", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("GeForce", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("Radeon", StringComparison.OrdinalIgnoreCase) ||
+                         s.Contains("Iris Xe", StringComparison.OrdinalIgnoreCase))
+                {
+                    vgaValue = s;
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(vgaValue))
+            {
+                var answer = $"Dạ mẫu **{name}** được trang bị card đồ họa **{vgaValue}** bạn nhé!";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại trên hệ thống của EMUA chưa có thông số chi tiết về card đồ họa cho mẫu **{name}**. Bạn vui lòng bấm vào nút 'Xem sản phẩm' bên dưới để xem thêm nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 7. Hỏi về Màn hình
+        if (q.Contains("màn hình") || q.Contains("màn") || q.Contains("mấy inch") || q.Contains("bao nhiêu inch") || q.Contains("mấy hz") || q.Contains("tần số quét"))
+        {
+            string? screenValue = null;
+            foreach (var s in specSegments)
+            {
+                if (Regex.IsMatch(s, @"\b(?:Màn hình|Display|Screen)\b", RegexOptions.IgnoreCase))
+                {
+                    var clean = Regex.Replace(s, @"^(?:Màn hình|Display|Screen)\s*[:=-]?\s*", "", RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(clean))
+                    {
+                        screenValue = clean;
+                        break;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(screenValue))
+            {
+                var answer = $"Dạ mẫu **{name}** sở hữu màn hình **{screenValue}** bạn nhé!";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại trên hệ thống của EMUA chưa có thông số chi tiết về màn hình cho mẫu **{name}**. Bạn vui lòng bấm vào nút 'Xem sản phẩm' bên dưới để xem thêm nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 8. Hỏi về Pin / Trọng lượng
+        if (q.Contains("pin") || q.Contains("nặng bao nhiêu") || q.Contains("bao nhiêu kg") || q.Contains("trọng lượng") || q.Contains("nặng không"))
+        {
+            string? pinOrWeight = null;
+            foreach (var s in specSegments)
+            {
+                if (q.Contains("pin") && Regex.IsMatch(s, @"\b(?:Pin|Battery)\b", RegexOptions.IgnoreCase))
+                {
+                    pinOrWeight = s;
+                    break;
+                }
+                else if (!q.Contains("pin") && Regex.IsMatch(s, @"\b(?:Trọng lượng|Khối lượng|Weight|kg)\b", RegexOptions.IgnoreCase))
+                {
+                    pinOrWeight = s;
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(pinOrWeight))
+            {
+                var answer = $"Dạ thông số về {(q.Contains("pin") ? "pin" : "trọng lượng")} của mẫu **{name}** là: **{pinOrWeight}** bạn nhé!";
+                return (true, answer, productDto);
+            }
+            else
+            {
+                var answer = $"Dạ hiện tại thông số chi tiết về {(q.Contains("pin") ? "dung lượng pin" : "trọng lượng")} của mẫu **{name}** chưa được cập nhật đầy đủ trong hệ thống. Bạn vui lòng bấm vào thẻ sản phẩm bên dưới để xem catalogue chi tiết nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        // 9. Hỏi về Bảo hành
+        if (q.Contains("bảo hành"))
+        {
+            var bh = !string.IsNullOrWhiteSpace(p.BaoHanh) ? p.BaoHanh : "12 tháng";
+            var answer = $"Dạ mẫu **{name}** được hưởng chính sách bảo hành chính hãng **{bh}** tại EMUA, hỗ trợ 1 đổi 1 trong vòng 7 ngày đầu nếu có lỗi phần cứng từ nhà sản xuất bạn nhé!";
+            return (true, answer, productDto);
+        }
+
+        // 10. Hỏi cấu hình / thông số tổng quát
+        if (q.Contains("cấu hình") || q.Contains("thông số") || q.Contains("chi tiết máy") || q.Contains("thông tin máy"))
+        {
+            if (specSegments.Any())
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine($"Dạ thông số kỹ thuật chi tiết của mẫu **{name}** như sau:");
+                foreach (var s in specSegments.Take(8))
+                {
+                    sb.AppendLine($"• {s}");
+                }
+                var minPriceStr = minPrice.HasValue && minPrice.Value > 0 ? minPrice.Value.ToString("N0", culture) + " VNĐ" : "";
+                if (!string.IsNullOrWhiteSpace(minPriceStr))
+                {
+                    sb.AppendLine($"• Giá bán hiện tại: **{minPriceStr}** ({(inStock ? "Còn hàng" : "Tạm hết hàng")})");
+                }
+                sb.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem catalogue đầy đủ và đặt hàng nhé!");
+                return (true, sb.ToString(), productDto);
+            }
+            else
+            {
+                var minPriceStr = minPrice.HasValue && minPrice.Value > 0 ? minPrice.Value.ToString("N0", culture) + " VNĐ" : "";
+                var answer = $"Dạ mẫu **{name}** hiện đang có giá bán từ **{minPriceStr}** ({(inStock ? "Còn hàng" : "Tạm hết hàng")}). Do hệ thống chưa có bảng thông số kỹ thuật chi tiết của mã này, bạn vui lòng bấm 'Xem sản phẩm' bên dưới để xem catalogue từ nhà sản xuất nhé!";
+                return (true, answer, productDto);
+            }
+        }
+
+        return (false, "", productDto);
     }
 
     private static string ShortDescription(string? value)

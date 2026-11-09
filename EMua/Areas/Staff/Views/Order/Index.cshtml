@@ -12,6 +12,34 @@
 }
 
 <style>
+        .order-row-return {
+        background-color: #fff1f2 !important; /* Đỏ nhạt nổi bật riêng cho đổi trả */
+    }
+    .order-row-return td {
+        background-color: #fff1f2 !important;
+        border-bottom-color: #fecdd3 !important;
+    }
+    .order-row-pending {
+        background-color: #fffbeb !important; /* Vàng nhạt cho đơn cần xử lý */
+    }
+    .order-row-pending td {
+        background-color: #fffbeb !important;
+        border-bottom-color: #fde68a !important;
+    }
+    .order-row-shipping {
+        background-color: #f0fdf4 !important; /* Xanh nhạt cho đơn đang giao / đang xử lý */
+    }
+    .order-row-shipping td {
+        background-color: #f0fdf4 !important;
+        border-bottom-color: #bbf7d0 !important;
+    }
+    .order-row-failed {
+        background-color: #fef2f2 !important; /* Đỏ nhạt có vấn đề */
+    }
+    .order-row-failed td {
+        background-color: #fef2f2 !important;
+        border-bottom-color: #fecaca !important;
+    }
     .order-status-tabs {
         display: flex;
         gap: 8px;
@@ -145,8 +173,18 @@
             <tbody>
                 @foreach (var order in Model)
                 {
-                    var isReturn = order.TrangThaiDonHang != null && order.TrangThaiDonHang.Contains("đổi trả");
-                    <tr class="@(isReturn ? "table-warning" : "")">
+                    var st = order.TrangThaiDonHang ?? "";
+                    var isReturn = st.Contains("đổi trả");
+                    var isPending = st == "Chờ xử lý" || st == "Chờ xác nhận" || string.IsNullOrWhiteSpace(st);
+                    var isShipping = st == "Đang xử lý" || st == "Đang giao" || st == "Đang giao hàng";
+                    var isFailed = st == "Giao thất bại";
+
+                    var rowClass = isReturn ? "order-row-return" :
+                                   isFailed ? "order-row-failed" :
+                                   isPending ? "order-row-pending" :
+                                   isShipping ? "order-row-shipping" : "";
+
+                    <tr class="@rowClass">
                         <td>
                             <strong class="text-primary">#DH-@order.MaDonHang.ToString("D5")</strong>
                         </td>
@@ -170,19 +208,23 @@
                             }
                             else if (order.TrangThaiDonHang == "Đã hủy" || order.TrangThaiDonHang == "Đã huỷ")
                             {
-                                <span class="badge bg-danger">@order.TrangThaiDonHang</span>
+                                <span class="badge bg-secondary">@order.TrangThaiDonHang</span>
                             }
                             else if (isReturn)
                             {
-                                <span class="badge bg-warning text-dark"><i class="bi bi-arrow-counterclockwise me-1"></i>@order.TrangThaiDonHang</span>
+                                <span class="badge bg-danger text-white"><i class="bi bi-exclamation-triangle-fill me-1"></i>@order.TrangThaiDonHang</span>
                             }
-                            else if (order.TrangThaiDonHang == "Đang xử lý" || order.TrangThaiDonHang == "Đang giao")
+                            else if (isFailed)
                             {
-                                <span class="badge bg-info text-dark">@order.TrangThaiDonHang</span>
+                                <span class="badge bg-danger text-white"><i class="bi bi-x-circle-fill me-1"></i>Giao thất bại</span>
+                            }
+                            else if (isShipping)
+                            {
+                                <span class="badge bg-info text-dark"><i class="bi bi-truck me-1"></i>@order.TrangThaiDonHang</span>
                             }
                             else
                             {
-                                <span class="badge bg-light text-dark border">@(order.TrangThaiDonHang ?? "Chờ xử lý")</span>
+                                <span class="badge bg-warning text-dark border"><i class="bi bi-clock-history me-1"></i>@(order.TrangThaiDonHang ?? "Chờ xử lý")</span>
                             }
                         </td>
                         <td class="text-end">
