@@ -304,7 +304,11 @@ builder.Services.AddDbContext<EMuaDbContext>(options =>
         connectionString,
         npgsqlOptions =>
         {
-            npgsqlOptions.EnableRetryOnFailure();
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorCodesToAdd: null);
+            npgsqlOptions.CommandTimeout(30);
         });
 });
 
