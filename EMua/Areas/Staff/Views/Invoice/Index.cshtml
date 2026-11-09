@@ -1,137 +1,242 @@
 @model IEnumerable<EMua.Models.Database.HoaDon>
 @{
     ViewData["Title"] = "Quản lý hóa đơn bán hàng";
+    var invoices = Model?.ToList() ?? new List<EMua.Models.Database.HoaDon>();
     var currentPage = (int)(ViewBag.CurrentPage ?? 1);
     var totalPages = (int)(ViewBag.TotalPages ?? 1);
-    var search = ViewBag.Search as string;
-    var selectedStatus = ViewBag.SelectedStatus as string;
+    var search = ViewBag.Search as string ?? "";
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "";
     var statusList = ViewBag.StatusList as List<string> ?? new List<string>();
+    var hasFilter = !string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus);
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-        <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text text-primary me-2"></i>Hóa đơn bán hàng nội bộ</h4>
-        <p class="text-muted small mb-0">Chứng từ xuất kho và xác nhận thanh toán phát sinh từ đơn hàng hệ thống EMUA.</p>
-    </div>
-</div>
+<style>
+    .emua-invoice-list, .emua-invoice-list * {
+        box-sizing: border-box;
+    }
 
-<!-- Form tìm kiếm và lọc trạng thái -->
-<form method="get" class="staff-filter mb-4 bg-white p-3 border shadow-sm rounded">
-    <div class="row g-2 align-items-center">
-        <div class="col-md-5">
-            <input type="text" name="q" value="@search" class="form-control form-control-sm" placeholder="Tìm theo mã HĐ (#HD-00001), mã ĐH (#DH-00001) hoặc tên khách..." />
+        .emua-invoice-list .invoice-toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #dfe5ed;
+            background: #fff;
+        }
+
+        .emua-invoice-list .invoice-search {
+            flex: 1 1 320px;
+            min-width: 200px;
+        }
+
+        .emua-invoice-list .invoice-status {
+            flex: 0 1 230px;
+            min-width: 170px;
+        }
+
+        .emua-invoice-list .invoice-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .emua-invoice-list .invoice-toolbar .form-control,
+        .emua-invoice-list .invoice-toolbar .form-select,
+        .emua-invoice-list .invoice-toolbar .btn {
+            height: 40px;
+            font-size: 13px;
+            border-radius: 0 !important;
+        }
+
+        .emua-invoice-list .invoice-toolbar .btn {
+            padding: 0 16px;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .emua-invoice-list .invoice-panel {
+            background: white;
+            border: 1px solid #dfe5ed;
+            overflow: hidden;
+        }
+
+        .emua-invoice-list .invoice-table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+            .emua-invoice-list .invoice-table thead th {
+                padding: 13px 14px;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: .025em;
+                background: #f7f9fc;
+                color: #425575;
+                white-space: nowrap;
+                border-bottom: 1px solid #e1e7ef;
+            }
+
+            .emua-invoice-list .invoice-table tbody td {
+                padding: 13px 14px;
+                font-size: 13px;
+                border-bottom: 1px solid #edf1f6;
+                vertical-align: middle;
+            }
+
+            .emua-invoice-list .invoice-table tbody tr:last-child td {
+                border-bottom: 0;
+            }
+
+        .emua-invoice-list .invoice-actions-cell {
+            white-space: nowrap;
+        }
+
+            .emua-invoice-list .invoice-actions-cell .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                margin: 2px;
+            }
+
+        .emua-invoice-list .invoice-panel .btn,
+        .emua-invoice-list .invoice-panel .badge,
+        .emua-invoice-list .invoice-panel .page-link {
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .emua-invoice-list .invoice-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-top: 1px solid #e1e7ef;
+        }
+
+            .emua-invoice-list .invoice-pagination .pagination {
+                flex-wrap: wrap;
+                gap: 3px;
+            }
+
+    @@media (max-width: 767.98px) {
+        .emua-invoice-list .invoice-search,
+        .emua-invoice-list .invoice-status {
+            flex: 1 1 100%;
+            min-width: 0;
+        }
+
+        .emua-invoice-list .invoice-actions {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
+</style>
+
+<div class="emua-invoice-list">
+    <!-- Chỉ một thanh công cụ, không lặp tiêu đề trong nội dung -->
+    <form method="get" asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="invoice-toolbar">
+        <div class="invoice-search">
+            <input type="search" name="q" value="@search" class="form-control" aria-label="Tìm hóa đơn" placeholder="Tìm mã HĐ, mã ĐH hoặc tên khách hàng..." />
         </div>
-        <div class="col-md-4">
-            <select name="status" class="form-select form-select-sm">
-                <option value="">-- Tất cả trạng thái --</option>
+        <div class="invoice-status">
+            <select name="status" class="form-select" aria-label="Trạng thái hóa đơn">
+                <option value="">Tất cả trạng thái</option>
                 @foreach (var st in statusList)
                 {
-                    <option value="@st" selected="@(selectedStatus == st ? "selected" : null)">@st</option>
+                    <option value="@st" selected="@(selectedStatus == st)">@st</option>
                 }
             </select>
         </div>
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-search me-1"></i> Tìm kiếm</button>
-            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus))
+        <div class="invoice-actions">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+            @if (hasFilter)
             {
-                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại</a>
+                <a asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Đặt lại</a>
             }
         </div>
-    </div>
-</form>
+    </form>
 
-<section class="staff-card bg-white border p-3 shadow-sm rounded">
-    <div class="table-responsive">
-        <table class="staff-table table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Mã hóa đơn</th>
-                    <th>Đơn hàng gốc</th>
-                    <th>Khách hàng</th>
-                    <th>Người lập</th>
-                    <th>Ngày lập</th>
-                    <th>Tổng thanh toán</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var invoice in Model)
-                {
+    <section class="invoice-panel">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle invoice-table">
+                <thead>
                     <tr>
-                        <td>
-                            <strong>#HD-@invoice.MaHoaDon.ToString("D5")</strong>
-                        </td>
-                        <td>
-                            <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@invoice.MaDonHang" class="text-decoration-none fw-semibold">
-                                #DH-@invoice.MaDonHang.ToString("D5")
-                            </a>
-                        </td>
-                        <td>
-                            <div class="fw-semibold text-dark">@(invoice.HoTenKhachHang ?? invoice.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
-                            <small class="text-muted">@(invoice.SoDienThoai ?? invoice.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
-                        </td>
-                        <td>
-                            <small class="text-muted"><i class="bi bi-person-badge me-1"></i>@(invoice.TenNguoiLap ?? invoice.MaNguoiLapNavigation?.TenNguoiDung ?? invoice.MaNguoiLapNavigation?.TenDangNhap ?? "Chưa xác định")</small>
-                        </td>
-                        <td>
-                            @(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")
-                        </td>
-                        <td>
-                            <strong class="text-dark">@((invoice.TongTien ?? 0).ToString("N0")) đ</strong>
-                        </td>
-                        <td>
-                            @if (invoice.TrangThaiHoaDon == "Đã thanh toán")
-                            {
-                                <span class="badge bg-success">@invoice.TrangThaiHoaDon</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning text-dark">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-info me-1" title="Xem chi tiết">
-                                <i class="bi bi-eye"></i> Chi tiết
-                            </a>
-                            <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@invoice.MaHoaDon" target="_blank" class="btn btn-sm btn-outline-secondary" title="In phiếu / PDF">
-                                <i class="bi bi-printer"></i> In
-                            </a>
-                        </td>
+                        <th>Mã hóa đơn</th>
+                        <th>Đơn hàng gốc</th>
+                        <th style="min-width:170px">Khách hàng</th>
+                        <th>Người lập</th>
+                        <th>Ngày lập</th>
+                        <th class="text-end">Tổng thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
                     </tr>
-                }
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            Không tìm thấy hóa đơn nào phù hợp.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Phân trang -->
-    @if (totalPages > 1)
-    {
-        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-            <span class="text-muted small">Trang @currentPage / @totalPages</span>
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Trước</a>
-                </li>
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selectedStatus">@i</a>
-                    </li>
-                }
-                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Sau</a>
-                </li>
-            </ul>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in invoices)
+                    {
+                        <tr>
+                            <td><strong>#HD-@invoice.MaHoaDon.ToString("D5")</strong></td>
+                            <td>
+                                <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@invoice.MaDonHang" class="text-decoration-none fw-semibold">#DH-@invoice.MaDonHang.ToString("D5")</a>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">@(invoice.HoTenKhachHang ?? invoice.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
+                                <small class="text-muted">@(invoice.SoDienThoai ?? invoice.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
+                            </td>
+                            <td>
+                                <small class="text-muted"><i class="bi bi-person-badge me-1"></i>@(invoice.TenNguoiLap ?? invoice.MaNguoiLapNavigation?.TenNguoiDung ?? invoice.MaNguoiLapNavigation?.TenDangNhap ?? "Chưa xác định")</small>
+                            </td>
+                            <td class="text-nowrap">@(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td class="text-end text-nowrap"><strong class="text-dark">@((invoice.TongTien ?? 0).ToString("N0")) đ</strong></td>
+                            <td>
+                                @if (invoice.TrangThaiHoaDon == "Đã thanh toán")
+                                {
+                                    <span class="badge bg-success">@invoice.TrangThaiHoaDon</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
+                                }
+                            </td>
+                            <td class="text-end invoice-actions-cell">
+                                <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-primary" title="Xem chi tiết"><i class="bi bi-eye"></i> Chi tiết</a>
+                                <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@invoice.MaHoaDon" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" title="In phiếu / PDF"><i class="bi bi-printer"></i> In</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (invoices.Count == 0)
+                    {
+                        <tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Không tìm thấy hóa đơn nào phù hợp.</td></tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
-</section>
+        @if (totalPages > 1)
+        {
+            <div class="invoice-pagination">
+                <span class="text-muted small">Trang @currentPage / @totalPages</span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Trước</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selectedStatus">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Sau</a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </section>
+</div>

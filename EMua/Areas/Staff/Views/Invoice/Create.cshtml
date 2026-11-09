@@ -3,15 +3,72 @@
     ViewData["Title"] = $"Lập hóa đơn bán hàng - Đơn #DH-{Model.MaDonHang:D5}";
 }
 
-<div class="container-fluid px-0">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <div>
-            <h4 class="fw-bold mb-1"><i class="bi bi-file-earmark-diff text-primary me-2"></i>Lập &amp; Xem trước hóa đơn bán hàng</h4>
-            <span class="text-muted small">Khởi tạo chứng từ xuất kho và thanh toán cho đơn hàng <strong>#DH-@Model.MaDonHang.ToString("D5")</strong></span>
+
+<style>
+    /* Staff EMUA: bo góc 0, bố cục nhất quán; không ảnh hưởng trang khác */
+    .emua-invoice-detail .card,
+    .emua-invoice-detail .btn,
+    .emua-invoice-detail .badge,
+    .emua-invoice-detail .form-control,
+    .emua-invoice-detail .form-select,
+    .emua-invoice-detail .alert,
+    .emua-invoice-detail .rounded {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .emua-invoice-detail .invoice-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border: 1px solid #e1e7ef;
+        background: #fff;
+    }
+
+        .emua-invoice-detail .invoice-page-actions .btn {
+            white-space: nowrap;
+        }
+
+    .emua-invoice-detail .card {
+        border: 1px solid #e1e7ef !important;
+    }
+
+    .emua-invoice-detail .card-header {
+        border-bottom: 1px solid #e1e7ef;
+    }
+
+    .emua-invoice-detail .table th {
+        background-color: #f7f9fc;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .emua-invoice-detail .table td {
+        font-size: 13px;
+    }
+
+    @@media (max-width: 575.98px) {
+        .emua-invoice-detail .invoice-page-actions {
+            align-items: flex-start;
+        }
+
+            .emua-invoice-detail .invoice-page-actions > div:last-child {
+                flex-wrap: wrap;
+            }
+    }
+</style>
+
+<div class="container-fluid px-0 emua-invoice-detail">
+    <div class="invoice-page-actions d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="text-muted small">
+            Đang lập hóa đơn cho đơn hàng: <strong class="text-primary">#DH-@Model.MaDonHang.ToString("D5")</strong>
         </div>
         <div class="d-flex gap-2">
             <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@Model.MaDonHang" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Quay lại chi tiết đơn
+                <i class="bi bi-arrow-left me-1"></i> Quay lại đơn hàng
             </a>
         </div>
     </div>
@@ -31,7 +88,7 @@
         <div class="row g-3">
             <!-- CỘT TRÁI: THÔNG TIN CHỨNG TỪ & KHÁCH HÀNG -->
             <div class="col-lg-4">
-                <div class="card border mb-3 shadow-sm">
+                <div class="card border mb-3">
                     <div class="card-header bg-light py-2">
                         <strong class="text-dark"><i class="bi bi-info-circle me-1"></i> Thông tin chứng từ</strong>
                     </div>
@@ -63,7 +120,7 @@
                     </div>
                 </div>
 
-                <div class="card border mb-3 shadow-sm">
+                <div class="card border mb-3">
                     <div class="card-header bg-light py-2">
                         <strong class="text-dark"><i class="bi bi-person me-1"></i> Thông tin khách hàng &amp; Giao nhận</strong>
                     </div>
@@ -93,7 +150,7 @@
 
             <!-- CỘT PHẢI: BẢNG SẢN PHẨM & TÍNH TOÁN THANH TOÁN -->
             <div class="col-lg-8">
-                <div class="card border mb-3 shadow-sm">
+                <div class="card border mb-3">
                     <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                         <strong class="text-dark"><i class="bi bi-cart-check me-1"></i> Danh sách mặt hàng xuất bán</strong>
                         <span class="badge bg-secondary">@(Model.Items?.Count ?? 0) mặt hàng</span>
@@ -140,11 +197,11 @@
                 </div>
 
                 <!-- TỔNG KẾT TÀI CHÍNH -->
-                <div class="card border shadow-sm">
+                <div class="card border">
                     <div class="card-body p-3">
                         <div class="row">
                             <div class="col-md-6 mb-3 mb-md-0">
-                                <div class="p-3 bg-light border rounded">
+                                <div class="p-3 bg-light border">
                                     <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-shield-check text-success me-1"></i> Quy định tính hóa đơn nội bộ</h6>
                                     <ul class="text-muted small ps-3 mb-0">
                                         <li>Đơn giá và thành tiền mặt hàng được tính chuẩn xác từ đơn hàng gốc.</li>
@@ -190,7 +247,7 @@
                                 </div>
 
                                 <div class="d-grid gap-2">
-                                    <button type="button" class="btn btn-primary btn-lg" onclick="confirmSubmitInvoice()">
+                                    <button type="button" class="btn btn-primary" onclick="confirmSubmitInvoice()">
                                         <i class="bi bi-check-circle-fill me-1"></i> Xác nhận lập hóa đơn
                                     </button>
                                 </div>

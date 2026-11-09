@@ -1,206 +1,992 @@
 @model IEnumerable<KhuyenMai>
+
+
+
 @{
+
     ViewData["Title"] = "Quản lý khuyến mãi";
-    var totalCount = Model.Count();
+
+
+
+    var promotions = Model?.ToList() ?? new List<KhuyenMai>();
+
     var now = DateTime.Now;
-    var activeCount = Model.Count(k => k.TrangThai && (!k.NgayBatDau.HasValue || k.NgayBatDau <= now) && (!k.NgayKetThuc.HasValue || k.NgayKetThuc >= now));
-    var upcomingCount = Model.Count(k => k.TrangThai && k.NgayBatDau.HasValue && k.NgayBatDau > now);
-    var expiredCount = Model.Count(k => k.NgayKetThuc.HasValue && k.NgayKetThuc < now);
-    var disabledCount = Model.Count(k => !k.TrangThai);
+
+
+
+    string search = ViewBag.Search as string ?? "";
+
+    string status = ViewBag.Status as string ?? "all";
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+
+    int totalPages = ViewBag.TotalPages ?? 1;
+
+    int totalItems = ViewBag.TotalItems ?? promotions.Count;
+
+
+
+    bool hasFilter = !string.IsNullOrWhiteSpace(search)
+
+                     || (status != "all" && !string.IsNullOrWhiteSpace(status));
+
 }
 
+
+
 <style>
-    .promo-status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 8px;
-        font-size: 11px;
-        font-weight: 600;
+
+    /* Chỉ áp dụng cho trang khuyến mãi Staff */
+
+    .staff-promo-page,
+
+    .staff-promo-page * {
+
+        box-sizing: border-box;
+
     }
-    .promo-status-badge.active {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
+
+
+
+        .staff-promo-page .promo-toolbar {
+
+            background: #fff;
+
+            border: 1px solid #e2e8f0;
+
+            padding: 14px;
+
+            margin-bottom: 16px;
+
+            border-radius: 0 !important;
+
+        }
+
+
+
+        .staff-promo-page .promo-toolbar-inner {
+
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            width: 100%;
+
+        }
+
+
+
+        .staff-promo-page .promo-search {
+
+            flex: 1 1 300px;
+
+            min-width: 180px;
+
+        }
+
+
+
+        .staff-promo-page .promo-filter {
+
+            flex: 0 1 220px;
+
+            min-width: 170px;
+
+        }
+
+
+
+        .staff-promo-page .promo-actions {
+
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-left: auto;
+
+        }
+
+
+
+        .staff-promo-page .promo-btn-create {
+
+            background: #315efb;
+
+            border-color: #315efb;
+
+            color: #fff;
+
+        }
+
+
+
+            .staff-promo-page .promo-btn-create:hover {
+
+                background: #244bd4;
+
+                border-color: #244bd4;
+
+                color: #fff;
+
+            }
+
+
+
+        .staff-promo-page .promo-toolbar .form-control,
+
+        .staff-promo-page .promo-toolbar .form-select,
+
+        .staff-promo-page .promo-toolbar .btn {
+
+            height: 40px;
+
+            border-radius: 0 !important;
+
+            font-size: 13px;
+
+        }
+
+
+
+        .staff-promo-page .promo-toolbar .form-control,
+
+        .staff-promo-page .promo-toolbar .form-select {
+
+            border: 1px solid #d7dfea;
+
+            background-color: #fff;
+
+        }
+
+
+
+        .staff-promo-page .promo-toolbar .btn {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 6px;
+
+            white-space: nowrap;
+
+            padding: 0 14px;
+
+            font-weight: 500;
+
+        }
+
+
+
+            .staff-promo-page .promo-toolbar .btn i {
+
+                margin: 0 !important;
+
+            }
+
+
+
+        .staff-promo-page .promo-toolbar .form-control:focus,
+
+        .staff-promo-page .promo-toolbar .form-select:focus {
+
+            border-color: #315efb;
+
+            box-shadow: none;
+
+        }
+
+
+
+        .staff-promo-page .promo-table-card {
+
+            background: #fff;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 0 !important;
+
+            overflow: hidden;
+
+        }
+
+
+
+        .staff-promo-page .staff-promo-table {
+
+            margin-bottom: 0;
+
+        }
+
+
+
+            .staff-promo-page .staff-promo-table th {
+
+                font-size: 11px;
+
+                font-weight: 700;
+
+                text-transform: uppercase;
+
+                color: #64748b;
+
+                background: #f8fafc;
+
+                border-bottom: 1px solid #e2e8f0;
+
+                padding: 13px 14px;
+
+                white-space: nowrap;
+
+            }
+
+
+
+            .staff-promo-page .staff-promo-table td {
+
+                font-size: 13px;
+
+                vertical-align: middle;
+
+                padding: 13px 14px;
+
+                border-bottom: 1px solid #edf2f7;
+
+            }
+
+
+
+            .staff-promo-page .staff-promo-table tbody tr:last-child td {
+
+                border-bottom: 0;
+
+            }
+
+
+
+        .staff-promo-page .promo-status-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 5px;
+
+            padding: 5px 9px;
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+
+            border-radius: 0 !important;
+
+        }
+
+
+
+            .staff-promo-page .promo-status-badge.active {
+
+                background: #f0fdf4;
+
+                color: #166534;
+
+                border: 1px solid #bbf7d0;
+
+            }
+
+
+
+            .staff-promo-page .promo-status-badge.upcoming {
+
+                background: #eff6ff;
+
+                color: #1e40af;
+
+                border: 1px solid #bfdbfe;
+
+            }
+
+
+
+            .staff-promo-page .promo-status-badge.expired {
+
+                background: #f1f5f9;
+
+                color: #64748b;
+
+                border: 1px solid #cbd5e1;
+
+            }
+
+
+
+            .staff-promo-page .promo-status-badge.disabled {
+
+                background: #fef2f2;
+
+                color: #991b1b;
+
+                border: 1px solid #fecaca;
+
+            }
+
+
+
+        .staff-promo-page .staff-promo-table .btn,
+
+        .staff-promo-page .staff-promo-table .badge {
+
+            border-radius: 0 !important;
+
+        }
+
+
+
+        .staff-promo-page .staff-promo-table .btn {
+
+            white-space: nowrap;
+
+            min-width: 70px;
+
+        }
+
+
+
+    @@media (max-width: 991.98px) {
+
+        .staff-promo-page .promo-search {
+
+            flex: 1 1 100%;
+
+        }
+
+
+
+        .staff-promo-page .promo-filter {
+
+            flex: 1 1 180px;
+
+        }
+
     }
-    .promo-status-badge.upcoming {
-        background: #eff6ff;
-        color: #1e40af;
-        border: 1px solid #bfdbfe;
+
+
+
+    @@media (max-width: 575.98px) {
+
+        .staff-promo-page .promo-toolbar {
+
+            padding: 10px;
+
+        }
+
+
+
+        .staff-promo-page .promo-search,
+
+        .staff-promo-page .promo-filter {
+
+            flex: 1 1 100%;
+
+            min-width: 0;
+
+        }
+
+
+
+        .staff-promo-page .promo-actions {
+
+            width: 100%;
+
+            margin-left: 0;
+
+            display: grid;
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        }
+
+
+
+            .staff-promo-page .promo-actions .btn {
+
+                min-width: 0;
+
+            }
+
+
+
+            .staff-promo-page .promo-actions .promo-btn-create {
+
+                grid-column: 1 / -1;
+
+            }
+
     }
-    .promo-status-badge.expired {
-        background: #f1f5f9;
-        color: #64748b;
-        border: 1px solid #cbd5e1;
-    }
-    .promo-status-badge.disabled {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-    .staff-promo-table th {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #64748b;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 12px 14px;
-        white-space: nowrap;
-    }
-    .staff-promo-table td {
-        font-size: 13px;
-        vertical-align: middle;
-        padding: 12px 14px;
-        border-bottom: 1px solid #edf2f7;
-    }
+
 </style>
 
-<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-        <h4 class="mb-1 fw-bold"><i class="bi bi-ticket-perforated me-2"></i>Chương trình khuyến mãi &amp; Voucher</h4>
-        <span class="text-muted small">
-            Tổng: <strong>@totalCount</strong> mã | 
-            <span class="text-success fw-semibold">Đang áp dụng: @activeCount</span> | 
-            <span class="text-primary fw-semibold">Sắp diễn ra: @upcomingCount</span> | 
-            <span class="text-muted">Đã hết hạn: @expiredCount</span> | 
-            <span class="text-danger">Đã tắt: @disabledCount</span>
-        </span>
-    </div>
-    <div>
-        <a class="btn btn-sm btn-primary" asp-action="Create">
-            <i class="bi bi-plus-lg me-1"></i> Tạo khuyến mãi mới
-        </a>
-    </div>
+
+
+<div class="staff-promo-page">
+
+
+
+    <!-- Thanh tìm kiếm và thao tác -->
+
+    <form method="get" asp-action="Index" class="promo-toolbar">
+
+        <div class="promo-toolbar-inner">
+
+
+
+            <!-- Tìm kiếm -->
+
+            <div class="promo-search">
+
+                <input type="search"
+
+                       name="q"
+
+                       value="@search"
+
+                       class="form-control"
+
+                       placeholder="Tìm mã voucher hoặc tên chương trình..."
+
+                       aria-label="Tìm kiếm khuyến mãi" />
+
+            </div>
+
+
+
+            <!-- Trạng thái -->
+
+            <div class="promo-filter">
+
+                <select name="status"
+
+                        class="form-select"
+
+                        aria-label="Lọc trạng thái khuyến mãi">
+
+
+
+                    <option value="all" selected="@(status == "all")">
+
+                        Tất cả trạng thái
+
+                    </option>
+
+
+
+                    <option value="active" selected="@(status == "active")">
+
+                        Đang kích hoạt
+
+                    </option>
+
+
+
+                    <option value="inactive" selected="@(status == "inactive")">
+
+                        Đã tắt kích hoạt
+
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- Nhóm nút -->
+
+            <div class="promo-actions">
+
+                <button type="submit" class="btn btn-outline-primary">
+
+                    <i class="bi bi-search"></i>
+
+                    Tìm kiếm
+
+                </button>
+
+
+
+                @if (hasFilter)
+
+                {
+
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+
+                        <i class="bi bi-arrow-counterclockwise"></i>
+
+                        Đặt lại
+
+                    </a>
+
+                }
+
+
+
+                <a asp-action="Create" class="btn promo-btn-create">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                    Tạo mã mới
+
+                </a>
+
+            </div>
+
+
+
+        </div>
+
+    </form>
+
+
+
+    <!-- Bảng khuyến mãi -->
+
+    <section class="promo-table-card">
+
+
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle staff-promo-table">
+
+
+
+                <thead>
+
+                    <tr>
+
+                        <th style="min-width:140px;">Mã Voucher</th>
+
+                        <th style="min-width:220px;">Tên chương trình</th>
+
+                        <th style="min-width:130px;" class="text-end">
+
+                            Mức giảm
+
+                        </th>
+
+                        <th style="min-width:150px;">
+
+                            Đơn tối thiểu
+
+                        </th>
+
+                        <th style="min-width:180px;">
+
+                            Thời gian hiệu lực
+
+                        </th>
+
+                        <th style="min-width:100px;" class="text-center">
+
+                            Số lượng
+
+                        </th>
+
+                        <th style="min-width:130px;" class="text-center">
+
+                            Tình trạng
+
+                        </th>
+
+                        <th style="min-width:110px;" class="text-end">
+
+                            Thao tác
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+
+                <tbody>
+
+                    @foreach (var item in promotions)
+
+                    {
+
+                        var isExpired = item.NgayKetThuc.HasValue
+
+                        && item.NgayKetThuc.Value < now;
+
+
+
+                        var isUpcoming = item.NgayBatDau.HasValue
+
+                        && item.NgayBatDau.Value > now;
+
+
+
+                        <tr>
+
+                            <td>
+
+                                <strong class="text-primary font-monospace fs-6">
+
+                                    @item.MaCode
+
+                                </strong>
+
+                            </td>
+
+
+
+                            <td>
+
+                                <div class="fw-semibold text-dark">
+
+                                    @item.TenKhuyenMai
+
+                                </div>
+
+
+
+                                @if (!string.IsNullOrWhiteSpace(item.MoTa))
+
+                                {
+
+                                    <small class="text-muted d-block text-truncate"
+
+                                           style="max-width:240px;">
+
+                                        @item.MoTa
+
+                                    </small>
+
+                                }
+
+                        </td>
+
+
+
+                        <td class="text-end">
+
+                            <span class="fw-bold text-danger">
+
+                                @(item.LoaiGiamGia == "Phần trăm"
+
+                                                                ? $"{item.GiaTriGiam:0.#}%"
+
+                                                                : $"{item.GiaTriGiam:N0} đ")
+
+                                                                                        </span>
+
+                                                                                    </td>
+
+
+
+                        <td>
+
+                            <span class="text-muted">
+
+                                @(item.GiaTriDonHangToiThieu.HasValue
+
+                                                                && item.GiaTriDonHangToiThieu > 0
+
+                                                                ? $"{item.GiaTriDonHangToiThieu:N0} đ"
+
+                                                                : "Không yêu cầu")
+
+                                                                              </span>
+
+                                                                          </td>
+
+
+
+                        <td>
+
+                            <small class="text-dark d-block">
+
+                                Từ:
+
+                                @(item.NgayBatDau?.ToString("dd/MM/yyyy")
+
+                                                                ?? "Bắt đầu ngay")
+
+                                                                              </small>
+
+
+
+                            <small class="text-muted d-block">
+
+                                Đến:
+
+                                @(item.NgayKetThuc?.ToString("dd/MM/yyyy")
+
+                                                                ?? "Vô thời hạn")
+
+                            </small>
+
+                        </td>
+
+
+
+                            <td class="text-center">
+
+                            @if (item.SoLuong.HasValue)
+
+                                {
+
+                                    <span class="badge bg-light text-dark border">
+
+                                        @item.SoLuong.Value lượt
+
+                                    </span>
+
+                                }
+
+                                else
+
+                                {
+
+                                    <span class="text-muted small">
+
+                                        &infin; Không giới hạn
+
+                                    </span>
+
+                                }
+
+                            </td>
+
+
+
+                            <td class="text-center">
+
+                                @if (!item.TrangThai)
+
+                                {
+
+                                    <span class="promo-status-badge disabled">
+
+                                        <i class="bi bi-pause-circle"></i>
+
+                                        Đã tắt
+
+                                    </span>
+
+                                }
+
+                                else if (isExpired)
+
+                                {
+
+                                    <span class="promo-status-badge expired">
+
+                                        <i class="bi bi-clock-history"></i>
+
+                                        Hết hạn
+
+                                    </span>
+
+                                }
+
+                                else if (isUpcoming)
+
+                                {
+
+                                    <span class="promo-status-badge upcoming">
+
+                                        <i class="bi bi-calendar-event"></i>
+
+                                        Sắp diễn ra
+
+                                    </span>
+
+                                }
+
+                                else
+
+                                {
+
+                                    <span class="promo-status-badge active">
+
+                                        <i class="bi bi-check-circle"></i>
+
+                                        Đang chạy
+
+                                    </span>
+
+                                }
+
+                            </td>
+
+
+
+                            <td class="text-end">
+
+                                <form asp-action="Toggle"
+
+                                      method="post"
+
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+
+
+                                    <input type="hidden"
+
+                                           name="id"
+
+                                           value="@item.MaKhuyenMai" />
+
+
+
+                                    <button type="submit"
+
+                                            class="btn btn-sm @(item.TrangThai
+
+                                                                                        ? "btn-outline-danger"
+
+                                                                                        : "btn-outline-success")"
+
+                                        title="@(item.TrangThai
+
+                                                                                    ? "Tạm dừng chương trình"
+
+                                                                                    : "Kích hoạt chương trình")">
+
+
+
+                                    <i class="bi @(item.TrangThai
+
+                                                                                   ? "bi-power"
+
+                                                                                   : "bi-play-fill") me-1"></i>
+
+
+
+                                    @(item.TrangThai ? "Tắt" : "Bật")
+
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                                        }
+
+
+
+                    @if (promotions.Count == 0)
+
+                    {
+
+                        <tr>
+
+                            <td colspan="8"
+
+                                class="text-center py-5 text-muted">
+
+
+
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+
+
+
+                                Không có chương trình khuyến mãi nào được tìm thấy.
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                </tbody>
+
+
+
+            </table>
+
+        </div>
+
+
+
+        @if (totalPages > 1)
+
+        {
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-top bg-white">
+
+                <span class="text-muted small">Hiển thị @promotions.Count / @totalItems khuyến mãi (Trang @currentPage / @totalPages)</span>
+
+                <ul class="pagination pagination-sm mb-0">
+
+                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+
+                        <a class="page-link" style="border-radius:0;" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@status">Trước</a>
+
+                    </li>
+
+                    @for (int i = 1; i <= totalPages; i++)
+
+                    {
+
+                        if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
+
+                        {
+
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+
+                                <a class="page-link" style="border-radius:0;" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@status">@i</a>
+
+                            </li>
+
+                        }
+
+                        else if (i == currentPage - 3 || i == currentPage + 3)
+
+                        {
+
+                            <li class="page-item disabled"><span class="page-link" style="border-radius:0;">...</span></li>
+
+                        }
+
+                    }
+
+                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+
+                        <a class="page-link" style="border-radius:0;" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@status">Sau</a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        }
+
+    </section>
+
+
+
 </div>
 
-<!-- Bộ lọc tìm kiếm -->
-<form method="get" class="mb-4 bg-white p-3 border">
-    <div class="row g-2 align-items-center">
-        <div class="col-md-7">
-            <input name="q" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm theo mã code (VD: SALE10) hoặc tên chương trình..." />
-        </div>
-        <div class="col-md-3">
-            <select name="status" class="form-select form-select-sm">
-                <option value="all">Tất cả trạng thái kích hoạt</option>
-                <option value="active" selected="@(ViewBag.Status == "active")">Đang bật kích hoạt</option>
-                <option value="inactive" selected="@(ViewBag.Status == "inactive")">Đã tắt kích hoạt</option>
-            </select>
-        </div>
-        <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="btn btn-sm btn-primary w-100">
-                <i class="bi bi-search me-1"></i> Tìm
-            </button>
-            @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string) || (ViewBag.Status as string) != "all" && !string.IsNullOrWhiteSpace(ViewBag.Status as string))
-            {
-                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Đặt lại</a>
-            }
-        </div>
-    </div>
-</form>
-
-<!-- Bảng khuyến mãi -->
-<section class="staff-card bg-white border p-0">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 staff-promo-table">
-            <thead>
-                <tr>
-                    <th style="min-width: 140px;">Mã Voucher</th>
-                    <th style="min-width: 220px;">Tên chương trình</th>
-                    <th style="min-width: 130px;" class="text-end">Mức giảm</th>
-                    <th style="min-width: 150px;">Đơn tối thiểu</th>
-                    <th style="min-width: 180px;">Thời gian hiệu lực</th>
-                    <th style="min-width: 100px;" class="text-center">Số lượng</th>
-                    <th style="min-width: 130px;" class="text-center">Tình trạng</th>
-                    <th style="min-width: 110px;" class="text-end">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    var isExpired = item.NgayKetThuc.HasValue && item.NgayKetThuc.Value < now;
-                    var isUpcoming = item.NgayBatDau.HasValue && item.NgayBatDau.Value > now;
-                    var isRunning = item.TrangThai && !isExpired && !isUpcoming;
-
-                    <tr>
-                        <td>
-                            <strong class="text-primary font-monospace fs-6">@item.MaCode</strong>
-                        </td>
-                        <td>
-                            <div class="fw-semibold text-dark">@item.TenKhuyenMai</div>
-                            @if (!string.IsNullOrWhiteSpace(item.MoTa))
-                            {
-                                <small class="text-muted d-block text-truncate" style="max-width: 240px;">@item.MoTa</small>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <span class="fw-bold text-danger">
-                                @(item.LoaiGiamGia == "Phần trăm" ? $"{item.GiaTriGiam:0.#}%" : $"{item.GiaTriGiam:N0} đ")
-                            </span>
-                        </td>
-                        <td>
-                            <span class="text-muted">
-                                @(item.GiaTriDonHangToiThieu.HasValue && item.GiaTriDonHangToiThieu > 0 ? $"{item.GiaTriDonHangToiThieu:N0} đ" : "Không yêu cầu")
-                            </span>
-                        </td>
-                        <td>
-                            <small class="text-dark d-block">
-                                Từ: @(item.NgayBatDau?.ToString("dd/MM/yyyy") ?? "Bắt đầu ngay")
-                            </small>
-                            <small class="text-muted d-block">
-                                Đến: @(item.NgayKetThuc?.ToString("dd/MM/yyyy") ?? "Vô thời hạn")
-                            </small>
-                        </td>
-                        <td class="text-center">
-                            @if (item.SoLuong.HasValue)
-                            {
-                                <span class="badge bg-light text-dark border">@item.SoLuong.Value lượt</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted small">&infin; Không giới hạn</span>
-                            }
-                        </td>
-                        <td class="text-center">
-                            @if (!item.TrangThai)
-                            {
-                                <span class="promo-status-badge disabled"><i class="bi bi-pause-circle"></i> Đã tắt</span>
-                            }
-                            else if (isExpired)
-                            {
-                                <span class="promo-status-badge expired"><i class="bi bi-clock-history"></i> Hết hạn</span>
-                            }
-                            else if (isUpcoming)
-                            {
-                                <span class="promo-status-badge upcoming"><i class="bi bi-calendar-event"></i> Sắp diễn ra</span>
-                            }
-                            else
-                            {
-                                <span class="promo-status-badge active"><i class="bi bi-check-circle"></i> Đang chạy</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <form asp-action="Toggle" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@item.MaKhuyenMai" />
-                                <button type="submit" class="btn btn-sm @(item.TrangThai ? "btn-outline-danger" : "btn-outline-success")" title="@(item.TrangThai ? "Tạm dừng chương trình" : "Kích hoạt chương trình")">
-                                    <i class="bi @(item.TrangThai ? "bi-power" : "bi-play-fill") me-1"></i>
-                                    @(item.TrangThai ? "Tắt" : "Bật")
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                            Không có chương trình khuyến mãi nào được tìm thấy.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</section>

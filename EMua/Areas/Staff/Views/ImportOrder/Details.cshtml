@@ -4,13 +4,12 @@
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-        <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Phiếu đề nghị nhập hàng: @Model.MaChungTu</h4>
-        <span class="text-muted small">Ngày lập: @Model.NgayTao.ToString("dd/MM/yyyy HH:mm") | Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong></span>
+    <div class="text-muted small">
+        Mã chứng từ: <strong class="text-primary">@Model.MaChungTu</strong> | Ngày lập: <strong>@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</strong> | Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong>
     </div>
     <div>
         <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
         </a>
     </div>
 </div>
