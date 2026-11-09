@@ -13,6 +13,7 @@ namespace EMua.Services.AI
 {
     public class GeminiService
     {
+        private static DateTimeOffset? _quotaExhaustedUntil;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GeminiService> _logger;
@@ -32,6 +33,19 @@ namespace EMua.Services.AI
             if (string.IsNullOrWhiteSpace(message))
                 throw new ArgumentException(
                     "Câu hỏi không được để trống.");
+
+            // Kiểm tra trạng thái cạn kiệt Quota: Nếu đã bị 429 RESOURCE_EXHAUSTED trước đó, không gọi lại Gemini
+            if (_quotaExhaustedUntil.HasValue)
+            {
+                if (DateTimeOffset.UtcNow < _quotaExhaustedUntil.Value)
+                {
+                    var waitSec = (int)(_quotaExhaustedUntil.Value - DateTimeOffset.UtcNow).TotalSeconds;
+                    _logger.LogWarning("EMUA AI: Gemini API đang cạn kiệt Quota (RESOURCE_EXHAUSTED). Tạm ngưng gọi trong {WaitSec}s để bảo vệ hệ thống.", waitSec);
+                    throw new HttpRequestException("Gemini HTTP 429: RESOURCE_EXHAUSTED (Quota Exceeded)", null, System.Net.HttpStatusCode.TooManyRequests);
+                }
+
+                _quotaExhaustedUntil = null;
+            }
 
             var apiKey = _configuration["Gemini:ApiKey"]?.Trim();
             var model = _configuration["Gemini:Model"]?.Trim();
@@ -164,13 +178,11 @@ namespace EMua.Services.AI
 
                 // Kiểm tra xem 429 có phải do cạn hẳn Quota không
                 var isExhaustedQuota = false;
-                if (statusCode == 429 && !string.IsNullOrWhiteSpace(json))
+                if (statusCode == 429)
                 {
-                    if (json.Contains("RESOURCE_EXHAUSTED", StringComparison.OrdinalIgnoreCase) ||
-                        json.Contains("quota exceeded", StringComparison.OrdinalIgnoreCase))
-                    {
-                        isExhaustedQuota = true;
-                    }
+                    isExhaustedQuota = true;
+                    _quotaExhaustedUntil = DateTimeOffset.UtcNow.AddMinutes(5);
+                    _logger.LogWarning("EMUA AI: Phát hiện lỗi 429 RESOURCE_EXHAUSTED / Quota Exceeded. Kích hoạt tạm ngưng gọi Gemini trong 5 phút.");
                 }
 
                 if (isTransient && !isExhaustedQuota && attempt < maxRetries)

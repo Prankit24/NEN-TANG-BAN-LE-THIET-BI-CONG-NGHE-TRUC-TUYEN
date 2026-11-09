@@ -126,17 +126,59 @@ public class RecommendationService
         return null;
     }
 
-    public async Task<(string ContextText, List<ProductRecommendationDto> Products)> GetProductRecommendationsAsync(string query, System.Threading.CancellationToken cancellationToken = default)
+    public static bool IsShoppingQuery(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return false;
+
+        var q = query.Trim().ToLowerInvariant();
+
+        // 1. Nhận diện có ngân sách
+        if (ExtractBudget(q) != null)
+            return true;
+
+        // 2. Từ khóa loại thiết bị / danh mục sản phẩm công nghệ
+        string[] productKeywords = new[]
+        {
+            "laptop", "máy tính", "macbook", "xps", "thinkpad", "vivobook", "inspiron",
+            "zenbook", "asus", "dell", "hp", "lenovo", "acer", "msi",
+            "điện thoại", "dien thoai", "smartphone", "iphone", "samsung", "galaxy", "xiaomi", "oppo", "redmi",
+            "tai nghe", "chuột", "bàn phím", "màn hình", "loa", "sạc", "cáp", "phụ kiện",
+            "ipad", "tablet", "máy tính bảng", "linh kiện"
+        };
+
+        if (productKeywords.Any(k => q.Contains(k)))
+            return true;
+
+        // 3. Từ khóa ý định mua sắm
+        string[] shoppingKeywords = new[]
+        {
+            "mua", "tìm", "tư vấn", "cần mua", "muốn mua", "chọn mua", "tầm giá",
+            "ngân sách", "bao nhiêu tiền", "giá bao nhiêu", "có bán", "còn hàng",
+            "đề xuất", "gợi ý", "mẫu nào", "loại nào", "hãng nào", "nên mua", "sản phẩm"
+        };
+
+        return shoppingKeywords.Any(k => q.Contains(k));
+    }
+
+    public async Task<(string ContextText, List<ProductRecommendationDto> Products, decimal? LowestExistingPrice)> GetProductRecommendationsAsync(string query, System.Threading.CancellationToken cancellationToken = default)
     {
         var timer = Stopwatch.StartNew();
         var rawQuery = (query ?? "").Trim();
         var keyword = rawQuery.ToLowerInvariant();
-        var budget = ExtractBudget(rawQuery);
 
+        // Với câu hỏi không liên quan đến mua sắm, không tự đề xuất sản phẩm
+        if (!IsShoppingQuery(rawQuery))
+        {
+            _logger.LogInformation("EMUA AI: Câu hỏi không thuộc ý định mua sắm. Bỏ qua truy vấn sản phẩm.");
+            return ("", new List<ProductRecommendationDto>(), null);
+        }
+
+        var budget = ExtractBudget(rawQuery);
         var source = _db.SanPhams.AsNoTracking();
 
         // 1. Lọc theo danh mục / loại thiết bị
-        if (keyword.Contains("laptop") || keyword.Contains("máy tính xách tay"))
+        if (keyword.Contains("laptop") || keyword.Contains("máy tính xách tay") || keyword.Contains("macbook"))
         {
             source = source.Where(p =>
                 p.TenSanPham != null &&
@@ -151,7 +193,7 @@ public class RecommendationService
                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("laptop"))
                 ));
         }
-        else if (keyword.Contains("điện thoại") || keyword.Contains("dien thoai") || keyword.Contains("smartphone"))
+        else if (keyword.Contains("điện thoại") || keyword.Contains("dien thoai") || keyword.Contains("smartphone") || keyword.Contains("iphone") || keyword.Contains("galaxy"))
         {
             source = source.Where(p =>
                 p.TenSanPham != null &&
@@ -162,6 +204,17 @@ public class RecommendationService
                     p.TenSanPham.ToLower().Contains("smartphone") ||
                     (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("điện thoại"))
+                ));
+        }
+        else if (keyword.Contains("tai nghe") || keyword.Contains("chuột") || keyword.Contains("bàn phím") || keyword.Contains("màn hình"))
+        {
+            source = source.Where(p =>
+                p.TenSanPham != null &&
+                (
+                    (keyword.Contains("tai nghe") && p.TenSanPham.ToLower().Contains("tai nghe")) ||
+                    (keyword.Contains("chuột") && p.TenSanPham.ToLower().Contains("chuột")) ||
+                    (keyword.Contains("bàn phím") && p.TenSanPham.ToLower().Contains("bàn phím")) ||
+                    (keyword.Contains("màn hình") && p.TenSanPham.ToLower().Contains("màn hình"))
                 ));
         }
 
@@ -262,7 +315,7 @@ public class RecommendationService
                 emptyContextBuilder.AppendLine("- Hãy hỏi rõ thêm tên thiết bị hoặc tầm ngân sách cụ thể để hỗ trợ khách chính xác.");
             }
 
-            return (emptyContextBuilder.ToString(), new List<ProductRecommendationDto>());
+            return (emptyContextBuilder.ToString(), new List<ProductRecommendationDto>(), lowestExisting);
         }
 
         // 6. Xây dựng ngữ cảnh sản phẩm khi tìm thấy đúng ngân sách
@@ -294,7 +347,7 @@ public class RecommendationService
             "EMUA AI: Ngữ cảnh sản phẩm dài {Length} ký tự.",
             context.Length);
 
-        return (context.ToString(), productDtos);
+        return (context.ToString(), productDtos, rawProducts.FirstOrDefault()?.MinPrice);
     }
 
     public async Task<string> GetProductContextAsync(string query, System.Threading.CancellationToken cancellationToken = default)
