@@ -13,6 +13,7 @@ namespace EMua.Services.AI
 {
     public class GeminiService
     {
+        private static DateTimeOffset? _quotaExhaustedUntil;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GeminiService> _logger;
@@ -27,11 +28,24 @@ namespace EMua.Services.AI
             _logger = logger;
         }
 
-        public async Task<string> AskAsync(string message)
+        public async Task<string> AskAsync(string message, System.Threading.CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(message))
                 throw new ArgumentException(
                     "Câu hỏi không được để trống.");
+
+            // Kiểm tra trạng thái cạn kiệt Quota: Nếu đã bị 429 RESOURCE_EXHAUSTED trước đó, không gọi lại Gemini
+            if (_quotaExhaustedUntil.HasValue)
+            {
+                if (DateTimeOffset.UtcNow < _quotaExhaustedUntil.Value)
+                {
+                    var waitSec = (int)(_quotaExhaustedUntil.Value - DateTimeOffset.UtcNow).TotalSeconds;
+                    _logger.LogWarning("EMUA AI: Gemini API đang cạn kiệt Quota (RESOURCE_EXHAUSTED). Tạm ngưng gọi trong {WaitSec}s để bảo vệ hệ thống.", waitSec);
+                    throw new HttpRequestException("Gemini HTTP 429: RESOURCE_EXHAUSTED (Quota Exceeded)", null, System.Net.HttpStatusCode.TooManyRequests);
+                }
+
+                _quotaExhaustedUntil = null;
+            }
 
             var apiKey = _configuration["Gemini:ApiKey"]?.Trim();
             var model = _configuration["Gemini:Model"]?.Trim();
@@ -112,30 +126,47 @@ namespace EMua.Services.AI
                 generationConfig
             };
 
-            using var request =
-                new HttpRequestMessage(HttpMethod.Post, url);
-
-            request.Headers.Add("x-goog-api-key", apiKey);
-            request.Content = JsonContent.Create(body);
-
             _logger.LogInformation(
                 "EMUA AI: Đang gọi Gemini model {Model}", model);
 
             HttpResponseMessage response = null!;
             string json = "";
 
-            // Retry tối đa 3 lần với Exponential Backoff khi gặp 503 ServiceUnavailable hoặc 429 TooManyRequests (do spike tải).
-            // Nếu hết quota thực sự (ResourceExhausted / quota exceeded) hoặc có Retry-After vượt mức cho phép, dừng ngay.
-            const int maxRetries = 3;
+            // Retry tối đa 2 lần (1 attempt + 1 retry) CHỈ khi gặp lỗi tạm thời (429, 503, 504)
+            // Không retry lỗi 400, 401, 403, 404
+            const int maxRetries = 2;
             for (var attempt = 1; attempt <= maxRetries; attempt++)
             {
+                var attemptTimer = System.Diagnostics.Stopwatch.StartNew();
                 using var attemptRequest = new HttpRequestMessage(HttpMethod.Post, url);
                 attemptRequest.Headers.Add("x-goog-api-key", apiKey);
                 attemptRequest.Content = JsonContent.Create(body);
 
                 response?.Dispose();
-                response = await _httpClient.SendAsync(attemptRequest);
-                json = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    response = await _httpClient.SendAsync(attemptRequest, cancellationToken);
+                    json = await response.Content.ReadAsStringAsync(cancellationToken);
+                    attemptTimer.Stop();
+
+                    _logger.LogInformation(
+                        "EMUA AI: Gemini Attempt {Attempt}/{MaxRetries} hoàn thành sau {ElapsedMs} ms. HTTP: {StatusCode}",
+                        attempt,
+                        maxRetries,
+                        attemptTimer.ElapsedMilliseconds,
+                        (int)response.StatusCode);
+                }
+                catch (Exception ex)
+                {
+                    attemptTimer.Stop();
+                    _logger.LogWarning(
+                        ex,
+                        "EMUA AI: Gemini Attempt {Attempt}/{MaxRetries} thất bại sau {ElapsedMs} ms",
+                        attempt,
+                        maxRetries,
+                        attemptTimer.ElapsedMilliseconds);
+                    throw;
+                }
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -143,23 +174,21 @@ namespace EMua.Services.AI
                 }
 
                 var statusCode = (int)response.StatusCode;
-                var isTransient = statusCode == 503 || statusCode == 429;
+                var isTransient = statusCode == 503 || statusCode == 429 || statusCode == 504;
 
-                // Kiểm tra xem 429 có phải do hết hẳn Quota không
+                // Kiểm tra xem 429 có phải do cạn hẳn Quota không
                 var isExhaustedQuota = false;
-                if (statusCode == 429 && !string.IsNullOrWhiteSpace(json))
+                if (statusCode == 429)
                 {
-                    if (json.Contains("RESOURCE_EXHAUSTED", StringComparison.OrdinalIgnoreCase) ||
-                        json.Contains("quota exceeded", StringComparison.OrdinalIgnoreCase))
-                    {
-                        isExhaustedQuota = true;
-                    }
+                    isExhaustedQuota = true;
+                    _quotaExhaustedUntil = DateTimeOffset.UtcNow.AddMinutes(5);
+                    _logger.LogWarning("EMUA AI: Phát hiện lỗi 429 RESOURCE_EXHAUSTED / Quota Exceeded. Kích hoạt tạm ngưng gọi Gemini trong 5 phút.");
                 }
 
                 if (isTransient && !isExhaustedQuota && attempt < maxRetries)
                 {
-                    // Ưu tiên đọc Retry-After header từ response
-                    TimeSpan delay = TimeSpan.FromMilliseconds(1000 * Math.Pow(2, attempt - 1)); // 1s, 2s, 4s
+                    // Đọc Retry-After header nếu có, mặc định 1.5s
+                    var delay = TimeSpan.FromMilliseconds(1500);
                     if (response.Headers.RetryAfter != null)
                     {
                         if (response.Headers.RetryAfter.Delta.HasValue)
@@ -173,15 +202,15 @@ namespace EMua.Services.AI
                         }
                     }
 
-                    // Nếu delay quá dài (> 10s), không retry để tránh treo request của khách
-                    if (delay > TimeSpan.FromSeconds(10))
+                    // Không retry nếu delay > 3s để tránh kéo dài request của khách
+                    if (delay > TimeSpan.FromSeconds(3))
                     {
                         _logger.LogWarning("Gemini yêu cầu Retry-After quá lâu ({Seconds}s). Hủy retry.", delay.TotalSeconds);
                         break;
                     }
 
                     _logger.LogWarning("Gemini HTTP {StatusCode} (Attempt {Attempt}/{Max}). Chờ {Ms}ms thử lại...", statusCode, attempt, maxRetries, (int)delay.TotalMilliseconds);
-                    await Task.Delay(delay);
+                    await Task.Delay(delay, cancellationToken);
                     continue;
                 }
 
