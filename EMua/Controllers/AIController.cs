@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using EMua.Models.AI;
 using EMua.Services.AI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -42,202 +43,153 @@ namespace EMua.Controllers
             }
 
             var totalTimer = System.Diagnostics.Stopwatch.StartNew();
-            var stage = "Phân loại câu hỏi";
 
+            // 1. Phân loại câu hỏi
+            DomainPrediction prediction;
             try
             {
                 var classifyTimer = System.Diagnostics.Stopwatch.StartNew();
-                var prediction =
-                    _domainClassifier.Predict(request.Message);
+                prediction = _domainClassifier.Predict(request.Message);
                 classifyTimer.Stop();
 
                 _logger.LogInformation(
                     "EMUA AI: [Bước 1/4] Phân loại câu hỏi mất {ElapsedMs} ms. Kết quả: {IsTechnology}",
                     classifyTimer.ElapsedMilliseconds,
                     prediction.IsTechnology);
-
-                if (!prediction.IsTechnology)
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "EMUA AI: Lỗi phân loại câu hỏi.");
+                return StatusCode(500, new
                 {
-                    totalTimer.Stop();
-                    return Json(new
-                    {
-                        domain = "NonTechnology",
-                        message =
-                            "Tôi là trợ lý công nghệ của EMUA. " +
-                            "Tôi chỉ hỗ trợ các câu hỏi liên quan đến " +
-                            "công nghệ, thiết bị và sản phẩm tại EMUA.",
-                        isLimitReached = false
-                    });
-                }
+                    domain = "Technology",
+                    message = "Hệ thống phân loại đang gặp sự cố. Bạn vui lòng thử lại sau.",
+                    errorCode = "CLASSIFICATION_ERROR",
+                    isLimitReached = false
+                });
+            }
 
-                stage = "Lấy dữ liệu sản phẩm";
+            if (!prediction.IsTechnology)
+            {
+                totalTimer.Stop();
+                return Json(new
+                {
+                    domain = "NonTechnology",
+                    message =
+                        "Tôi là trợ lý công nghệ của EMUA. " +
+                        "Tôi chỉ hỗ trợ các câu hỏi liên quan đến " +
+                        "công nghệ, thiết bị và sản phẩm tại EMUA.",
+                    isLimitReached = false
+                });
+            }
+
+            // 2. Truy vấn Supabase
+            var isShopping = RecommendationService.IsShoppingQuery(request.Message);
+            string productContext;
+            List<ProductRecommendationDto> recommendedProducts;
+            decimal? lowestExistingPrice;
+
+            try
+            {
                 var dbTimer = System.Diagnostics.Stopwatch.StartNew();
-
-                var isShopping = RecommendationService.IsShoppingQuery(request.Message);
-
-                var (productContext, recommendedProducts, lowestExistingPrice) =
+                (productContext, recommendedProducts, lowestExistingPrice) =
                     await _recommendationService
                         .GetProductRecommendationsAsync(request.Message, cancellationToken);
                 dbTimer.Stop();
 
                 _logger.LogInformation(
-                    "EMUA AI: [Bước 2/4] Ý định mua sắm: {IsShopping}. Truy vấn Supabase & lọc sản phẩm mất {ElapsedMs} ms. Tìm thấy: {Count} sản phẩm.",
+                    "EMUA AI: [Bước 2/4] Ý định mua sắm: {IsShopping}. Truy vấn Supabase mất {ElapsedMs} ms. Tìm thấy: {Count} sản phẩm.",
                     isShopping,
                     dbTimer.ElapsedMilliseconds,
                     recommendedProducts.Count);
-
-                var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
-                var budget = RecommendationService.ExtractBudget(request.Message);
-
-                // Hậu kiểm tra: Chỉ chấp nhận các sản phẩm thỏa mãn điều kiện ngân sách và tồn kho
-                var verifiedProducts = isShopping
-                    ? recommendedProducts
-                        .Where(p => p.InStock && p.MinPrice.HasValue && p.MinPrice.Value > 0)
-                        .Where(p => budget == null || (!budget.MaxPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value <= budget.MaxPrice.Value)))
-                        .Where(p => budget == null || (!budget.MinPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value >= budget.MinPrice.Value)))
-                        .Take(3)
-                        .Select(p => new ChatProductItemDto(
-                            p.Id,
-                            p.Name,
-                            (p.MinPrice ?? 0m).ToString("N0", culture) + " VNĐ",
-                            p.InStock,
-                            p.ImageUrl,
-                            p.DetailUrl
-                        )).ToList()
-                    : new List<ChatProductItemDto>();
-
-                var promptWithContext = string.IsNullOrWhiteSpace(productContext)
-                    ? request.Message
-                    : "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
-                      productContext +
-                      "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
-                      request.Message;
-
-                stage = "Gọi Gemini";
-                _logger.LogInformation(
-                    "EMUA AI: [Bước 3/4] Gọi Gemini. Độ dài prompt: {Length} ký tự.",
-                    promptWithContext.Length);
-
-                var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
-                string answer;
-
-                try
-                {
-                    answer = await _geminiService.AskAsync(promptWithContext, cancellationToken);
-                    geminiTimer.Stop();
-                    _logger.LogInformation(
-                        "EMUA AI: [Bước 3/4] Gemini trả lời thành công sau {ElapsedMs} ms.",
-                        geminiTimer.ElapsedMilliseconds);
-                }
-                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-                {
-                    geminiTimer.Stop();
-                    _logger.LogWarning(
-                        ex,
-                        "EMUA AI: Gọi Gemini thất bại/hết quota/quá hạn sau {ElapsedMs} ms. Kích hoạt fallback Supabase tự động.",
-                        geminiTimer.ElapsedMilliseconds);
-
-                    answer = GenerateFallbackAnswer(request.Message, isShopping, verifiedProducts, budget, lowestExistingPrice);
-                }
-
-                totalTimer.Stop();
-                _logger.LogInformation(
-                    "EMUA AI: [Bước 4/4] Hoàn thành toàn bộ xử lý trong {TotalMs} ms.",
-                    totalTimer.ElapsedMilliseconds);
-
-                return Json(new
-                {
-                    domain = "Technology",
-                    message = answer,
-                    products = verifiedProducts,
-                    isLimitReached = false
-                });
             }
-            catch (OperationCanceledException)
-                when (HttpContext.RequestAborted.IsCancellationRequested)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                // Trình duyệt đã ngắt yêu cầu.
                 return new EmptyResult();
             }
-            catch (OperationCanceledException ex)
+            catch (Exception dbEx)
             {
-                _logger.LogWarning(
-                    ex,
-                    "EMUA AI: Hết thời gian chờ tại bước {Stage}.",
-                    stage);
-
-                return StatusCode(504, new
-                {
-                    domain = "Technology",
-                    message =
-                        "Dịch vụ tư vấn phản hồi quá lâu. " +
-                        "Bạn vui lòng thử lại sau.",
-                    errorCode = "AI_TIMEOUT",
-                    isLimitReached = false
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "EMUA AI: Lỗi HTTP tại bước {Stage}. Mã: {StatusCode}.",
-                    stage,
-                    ex.StatusCode);
-
-                var isRateLimited =
-                    ex.StatusCode == HttpStatusCode.TooManyRequests;
-
-                var message = ex.StatusCode switch
-                {
-                    HttpStatusCode.TooManyRequests =>
-                        "Dịch vụ AI đang vượt giới hạn sử dụng. " +
-                        "Bạn vui lòng thử lại sau.",
-
-                    HttpStatusCode.ServiceUnavailable =>
-                        "Dịch vụ AI tạm thời không khả dụng. " +
-                        "Bạn vui lòng thử lại sau.",
-
-                    HttpStatusCode.Unauthorized or
-                    HttpStatusCode.Forbidden =>
-                        "Dịch vụ AI đang gặp lỗi xác thực hoặc quyền truy cập.",
-
-                    HttpStatusCode.NotFound =>
-                        "Model AI đang cấu hình không khả dụng.",
-
-                    HttpStatusCode.BadRequest =>
-                        "Dịch vụ AI từ chối yêu cầu. " +
-                        "Cần kiểm tra cấu hình và dữ liệu gửi đi.",
-
-                    _ =>
-                        "Không thể kết nối ổn định với dịch vụ AI. " +
-                        "Bạn vui lòng thử lại sau."
-                };
-
-                return StatusCode(isRateLimited ? 503 : 502, new
-                {
-                    domain = "Technology",
-                    message,
-                    errorCode = "AI_UPSTREAM_ERROR",
-                    isLimitReached = isRateLimited
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "EMUA AI: Lỗi tại bước {Stage}.",
-                    stage);
-
+                _logger.LogError(dbEx, "EMUA AI: Lỗi truy vấn cơ sở dữ liệu Supabase.");
                 return StatusCode(500, new
                 {
                     domain = "Technology",
-                    message =
-                        "Hệ thống tư vấn đang gặp sự cố. " +
-                        "Bạn vui lòng thử lại sau.",
-                    errorCode = "AI_INTERNAL_ERROR",
+                    message = "Không thể kết nối đến cơ sở dữ liệu sản phẩm. Bạn vui lòng thử lại sau.",
+                    errorCode = "DB_QUERY_ERROR",
                     isLimitReached = false
                 });
             }
+
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+            var budget = RecommendationService.ExtractBudget(request.Message);
+
+            // Hậu kiểm tra: Chỉ chấp nhận các sản phẩm thỏa mãn điều kiện ngân sách và tồn kho
+            var verifiedProducts = isShopping
+                ? recommendedProducts
+                    .Where(p => p.InStock && p.MinPrice.HasValue && p.MinPrice.Value > 0)
+                    .Where(p => budget == null || (!budget.MaxPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value <= budget.MaxPrice.Value)))
+                    .Where(p => budget == null || (!budget.MinPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value >= budget.MinPrice.Value)))
+                    .Take(3)
+                    .Select(p => new ChatProductItemDto(
+                        p.Id,
+                        p.Name,
+                        (p.MinPrice ?? 0m).ToString("N0", culture) + " VNĐ",
+                        p.InStock,
+                        p.ImageUrl,
+                        p.DetailUrl
+                    )).ToList()
+                : new List<ChatProductItemDto>();
+
+            var promptWithContext = string.IsNullOrWhiteSpace(productContext)
+                ? request.Message
+                : "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
+                  productContext +
+                  "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
+                  request.Message;
+
+            // 3. Gọi Gemini với fallback đích danh các lỗi upstream/timeout (không dùng catch chung che giấu lỗi code)
+            _logger.LogInformation(
+                "EMUA AI: [Bước 3/4] Gọi Gemini. Độ dài prompt: {Length} ký tự.",
+                promptWithContext.Length);
+
+            var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
+            string answer;
+
+            try
+            {
+                answer = await _geminiService.AskAsync(promptWithContext, cancellationToken);
+                geminiTimer.Stop();
+                _logger.LogInformation(
+                    "EMUA AI: [Bước 3/4] Gemini trả lời thành công sau {ElapsedMs} ms.",
+                    geminiTimer.ElapsedMilliseconds);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return new EmptyResult();
+            }
+            catch (Exception ex) when (ex is HttpRequestException || ex is TimeoutException || ex is OperationCanceledException)
+            {
+                geminiTimer.Stop();
+                _logger.LogWarning(
+                    ex,
+                    "EMUA AI: Gọi Gemini thất bại/hết quota/timeout ({ExType}) sau {ElapsedMs} ms. Kích hoạt fallback Supabase.",
+                    ex.GetType().Name,
+                    geminiTimer.ElapsedMilliseconds);
+
+                answer = GenerateFallbackAnswer(request.Message, isShopping, verifiedProducts, budget, lowestExistingPrice);
+            }
+
+            totalTimer.Stop();
+            _logger.LogInformation(
+                "EMUA AI: [Bước 4/4] Hoàn thành toàn bộ xử lý trong {TotalMs} ms.",
+                totalTimer.ElapsedMilliseconds);
+
+            return Json(new
+            {
+                domain = "Technology",
+                message = answer,
+                products = verifiedProducts,
+                isLimitReached = false
+            });
         }
 
         private static string GenerateFallbackAnswer(
