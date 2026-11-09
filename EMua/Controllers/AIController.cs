@@ -44,6 +44,26 @@ namespace EMua.Controllers
 
             var totalTimer = System.Diagnostics.Stopwatch.StartNew();
 
+            // 0. Đọc ngữ cảnh phiên chat hiện tại từ Session
+            const string sessionKey = "EMUA_CHAT_SESSION_CONTEXT";
+            ChatConversationState? chatState = null;
+            try
+            {
+                var sessionData = HttpContext.Session.GetString(sessionKey);
+                if (!string.IsNullOrWhiteSpace(sessionData))
+                {
+                    chatState = System.Text.Json.JsonSerializer.Deserialize<ChatConversationState>(sessionData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "EMUA AI: Không thể đọc ngữ cảnh phiên chat từ Session.");
+            }
+            chatState ??= new ChatConversationState();
+
+            // Kiểm tra câu hỏi tiếp nối (Ví dụ: "dùng để lập trình liệu có ổn không", "con này pin thế nào")
+            var isFollowUp = RecommendationService.IsFollowUpQuery(request.Message) && chatState.LastProducts.Any();
+
             // 1. Phân loại câu hỏi
             DomainPrediction prediction;
             try
@@ -52,10 +72,17 @@ namespace EMua.Controllers
                 prediction = _domainClassifier.Predict(request.Message);
                 classifyTimer.Stop();
 
+                // Nếu là câu hỏi tiếp nối trong phiên chat công nghệ, bỏ qua từ chối nhầm
+                if (isFollowUp && !prediction.IsTechnology)
+                {
+                    prediction = new DomainPrediction { IsTechnology = true };
+                }
+
                 _logger.LogInformation(
-                    "EMUA AI: [Bước 1/4] Phân loại câu hỏi mất {ElapsedMs} ms. Kết quả: {IsTechnology}",
+                    "EMUA AI: [Bước 1/4] Phân loại câu hỏi mất {ElapsedMs} ms. Kết quả: {IsTechnology}. Tiếp nối: {IsFollowUp}",
                     classifyTimer.ElapsedMilliseconds,
-                    prediction.IsTechnology);
+                    prediction.IsTechnology,
+                    isFollowUp);
             }
             catch (Exception ex)
             {
@@ -84,7 +111,7 @@ namespace EMua.Controllers
             }
 
             // 2. Truy vấn Supabase
-            var isShopping = RecommendationService.IsShoppingQuery(request.Message);
+            var isShopping = isFollowUp || RecommendationService.IsShoppingQuery(request.Message);
             string productContext;
             List<ProductRecommendationDto> recommendedProducts;
             decimal? lowestExistingPrice;
@@ -97,9 +124,25 @@ namespace EMua.Controllers
                         .GetProductRecommendationsAsync(request.Message, cancellationToken);
                 dbTimer.Stop();
 
+                // Nếu là câu hỏi tiếp nối và truy vấn từ khóa mới không có sản phẩm, dùng ngữ cảnh sản phẩm từ phiên trước
+                if (isFollowUp && recommendedProducts.Count == 0 && chatState.LastProducts.Any())
+                {
+                    recommendedProducts = chatState.LastProducts;
+                    lowestExistingPrice ??= chatState.LastLowestPrice;
+
+                    var sbContext = new System.Text.StringBuilder();
+                    sbContext.AppendLine("[SẢN PHẨM KHÁCH HÀNG ĐANG QUAN TÂM TRONG PHIÊN CHAT HIỆN TẠI]:");
+                    foreach (var p in chatState.LastProducts.Take(3))
+                    {
+                        sbContext.AppendLine($"• Tên: {p.Name} | Giá từ: {(p.MinPrice ?? 0m):N0} VNĐ | Thông số kỹ thuật: {p.Specs} | Mô tả: {p.Description}");
+                    }
+                    productContext = sbContext.ToString();
+                }
+
                 _logger.LogInformation(
-                    "EMUA AI: [Bước 2/4] Ý định mua sắm: {IsShopping}. Truy vấn Supabase mất {ElapsedMs} ms. Tìm thấy: {Count} sản phẩm.",
+                    "EMUA AI: [Bước 2/4] Ý định mua sắm: {IsShopping}. Tiếp nối: {IsFollowUp}. Truy vấn Supabase mất {ElapsedMs} ms. Số sản phẩm: {Count}.",
                     isShopping,
+                    isFollowUp,
                     dbTimer.ElapsedMilliseconds,
                     recommendedProducts.Count);
             }
@@ -120,15 +163,15 @@ namespace EMua.Controllers
             }
 
             var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
-            var budget = RecommendationService.ExtractBudget(request.Message);
+            var budget = RecommendationService.ExtractBudget(request.Message) ?? (isFollowUp ? chatState.LastBudget : null);
 
-            // Hậu kiểm tra: Chỉ chấp nhận các sản phẩm thỏa mãn điều kiện ngân sách và tồn kho
+            // Hậu kiểm tra: Lọc sản phẩm thỏa mãn điều kiện ngân sách và tồn kho
             var verifiedProducts = isShopping
                 ? recommendedProducts
                     .Where(p => p.InStock && p.MinPrice.HasValue && p.MinPrice.Value > 0)
                     .Where(p => budget == null || (!budget.MaxPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value <= budget.MaxPrice.Value)))
                     .Where(p => budget == null || (!budget.MinPrice.HasValue || (p.MinPrice.HasValue && p.MinPrice.Value >= budget.MinPrice.Value)))
-                    .Take(3)
+                    .Take(isFollowUp ? 1 : 3)
                     .Select(p => new ChatProductItemDto(
                         p.Id,
                         p.Name,
@@ -146,7 +189,7 @@ namespace EMua.Controllers
                   "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
                   request.Message;
 
-            // 3. Gọi Gemini với fallback đích danh các lỗi upstream/timeout (không dùng catch chung che giấu lỗi code)
+            // 3. Gọi Gemini với fallback thông minh hỗ trợ câu hỏi tiếp nối
             _logger.LogInformation(
                 "EMUA AI: [Bước 3/4] Gọi Gemini. Độ dài prompt: {Length} ký tự.",
                 promptWithContext.Length);
@@ -175,7 +218,22 @@ namespace EMua.Controllers
                     ex.GetType().Name,
                     geminiTimer.ElapsedMilliseconds);
 
-                answer = GenerateFallbackAnswer(request.Message, isShopping, verifiedProducts, budget, lowestExistingPrice);
+                answer = GenerateFallbackAnswer(request.Message, isShopping, isFollowUp, verifiedProducts, recommendedProducts, budget, lowestExistingPrice);
+            }
+
+            // Cập nhật lại Session ngữ cảnh nếu tìm thấy sản phẩm mới
+            if (recommendedProducts.Any() && !isFollowUp)
+            {
+                chatState.LastProducts = recommendedProducts;
+                chatState.LastBudget = budget;
+                chatState.LastLowestPrice = lowestExistingPrice;
+                chatState.LastQuery = request.Message;
+                chatState.LastUpdatedAt = DateTimeOffset.UtcNow;
+                try
+                {
+                    HttpContext.Session.SetString(sessionKey, System.Text.Json.JsonSerializer.Serialize(chatState));
+                }
+                catch { }
             }
 
             totalTimer.Stop();
@@ -195,11 +253,21 @@ namespace EMua.Controllers
         private static string GenerateFallbackAnswer(
             string message,
             bool isShopping,
+            bool isFollowUp,
             System.Collections.Generic.List<ChatProductItemDto> verifiedProducts,
+            System.Collections.Generic.List<ProductRecommendationDto> recommendedProducts,
             BudgetInfo? budget,
             decimal? lowestExistingPrice)
         {
             var culture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
+
+            // 0. Trường hợp câu hỏi tiếp nối về sản phẩm đã đề xuất trong phiên chat
+            if (isFollowUp && verifiedProducts.Count > 0)
+            {
+                var targetProduct = verifiedProducts.First();
+                var targetDto = recommendedProducts.FirstOrDefault(p => p.Id == targetProduct.id);
+                return GenerateFollowUpAnswer(message, targetProduct, targetDto);
+            }
 
             // 1. Nhu cầu mua sắm và tìm thấy sản phẩm phù hợp trong kho
             if (isShopping && verifiedProducts.Count > 0)
@@ -266,6 +334,137 @@ namespace EMua.Controllers
             // Câu hỏi công nghệ hoặc thắc mắc khác
             return "Dạ hiện tại hệ thống AI tư vấn đang tạm thời bận hoặc vượt giới hạn xử lý. Để được giải đáp nhanh và chi tiết nhất về thắc mắc này, bạn có thể nhắn tin trực tiếp với nhân viên hỗ trợ EMUA qua trang Liên hệ nhé!";
         }
+
+        private static string GenerateFollowUpAnswer(
+            string message,
+            ChatProductItemDto product,
+            ProductRecommendationDto? productDto)
+        {
+            var q = (message ?? "").ToLowerInvariant();
+            var sb = new System.Text.StringBuilder();
+            var specs = productDto?.Specs ?? "";
+            var desc = productDto?.Description ?? "";
+            var fullInfo = $"{specs} {desc}".ToLowerInvariant();
+
+            // 1. Nhu cầu lập trình / code / IT / chạy máy ảo
+            if (q.Contains("lập trình") || q.Contains("code") || q.Contains("coder") ||
+                q.Contains("it") || q.Contains("visual studio") || q.Contains("dev") || q.Contains("máy ảo"))
+            {
+                bool has16Gb = fullInfo.Contains("16gb") || fullInfo.Contains("16 gb") || fullInfo.Contains("32gb");
+                bool has8Gb = fullInfo.Contains("8gb") || fullInfo.Contains("8 gb");
+
+                sb.AppendLine($"Dạ với nhu cầu học tập và làm việc lập trình, mẫu **{product.name}** dùng **hoàn toàn ổn định và phù hợp** bạn nhé!");
+
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Thông số kỹ thuật từ cửa hàng: {specs}");
+                }
+
+                if (has16Gb)
+                {
+                    sb.AppendLine("• Đánh giá cấu hình: Dung lượng RAM 16GB cùng ổ cứng SSD tốc độ cao giúp máy đa nhiệm cực kỳ mượt mà khi bạn mở nhiều tab tra cứu tài liệu, chạy đồng thời VS Code, PyCharm, Visual Studio hoặc build dự án.");
+                }
+                else if (has8Gb)
+                {
+                    sb.AppendLine("• Đánh giá cấu hình: Máy đáp ứng tốt các tác vụ lập trình Web, Python, C++, thuật toán và phần mềm thông thường. Nếu sau này bạn có nhu cầu chạy máy ảo Docker nặng, bạn có thể cân nhắc nâng cấp thêm RAM để tối ưu nhất.");
+                }
+                else
+                {
+                    sb.AppendLine("• Đánh giá cấu hình: Cấu hình của máy đáp ứng tốt các công cụ lập trình cơ bản và học tập công nghệ thông tin.");
+                }
+
+                if (string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine("• Lưu ý: Do hệ thống chưa có bảng thông số kỹ thuật chi tiết của mã này trong kho dữ liệu, bạn vui lòng bấm 'Xem sản phẩm' bên dưới để xem catalogue đầy đủ từ nhà sản xuất nhé!");
+                }
+
+                sb.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem chi tiết hoặc đặt mua nhé!");
+                return sb.ToString();
+            }
+
+            // 2. Chơi game / Gaming
+            if (q.Contains("chơi game") || q.Contains("gaming") || q.Contains("game") ||
+                q.Contains("fifa") || q.Contains("lol") || q.Contains("valorant") || q.Contains("genshin"))
+            {
+                bool hasGpu = fullInfo.Contains("rtx") || fullInfo.Contains("gtx") || fullInfo.Contains("geforce") || fullInfo.Contains("radeon rx");
+                if (hasGpu)
+                {
+                    sb.AppendLine($"Dạ mẫu **{product.name}** trang bị card đồ họa chuyên dụng, hoàn toàn chiến mượt các tựa game eSports (LOL, FO4, Valorant) và game 3D ở mức thiết lập đồ họa thích hợp.");
+                }
+                else
+                {
+                    sb.AppendLine($"Dạ mẫu **{product.name}** là dòng máy mỏng nhẹ văn phòng/học tập với card đồ họa tích hợp. Máy có thể giải trí tốt các tựa game nhẹ (như Liên Minh Huyền Thoại, CS:GO, FO4 ở cấu hình vừa phải), nhưng không chuyên dụng để cày các tựa game 3D hạng nặng (AAA).");
+                }
+
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Cấu hình tham khảo: {specs}");
+                }
+                sb.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem chi tiết nhé!");
+                return sb.ToString();
+            }
+
+            // 3. Đồ họa / Thiết kế
+            if (q.Contains("đồ họa") || q.Contains("photoshop") || q.Contains("illustrator") ||
+                q.Contains("premiere") || q.Contains("canva") || q.Contains("render") || q.Contains("autocad"))
+            {
+                sb.AppendLine($"Dạ mẫu **{product.name}** đáp ứng rất tốt các tác vụ thiết kế 2D (Photoshop, Illustrator, Canva, chỉnh sửa ảnh/video cơ bản).");
+                sb.AppendLine("Với nhu cầu dựng phim 4K chuyên nghiệp hoặc render 3D nặng kéo dài, bạn nên tham khảo các dòng máy trạm hoặc laptop có trang bị card đồ họa rời nhé.");
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Cấu hình thực tế: {specs}");
+                }
+                sb.Append("Bạn có thể bấm vào thẻ sản phẩm bên dưới để xem chi tiết nhé!");
+                return sb.ToString();
+            }
+
+            // 4. Pin / Trọng lượng / Di chuyển
+            if (q.Contains("pin") || q.Contains("nặng") || q.Contains("nhẹ") ||
+                q.Contains("trọng lượng") || q.Contains("bao nhiêu kg") || q.Contains("mang đi"))
+            {
+                sb.AppendLine($"Dạ mẫu **{product.name}** thuộc phân khúc máy hiện đại, thiết kế mỏng nhẹ tiện lợi để bạn bỏ balo mang đi học hay đi làm hàng ngày.");
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Thông số phần cứng: {specs}");
+                }
+                else
+                {
+                    sb.AppendLine("• Thông số chi tiết về khối lượng (kg) và dung lượng pin (Wh) được niêm yết đầy đủ tại trang chi tiết sản phẩm.");
+                }
+                sb.Append("Bạn có thể bấm vào nút 'Xem sản phẩm' bên dưới để xem thông số chính xác nhất nhé!");
+                return sb.ToString();
+            }
+
+            // 5. Nâng cấp RAM / SSD
+            if (q.Contains("nâng cấp") || q.Contains("thêm ram") || q.Contains("thêm ssd") || q.Contains("gắn thêm"))
+            {
+                sb.AppendLine($"Dạ khả năng nâng cấp RAM/SSD của **{product.name}** phụ thuộc vào phiên bản bo mạch cụ thể của nhà sản xuất.");
+                if (!string.IsNullOrWhiteSpace(specs))
+                {
+                    sb.AppendLine($"• Cấu hình xuất xưởng: {specs}");
+                }
+                sb.Append("Để biết máy có sẵn khe cắm nâng cấp hay dùng RAM onboard, bạn vui lòng bấm 'Xem sản phẩm' hoặc liên hệ trực tiếp kỹ thuật EMUA để được hỗ trợ chính xác nhé!");
+                return sb.ToString();
+            }
+
+            // 6. Câu hỏi đánh giá chung ("ổn không", "tốt không", "thế nào", "có nên mua")
+            sb.AppendLine($"Dạ mẫu **{product.name}** (giá hiện tại: **{product.price}**) là sản phẩm chính hãng đang rất được ưa chuộng tại EMUA nhờ độ bền tốt, thiết kế hiện đại và chính sách bảo hành chính hãng uy tín.");
+            if (!string.IsNullOrWhiteSpace(specs))
+            {
+                sb.AppendLine($"• Tóm tắt thông số: {specs}");
+            }
+            sb.Append("Bạn có thể bấm 'Xem sản phẩm' hoặc 'Mua ngay' bên dưới để nhận thêm các ưu đãi nhé!");
+            return sb.ToString();
+        }
+    }
+
+    public class ChatConversationState
+    {
+        public List<ProductRecommendationDto> LastProducts { get; set; } = new();
+        public BudgetInfo? LastBudget { get; set; }
+        public decimal? LastLowestPrice { get; set; }
+        public string? LastQuery { get; set; }
+        public DateTimeOffset LastUpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 
     public record ChatProductItemDto(
