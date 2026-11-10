@@ -67,6 +67,19 @@
                     </div>
                 </div>
 
+                @if (ViewBag.InvoiceId != null)
+                {
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                            <div>
+                                <span class="text-muted small d-block">Mã hóa đơn</span>
+                                <strong class="text-dark">#HD-@(((int)ViewBag.InvoiceId).ToString("D5"))</strong>
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <div class="d-grid gap-2">
                     <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="customer-button text-center">
                         <i class="bi bi-receipt me-1"></i> Xem chi tiết đơn hàng
@@ -107,6 +120,12 @@
                 {
                     <div class="qr-box text-center p-4 border rounded bg-light mb-4">
                         <span class="badge bg-warning text-dark mb-2">Thanh toán Ví Web3</span>
+                        <div class="alert alert-warning text-start mt-2 mb-3 small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>Lưu ý:</strong> Hệ thống chưa tích hợp xác minh giao dịch on-chain tự động.
+                            Sau khi chuyển tiền, vui lòng liên hệ nhân viên để xác nhận thanh toán thủ công.
+                            Đơn hàng sẽ được xử lý sau khi nhân viên xác nhận nhận được tiền.
+                        </div>
                         <p class="small text-muted mb-2">Chuyển đúng số tiền vào địa chỉ ví bên dưới:</p>
                         <code class="d-block p-2 bg-dark text-warning rounded text-break mb-2 fs-6">@web3WalletAddress</code>
                     </div>
@@ -140,6 +159,19 @@
                             </div>
                         </div>
                         <small class="text-muted d-block mt-2 fs-7">* Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống đối soát chính xác.</small>
+                    </div>
+                }
+
+                @if (ViewBag.InvoiceId != null)
+                {
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                            <div>
+                                <span class="text-muted small d-block">Mã hóa đơn</span>
+                                <strong class="text-dark">#HD-@(((int)ViewBag.InvoiceId).ToString("D5"))</strong>
+                            </div>
+                        </div>
                     </div>
                 }
 

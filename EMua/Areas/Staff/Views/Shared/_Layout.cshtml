@@ -2,22 +2,43 @@
 @using Microsoft.EntityFrameworkCore
 @inject EMua.Data.EMuaDbContext DbContext
 @{
-    var displayName = User.Identity?.Name ?? "Nhân viên";
+    // TenNguoiDung tu database duoc uu tien hon ten dang nhap trong claims.
+    // Fallback: ten claim, sau cung la "Nhan vien".
+    var claimDisplayName = User.Identity?.Name;
+    var displayName = string.IsNullOrWhiteSpace(claimDisplayName)
+        ? "Nhân viên"
+        : claimDisplayName.Trim();
+
+    string? avatarUrl = null;
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    // Chi truy van bang ID so khi claim thuc su chua MaNguoiDung.
+    // Neu identity dung ID khac, can doi chieu luong dang nhap truoc khi sua.
+    if (int.TryParse(userIdClaim, out var staffUserId))
+    {
+        var staffUser = await DbContext.NguoiDungs
+            .AsNoTracking()
+            .Where(u => u.MaNguoiDung == staffUserId)
+            .Select(u => new { u.TenNguoiDung, u.AnhDaiDien })
+            .FirstOrDefaultAsync();
+
+        if (staffUser != null)
+        {
+            if (!string.IsNullOrWhiteSpace(staffUser.TenNguoiDung))
+            {
+                displayName = staffUser.TenNguoiDung.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(staffUser.AnhDaiDien))
+            {
+                avatarUrl = staffUser.AnhDaiDien;
+            }
+        }
+    }
 
     var avatarLetter = string.IsNullOrWhiteSpace(displayName)
         ? "N"
         : displayName[..1].ToUpperInvariant();
-
-    string? avatarUrl = null;
-    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    if (int.TryParse(userIdClaim, out var staffUserId))
-    {
-        var staffUser = DbContext.NguoiDungs.AsNoTracking().FirstOrDefault(u => u.MaNguoiDung == staffUserId);
-        if (staffUser != null && !string.IsNullOrWhiteSpace(staffUser.AnhDaiDien))
-        {
-            avatarUrl = staffUser.AnhDaiDien;
-        }
-    }
 
     // Dùng giờ Việt Nam để lời chào đúng ngày khi deploy lên Render (UTC).
     var vietnamNow = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
@@ -105,7 +126,7 @@
           href="~/css/staff/staff-theme.css"
           asp-append-version="true" />
 
-    
+
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
