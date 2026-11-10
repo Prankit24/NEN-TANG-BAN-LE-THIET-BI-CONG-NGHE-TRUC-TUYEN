@@ -13,6 +13,7 @@ namespace EMua.Controllers;
 public class CheckoutController : Controller
 {
     private const decimal StandardShippingFee = 30000m;
+    private const decimal ExpressShippingFee = 25000m;
     private const string BuyNowUserKey = "Checkout_BuyNowUserId";
     private const string BuyNowVariantKey = "Checkout_BuyNowVariantId";
     private const string BuyNowQuantityKey = "Checkout_BuyNowQuantity";
@@ -65,6 +66,8 @@ public class CheckoutController : Controller
             model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? model.PhoneNumber;
             model.Address = TempData["Checkout_Address"]?.ToString() ?? model.Address;
             model.Note = TempData["Checkout_Note"]?.ToString();
+            var savedShipping = TempData["Checkout_ShippingMethod"]?.ToString();
+            if (savedShipping == "EXPRESS") model.ShippingMethod = "EXPRESS";
             TempData.Keep();
         }
 
@@ -104,6 +107,7 @@ public class CheckoutController : Controller
         TempData["Checkout_PhoneNumber"] = model.PhoneNumber.Trim();
         TempData["Checkout_Address"] = model.Address.Trim();
         TempData["Checkout_Note"] = model.Note?.Trim();
+        TempData["Checkout_ShippingMethod"] = model.ShippingMethod == "EXPRESS" ? "EXPRESS" : "STANDARD";
 
         return RedirectToAction(nameof(Payment));
     }
@@ -257,6 +261,7 @@ public class CheckoutController : Controller
         var note = TempData.Peek("Checkout_Note")?.ToString();
         var paymentMethod = TempData.Peek("Checkout_PaymentMethod")?.ToString();
         var couponCode = TempData.Peek("Checkout_CouponCode")?.ToString();
+        var shippingMethod = TempData.Peek("Checkout_ShippingMethod")?.ToString();
 
         if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(address))
         {
@@ -302,7 +307,19 @@ public class CheckoutController : Controller
 
                     // 3. Tính toán số tiền
                     var subtotal = cartItems.Sum(x => x.SoLuong * (x.MaBienTheNavigation.Gia));
-                    var shipping = subtotal >= 500000m ? 0m : StandardShippingFee;
+
+                    // Phí vận chuyển theo phương thức đã chọn
+                    decimal shipping;
+                    bool isExpress = shippingMethod == "EXPRESS";
+                    if (isExpress)
+                    {
+                        shipping = ExpressShippingFee;
+                    }
+                    else
+                    {
+                        shipping = subtotal >= 500000m ? 0m : StandardShippingFee;
+                    }
+
                     var coupon = await FindValidCouponAsync(couponCode, subtotal);
                     if (!string.IsNullOrWhiteSpace(couponCode) && coupon == null)
                     {
@@ -322,7 +339,7 @@ public class CheckoutController : Controller
                         SoDienThoaiNhanHang = phoneNumber.Trim(),
                         DiaChiNhanHang = address.Trim(),
                         GhiChu = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
-                        PhuongThucVanChuyen = "Giao hàng tiêu chuẩn",
+                        PhuongThucVanChuyen = isExpress ? "Giao hàng nhanh" : "Giao hàng tiêu chuẩn",
                         MaKhuyenMai = coupon?.MaKhuyenMai
                     };
 
@@ -424,6 +441,7 @@ public class CheckoutController : Controller
             TempData.Remove("Checkout_Note");
             TempData.Remove("Checkout_PaymentMethod");
             TempData.Remove("Checkout_CouponCode");
+            TempData.Remove("Checkout_ShippingMethod");
             TempData.Remove(BuyNowExpectedKey);
             if (isBuyNow) ClearBuyNowSession();
             else HttpContext.Session.Remove("Cart_CouponCode");
@@ -453,6 +471,7 @@ public class CheckoutController : Controller
 
         var order = await _db.DonHangs
             .Include(x => x.ThanhToans)
+            .Include(x => x.HoaDon)
             .Include(x => x.ChiTietDonHangs)
                 .ThenInclude(x => x.MaBienTheNavigation)
                     .ThenInclude(x => x.MaSanPhamNavigation)
@@ -500,6 +519,12 @@ public class CheckoutController : Controller
                 Quantity = x.SoLuong
             }).ToList()
         };
+
+        // Truyền thông tin hóa đơn nếu tồn tại thực sự trong CSDL
+        if (order.HoaDon != null)
+        {
+            ViewBag.InvoiceId = order.HoaDon.MaHoaDon;
+        }
 
         return View(viewModel);
     }
@@ -559,7 +584,22 @@ public class CheckoutController : Controller
             }).ToList()
         };
         model.Subtotal = model.Items.Sum(x => x.LineTotal);
-        model.ShippingFee = model.Subtotal <= 0 || model.Subtotal >= 500000m ? 0m : StandardShippingFee;
+
+        // Xác định phương thức vận chuyển từ TempData hoặc mặc định
+        var shippingMethod = TempData.Peek("Checkout_ShippingMethod")?.ToString();
+        model.ShippingMethod = shippingMethod == "EXPRESS" ? "EXPRESS" : "STANDARD";
+
+        // Tính phí vận chuyển theo phương thức đã chọn
+        if (model.ShippingMethod == "EXPRESS")
+        {
+            model.ShippingFee = ExpressShippingFee;
+        }
+        else
+        {
+            // Tiêu chuẩn: miễn phí nếu đơn >= 500k, ngược lại phí chuẩn
+            model.ShippingFee = model.Subtotal <= 0 || model.Subtotal >= 500000m ? 0m : StandardShippingFee;
+        }
+
         var couponCode = TempData.Peek("Checkout_CouponCode")?.ToString();
         var coupon = await FindValidCouponAsync(couponCode, model.Subtotal);
         if (coupon != null)

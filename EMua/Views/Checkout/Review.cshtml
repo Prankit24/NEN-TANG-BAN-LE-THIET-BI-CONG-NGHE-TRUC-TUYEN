@@ -38,6 +38,11 @@
                 </div>
             }
 
+            <div class="confirmation-line">
+                <span>Vận chuyển</span>
+                <strong>@(Model.ShippingMethod == "EXPRESS" ? "Giao nhanh 2 giờ — 25.000 đ" : (Model.ShippingFee == 0 ? "Giao tiêu chuẩn — Miễn phí" : $"Giao tiêu chuẩn — {Model.ShippingFee:N0} đ"))</strong>
+            </div>
+
             <h2 class="mt-4">Phương thức thanh toán</h2>
             @if (paymentMethod == "BANK_TRANSFER")
             {
@@ -58,7 +63,8 @@
                         <i class="bi bi-wallet2 fs-4 text-warning"></i>
                         <div>
                             <strong>Ví Web3 (Crypto / USDT)</strong>
-                            <div class="small text-muted">Thông tin ví nhận tiền sẽ hiển thị ngay ở bước tiếp theo.</div>
+                            <div class="small text-muted">Thông tin ví nhận tiền sẽ hiển thị sau khi bấm "Đặt hàng".</div>
+                            <div class="small text-warning mt-1"><i class="bi bi-exclamation-triangle me-1"></i>Hệ thống chưa tích hợp xác minh on-chain. Nhân viên sẽ xác nhận thanh toán thủ công.</div>
                         </div>
                     </div>
                 </div>
@@ -86,6 +92,21 @@
                         <strong>@item.LineTotal.ToString("N0") đ</strong>
                     </div>
                 }
+            </div>
+            <div class="summary-line">
+                <span>Tạm tính</span>
+                <strong>@Model.Subtotal.ToString("N0") đ</strong>
+            </div>
+            @if (Model.Discount > 0)
+            {
+                <div class="summary-line discount">
+                    <span>Giảm giá</span>
+                    <strong>-@Model.Discount.ToString("N0") đ</strong>
+                </div>
+            }
+            <div class="summary-line">
+                <span>Vận chuyển</span>
+                <strong>@(Model.ShippingFee == 0 ? "Miễn phí" : $"{Model.ShippingFee:N0} đ")</strong>
             </div>
             <hr />
             <div class="summary-total">

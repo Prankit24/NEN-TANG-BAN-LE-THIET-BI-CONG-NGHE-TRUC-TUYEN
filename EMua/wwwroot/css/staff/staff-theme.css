@@ -12,13 +12,13 @@
     --staff-navy-sidebar: #0f172a;
     --staff-navy-sidebar-hover: #1e293b;
     --staff-navy-active: #1d4ed8;
-    --staff-blue-accent: #2563eb;
-    --staff-blue-hover: #1d4ed8;
-    --staff-bg-page: #f8fafc;
+    --staff-blue-accent: #315efb;
+    --staff-blue-hover: #254bce;
+    --staff-bg-page: #f4f6fa;
     --staff-bg-card: #ffffff;
     --staff-border-color: #e2e8f0;
     --staff-border-subtle: #f1f5f9;
-    --staff-text-main: #0f172a;
+    --staff-text-main: #172033;
     --staff-text-muted: #64748b;
     --staff-text-light: #94a3b8;
     --staff-radius: 0px;
@@ -812,4 +812,30 @@ html, body.emua-staff {
 .table-responsive {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Overrides for Flat Clean Minimal Staff Architecture */
+.staff-card, .staff-table-card, .staff-filter-card, .staff-form-card, .dash-panel, .dash-kpi, .card {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+}
+
+.table thead th, .staff-table thead th, .staff-order-table th {
+    background-color: #f9fafb !important;
+    color: #475569 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.table tbody td, .staff-table tbody td, .staff-order-table td {
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #172033 !important;
+}
+
+.form-control, .form-select, .btn, .badge {
+    border-radius: 0 !important;
 }
