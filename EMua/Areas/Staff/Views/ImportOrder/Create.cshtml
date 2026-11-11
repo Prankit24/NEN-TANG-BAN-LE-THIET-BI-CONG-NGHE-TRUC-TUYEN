@@ -14,6 +14,17 @@
         width: 100% !important;
         max-width: 100% !important;
     }
+    .form-control.is-invalid, .form-select.is-invalid, .input-group.is-invalid > .form-control, .input-group.is-invalid > .form-select {
+        border-color: #DC2626 !important;
+        background-color: #FEF2F2 !important;
+    }
+    .field-validation-error {
+        color: #DC2626 !important;
+        font-size: 12px;
+        margin-top: 4px;
+        display: block;
+        font-weight: 500;
+    }
 </style>
 
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
@@ -52,7 +63,7 @@
                     <i class="bi bi-plus-circle me-1"></i>Thêm nhà cung cấp mới
                 </button>
             </div>
-            <div class="input-group">
+            <div class="input-group" id="supplierInputGroup">
                 <select id="supplierSelect" class="form-select" onchange="onSupplierSelectChange(this)">
                     <option value="" data-id="">-- Chọn nhà cung cấp từ CSDL --</option>
                     @if (suppliers.Any())
@@ -69,15 +80,15 @@
                         <option disabled>Chưa có nhà cung cấp</option>
                     }
                 </select>
-                <input asp-for="NhaCungCap" id="NhaCungCapInput" class="form-control" placeholder="Hoặc nhập tên NCC..." />
+                <input asp-for="NhaCungCap" id="NhaCungCapInput" class="form-control" placeholder="Hoặc nhập tên NCC..." oninput="onNhaCungCapInput(this)" />
             </div>
-            <span asp-validation-for="NhaCungCap" class="text-danger small"></span>
+            <span asp-validation-for="NhaCungCap" class="text-danger small" id="nhaCungCapError"></span>
         </div>
 
         <div class="col-md-6">
             <label asp-for="LyDoNhap" class="form-label fw-bold">Lý do đề nghị nhập hàng <span class="text-danger">*</span></label>
-            <input asp-for="LyDoNhap" class="form-control" placeholder="VD: Bổ sung tồn kho hết hàng / Khách đặt số lượng lớn..." />
-            <span asp-validation-for="LyDoNhap" class="text-danger small"></span>
+            <input asp-for="LyDoNhap" id="LyDoNhap" class="form-control" placeholder="VD: Bổ sung tồn kho hết hàng / Khách đặt số lượng lớn..." oninput="onLyDoNhapInput(this)" />
+            <span asp-validation-for="LyDoNhap" class="text-danger small" id="lyDoNhapError"></span>
         </div>
 
         <div class="col-12">
@@ -289,22 +300,102 @@
         const allVariantsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AllVariants ?? new List<object>()));
         let activeComparisonRow = null;
 
+        function setInlineError(fieldName, message, focus = false) {
+            if (fieldName === 'NhaCungCap') {
+                const group = document.getElementById('supplierInputGroup');
+                const errSpan = document.getElementById('nhaCungCapError');
+                if (group) group.classList.add('is-invalid');
+                if (errSpan) {
+                    errSpan.textContent = message;
+                    errSpan.className = 'text-danger small field-validation-error';
+                }
+                if (focus) {
+                    const input = document.getElementById('NhaCungCapInput');
+                    if (input) {
+                        input.focus();
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            } else if (fieldName === 'LyDoNhap') {
+                const input = document.getElementById('LyDoNhap');
+                const errSpan = document.getElementById('lyDoNhapError');
+                if (input) input.classList.add('is-invalid');
+                if (errSpan) {
+                    errSpan.textContent = message;
+                    errSpan.className = 'text-danger small field-validation-error';
+                }
+                if (focus && input) {
+                    input.focus();
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function clearInlineError(fieldName) {
+            if (fieldName === 'NhaCungCap') {
+                const group = document.getElementById('supplierInputGroup');
+                const errSpan = document.getElementById('nhaCungCapError');
+                if (group) group.classList.remove('is-invalid');
+                if (errSpan) {
+                    errSpan.textContent = '';
+                    errSpan.className = 'text-danger small';
+                }
+            } else if (fieldName === 'LyDoNhap') {
+                const input = document.getElementById('LyDoNhap');
+                const errSpan = document.getElementById('lyDoNhapError');
+                if (input) input.classList.remove('is-invalid');
+                if (errSpan) {
+                    errSpan.textContent = '';
+                    errSpan.className = 'text-danger small';
+                }
+            }
+        }
+
         function onSupplierSelectChange(select) {
             const opt = select.options[select.selectedIndex];
             const val = select.value;
             const nccId = opt.getAttribute('data-id') || '';
+            const nccInput = document.getElementById('NhaCungCapInput');
             if (val) {
-                document.getElementById('NhaCungCapInput').value = val;
+                nccInput.value = val;
                 document.getElementById('MaNhaCungCapHidden').value = nccId;
+                clearInlineError('NhaCungCap');
+            } else {
+                document.getElementById('MaNhaCungCapHidden').value = '';
+                if (!nccInput.value.trim()) {
+                    setInlineError('NhaCungCap', 'Vui lòng chọn hoặc nhập tên nhà cung cấp.');
+                }
+            }
+        }
+
+        function onNhaCungCapInput(input) {
+            const val = input.value.trim();
+            if (val) {
+                clearInlineError('NhaCungCap');
+                // Nếu người dùng tự gõ khác option đang chọn thì reset select về rỗng
+                const select = document.getElementById('supplierSelect');
+                if (select && select.value !== val) {
+                    select.value = '';
+                    document.getElementById('MaNhaCungCapHidden').value = '';
+                }
+            }
+        }
+
+        function onLyDoNhapInput(input) {
+            if (input.value.trim()) {
+                clearInlineError('LyDoNhap');
             }
         }
 
         async function saveNewSupplier() {
-            const name = document.getElementById('modalSupplierName').value.trim();
+            const nameInput = document.getElementById('modalSupplierName');
+            const name = nameInput.value.trim();
             if (!name) {
-                alert('Vui lòng nhập tên nhà cung cấp.');
+                nameInput.classList.add('is-invalid');
+                nameInput.focus();
                 return;
             }
+            nameInput.classList.remove('is-invalid');
 
             const phone = document.getElementById('modalSupplierPhone').value.trim();
             const tax = document.getElementById('modalSupplierTax').value.trim();
@@ -340,16 +431,22 @@
                     opt.selected = true;
                     select.appendChild(opt);
 
-                    document.getElementById('NhaCungCapInput').value = data.name;
+                    const nccInput = document.getElementById('NhaCungCapInput');
+                    nccInput.value = data.name;
                     document.getElementById('MaNhaCungCapHidden').value = data.id || '';
+                    clearInlineError('NhaCungCap');
 
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
                     if (modal) modal.hide();
                 } else {
-                    alert(data.message || 'Không thể thêm nhà cung cấp.');
+                    if (window.StaffDialog) {
+                        StaffDialog.error('Thất bại', data.message || 'Không thể thêm nhà cung cấp.');
+                    }
                 }
             } catch (e) {
-                alert('Lỗi khi gửi yêu cầu thêm nhà cung cấp: ' + e);
+                if (window.StaffDialog) {
+                    StaffDialog.error('Lỗi kết nối', 'Lỗi khi gửi yêu cầu thêm nhà cung cấp: ' + e);
+                }
             }
         }
 
@@ -439,7 +536,9 @@
         function removeItemRow(btn) {
             const rows = document.querySelectorAll('#importItemsBody .item-row');
             if (rows.length <= 1) {
-                alert('Phiếu nhập hàng cần ít nhất một dòng sản phẩm.');
+                if (window.StaffDialog) {
+                    StaffDialog.warning('Không thể xóa dòng', 'Phiếu đề nghị nhập hàng cần tối thiểu một dòng sản phẩm.');
+                }
                 return;
             }
             btn.closest('tr').remove();
@@ -551,7 +650,9 @@
             const row = btn.closest('tr');
             const variantId = row.querySelector('.variant-select')?.value || row.querySelector('.variant-id-input')?.value;
             if (!variantId) {
-                alert('Vui lòng chọn biến thể sản phẩm trước khi so sánh báo giá.');
+                if (window.StaffDialog) {
+                    StaffDialog.warning('Chưa chọn biến thể', 'Vui lòng chọn biến thể sản phẩm trước khi so sánh báo giá nhà cung cấp.');
+                }
                 return;
             }
             compareSupplierQuotations(variantId, btn);
@@ -648,15 +749,57 @@
             if (modal) modal.hide();
         }
 
-        function submitImportOrder() {
+        async function submitImportOrder() {
             const ncc = document.getElementById('NhaCungCapInput').value.trim();
             const lydo = document.getElementById('LyDoNhap').value.trim();
-            if (!ncc || !lydo) {
-                alert('Vui lòng chọn hoặc điền đầy đủ Tên nhà cung cấp và Lý do đề nghị nhập hàng.');
+            let isValid = true;
+            let firstInvalidField = null;
+
+            if (!ncc) {
+                setInlineError('NhaCungCap', 'Vui lòng chọn hoặc điền tên nhà cung cấp.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = 'NhaCungCap';
+            } else {
+                clearInlineError('NhaCungCap');
+            }
+
+            if (!lydo) {
+                setInlineError('LyDoNhap', 'Vui lòng nhập lý do đề nghị nhập hàng.');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = 'LyDoNhap';
+            } else {
+                clearInlineError('LyDoNhap');
+            }
+
+            if (!isValid) {
+                if (firstInvalidField) {
+                    setInlineError(firstInvalidField, firstInvalidField === 'NhaCungCap' ? 'Vui lòng chọn hoặc điền tên nhà cung cấp.' : 'Vui lòng nhập lý do đề nghị nhập hàng.', true);
+                }
                 return;
             }
 
-            if (confirm('Xác nhận gửi phiếu đề nghị nhập hàng đến Admin để phê duyệt? Tồn kho chỉ được ghi nhận sau khi hàng được kiểm nhận nhập kho thực tế.')) {
+            // Kiểm tra tối thiểu 1 dòng biến thể hợp lệ
+            const rows = document.querySelectorAll('#importItemsBody .item-row');
+            if (rows.length === 0) {
+                if (window.StaffDialog) {
+                    StaffDialog.warning('Thiếu dòng sản phẩm', 'Vui lòng thêm ít nhất một sản phẩm cần nhập.');
+                }
+                return;
+            }
+
+            // Modal xác nhận thao tác chuẩn EMUA StaffDialog
+            if (window.StaffDialog && window.StaffDialog.confirm) {
+                const confirmed = await StaffDialog.confirm({
+                    title: 'Xác nhận gửi phiếu nhập hàng',
+                    message: 'Bạn có chắc chắn muốn gửi phiếu đề nghị nhập hàng này đến Admin để phê duyệt? Tồn kho thực tế chỉ được ghi nhận sau khi hàng được kiểm nhận nhập kho.',
+                    confirmText: 'Gửi đề nghị',
+                    cancelText: 'Xem lại',
+                    isDanger: false
+                });
+                if (confirmed) {
+                    document.getElementById('createImportOrderForm').submit();
+                }
+            } else {
                 document.getElementById('createImportOrderForm').submit();
             }
         }

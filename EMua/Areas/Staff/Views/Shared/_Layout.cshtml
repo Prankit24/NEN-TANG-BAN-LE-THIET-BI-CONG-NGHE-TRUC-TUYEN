@@ -411,6 +411,7 @@
 
             <!-- NỘI DUNG TỪNG TRANG -->
             <section class="admin-content staff-content">
+                @await Html.PartialAsync("_ToastNotification")
                 @await Html.PartialAsync("_StaffDialog")
 
                 @RenderBody()

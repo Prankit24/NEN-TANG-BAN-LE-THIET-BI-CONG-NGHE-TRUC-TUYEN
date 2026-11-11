@@ -15,21 +15,6 @@
     </div>
 </div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-check-circle-fill"></i>
-        <div>@TempData["Success"]</div>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <div>@TempData["Error"]</div>
-    </div>
-}
-
 <div class="row g-3">
     <!-- Thông tin chung & Nút phê duyệt của Admin -->
     <div class="col-lg-4">
@@ -102,20 +87,16 @@
             <div class="border border-primary p-3 bg-white">
                 <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="bi bi-check2-all me-1"></i>Quyết định phê duyệt</h6>
 
-                <form asp-action="Approve" method="post" class="mb-2">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
-                    <button type="submit" class="btn btn-success w-100 fw-bold" onclick="return confirm('Bạn có chắc chắn muốn PHÊ DUYỆT phiếu đề nghị nhập hàng này?');">
-                        <i class="bi bi-check-lg me-1"></i> Phê duyệt phiếu
-                    </button>
-                </form>
+                <button type="button" class="btn btn-success w-100 fw-bold mb-2" data-bs-toggle="modal" data-bs-target="#approveConfirmModal">
+                    <i class="bi bi-check-lg me-1"></i> Phê duyệt phiếu
+                </button>
 
                 <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="collapse" data-bs-target="#boxReject">
                     <i class="bi bi-x-lg me-1"></i> Từ chối phê duyệt
                 </button>
 
                 <div class="collapse mt-2" id="boxReject">
-                    <form asp-action="Reject" method="post" class="p-2 border rounded bg-light">
+                    <form asp-action="Reject" method="post" class="p-2 border bg-light">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
                         <label class="form-label small fw-bold">Lý do từ chối <span class="text-danger">*</span></label>
@@ -131,13 +112,9 @@
                 <h6 class="fw-bold text-success border-bottom pb-2 mb-2"><i class="bi bi-box-seam me-1"></i>Kiểm nhận nhập kho</h6>
                 <p class="small text-muted mb-3">Hàng đã được giao tới kho? Bấm xác nhận sau khi đã kiểm đếm hợp lệ. <strong>Tồn kho sẽ tự động được cộng vào từng biến thể.</strong></p>
 
-                <form asp-action="ConfirmReceived" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
-                    <button type="submit" class="btn btn-success w-100 fw-bold" onclick="return confirm('XÁC NHẬN HÀNG ĐÃ VÀO KHO? Hành động này sẽ cộng trực tiếp số lượng vào tồn kho thực tế của các sản phẩm.');">
-                        <i class="bi bi-check-circle-fill me-1"></i> Xác nhận nhập kho &amp; Cộng tồn
-                    </button>
-                </form>
+                <button type="button" class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#receiveConfirmModal">
+                    <i class="bi bi-check-circle-fill me-1"></i> Xác nhận nhập kho &amp; Cộng tồn
+                </button>
             </div>
         }
     </div>
@@ -193,6 +170,62 @@
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Phê duyệt phiếu đề nghị -->
+<div class="modal fade" id="approveConfirmModal" tabindex="-1" aria-labelledby="approveConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border">
+            <div class="modal-header border-bottom">
+                <h6 class="modal-title fw-bold" id="approveConfirmModalLabel"><i class="bi bi-shield-check text-success me-2"></i>Xác nhận phê duyệt phiếu nhập hàng</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Bạn có chắc chắn muốn <strong>PHÊ DUYỆT</strong> phiếu đề nghị nhập hàng <strong>[@Model.MaChungTu]</strong>?</p>
+                <div class="small text-muted p-2 bg-light border">
+                    <i class="bi bi-info-circle me-1 text-primary"></i> Sau khi duyệt, phiếu sẽ chuyển sang trạng thái <strong>Đã duyệt</strong> để nhân viên tiến hành nhập hàng từ nhà cung cấp. Tồn kho sẽ được cộng tăng khi hoàn tất bước kiểm nhận hàng vào kho.
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button>
+                <form asp-action="Approve" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
+                    <button type="submit" class="btn btn-success btn-sm fw-bold">
+                        <i class="bi bi-check-lg me-1"></i> Đồng ý phê duyệt
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận nhập kho thực tế -->
+<div class="modal fade" id="receiveConfirmModal" tabindex="-1" aria-labelledby="receiveConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border">
+            <div class="modal-header border-bottom">
+                <h6 class="modal-title fw-bold" id="receiveConfirmModalLabel"><i class="bi bi-box-seam text-success me-2"></i>Xác nhận kiểm nhận hàng vào kho</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Xác nhận hàng thực tế từ phiếu <strong>[@Model.MaChungTu]</strong> đã được vận chuyển đến kho và kiểm đếm đầy đủ?</p>
+                <div class="alert alert-success border-success mb-0 p-2 small">
+                    <i class="bi bi-check-circle-fill me-1"></i> Hệ thống sẽ tự động <strong>cộng trực tiếp số lượng</strong> vào tồn kho thực tế của các biến thể sản phẩm.
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button>
+                <form asp-action="ConfirmReceived" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
+                    <button type="submit" class="btn btn-success btn-sm fw-bold">
+                        <i class="bi bi-check-circle-fill me-1"></i> Xác nhận &amp; Tăng tồn kho
+                    </button>
+                </form>
             </div>
         </div>
     </div>

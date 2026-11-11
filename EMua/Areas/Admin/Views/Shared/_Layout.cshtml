@@ -320,6 +320,7 @@
             </header>
 
             <section class="admin-content">
+                @await Html.PartialAsync("_ToastNotification")
                 @RenderBody()
             </section>
         </main>

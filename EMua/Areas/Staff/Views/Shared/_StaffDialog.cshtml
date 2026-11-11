@@ -7,11 +7,11 @@
         ?? TempData["WarningMessage"] as string;
 }
 
-<!-- Hidden element carrying TempData into client script -->
+<!-- Hidden element carrying TempData into client script (chỉ dùng nếu không dùng Toast) -->
 <div id="staffTempDataPayload"
-     data-success="@successMsg"
-     data-error="@errorMsg"
-     data-warning="@warningMsg"
+     data-success=""
+     data-error=""
+     data-warning=""
      style="display:none;"
      aria-hidden="true"></div>
 

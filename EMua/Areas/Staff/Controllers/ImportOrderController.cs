@@ -23,6 +23,21 @@ public class ImportOrderController : StaffControllerBase
         _quotationService = quotationService;
     }
 
+    private static DateTime GetVietnamNow()
+    {
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var vnTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
+        }
+        catch
+        {
+            var vnTime = DateTime.UtcNow.AddHours(7);
+            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
+        }
+    }
+
     // Danh sách phiếu đề nghị nhập hàng
     public async Task<IActionResult> Index(string? status, string? search, int page = 1, int pageSize = 12)
     {
@@ -143,7 +158,7 @@ public class ImportOrderController : StaffControllerBase
             DiaChi = model.DiaChi?.Trim(),
             GhiChu = model.GhiChu?.Trim(),
             TrangThai = "Đang hợp tác",
-            NgayTao = DateTime.UtcNow
+            NgayTao = GetVietnamNow()
         };
 
         _db.NhaCungCaps.Add(newNcc);
@@ -303,7 +318,8 @@ public class ImportOrderController : StaffControllerBase
         }
 
         // Sinh mã chứng từ chuẩn hệ thống
-        var maChungTu = $"PNN-{DateTime.UtcNow:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+        var nowVn = GetVietnamNow();
+        var maChungTu = $"PNN-{nowVn:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
         // Đồng bộ hoặc tìm MaNhaCungCap
         int? nccId = model.MaNhaCungCap;
@@ -323,7 +339,7 @@ public class ImportOrderController : StaffControllerBase
                 {
                     TenNhaCungCap = supplierName,
                     TrangThai = "Đang hợp tác",
-                    NgayTao = DateTime.UtcNow
+                    NgayTao = nowVn
                 };
                 _db.NhaCungCaps.Add(newNcc);
                 await _db.SaveChangesAsync();
@@ -346,7 +362,7 @@ public class ImportOrderController : StaffControllerBase
             GhiChu = model.GhiChu?.Trim(),
             TrangThai = "Chờ duyệt",
             MaNguoiTao = currentUserId,
-            NgayTao = DateTime.UtcNow,
+            NgayTao = nowVn,
             ChiPhiVanChuyen = model.ChiPhiVanChuyen,
             ChiPhiKhac = model.ChiPhiKhac,
             ChietKhau = model.ChietKhauTong
