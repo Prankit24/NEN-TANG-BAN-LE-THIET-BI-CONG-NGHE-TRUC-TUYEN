@@ -29,11 +29,12 @@
                 <i class="bi bi-search"></i>
                 <input type="text"
                        id="brandSearchInput"
+                       aria-label="Tìm kiếm thương hiệu"
                        placeholder="Tìm thương hiệu..."
                        oninput="filterBrandList()" />
             </div>
 
-            <div class="brand-list" id="brandList">
+            <div class="brand-list" id="brandList" aria-label="Danh sách thương hiệu">
                 @if (!Model.Brands.Any())
                 {
                     <p class="text-muted brand-empty">
@@ -50,6 +51,7 @@
 
                         <button type="button"
                                 class="brand-item"
+                                aria-label="Chỉnh sửa thương hiệu @brand.TenThuongHieu"
                                 data-id="@brand.MaThuongHieu"
                                 data-count="@brand.ProductCount"
                                 data-search="@brand.TenThuongHieu.ToLower()"
@@ -224,8 +226,8 @@
                         <b>*</b>&nbsp;là trường bắt buộc
                     </div>
 
-                    <div class="brand-footer-actions" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-                        <button type="submit" id="saveBrandBtn" class="brand-save-button btn btn-primary" style="padding:10px 20px;font-weight:600">
+                    <div class="brand-footer-actions">
+                        <button type="submit" id="saveBrandBtn" class="brand-save-button">
                             <i class="bi bi-save"></i>
                             @(editor.MaThuongHieu == 0 ? "Thêm thương hiệu" : "Lưu thay đổi")
                         </button>
@@ -245,7 +247,7 @@
 </div>
 
 <div class="brand-dialog-backdrop" id="dialogBackdrop" hidden>
-    <div class="brand-dialog">
+    <div class="brand-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogMessage">
         <i id="dialogIcon" class="bi"></i>
         <h3 id="dialogTitle"></h3>
         <p id="dialogMessage"></p>

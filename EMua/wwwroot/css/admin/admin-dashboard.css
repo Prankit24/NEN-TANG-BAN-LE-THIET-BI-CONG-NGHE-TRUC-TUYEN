@@ -1,370 +1,661 @@
-/* EMUA Admin Dashboard — Professional Clean Design System */
-:root {
-    --adm-primary: #315EFB;
-    --adm-primary-hover: #244bd6;
-    --adm-primary-light: #EBF1FF;
-    --adm-bg: #F4F6FA;
-    --adm-surface: #FFFFFF;
-    --adm-text: #172033;
-    --adm-muted: #64748B;
-    --adm-border: #DCE3ED;
-    --adm-success: #16803C;
-    --adm-success-bg: #F0FDF4;
-    --adm-warning: #B45309;
-    --adm-warning-bg: #FFFBEB;
-    --adm-danger: #DC2626;
-    --adm-danger-bg: #FEF2F2;
-}
-
-/* KPI 5-Column Grid */
-.dashboard-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.dashboard-stat-card,
-.admin-card {
-    border: 1px solid var(--adm-border);
-    border-radius: 0 !important;
-    background: var(--adm-surface);
-    box-shadow: none !important;
-}
-
-.dashboard-stat-card {
-    position: relative;
-    padding: 20px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 125px;
-}
-
-.dashboard-stat-card > span {
-    display: block;
-    color: var(--adm-muted);
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.3;
-}
-
-.dashboard-stat-card strong {
-    display: block;
-    margin-top: 14px;
-    color: var(--adm-text);
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    line-height: 1.15;
-}
-
-.dashboard-stat-card small {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 10px;
-    font-size: 11.5px;
-    font-weight: 600;
-}
-
-.dashboard-stat-card small.up {
-    color: var(--adm-success);
-}
-
-.dashboard-stat-card small.down {
-    color: var(--adm-danger);
-}
-
-.stat-card-icon {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    display: flex;
-    width: 36px;
-    height: 36px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0 !important;
-    font-size: 18px;
-}
-
-.stat-card-icon.revenue {
-    background: #EBF1FF;
-    color: #315EFB;
-}
-
-.stat-card-icon.orders {
-    background: #F0FDF4;
-    color: #16803C;
-}
-
-.stat-card-icon.customers {
-    background: #F8FAFC;
-    color: #475569;
-}
-
-.stat-card-icon.stock {
-    background: #FFFBEB;
-    color: #D97706;
-}
-
-.stat-card-icon.pending {
-    background: #EFF6FF;
-    color: #2563EB;
-}
-
-/* Charts Area */
-.dashboard-chart-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-.admin-card {
+/* EMUA Admin Dashboard — đồng bộ Admin Report Compact
+   CSS chỉ ảnh hưởng Dashboard; giữ nguyên Razor binding và nghiệp vụ. */
+.dashboard-page {
+    --dash-blue: #315EFB;
+    --dash-blue-dark: #244BD6;
+    --dash-ink: #172033;
+    --dash-muted: #56657B;
+    --dash-line: #DCE3ED;
+    --dash-green: #16803C;
+    --dash-red: #C43743;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
-    padding: 22px 20px;
+    color: var(--dash-ink);
+    font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    container-type: inline-size;
 }
 
-.admin-card h2 {
-    margin: 0;
-    color: var(--adm-text);
-    font-size: 16px;
-    font-weight: 600;
-}
-
-/* Revenue Chart — Clean Blue & Neutral Theme (No Purple) */
-.actual-revenue-chart {
-    display: flex;
-    height: 250px;
-    align-items: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 0 8px 0 16px;
-    border-bottom: 1px solid var(--adm-border);
-}
-
-.revenue-column {
-    display: flex;
-    height: 100%;
-    flex: 1;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 8px;
-    text-align: center;
-}
-
-.revenue-column-area {
-    display: flex;
-    height: 180px;
-    align-items: flex-end;
-    overflow: hidden;
-    border-radius: 0 !important;
-    background: #F1F5F9;
-}
-
-.revenue-column-area span {
-    width: 100%;
-    min-height: 4px;
-    border-radius: 0 !important;
-    background: #315EFB;
-    transition: background 0.15s ease;
-}
-
-.revenue-column-area span:hover {
-    background: #1D4ED8;
-}
-
-.revenue-column small,
-.revenue-value {
-    overflow: hidden;
-    color: var(--adm-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.revenue-value {
-    min-height: 14px;
-    font-weight: 500;
-    font-size: 10px;
-}
-
-/* Category Sales Chart — Clean Horizontal Bars */
-.actual-category-chart {
-    display: grid;
-    gap: 16px;
-    margin-top: 24px;
-}
-
-.actual-category-row {
-    display: grid;
-    grid-template-columns: 85px 1fr 90px;
-    align-items: center;
-    gap: 12px;
-}
-
-.actual-category-row > span {
-    overflow: hidden;
-    color: var(--adm-text);
-    font-size: 12px;
-    font-weight: 500;
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.actual-category-row > div {
-    height: 14px;
-    overflow: hidden;
-    border-radius: 0 !important;
-    background: #F1F5F9;
-}
-
-.actual-category-row i {
-    display: block;
-    height: 100%;
-    border-radius: 0 !important;
-    background: #315EFB;
-}
-
-.actual-category-row strong {
-    overflow: hidden;
-    color: var(--adm-text);
-    font-size: 12px;
-    font-weight: 600;
-    text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dashboard-empty {
-    margin: 40px 0;
-    color: var(--adm-muted);
-    font-size: 13px;
-    text-align: center;
-}
-
-/* Tables Section */
-.recent-orders-card {
-    padding: 0;
-    overflow: hidden;
-}
-
-.card-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--adm-border);
-}
-
-.card-title-row h2 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--adm-text);
-}
-
-.card-title-row > span {
-    color: var(--adm-muted);
-    font-size: 12px;
-}
-
-.admin-table-wrap {
-    overflow-x: auto;
-}
-
-.admin-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.admin-table th {
-    padding: 12px 16px;
-    background: #F8FAFC;
-    color: #475569;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: left;
-    border-bottom: 1px solid var(--adm-border);
-}
-
-.admin-table td {
-    padding: 12px 16px;
-    border-top: 1px solid var(--adm-border);
-    color: var(--adm-text);
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.admin-table tbody tr:hover {
-    background: #F8FAFC;
-}
-
-.admin-table td strong {
-    color: #1E293B;
-}
-
-.table-price {
-    color: #0F172A !important;
-    font-weight: 600;
-}
-
-/* Clean Badges (Square corners) */
-.status {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: 0 !important;
-    font-size: 11.5px;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-.status.done {
-    background: #DCFCE7;
-    color: #15803D;
-}
-
-.status.shipping {
-    background: #DBEAFE;
-    color: #1D4ED8;
-}
-
-.status.pending {
-    background: #FEF3C7;
-    color: #B45309;
-}
-
-.status.cancelled {
-    background: #FEE2E2;
-    color: #B91C1C;
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 1280px) {
-    .dashboard-stat-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .dashboard-page, .dashboard-page *, .dashboard-page *::before, .dashboard-page *::after {
+        box-sizing: border-box;
     }
-}
 
-@media (max-width: 992px) {
-    .dashboard-chart-grid {
+        .dashboard-page > *, .dashboard-page .row > *, .dashboard-page .dashboard-chart-grid > * {
+            min-width: 0;
+        }
+
+        .dashboard-page .text-muted {
+            color: var(--dash-muted) !important;
+        }
+
+        .dashboard-page h2 {
+            color: var(--dash-ink);
+        }
+
+        .dashboard-page :is(button, a, select):focus-visible {
+            outline: 2px solid var(--dash-blue);
+            outline-offset: 2px;
+        }
+
+        .dashboard-page .btn {
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dashboard-page .btn-primary {
+            background: var(--dash-blue) !important;
+            border-color: var(--dash-blue) !important;
+            color: #fff !important;
+        }
+
+            .dashboard-page .btn-primary:hover {
+                background: var(--dash-blue-dark) !important;
+                border-color: var(--dash-blue-dark) !important;
+            }
+
+        .dashboard-page .btn-outline-secondary {
+            border-color: var(--dash-line);
+            background: #fff;
+            color: #41516B;
+        }
+
+            .dashboard-page .btn-outline-secondary:hover {
+                color: var(--dash-blue);
+                border-color: #B9C9FF;
+                background: #EFF4FF;
+            }
+
+        .dashboard-page .btn-outline-primary {
+            color: var(--dash-blue);
+            border-color: #B9C9FF;
+            background: #fff;
+        }
+
+            .dashboard-page .btn-outline-primary:hover {
+                background: var(--dash-blue);
+                color: #fff;
+                border-color: var(--dash-blue);
+            }
+
+        /* Page title and compact filters, aligned as in Report */
+        .dashboard-page .dashboard-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin: 0 0 14px;
+        }
+
+            .dashboard-page .dashboard-heading h2 {
+                margin: 0 0 2px !important;
+                font-size: 20px !important;
+                font-weight: 700 !important;
+                line-height: 1.35;
+            }
+
+            .dashboard-page .dashboard-heading p {
+                margin: 0;
+                font-size: 12px;
+                line-height: 1.45;
+            }
+
+        .dashboard-page .dashboard-filters {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin: 0;
+        }
+
+            .dashboard-page .dashboard-filters .form-label {
+                margin: 0 2px 0 0 !important;
+                color: #34435C;
+                font-size: 13px;
+                font-weight: 500;
+            }
+
+            .dashboard-page .dashboard-filters .form-select {
+                width: 110px;
+                height: 38px;
+                min-height: 38px;
+                padding: 5px 27px 5px 9px;
+                color: var(--dash-ink);
+                border: 1px solid var(--dash-line);
+                border-radius: 0 !important;
+                box-shadow: none;
+                font-size: 13px;
+                background-color: #fff;
+            }
+
+            .dashboard-page .dashboard-filters #filterYear {
+                width: 92px;
+            }
+
+            .dashboard-page .dashboard-filters .btn {
+                min-height: 38px;
+                padding: 7px 15px;
+                font-size: 13px;
+            }
+
+        /* 5 KPIs: same compact white rectangular treatment as Report */
+        .dashboard-page .dashboard-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0,1fr));
+            gap: 12px;
+            width: 100%;
+            margin: 0 0 16px;
+        }
+
+        .dashboard-page .dashboard-stat-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            min-height: 120px;
+            padding: 13px 12px 12px;
+            background: #fff !important;
+            border: 1px solid var(--dash-line) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+            .dashboard-page .dashboard-stat-card > span {
+                display: block;
+                max-width: calc(100% - 33px);
+                color: #52627B;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.35;
+                text-transform: none;
+            }
+
+            .dashboard-page .dashboard-stat-card > strong {
+                display: block;
+                margin: 7px 0 5px;
+                color: var(--dash-ink);
+                font-size: clamp(18px, 1.35vw, 23px);
+                font-weight: 700;
+                line-height: 1.2;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: -.3px;
+                overflow-wrap: anywhere;
+            }
+
+            .dashboard-page .dashboard-stat-card > small {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 4px;
+                color: var(--dash-muted);
+                font-size: 11px;
+                font-weight: 600;
+                line-height: 1.35;
+            }
+
+                .dashboard-page .dashboard-stat-card > small i {
+                    flex: 0 0 auto;
+                }
+
+            .dashboard-page .dashboard-stat-card small.up {
+                color: var(--dash-green);
+            }
+
+            .dashboard-page .dashboard-stat-card small.down {
+                color: var(--dash-red);
+            }
+
+        .dashboard-page .stat-card-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 29px;
+            height: 29px;
+            display: grid;
+            place-items: center;
+            font-size: 15px;
+            border-radius: 0 !important;
+        }
+
+            .dashboard-page .stat-card-icon.revenue {
+                color: var(--dash-blue);
+                background: #EBF1FF;
+            }
+
+            .dashboard-page .stat-card-icon.orders {
+                color: var(--dash-green);
+                background: #F0FDF4;
+            }
+
+            .dashboard-page .stat-card-icon.customers {
+                color: #475569;
+                background: #F1F5F9;
+            }
+
+            .dashboard-page .stat-card-icon.stock {
+                color: #B45309;
+                background: #FFFBEB;
+            }
+
+            .dashboard-page .stat-card-icon.pending {
+                color: #2563EB;
+                background: #EFF6FF;
+            }
+
+        /* Charts: report-style panels and restrained colors */
+        .dashboard-page .dashboard-chart-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-page .admin-card {
+            min-width: 0;
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid var(--dash-line);
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #fff;
+        }
+
+            .dashboard-page .admin-card h2 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+
+        .dashboard-page .chart-header, .dashboard-page .dashboard-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 7px 11px;
+            padding-bottom: 9px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #E9EDF4;
+        }
+
+            .dashboard-page .chart-header > span {
+                color: var(--dash-muted);
+                font-size: 11px;
+            }
+
+            .dashboard-page .dashboard-section-header h2 {
+                font-size: 14px !important;
+            }
+
+        .dashboard-page .actual-revenue-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 7px;
+            width: 100%;
+            height: 212px;
+            margin: 0;
+            padding: 0 1px 3px;
+            border-bottom: 1px solid var(--dash-line);
+        }
+
+        .dashboard-page .revenue-column {
+            display: flex;
+            flex: 1 1 0;
+            min-width: 0;
+            height: 100%;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 5px;
+            text-align: center;
+        }
+
+        .dashboard-page .revenue-value {
+            color: #52627B;
+            min-height: 14px;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dashboard-page .revenue-column-area {
+            display: flex;
+            align-items: flex-end;
+            height: 160px;
+            min-height: 0;
+            background: #EFF3F9;
+            overflow: hidden;
+        }
+
+            .dashboard-page .revenue-column-area span {
+                display: block;
+                width: 100%;
+                min-height: 0;
+                background: #315EFB;
+                border-radius: 0 !important;
+                transition: background-color .15s ease;
+            }
+
+                .dashboard-page .revenue-column-area span:hover {
+                    background: #244BD6;
+                }
+
+        .dashboard-page .revenue-column > small {
+            color: var(--dash-muted);
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .dashboard-page .actual-category-chart {
+            display: grid;
+            gap: 13px;
+            margin-top: 13px;
+        }
+
+        .dashboard-page .actual-category-row {
+            display: grid;
+            grid-template-columns: 80px minmax(0,1fr) 105px;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+
+            .dashboard-page .actual-category-row > span {
+                color: var(--dash-ink);
+                font-size: 12px;
+                font-weight: 500;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .dashboard-page .actual-category-row > div {
+                height: 11px;
+                background: #E9EEF5;
+                overflow: hidden;
+            }
+
+            .dashboard-page .actual-category-row i {
+                display: block;
+                height: 100%;
+                background: #315EFB;
+            }
+
+            .dashboard-page .actual-category-row > strong {
+                color: var(--dash-ink);
+                font-size: 11px;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .dashboard-page .dashboard-empty {
+            padding: 18px 10px;
+            margin: 10px 0;
+            color: var(--dash-muted);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Detail rows and employee summary */
+        .dashboard-page .dashboard-detail-grid {
+            --bs-gutter-x: 14px;
+            --bs-gutter-y: 14px;
+            margin-bottom: 16px;
+        }
+
+            .dashboard-page .dashboard-detail-grid > [class*="col-"] {
+                min-width: 0;
+            }
+
+            .dashboard-page .dashboard-detail-grid .admin-card {
+                height: 100%;
+            }
+
+        .dashboard-page .staff-summary {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            margin-bottom: 11px;
+            background: #F7F9FD;
+            border: 1px solid #E9EDF4;
+        }
+
+            .dashboard-page .staff-summary > div {
+                min-width: 0;
+            }
+
+            .dashboard-page .staff-summary small {
+                font-size: 11px;
+            }
+
+        .dashboard-page .admin-card .badge {
+            border-radius: 0 !important;
+            padding: 4px 7px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Tables same readable sizing as Report */
+        .dashboard-page .admin-table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .dashboard-page .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 12px;
+        }
+
+            .dashboard-page .admin-table thead th {
+                padding: 9px 11px;
+                background: #F4F6FA;
+                color: #40516D;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.35;
+                border-bottom: 1px solid var(--dash-line);
+                white-space: nowrap;
+            }
+
+            .dashboard-page .admin-table tbody td {
+                padding: 9px 11px;
+                border-bottom: 1px solid #E9EDF4;
+                color: #34435C;
+                font-size: 12px;
+                line-height: 1.45;
+                vertical-align: middle;
+            }
+
+            .dashboard-page .admin-table tbody tr:last-child td {
+                border-bottom: 0;
+            }
+
+            .dashboard-page .admin-table tbody tr:hover {
+                background: #F7F9FF;
+            }
+
+            .dashboard-page .admin-table td strong {
+                color: var(--dash-ink);
+                font-weight: 600;
+            }
+
+            .dashboard-page .admin-table .text-muted {
+                color: var(--dash-muted) !important;
+            }
+
+            .dashboard-page .admin-table .text-end {
+                text-align: right;
+            }
+
+        .dashboard-page .table-price {
+            color: #172033;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .dashboard-page .recent-orders-card {
+            padding: 0;
+            overflow: hidden;
+            margin-bottom: 16px !important;
+        }
+
+        .dashboard-page .card-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--dash-line);
+        }
+
+            .dashboard-page .card-title-row h2 {
+                font-size: 14px;
+            }
+
+            .dashboard-page .card-title-row span {
+                color: var(--dash-muted);
+                font-size: 11px;
+            }
+
+        .dashboard-page .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 7px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            border-radius: 0 !important;
+        }
+
+            .dashboard-page .status.done {
+                background: #DCFCE7;
+                color: #15803D;
+            }
+
+            .dashboard-page .status.shipping {
+                background: #DBEAFE;
+                color: #1D4ED8;
+            }
+
+            .dashboard-page .status.pending {
+                background: #FEF3C7;
+                color: #B45309;
+            }
+
+            .dashboard-page .status.cancelled {
+                background: #FEE2E2;
+                color: #B91C1C;
+            }
+
+        .dashboard-page .admin-card .btn-sm {
+            min-height: 32px;
+            padding: 5px 10px;
+        }
+
+/* Respect available content width when Sidebar expands/collapses */
+@container (max-width: 1140px) {
+    .dashboard-page .dashboard-stat-grid {
+        grid-template-columns: repeat(3, minmax(0,1fr));
+    }
+
+    .dashboard-page .dashboard-chart-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 768px) {
-    .dashboard-stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+@container (max-width: 700px) {
+    .dashboard-page .dashboard-stat-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 10px;
+    }
+
+    .dashboard-page .dashboard-heading {
+        align-items: flex-start;
+    }
+
+    .dashboard-page .dashboard-filters {
+        width: 100%;
+    }
+
+    .dashboard-page .dashboard-detail-grid > [class*="col-"] {
+        width: 100%;
+    }
+
+    .dashboard-page .actual-category-row {
+        grid-template-columns: 70px minmax(0,1fr) 95px;
+        gap: 7px;
     }
 }
 
-@media (max-width: 480px) {
-    .dashboard-stat-grid {
+@container (max-width: 400px) {
+    .dashboard-page .dashboard-stat-grid {
         grid-template-columns: 1fr;
+    }
+
+    .dashboard-page .actual-revenue-chart {
+        gap: 3px;
+        height: 192px;
+    }
+
+    .dashboard-page .revenue-column-area {
+        height: 140px;
+    }
+
+    .dashboard-page .revenue-value {
+        font-size: 9px;
+    }
+
+    .dashboard-page .actual-category-row {
+        grid-template-columns: 60px minmax(0,1fr) 82px;
+        gap: 6px;
+    }
+}
+
+@supports not (container-type: inline-size) {
+    @media (max-width: 1320px) {
+        .dashboard-page .dashboard-stat-grid {
+            grid-template-columns: repeat(3,minmax(0,1fr));
+        }
+
+        .dashboard-page .dashboard-chart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .dashboard-page .dashboard-stat-grid {
+            grid-template-columns: repeat(2,minmax(0,1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-page .dashboard-stat-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-page * {
+        transition: none !important;
+        animation: none !important;
     }
 }
