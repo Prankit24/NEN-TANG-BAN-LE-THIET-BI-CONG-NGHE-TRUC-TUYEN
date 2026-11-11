@@ -1,4 +1,3 @@
-
 name: EMUA CI/CD Docker
 
 on:
@@ -63,9 +62,7 @@ jobs:
       - build
       - docker
 
-    if: >
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     runs-on: ubuntu-latest
 
@@ -73,16 +70,18 @@ jobs:
       - name: Trigger Render Deploy
         env:
           RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-
         shell: bash
-
         run: |
           if [ -z "$RENDER_HOOK" ]; then
-            echo "Missing RENDER_DEPLOY_HOOK_URL"
+            echo "Thiếu secret RENDER_DEPLOY_HOOK_URL."
             exit 1
           fi
 
-          curl --fail --silent --show-error \
+          echo "Đang gửi yêu cầu triển khai đến Render..."
+
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 20 \
+            --max-time 90 \
             --request POST "$RENDER_HOOK"
 
-          echo "Render deploy requested."
+          printf '\nĐã gửi yêu cầu triển khai đến Render.\n'
