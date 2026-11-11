@@ -1,0 +1,286 @@
+@model EMua.ViewModels.ProformaInvoiceViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phiếu tạm tính - Đơn hàng #DH-@Model.OrderId.ToString("D5") - EMUA STORE</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #172033;
+            background-color: #f4f6fa;
+            margin: 0;
+            padding: 24px 0;
+        }
+
+        .proforma-card {
+            max-width: 860px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 36px 40px;
+            border: 1px solid #dfe5ed;
+            box-shadow: none;
+            position: relative;
+        }
+
+        .watermark-proforma {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 46px;
+            font-weight: 850;
+            color: rgba(49, 94, 251, 0.06);
+            text-transform: uppercase;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 3px;
+            border: 4px dashed rgba(49, 94, 251, 0.1);
+            padding: 10px 24px;
+        }
+
+        .proforma-header {
+            border-bottom: 2px solid #315efb;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .brand-logo {
+            font-size: 26px;
+            font-weight: 850;
+            letter-spacing: -0.5px;
+            color: #315efb;
+            margin-bottom: 4px;
+        }
+
+        .table-items th {
+            background-color: #f8fafc;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .025em;
+            color: #475569;
+            border-bottom: 1px solid #dfe5ed;
+        }
+
+        .table-items td, .table-items th {
+            padding: 8px 10px;
+            font-size: 12.5px;
+        }
+
+        .alert-proforma-note {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            font-size: 12.5px;
+            padding: 10px 14px;
+        }
+
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .proforma-card {
+                border: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+        }
+
+        .btn, .badge, .proforma-card {
+            border-radius: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mb-3 no-print">
+        <div class="d-flex justify-content-between align-items-center max-width-wrapper" style="max-width: 860px; margin: 0 auto;">
+            <a href="javascript:window.close()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle me-1"></i> Đóng cửa sổ
+            </a>
+            <div class="d-flex gap-2">
+                @if (Model.OfficialInvoiceId.HasValue)
+                {
+                    <a asp-action="ViewOfficialInvoice" asp-route-orderId="@Model.OrderId" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-file-earmark-check me-1"></i> Xem hóa đơn thuế #HD-@Model.OfficialInvoiceId.Value.ToString("D5")
+                    </a>
+                }
+                <button class="btn btn-primary btn-sm px-3" onclick="window.print()">
+                    <i class="bi bi-printer-fill me-1"></i> In phiếu tạm tính / Lưu PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="proforma-card">
+        <div class="watermark-proforma">PHIẾU TẠM TÍNH – DEMO</div>
+
+        <!-- CẢNH BÁO PHÁP LÝ RÕ RÀNG -->
+        <div class="alert-proforma-note d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                <strong>PHIẾU TẠM TÍNH – KHÔNG PHẢI HÓA ĐƠN THUẾ.</strong>
+                <span class="ms-1">Chứng từ đối soát thông tin đặt mua hàng ngay khi đặt hàng thành công. Hóa đơn thuế điện tử sẽ được lập khi giao nhận hàng theo quy định.</span>
+            </div>
+            @if (Model.OfficialInvoiceId.HasValue)
+            {
+                <span class="badge bg-success text-uppercase ms-2">ĐÃ CÓ HÓA ĐƠN #HD-@Model.OfficialInvoiceId.Value.ToString("D5")</span>
+            }
+        </div>
+
+        <!-- HEADER -->
+        <div class="proforma-header d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="brand-logo">EMUA TECHNOLOGY STORE</h1>
+                <p class="text-muted small mb-1">Cửa hàng Thiết bị Công nghệ &amp; Phụ kiện chính hãng</p>
+                <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội | Hotline: 1900 6868</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-secondary text-uppercase mb-2">PHIẾU TẠM TÍNH ĐẶT HÀNG</span>
+                <h4 class="fw-bold mb-1 text-dark">#DH-@Model.OrderId.ToString("D5")</h4>
+                <p class="text-muted small mb-0">Thời gian đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+        </div>
+
+        <!-- THÔNG TIN NGƯỜI NHẬN & THANH TOÁN -->
+        <div class="row mb-3 g-3">
+            <div class="col-6">
+                <div class="p-3 border bg-light h-100">
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 small"><i class="bi bi-person me-1"></i> THÔNG TIN KHÁCH HÀNG</h6>
+                    <table class="w-100 small">
+                        <tr>
+                            <td class="text-muted" style="width: 100px;">Người nhận:</td>
+                            <td class="fw-bold">@Model.CustomerName</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Điện thoại:</td>
+                            <td>@Model.CustomerPhone</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Địa chỉ:</td>
+                            <td>@Model.ShippingAddress</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-3 border bg-light h-100">
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 small"><i class="bi bi-receipt me-1"></i> GIAO HÀNG &amp; THANH TOÁN</h6>
+                    <table class="w-100 small">
+                        <tr>
+                            <td class="text-muted" style="width: 120px;">Vận chuyển:</td>
+                            <td>@Model.ShippingMethod</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Phương thức:</td>
+                            <td><span class="badge bg-secondary">@Model.PaymentMethod</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Trạng thái tiền:</td>
+                            <td><strong class="@(Model.PaymentStatus == "Đã thanh toán" ? "text-success" : "text-warning")">@Model.PaymentStatus</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- BẢNG MẶT HÀNG -->
+        <table class="table table-bordered table-items align-middle mb-3">
+            <thead>
+                <tr>
+                    <th style="width: 40px;" class="text-center">STT</th>
+                    <th>Tên sản phẩm / Biến thể</th>
+                    <th class="text-center" style="width: 50px;">SL</th>
+                    <th class="text-end" style="width: 130px;">Đơn giá trước VAT</th>
+                    <th class="text-center" style="width: 90px;">VAT dự kiến</th>
+                    <th class="text-end" style="width: 110px;">Tiền VAT</th>
+                    <th class="text-end" style="width: 130px;">Đơn giá gồm VAT</th>
+                    <th class="text-end" style="width: 140px;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int stt = 1; }
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="text-center text-muted">@(stt++)</td>
+                        <td>
+                            <strong class="text-dark">@item.ProductName</strong>
+                            @if (!string.IsNullOrEmpty(item.VariantLabel))
+                            {
+                                <div class="text-muted small">@item.VariantLabel</div>
+                            }
+                        </td>
+                        <td class="text-center fw-bold">@item.Quantity</td>
+                        <td class="text-end text-muted">@item.NetUnitPrice.ToString("N0") ₫</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">@item.VatRate.ToString("G29")%</span></td>
+                        <td class="text-end text-success fw-semibold">@item.LineVatAmount.ToString("N0") ₫</td>
+                        <td class="text-end">@item.GrossUnitPrice.ToString("N0") ₫</td>
+                        <td class="text-end fw-bold">@item.LineTotal.ToString("N0") ₫</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- BẢNG TỔNG KẾT TÀI CHÍNH -->
+        <div class="d-flex justify-content-end mb-4">
+            <div style="width: 400px;">
+                <table class="w-100 small">
+                    <tr>
+                        <td class="py-1 text-muted">Tổng tiền hàng:</td>
+                        <td class="py-1 text-end fw-semibold">@Model.ItemsGrossTotal.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 text-muted">Trong đó: Tiền hàng trước thuế:</td>
+                        <td class="py-1 text-end">@Model.ItemsNetTotal.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 text-muted">Trong đó: Thuế VAT dự kiến:</td>
+                        <td class="py-1 text-end text-success fw-bold">@Model.EstimatedVatTotal.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td class="py-1 text-muted">Phí vận chuyển:</td>
+                        <td class="py-1 text-end fw-semibold">@(Model.ShippingFee > 0 ? $"{Model.ShippingFee:N0} ₫" : "0 ₫ (Miễn phí)")</td>
+                    </tr>
+                    @if (Model.VoucherDiscount > 0)
+                    {
+                        <tr>
+                            <td class="py-1 text-danger">Giảm giá Coupon (@(Model.VoucherCode ?? "Áp dụng")):</td>
+                            <td class="py-1 text-end text-danger fw-semibold">-@Model.VoucherDiscount.ToString("N0") ₫</td>
+                        </tr>
+                    }
+                    <tr class="border-top">
+                        <td class="pt-2 fw-bold fs-6">TỔNG THANH TOÁN:</td>
+                        <td class="pt-2 text-end fw-bold text-primary fs-5">@Model.FinalTotal.ToString("N0") ₫</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <div class="p-2 border bg-light mb-4 small">
+                <strong>Ghi chú:</strong> @Model.Note
+            </div>
+        }
+
+        <!-- XÁC NHẬN CHÂN TRANG -->
+        <div class="text-center text-muted small mt-4 pt-3 border-top">
+            <p class="mb-1">Cảm ơn quý khách đã tin tưởng và đặt hàng tại <strong>EMUA STORE</strong>.</p>
+            <p class="mb-0" style="font-size: 11px;">Mọi thắc mắc về đơn hàng, quý khách vui lòng liên hệ hotline <strong>1900 6868</strong> hoặc mục hỗ trợ đơn hàng.</p>
+        </div>
+    </main>
+</body>
+</html>

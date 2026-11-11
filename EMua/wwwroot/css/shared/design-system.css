@@ -1,0 +1,436 @@
+/**
+ * ==========================================================================
+ * EMUA GLOBAL DESIGN TOKENS (Design System 2026)
+ * Chuẩn hóa Typography, Form, Button, Table, Badge, Spacing, Colors
+ * ==========================================================================
+ */
+
+:root {
+    /* ── Màu sắc chuẩn toàn hệ thống ── */
+    --emua-primary: #315EFB;
+    --emua-primary-hover: #244bd4;
+    --emua-primary-light: #eef2ff;
+    --emua-page-bg: #F4F6FA;
+    --emua-surface: #FFFFFF;
+    --emua-text: #172033;
+    --emua-text-dark: #0f172a;
+    --emua-muted: #64748B;
+    --emua-border: #DCE3ED;
+    --emua-border-light: #F1F5F9;
+
+    /* ── Màu trạng thái chuẩn ── */
+    --emua-success: #16a34a;
+    --emua-success-bg: #f0fdf4;
+    --emua-success-border: #bbf7d0;
+
+    --emua-warning: #d97706;
+    --emua-warning-bg: #fffbeb;
+    --emua-warning-border: #fde68a;
+
+    --emua-danger: #dc2626;
+    --emua-danger-bg: #fef2f2;
+    --emua-danger-border: #fecaca;
+
+    --emua-info: #0284c7;
+    --emua-info-bg: #f0f9ff;
+    --emua-info-border: #bae6fd;
+
+    /* ── Typography chuẩn bắt buộc ── */
+    --emua-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --emua-font-page: 20px;
+    --emua-font-section: 16px;
+    --emua-font-form-title: 16px;
+    --emua-font-body: 14px;
+    --emua-font-label: 13px;
+    --emua-font-input: 14px;
+    --emua-font-button: 13px;
+    --emua-font-table-header: 12px;
+    --emua-font-table-body: 13px;
+    --emua-font-badge: 12px;
+    --emua-font-small: 12px;
+    --emua-font-sidebar: 13px;
+    --emua-font-header-acc: 13px;
+    --emua-font-kpi-val: 24px;
+    --emua-font-kpi-label: 13px;
+
+    /* ── Controls & Components Spacing & Sizing ── */
+    --emua-control-height: 40px;
+    --emua-button-sm-height: 32px;
+    --emua-textarea-min-height: 96px;
+    --emua-radius: 0px;
+    --emua-radius-pill: 9999px; /* Dành cho avatar */
+
+    --emua-spacing-label: 6px;
+    --emua-spacing-field: 16px;
+    --emua-spacing-section: 20px;
+}
+
+/* Áp dụng Font Inter chung */
+body, input, button, select, textarea {
+    font-family: var(--emua-font-family);
+}
+
+/* ==========================================================================
+   CHUẨN HÓA CÁC THÀNH PHẦN QUẢN TRỊ (Staff & Admin)
+   ========================================================================== */
+body.emua-staff,
+body.emua-admin,
+.admin-shell,
+.staff-shell {
+    background-color: var(--emua-page-bg) !important;
+    color: var(--emua-text) !important;
+    font-size: var(--emua-font-body) !important;
+    line-height: 1.5 !important;
+}
+
+/* Tiêu đề trang */
+body.emua-staff h1,
+body.emua-admin h1,
+.admin-header h1,
+.staff-header h1,
+.page-title {
+    font-size: var(--emua-font-page) !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Tiêu đề Section / Card */
+body.emua-staff h2,
+body.emua-admin h2,
+body.emua-staff .card-title,
+body.emua-admin .card-title,
+.staff-card-title h2,
+.admin-card h2,
+.section-title {
+    font-size: var(--emua-font-section) !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    color: var(--emua-text) !important;
+}
+
+/* Tiêu đề Form / Subheading */
+body.emua-staff h3,
+body.emua-admin h3,
+.form-title {
+    font-size: var(--emua-font-section) !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+}
+
+/* Body text */
+body.emua-staff p,
+body.emua-admin p,
+body.emua-staff span:not(.badge),
+body.emua-admin span:not(.badge) {
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA FORM (Staff, Admin, Guest/Customer Auth & Form)
+   ========================================================================== */
+.form-label,
+label:not(.btn):not(.form-check-label) {
+    font-size: var(--emua-font-label) !important;
+    font-weight: 500 !important;
+    color: var(--emua-text) !important;
+    margin-bottom: var(--emua-spacing-label) !important;
+    display: inline-block;
+    line-height: 1.4;
+}
+
+.form-control,
+.form-select {
+    height: var(--emua-control-height) !important;
+    min-height: var(--emua-control-height) !important;
+    font-size: var(--emua-font-input) !important;
+    font-weight: 400 !important;
+    border-radius: var(--emua-radius) !important;
+    border: 1px solid var(--emua-border) !important;
+    padding: 8px 12px !important;
+    line-height: 1.5 !important;
+    color: var(--emua-text) !important;
+    background-color: #fff !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--emua-primary) !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 1px var(--emua-primary) !important;
+}
+
+textarea.form-control {
+    height: auto !important;
+    min-height: var(--emua-textarea-min-height) !important;
+}
+
+/* Helper text / validation error */
+.form-text,
+.text-danger,
+.invalid-feedback,
+.field-validation-error {
+    font-size: var(--emua-font-small) !important;
+    line-height: 1.4 !important;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA BUTTONS
+   ========================================================================== */
+.btn {
+    height: var(--emua-control-height);
+    min-height: var(--emua-control-height);
+    font-size: var(--emua-font-button) !important;
+    font-weight: 600 !important;
+    border-radius: var(--emua-radius) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 0 16px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-sm,
+.btn-table {
+    height: var(--emua-button-sm-height) !important;
+    min-height: var(--emua-button-sm-height) !important;
+    font-size: var(--emua-font-table-body) !important;
+    padding: 0 10px !important;
+}
+
+/* Primary Button */
+.btn-primary,
+.btn-submit {
+    background-color: var(--emua-primary) !important;
+    border-color: var(--emua-primary) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-primary:hover,
+.btn-submit:hover {
+    background-color: var(--emua-primary-hover) !important;
+    border-color: var(--emua-primary-hover) !important;
+    color: #FFFFFF !important;
+}
+
+/* Secondary Button */
+.btn-secondary,
+.btn-outline-secondary {
+    background-color: #FFFFFF !important;
+    border: 1px solid var(--emua-border) !important;
+    color: var(--emua-text) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline-secondary:hover {
+    background-color: #F8FAFC !important;
+    border-color: var(--emua-muted) !important;
+    color: var(--emua-text) !important;
+}
+
+/* Outline Primary */
+.btn-outline-primary {
+    background-color: #FFFFFF !important;
+    border: 1px solid var(--emua-primary) !important;
+    color: var(--emua-primary) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--emua-primary) !important;
+    color: #FFFFFF !important;
+}
+
+/* Danger Button */
+.btn-danger,
+.btn-outline-danger {
+    background-color: var(--emua-danger) !important;
+    border-color: var(--emua-danger) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-outline-danger {
+    background-color: #FFFFFF !important;
+    color: var(--emua-danger) !important;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c !important;
+    border-color: #b91c1c !important;
+}
+
+/* Success Button */
+.btn-success {
+    background-color: var(--emua-success) !important;
+    border-color: var(--emua-success) !important;
+    color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA TABLE & PAGINATION
+   ========================================================================== */
+.table,
+.staff-table,
+.admin-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 0 !important;
+    border-radius: var(--emua-radius) !important;
+}
+
+.table thead th,
+.staff-table th,
+.admin-table th {
+    font-size: var(--emua-font-table-header) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.025em !important;
+    padding: 12px 14px !important;
+    background-color: #F8FAFC !important;
+    color: var(--emua-muted) !important;
+    border-bottom: 1px solid var(--emua-border) !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+}
+
+.table tbody td,
+.staff-table td,
+.admin-table td {
+    font-size: var(--emua-font-table-body) !important;
+    font-weight: 400 !important;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid var(--emua-border-light) !important;
+    vertical-align: middle !important;
+    color: var(--emua-text) !important;
+}
+
+.table tbody tr:hover,
+.staff-table tbody tr:hover,
+.admin-table tbody tr:hover {
+    background-color: #F8FAFC !important;
+}
+
+/* Pagination */
+.pagination {
+    margin-bottom: 0 !important;
+    gap: 4px !important;
+}
+
+.page-link {
+    height: var(--emua-button-sm-height) !important;
+    min-width: var(--emua-button-sm-height) !important;
+    font-size: var(--emua-font-table-body) !important;
+    font-weight: 500 !important;
+    border-radius: var(--emua-radius) !important;
+    border: 1px solid var(--emua-border) !important;
+    color: var(--emua-text) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 10px !important;
+}
+
+.page-item.active .page-link {
+    background-color: var(--emua-primary) !important;
+    border-color: var(--emua-primary) !important;
+    color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA BADGE / TRẠNG THÁI
+   ========================================================================== */
+.badge,
+.staff-badge,
+.status,
+.promo-status-badge {
+    font-size: var(--emua-font-badge) !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+    border-radius: var(--emua-radius) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+}
+
+.badge-success, .badge.bg-success, .status.done, .status-badge.active, .promo-status-badge.active {
+    background-color: var(--emua-success-bg) !important;
+    color: var(--emua-success) !important;
+    border: 1px solid var(--emua-success-border) !important;
+}
+
+.badge-warning, .badge.bg-warning, .status.pending, .promo-status-badge.upcoming {
+    background-color: var(--emua-warning-bg) !important;
+    color: var(--emua-warning) !important;
+    border: 1px solid var(--emua-warning-border) !important;
+}
+
+.badge-danger, .badge.bg-danger, .status.cancelled, .status-badge.hidden, .promo-status-badge.disabled {
+    background-color: var(--emua-danger-bg) !important;
+    color: var(--emua-danger) !important;
+    border: 1px solid var(--emua-danger-border) !important;
+}
+
+.badge-info, .badge.bg-info, .status.shipping {
+    background-color: var(--emua-info-bg) !important;
+    color: var(--emua-info) !important;
+    border: 1px solid var(--emua-info-border) !important;
+}
+
+/* ==========================================================================
+   KPI BLOCKS (Dashboard & Reports)
+   ========================================================================== */
+.kpi-value,
+.stat-value,
+.invoice-kpi-val,
+.dashboard-stat-card strong {
+    font-size: var(--emua-font-kpi-val) !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+}
+
+.kpi-label,
+.stat-label,
+.invoice-kpi-label,
+.dashboard-stat-card > span {
+    font-size: var(--emua-font-kpi-label) !important;
+    font-weight: 500 !important;
+    color: var(--emua-muted) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.025em !important;
+}
+
+/* ==========================================================================
+   CHUẨN HÓA HEADER & SIDEBAR QUẢN TRỊ
+   ========================================================================== */
+body.emua-staff .admin-header,
+body.emua-admin .admin-header {
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid var(--emua-border) !important;
+    box-shadow: none !important;
+}
+
+.admin-sidebar a,
+.staff-sidebar a {
+    font-size: var(--emua-font-sidebar) !important;
+    font-weight: 500 !important;
+    border-radius: var(--emua-radius) !important;
+}
+
+/* Avatar luôn bo tròn chuẩn */
+.avatar,
+.user-avatar,
+.admin-account-avatar,
+.staff-account-avatar {
+    border-radius: var(--emua-radius-pill) !important;
+}

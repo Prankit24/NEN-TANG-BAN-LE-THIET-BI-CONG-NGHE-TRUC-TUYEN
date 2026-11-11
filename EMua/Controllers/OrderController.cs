@@ -403,4 +403,126 @@ public class OrderController : Controller
     }
 
     private int CurrentUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    // XEM / IN PHIẾU TẠM TÍNH (PROFORMA INVOICE) CHO KHÁCH HÀNG HOẶC STAFF
+    [HttpGet]
+    public async Task<IActionResult> ProformaInvoice(int id)
+    {
+        var userId = CurrentUserId();
+        var order = await _db.DonHangs.AsNoTracking()
+            .Include(d => d.ChiTietDonHangs)
+                .ThenInclude(ct => ct.MaBienTheNavigation)
+                    .ThenInclude(bt => bt.MaSanPhamNavigation)
+                        .ThenInclude(sp => sp.MaDanhMucNavigation)
+            .Include(d => d.MaKhuyenMaiNavigation)
+            .Include(d => d.ThanhToans)
+            .Include(d => d.HoaDon)
+            .FirstOrDefaultAsync(d => d.MaDonHang == id && d.MaNguoiDung == userId);
+
+        if (order == null) return NotFound("Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.");
+
+        var payment = order.ThanhToans.OrderByDescending(p => p.NgayTao).FirstOrDefault();
+        decimal itemsGrossTotal = 0m;
+        decimal itemsNetTotal = 0m;
+        decimal estimatedVatTotal = 0m;
+        var itemsList = new List<ProformaInvoiceItemViewModel>();
+
+        foreach (var ct in order.ChiTietDonHangs)
+        {
+            var sp = ct.MaBienTheNavigation?.MaSanPhamNavigation;
+            var bt = ct.MaBienTheNavigation;
+            var catName = sp?.MaDanhMucNavigation?.TenDanhMuc ?? "";
+            var prodName = sp?.TenSanPham ?? "Sản phẩm";
+
+            var vatRule = VatConfigService.DetermineVatRate(catName, prodName, order.NgayDat ?? DateTime.Now);
+            decimal grossTotal = ct.ThanhTien;
+            decimal vatAmt = VatConfigService.CalculateVatAmount(grossTotal, vatRule.RatePercent);
+            decimal netTotal = grossTotal - vatAmt;
+            decimal netUnit = Math.Round(netTotal / ct.SoLuong, 2, MidpointRounding.AwayFromZero);
+
+            itemsGrossTotal += grossTotal;
+            itemsNetTotal += netTotal;
+            estimatedVatTotal += vatAmt;
+
+            itemsList.Add(new ProformaInvoiceItemViewModel
+            {
+                ProductId = sp?.MaSanPham ?? 0,
+                VariantId = ct.MaBienThe,
+                ProductName = prodName,
+                VariantLabel = $"{bt?.MauSac ?? ""} {bt?.PhienBan ?? ""}".Trim(),
+                ImageUrl = bt?.HinhAnh,
+                Quantity = ct.SoLuong,
+                GrossUnitPrice = ct.DonGia,
+                NetUnitPrice = netUnit,
+                VatRate = vatRule.RatePercent,
+                LineVatAmount = vatAmt,
+                LineTotal = grossTotal
+            });
+        }
+
+        decimal voucherDiscount = 0m;
+        string? voucherCode = order.MaKhuyenMaiNavigation?.MaCode;
+        if (order.MaKhuyenMaiNavigation != null)
+        {
+            var km = order.MaKhuyenMaiNavigation;
+            if (km.LoaiGiamGia != null && (km.LoaiGiamGia.Contains("%") || km.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)))
+            {
+                voucherDiscount = Math.Round(itemsGrossTotal * km.GiaTriGiam / 100m, 0, MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                voucherDiscount = km.GiaTriGiam;
+            }
+            voucherDiscount = Math.Clamp(voucherDiscount, 0m, itemsGrossTotal);
+        }
+
+        decimal finalTotal = order.TongTien ?? Math.Max(0m, itemsGrossTotal - voucherDiscount);
+        decimal shippingFee = Math.Max(0m, finalTotal + voucherDiscount - itemsGrossTotal);
+
+        var vm = new ProformaInvoiceViewModel
+        {
+            OrderId = order.MaDonHang,
+            OrderDate = order.NgayDat ?? DateTime.Now,
+            OrderStatus = order.TrangThaiDonHang ?? "Chờ xử lý",
+            CustomerName = order.HoTenNhanHang ?? "Khách hàng",
+            CustomerPhone = order.SoDienThoaiNhanHang ?? "",
+            ShippingAddress = order.DiaChiNhanHang ?? "",
+            PaymentMethod = payment?.PhuongThuc ?? "Thanh toán khi nhận hàng (COD)",
+            PaymentStatus = payment?.TrangThai ?? (order.TrangThaiDonHang == "Đã hoàn thành" ? "Đã thanh toán" : "Chưa thanh toán"),
+            ShippingMethod = order.PhuongThucVanChuyen ?? "Giao hàng tiêu chuẩn",
+            Note = order.GhiChu,
+            ItemsGrossTotal = itemsGrossTotal,
+            ItemsNetTotal = itemsNetTotal,
+            EstimatedVatTotal = estimatedVatTotal,
+            ShippingFee = shippingFee,
+            VoucherDiscount = voucherDiscount,
+            VoucherCode = voucherCode,
+            FinalTotal = finalTotal,
+            OfficialInvoiceId = order.HoaDon?.MaHoaDon,
+            Items = itemsList
+        };
+
+        return View("~/Views/Order/ProformaInvoice.cshtml", vm);
+    }
+
+    // KHÁCH HÀNG XEM HÓA ĐƠN THUẾ CHÍNH THỨC CỦA CHÍNH MÌNH (BẢO VỆ PHÂN QUYỀN)
+    [HttpGet]
+    public async Task<IActionResult> ViewOfficialInvoice(int orderId)
+    {
+        var userId = CurrentUserId();
+        var invoice = await _db.HoaDons.AsNoTracking()
+            .Include(h => h.MaDonHangNavigation)
+                .ThenInclude(d => d.ThanhToans)
+            .Include(h => h.MaNguoiLapNavigation)
+            .Include(h => h.ChiTietHoaDons)
+            .FirstOrDefaultAsync(h => h.MaDonHang == orderId && h.MaDonHangNavigation.MaNguoiDung == userId);
+
+        if (invoice == null)
+        {
+            return NotFound("Không tìm thấy hóa đơn hoặc bạn không có quyền xem hóa đơn này.");
+        }
+
+        ViewBag.DigitalSignature = DigitalSignatureInfoService.InspectAvailableDigitalCertificate();
+        return View("~/Areas/Staff/Views/Invoice/Print.cshtml", invoice);
+    }
 }

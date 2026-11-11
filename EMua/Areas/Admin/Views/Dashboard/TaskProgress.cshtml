@@ -1,66 +1,115 @@
 @model EMua.Areas.Admin.Models.ViewModels.TaskProgressViewModel
 @{
     ViewData["Title"] = "Tiến độ chức năng Admin";
+
+    var tasks = Model.Tasks.ToList();
+    int doneTasks = tasks.Count(t => t.IsCompleted);
+    int totalItems = tasks.Sum(t => t.TotalCount);
+    int doneItems = tasks.Sum(t => t.CompletedCount);
+    int overall = totalItems == 0 ? 0 : (int)Math.Round(doneItems * 100.0 / totalItems);
 }
-
-<div class="admin-task-progress-page">
-    <div class="d-flex justify-content-end align-items-center mb-3">
-        <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-            <i class="bi bi-plus-lg"></i> Thêm hạng mục mới
-        </button>
-    </div>
-
-    <!-- Cột bảng Trello Board Column -->
-    <div class="trello-board-column">
-        @foreach (var task in Model.Tasks)
-        {
-            <div class="trello-card @(task.IsCompleted ? "completed-card" : "")">
-                <div class="card-title-row">
-                    <i class="bi @(task.IsCompleted ? "bi-check-circle-fill text-success" : "bi-circle") card-status-icon"></i>
-                    <span class="card-title-text">@task.Title</span>
-                </div>
-                <div class="card-meta-row">
-                    <i class="bi bi-check2-square"></i>
-                    <span>@task.CompletedCount / @task.TotalCount</span>
-                </div>
-            </div>
-        }
-
-        <!-- Nút Add a card -->
-        <button type="button" class="trello-add-card-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-            <i class="bi bi-plus-lg"></i> Add a card
-        </button>
-    </div>
-</div>
-
-<!-- Modal thêm task/card mới (Phục vụ mở rộng tương lai) -->
-<div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold">Thêm thẻ công việc mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Tên chức năng / hạng mục</label>
-                        <input type="text" class="form-control" placeholder="Ví dụ: Quản lý mã giảm giá..." required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Số lượng tiêu chí (Total tasks)</label>
-                        <input type="number" class="form-control" value="5" min="1" required />
-                    </div>
-                    <div class="text-end">
-                        <button type="button" class="btn btn-light  px-4" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary  px-4">Thêm thẻ</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/admin-task-progress.css" asp-append-version="true" />
 }
+
+<div class="admin-task-progress-page">
+
+    <!-- TỔNG QUAN -->
+    <div class="task-overview">
+        <div class="task-overview-stats">
+            <div>
+                <strong>@overall%</strong>
+                <span>Hoàn thành chung</span>
+            </div>
+            <div>
+                <strong>@doneTasks / @tasks.Count</strong>
+                <span>Hạng mục xong</span>
+            </div>
+            <div>
+                <strong>@doneItems / @totalItems</strong>
+                <span>Tiêu chí đạt</span>
+            </div>
+        </div>
+
+        <button type="button"
+                class="btn btn-primary btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1"
+                data-bs-toggle="modal"
+                data-bs-target="#addTaskModal">
+            <i class="bi bi-plus-lg"></i> Thêm hạng mục
+        </button>
+    </div>
+
+    <div class="task-bar task-bar-lg">
+        <span style="width: @overall%"></span>
+    </div>
+
+    <!-- DANH SÁCH -->
+    <div class="task-list">
+        @foreach (var task in tasks)
+        {
+            int pct = task.TotalCount == 0 ? 0 : (int)Math.Round(task.CompletedCount * 100.0 / task.TotalCount);
+
+            <div class="task-row @(task.IsCompleted ? "is-done" : "")">
+                <i class="bi @(task.IsCompleted ? "bi-check-circle-fill" : "bi-circle") task-row-icon"></i>
+
+                <span class="task-row-title">@task.Title</span>
+
+                <div class="task-bar">
+                    <span style="width: @pct%"></span>
+                </div>
+
+                <span class="task-row-count">@task.CompletedCount / @task.TotalCount</span>
+            </div>
+        }
+
+        @if (!tasks.Any())
+        {
+            <p class="task-empty">Chưa có hạng mục nào.</p>
+        }
+    </div>
+
+    <button type="button"
+            class="task-add-link"
+            data-bs-toggle="modal"
+            data-bs-target="#addTaskModal">
+        <i class="bi bi-plus-lg"></i> Thêm hạng mục mới
+    </button>
+</div>
+
+<!-- MODAL THÊM HẠNG MỤC -->
+<div class="modal fade task-modal" id="addTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <form>
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Thêm hạng mục mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary" for="taskTitle">
+                            Tên chức năng / hạng mục <span class="text-danger">*</span>
+                        </label>
+                        <input id="taskTitle" type="text" class="form-control bg-light border-0 py-2"
+                               placeholder="Ví dụ: Quản lý mã giảm giá..." required />
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label small fw-bold text-secondary" for="taskTotal">
+                            Số lượng tiêu chí
+                        </label>
+                        <input id="taskTotal" type="number" class="form-control bg-light border-0 py-2"
+                               value="5" min="1" required />
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

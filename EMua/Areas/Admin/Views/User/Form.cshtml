@@ -10,15 +10,19 @@
 }
 
 <div class="users-page">
-    <div class="mb-3">
-        <a asp-action="Index" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">@(isEdit ? "Chỉnh sửa tài khoản" : "Tạo tài khoản mới")</h2>
+            <p class="text-muted small mb-0">Thiết lập thông tin đăng nhập, liên hệ và phân quyền hệ thống</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" style="height:36px; font-size:13px;">
             <i class="bi bi-arrow-left"></i> Quay lại danh sách
         </a>
     </div>
 
     @if (!ViewData.ModelState.IsValid)
     {
-        <div class="alert alert-danger  border-0  mb-4">
+        <div class="alert alert-danger border mb-4">
             <ul class="mb-0 ps-3">
                 @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                 {
@@ -30,13 +34,13 @@
 
     @if (isSelf)
     {
-        <div class="alert alert-warning  border-0  mb-4 d-flex align-items-center">
+        <div class="alert alert-warning border mb-4 d-flex align-items-center">
             <i class="bi bi-info-circle-fill fs-5 me-2"></i>
-            <div>Đây là tài khoản đang đăng nhập của bạn. Bạn không thể tự đổi phân quyền hoặc tự khóa tài khoản này.</div>
+            <div>Đây là tài khoản đang đăng nhập của bạn. Để đảm bảo an toàn, bạn không thể tự đổi nhóm quyền hoặc tự khóa chính mình.</div>
         </div>
     }
 
-    <div class="card border-0   p-4 p-lg-5 bg-white" style="max-width: 680px;">
+    <div class="bg-white border p-4" style="max-width: 820px;">
         <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
             @Html.AntiForgeryToken()
             @if (isEdit)
@@ -44,61 +48,70 @@
                 <input type="hidden" asp-for="MaNguoiDung" />
             }
 
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary">Họ và tên</label>
-                <input asp-for="TenNguoiDung" class="form-control bg-light  py-2 border-0" placeholder="Nguyễn Văn A" />
-            </div>
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-size:15px; color:#172033;">1. Thông tin cá nhân & Liên hệ</h5>
+                <div class="mb-3">
+                    <label class="form-label" style="font-size:13px; font-weight:500;">Họ và tên <span class="text-danger">*</span></label>
+                    <input asp-for="TenNguoiDung" class="form-control" style="height:40px; font-size:14px;" placeholder="Ví dụ: Nguyễn Văn A" required />
+                </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary">Email <span class="text-danger">*</span></label>
-                    <input asp-for="Email" type="email" class="form-control bg-light  py-2 border-0" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary">Số điện thoại</label>
-                    <input asp-for="SoDienThoai" class="form-control bg-light  py-2 border-0" placeholder="0912345678" />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary">Tên đăng nhập <span class="text-danger">*</span></label>
-                    <input asp-for="TenDangNhap" class="form-control bg-light  py-2 border-0" required />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary">
-                        Mật khẩu @(isEdit ? "(để trống nếu không đổi)" : "")
-                    </label>
-                    <input name="passwordPlain" type="password" class="form-control bg-light  py-2 border-0" placeholder="••••••••" />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary">Phân quyền</label>
-                    <select asp-for="MaQuyen" asp-items="ViewBag.DanhSachQuyen" class="form-select bg-light  py-2 border-0" disabled="@isSelf"></select>
-                    @if (isSelf)
-                    {
-                        <input type="hidden" asp-for="MaQuyen" />
-                        <div class="form-text text-warning small mt-1"><i class="bi bi-lock-fill"></i> Không thể tự đổi quyền của chính mình.</div>
-                    }
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-secondary d-block">Trạng thái tài khoản</label>
-                    <div class="form-check form-switch mt-2">
-                        <input class="form-check-input" type="checkbox" role="switch" asp-for="TrangThai" disabled="@isSelf" style="width: 2.5em; height: 1.25em;" />
-                        <label class="form-check-label small fw-medium ms-1">Đang hoạt động</label>
-                        @if (isSelf)
-                        {
-                            <input type="hidden" asp-for="TrangThai" />
-                        }
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size:13px; font-weight:500;">Địa chỉ Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control" style="height:40px; font-size:14px;" placeholder="name@domain.com" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size:13px; font-weight:500;">Số điện thoại</label>
+                        <input asp-for="SoDienThoai" class="form-control" style="height:40px; font-size:14px;" placeholder="0912345678" />
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                <a asp-action="Index" class="btn btn-outline-secondary  px-4">Hủy</a>
-                <button type="submit" class="btn btn-primary  px-4 d-flex align-items-center gap-1">
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-size:15px; color:#172033;">2. Thông tin đăng nhập & Bảo mật</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size:13px; font-weight:500;">Tên đăng nhập <span class="text-danger">*</span></label>
+                        <input asp-for="TenDangNhap" class="form-control" style="height:40px; font-size:14px;" placeholder="username" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size:13px; font-weight:500;">
+                            Mật khẩu @(isEdit ? "(để trống nếu không đổi)" : "") <span class="@(isEdit ? "" : "text-danger")">*</span>
+                        </label>
+                        <input name="passwordPlain" type="password" class="form-control" style="height:40px; font-size:14px;" placeholder="••••••••" @(isEdit ? "" : "required") />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-size:15px; color:#172033;">3. Phân quyền & Trạng thái</h5>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-size:13px; font-weight:500;">Nhóm quyền <span class="text-danger">*</span></label>
+                        <select asp-for="MaQuyen" asp-items="ViewBag.DanhSachQuyen" class="form-select" style="height:40px; font-size:14px;" disabled="@isSelf"></select>
+                        @if (isSelf)
+                        {
+                            <input type="hidden" asp-for="MaQuyen" />
+                            <small class="text-muted d-block mt-1">Không thể thay đổi quyền của tài khoản đang đăng nhập.</small>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label d-block" style="font-size:13px; font-weight:500;">Trạng thái tài khoản</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" role="switch" asp-for="TrangThai" disabled="@isSelf" style="width: 2.5em; height: 1.25em;" />
+                            <label class="form-check-label ms-2" style="font-size:13px;">Cho phép đăng nhập & hoạt động</label>
+                            @if (isSelf)
+                            {
+                                <input type="hidden" asp-for="TrangThai" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4" style="height:40px; font-size:13px;">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary px-4 d-flex align-items-center gap-2" style="height:40px; font-size:13px; font-weight:600;">
                     <i class="bi bi-check-lg"></i> @(isEdit ? "Lưu thay đổi" : "Tạo tài khoản")
                 </button>
             </div>

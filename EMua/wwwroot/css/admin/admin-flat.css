@@ -1,0 +1,138 @@
+/* ===== GIAO DIỆN PHẲNG: bỏ bo góc, bóng, viền thừa ===== */
+body.emua-admin {
+    --bs-border-radius: 0;
+    --bs-border-radius-sm: 0;
+    --bs-border-radius-lg: 0;
+    --bs-border-radius-xl: 0;
+    --bs-border-radius-xxl: 0;
+    --bs-border-radius-pill: 0;
+}
+
+/* Thành phần Bootstrap */
+.emua-admin .card,
+.emua-admin .btn,
+.emua-admin .form-control,
+.emua-admin .form-select,
+.emua-admin .input-group-text,
+.emua-admin .badge,
+.emua-admin .alert,
+.emua-admin .modal-content,
+.emua-admin .dropdown-menu,
+.emua-admin .page-link,
+.emua-admin .rounded,
+.emua-admin .rounded-1,
+.emua-admin .rounded-2,
+.emua-admin .rounded-3,
+.emua-admin .rounded-4,
+.emua-admin .rounded-pill,
+.emua-admin .form-switch .form-check-input {
+    border-radius: 0 !important;
+}
+
+/* Thành phần tự viết của từng trang */
+.emua-admin .brand-list-card,
+.emua-admin .brand-detail-card,
+.emua-admin .brand-item,
+.emua-admin .brand-logo,
+.emua-admin .brand-logo-preview,
+.emua-admin .brand-state,
+.emua-admin .brand-item em,
+.emua-admin .brand-summary,
+.emua-admin .brand-search,
+.emua-admin .brand-dialog,
+.emua-admin .brand-outline-button,
+.emua-admin .brand-file-button,
+.emua-admin .brand-save-button,
+.emua-admin .brand-delete-button,
+.emua-admin .category-list-card,
+.emua-admin .category-detail-card,
+.emua-admin .category-item,
+.emua-admin .category-item-icon,
+.emua-admin .category-summary-box,
+.emua-admin .category-summary-icon,
+.emua-admin .category-search,
+.emua-admin .category-count,
+.emua-admin .category-active-state,
+.emua-admin .category-detail-badge,
+.emua-admin .admin-dialog,
+.emua-admin .admin-dialog-icon,
+.emua-admin .dashboard-stat-card,
+.emua-admin .stat-card-icon,
+.emua-admin .admin-card,
+.emua-admin .status,
+.emua-admin .kpi-card,
+.emua-admin .panel,
+.emua-admin .report-filter-card,
+.emua-admin .verdict-banner,
+.emua-admin .trend-chip,
+.emua-admin .role-panel,
+.emua-admin .role-stat,
+.emua-admin .role-icon,
+.emua-admin .role-card-custom,
+.emua-admin .mini-stat,
+.emua-admin .mini-stat-icon,
+.emua-admin .filter-bar,
+.emua-admin .system-section,
+.emua-admin .system-action,
+.emua-admin .admin-user {
+    border-radius: 0 !important;
+}
+
+/* Bỏ bóng đổ */
+.emua-admin .shadow,
+.emua-admin .shadow-sm,
+.emua-admin .shadow-lg,
+.emua-admin .card,
+.emua-admin .brand-list-card,
+.emua-admin .brand-detail-card,
+.emua-admin .category-list-card,
+.emua-admin .category-detail-card,
+.emua-admin .dashboard-stat-card,
+.emua-admin .admin-card,
+.emua-admin .kpi-card,
+.emua-admin .panel,
+.emua-admin .report-filter-card,
+.emua-admin .role-panel,
+.emua-admin .mini-stat,
+.emua-admin .filter-bar {
+    box-shadow: none !important;
+}
+
+/* Khung lồng trong khung: bỏ viền, chỉ giữ đường kẻ mảnh */
+.emua-admin .dashboard-stat-card,
+.emua-admin .kpi-card,
+.emua-admin .mini-stat,
+.emua-admin .role-stat,
+.emua-admin .brand-summary,
+.emua-admin .category-summary-box {
+    border: 0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: transparent !important;
+}
+
+.emua-admin .filter-bar,
+.emua-admin .report-filter-card {
+    border: 0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Avatar tròn vẫn giữ tròn */
+.emua-admin .rounded-circle,
+.emua-admin .avatar-circle,
+.emua-admin .admin-avatar,
+.emua-admin .admin-avatar-img,
+.emua-admin .spinner-border {
+    border-radius: 50% !important;
+}
+
+/* Bảng trong thẻ: không cần khung bao */
+.emua-admin .card.overflow-hidden,
+.emua-admin .recent-orders-card,
+.emua-admin .recent-accounts-card {
+    border: 0 !important;
+    border-top: 1px solid #e2e8f0 !important;
+    background: transparent !important;
+}

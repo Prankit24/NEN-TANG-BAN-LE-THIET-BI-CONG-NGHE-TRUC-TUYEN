@@ -56,6 +56,9 @@
     <a class="btn btn-outline-secondary" asp-action="Index">
         <i class="bi bi-arrow-left"></i> Quay lại
     </a>
+    <a asp-controller="Order" asp-action="ProformaInvoice" asp-area="" asp-route-id="@Model.MaDonHang" target="_blank" class="btn btn-outline-info">
+        <i class="bi bi-receipt me-1"></i> Phiếu tạm tính
+    </a>
 
     @if (Model.HoaDon != null)
     {

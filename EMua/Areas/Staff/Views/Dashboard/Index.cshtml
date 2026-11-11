@@ -13,11 +13,23 @@
 @section Styles {
     <style>
         .emua-dashboard {
-            --dash-blue: #2563eb;
+            --dash-blue: #315efb;
             --dash-text: #0f172a;
             --dash-muted: #64748b;
             --dash-border: #e2e8f0;
             color: var(--dash-text);
+            margin: 0;
+            padding: 0;
+            display: flow-root;
+        }
+
+        /* Không để các margin mặc định của layout kéo giãn đầu trang */
+        .staff-content:has(> .emua-dashboard) {
+            padding-top: 12px;
+        }
+
+        .emua-dashboard > :first-child {
+            margin-top: 0 !important;
         }
 
         .dash-urgent-card,
@@ -25,78 +37,52 @@
         .dash-kpi,
         .dash-panel,
         .dash-stock-item {
-            border-radius: 8px !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
 
-        .dash-kpi-icon,
-        .dash-period-icon {
-            border-radius: 6px !important;
-        }
-
-        .dash-period button {
-            border-radius: 6px !important;
-        }
-
-        .dash-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .dash-heading h2 {
-            margin: 0 0 4px;
-            color: #182238;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .dash-heading p {
-            margin: 0;
-            color: #7b879a;
-            font-size: 13px;
-        }
+            .dash-kpi-icon,
+            .dash-period-icon,
+            .dash-period button {
+                border-radius: 0 !important;
+            }
 
         /* KHỐI CÔNG VIỆC CẦN XỬ LÝ NGAY */
         .dash-urgent-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
         .dash-urgent-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 18px 20px;
+            padding: 14px 16px;
             background: #fff;
             border: 1px solid #e4eaf3;
-            box-shadow: 0 4px 14px rgba(31, 55, 94, .04);
             text-decoration: none;
             color: inherit;
             transition: all .2s ease;
         }
 
-        .dash-urgent-card:hover {
-            border-color: #b7c9ff;
-            background: #fafcff;
-            transform: translateY(-2px);
-        }
+            .dash-urgent-card:hover {
+                border-color: #b7c9ff;
+                background: #fafcff;
+            }
 
-        .dash-urgent-card.warning {
-            border-left: 4px solid #f59e0b;
-        }
+            .dash-urgent-card.warning {
+                border-left: 4px solid #f59e0b;
+            }
 
-        .dash-urgent-card.danger {
-            border-left: 4px solid #ef4444;
-        }
+            .dash-urgent-card.danger {
+                border-left: 4px solid #ef4444;
+            }
 
-        .dash-urgent-card.primary {
-            border-left: 4px solid #315efb;
-        }
+            .dash-urgent-card.primary {
+                border-left: 4px solid #315efb;
+            }
 
         .dash-urgent-title {
             display: block;
@@ -123,15 +109,36 @@
         }
 
         /* BỘ LỌC THÁNG */
+        .dash-topbar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 40px;
+            margin: 0 0 10px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
         .dash-period {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-start;
             gap: 8px;
-            padding: 6px 10px;
-            border: 1px solid #e4eaf3;
-            background: #fff;
-            box-shadow: 0 4px 14px rgba(31, 55, 94, .04);
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
         }
+
+            .dash-period select,
+            .dash-period button {
+                height: 40px;
+                border-radius: 0 !important;
+                font-size: 13px;
+            }
 
         .dash-period-icon {
             display: grid;
@@ -148,21 +155,21 @@
             align-items: center;
             gap: 6px;
             font-size: 13px;
-            padding: 0 6px;
+            padding: 0;
         }
 
-        .dash-period-field select {
-            border: 1px solid #cbd5e1;
-            padding: 4px 8px;
-            font-size: 13px;
-            background: #fff;
-        }
+            .dash-period-field select {
+                border: 1px solid #cbd5e1;
+                padding: 0 10px;
+                font-size: 13px;
+                background: #fff;
+            }
 
         .dash-period button {
             border: none;
             background: #315efb;
             color: #fff;
-            padding: 6px 12px;
+            padding: 0 14px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
@@ -172,15 +179,14 @@
         .dash-kpis {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
         .dash-kpi {
             background: #fff;
             border: 1px solid #e4eaf3;
-            padding: 18px 20px;
-            box-shadow: 0 4px 14px rgba(31, 55, 94, .04);
+            padding: 14px 16px;
         }
 
         .dash-kpi-top {
@@ -213,9 +219,20 @@
             font-size: 18px;
         }
 
-        .dash-kpi-icon.green { background: #ecfdf5; color: #10b981; }
-        .dash-kpi-icon.orange { background: #fffbeb; color: #f59e0b; }
-        .dash-kpi-icon.cyan { background: #f0fdf4; color: #06b6d4; }
+            .dash-kpi-icon.green {
+                background: #ecfdf5;
+                color: #10b981;
+            }
+
+            .dash-kpi-icon.orange {
+                background: #fffbeb;
+                color: #f59e0b;
+            }
+
+            .dash-kpi-icon.cyan {
+                background: #f0fdf4;
+                color: #06b6d4;
+            }
 
         .dash-kpi-bottom {
             margin: 12px 0 0;
@@ -229,55 +246,54 @@
             margin-right: 4px;
         }
 
-        .dash-trend.negative {
-            color: #ef4444;
-        }
+            .dash-trend.negative {
+                color: #ef4444;
+            }
 
         /* MIDDLE GRIDS */
         .dash-middle {
             display: grid;
             grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
         .dash-panel {
             background: #fff;
             border: 1px solid #e4eaf3;
-            box-shadow: 0 4px 14px rgba(31, 55, 94, .04);
         }
 
         .dash-panel-heading {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #edf1f6;
         }
 
-        .dash-panel-heading h3 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 700;
-            color: #1e293b;
-        }
+            .dash-panel-heading h3 {
+                margin: 0;
+                font-size: 15px;
+                font-weight: 700;
+                color: #1e293b;
+            }
 
-        .dash-panel-heading p {
-            margin: 2px 0 0;
-            font-size: 12px;
-            color: #64748b;
-        }
+            .dash-panel-heading p {
+                margin: 2px 0 0;
+                font-size: 12px;
+                color: #64748b;
+            }
 
         .dash-chart-wrap {
-            padding: 16px 20px;
+            padding: 12px 16px;
         }
 
         .dash-chart {
-            height: 240px;
+            height: 220px;
         }
 
         .dash-stock-list {
-            padding: 12px 20px;
+            padding: 10px 16px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -287,20 +303,21 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
-            background: #f8fafc;
-            border: 1px solid #edf2f7;
+            padding: 9px 0;
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid #edf2f7;
             font-size: 13px;
         }
 
-        .dash-stock-item strong {
-            display: block;
-            color: #1e293b;
-        }
+            .dash-stock-item strong {
+                display: block;
+                color: #1e293b;
+            }
 
-        .dash-stock-item small {
-            color: #64748b;
-        }
+            .dash-stock-item small {
+                color: #64748b;
+            }
 
         /* ORDERS TABLE */
         .dash-orders-table {
@@ -309,25 +326,25 @@
             font-size: 13px;
         }
 
-        .dash-orders-table th {
-            padding: 12px 18px;
-            background: #f8fafc;
-            border-bottom: 1px solid #edf1f6;
-            color: #64748b;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
+            .dash-orders-table th {
+                padding: 11px 14px;
+                background: #f8fafc;
+                border-bottom: 1px solid #edf1f6;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+            }
 
-        .dash-orders-table td {
-            padding: 14px 18px;
-            border-bottom: 1px solid #edf1f6;
-            vertical-align: middle;
-        }
+            .dash-orders-table td {
+                padding: 11px 14px;
+                border-bottom: 1px solid #edf1f6;
+                vertical-align: middle;
+            }
 
-        .dash-orders-table tbody tr:hover td {
-            background: #fafcff;
-        }
+            .dash-orders-table tbody tr:hover td {
+                background: #fafcff;
+            }
 
         .dash-status {
             display: inline-block;
@@ -339,12 +356,45 @@
             border: 1px solid #e2e8f0;
         }
 
-        @@media (max-width: 992px) {
-            .dash-urgent-grid, .dash-kpis {
+        @@media (max-width: 1100px) {
+            .dash-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 900px) {
+            .dash-urgent-grid {
                 grid-template-columns: 1fr;
             }
+
             .dash-middle {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .dash-topbar {
+                justify-content: flex-start;
+            }
+
+            .dash-period {
+                justify-content: flex-start;
+            }
+
+            .dash-kpis {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-period-icon {
+                display: none;
+            }
+
+            .dash-period-field {
+                gap: 4px;
+            }
+
+            .dash-urgent-card {
+                padding: 12px;
             }
         }
     </style>
@@ -353,8 +403,8 @@
 <div class="emua-dashboard">
 
     <!-- BỘ LỌC KỲ BÁO CÁO -->
-    <div class="d-flex justify-content-end mb-3">
-        <form method="get" class="dash-period m-0">
+    <div class="dash-topbar">
+        <form method="get" class="dash-period">
             <span class="dash-period-icon" aria-hidden="true">
                 <i class="bi bi-calendar3"></i>
             </span>

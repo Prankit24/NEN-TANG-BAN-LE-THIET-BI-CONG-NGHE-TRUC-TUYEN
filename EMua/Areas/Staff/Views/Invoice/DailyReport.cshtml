@@ -1,0 +1,346 @@
+@model EMua.Areas.Staff.Models.DailyInvoiceReportViewModel
+@{
+    ViewData["Title"] = $"Báo cáo tổng hợp hóa đơn cuối ngày ({Model.SelectedDate:dd/MM/yyyy})";
+}
+
+<style>
+    .daily-report-wrapper {
+        color: #172033;
+    }
+
+    .daily-report-wrapper .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .daily-report-wrapper .kpi-card {
+        background: #ffffff;
+        border: 1px solid #dfe5ed;
+        padding: 14px 16px;
+        border-radius: 0;
+    }
+
+    .daily-report-wrapper .kpi-label {
+        font-size: 11.5px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .025em;
+        margin-bottom: 4px;
+    }
+
+    .daily-report-wrapper .kpi-val {
+        font-size: 20px;
+        font-weight: 750;
+        color: #172033;
+    }
+
+    .daily-report-wrapper .kpi-sub {
+        font-size: 11px;
+        color: #8290a3;
+        margin-top: 4px;
+    }
+
+    .daily-report-wrapper .toolbar-flat {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0;
+        margin-bottom: 14px;
+        border: none;
+        background: transparent;
+    }
+
+    .daily-report-wrapper .toolbar-flat .form-control,
+    .daily-report-wrapper .toolbar-flat .btn {
+        height: 40px;
+        border-radius: 0 !important;
+        font-size: 13px;
+    }
+
+    .daily-report-wrapper .panel-box {
+        background: #ffffff;
+        border: 1px solid #dfe5ed;
+        border-radius: 0;
+        margin-bottom: 20px;
+    }
+
+    .daily-report-wrapper .panel-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #dfe5ed;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .daily-report-wrapper .panel-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 13px;
+        color: #1e293b;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+    }
+
+    .daily-report-wrapper table th {
+        background-color: #f8fafc;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .025em;
+        color: #475569;
+        white-space: nowrap;
+        padding: 11px 14px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .daily-report-wrapper table td {
+        font-size: 12.5px;
+        padding: 11px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    @@media (max-width: 991.98px) {
+        .daily-report-wrapper .kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @@media (max-width: 575.98px) {
+        .daily-report-wrapper .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="daily-report-wrapper">
+    <!-- CẢNH BÁO BẢN CHẤT NGHIỆP VỤ BÁO CÁO -->
+    <div class="alert alert-info py-2 px-3 small border mb-3 d-flex align-items-center justify-content-between">
+        <div>
+            <i class="bi bi-info-circle-fill me-1 text-primary"></i>
+            <strong>BÁO CÁO ĐỐI SOÁT CUỐI NGÀY:</strong> Tổng hợp dữ liệu độc lập giữa <em>Ngày đặt hàng</em>, <em>Ngày bàn giao thực tế</em> và <em>Ngày lập hóa đơn</em>. Báo cáo không phải là hóa đơn thuế tổng và không làm tăng doanh thu ảo.
+        </div>
+        <span class="badge bg-primary">ĐỐI SOÁT NGÀY: @Model.SelectedDate.ToString("dd/MM/yyyy")</span>
+    </div>
+
+    <!-- THANH CÔNG CỤ CHỌN NGÀY & XUẤT BÁO CÁO -->
+    <div class="toolbar-flat justify-content-between">
+        <form method="get" asp-action="DailyReport" class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="small fw-bold text-muted"><i class="bi bi-calendar-event me-1"></i> Chọn ngày đối soát:</span>
+            <input type="date" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" class="form-control" style="width: 170px;" />
+            <button type="submit" class="btn btn-primary px-3"><i class="bi bi-funnel me-1"></i> Xem báo cáo</button>
+            <a asp-action="DailyReport" asp-route-date="@DateTime.Today.ToString("yyyy-MM-dd")" class="btn btn-outline-secondary">Hôm nay</a>
+        </form>
+
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="ExportDailyReportCsv" asp-route-date="@Model.SelectedDate.ToString("yyyy-MM-dd")" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV đối soát
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> DS hóa đơn
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. KHỐI THỐNG KÊ SỐ LƯỢNG ĐỐI SOÁT -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Đơn đặt trong ngày</div>
+            <div class="kpi-val text-primary">@Model.TotalOrdersCreatedToday.ToString("N0")</div>
+            <div class="kpi-sub">Theo ngày đặt hàng (@Model.SelectedDate:dd/MM)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Đơn đã bàn giao trong ngày</div>
+            <div class="kpi-val text-success">@Model.TotalOrdersDeliveredToday.ToString("N0")</div>
+            <div class="kpi-sub">Thời điểm chuyển giao quyền sở hữu</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Hóa đơn đã lập trong ngày</div>
+            <div class="kpi-val text-dark">@Model.TotalInvoicesIssuedToday.ToString("N0")</div>
+            <div class="kpi-sub">Theo thời điểm lập hóa đơn</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Đã bàn giao chưa có HĐ</div>
+            <div class="kpi-val @(Model.TotalDeliveredPendingInvoicesCount > 0 ? "text-danger" : "text-muted")">
+                @Model.TotalDeliveredPendingInvoicesCount.ToString("N0")
+            </div>
+            <div class="kpi-sub">Cần lập HĐ theo luật định</div>
+        </div>
+    </div>
+
+    <!-- 2. KHỐI THỐNG KÊ TÀI CHÍNH & THUẾ VAT TỪ HÓA ĐƠN TRONG NGÀY -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Doanh số trước thuế</div>
+            <div class="kpi-val text-dark">@Model.TotalNetRevenue.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="kpi-sub">Cơ sở tính thuế GTGT</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Tổng thuế GTGT (VAT)</div>
+            <div class="kpi-val text-success">@Model.TotalVatAmount.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="kpi-sub">
+                @if (Model.VatAmountByRate.Any())
+                {
+                    <span>@string.Join(" | ", Model.VatAmountByRate.Select(kv => $"{kv.Key:G29}%: {kv.Value:N0}₫"))</span>
+                }
+                else
+                {
+                    <span>Không có thuế phát sinh</span>
+                }
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Đã xác nhận thanh toán</div>
+            <div class="kpi-val text-success">@Model.TotalPaidAmount.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="kpi-sub">Tiền hàng thực thu / CK thành công</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Chưa thanh toán (COD/Chờ)</div>
+            <div class="kpi-val text-warning">@Model.TotalUnpaidAmount.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="kpi-sub">HĐ đã xuất nhưng chưa thu tiền</div>
+        </div>
+    </div>
+
+    <!-- 3. DANH SÁCH ĐƠN HÀNG ĐÃ BÀN GIAO NHƯNG CHƯA CÓ HÓA ĐƠN (CẦN XỬ LÝ) -->
+    @if (Model.DeliveredPendingInvoiceOrders.Any())
+    {
+        <div class="panel-box border-warning">
+            <div class="panel-header bg-warning bg-opacity-10">
+                <h6 class="text-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i> CẦN XỬ LÝ: ĐƠN HÀNG ĐÃ BÀN GIAO CHƯA LẬP HÓA ĐƠN (@Model.DeliveredPendingInvoiceOrders.Count ĐƠN)</h6>
+                <span class="small text-muted">Thời điểm lập HĐ là thời điểm chuyển giao quyền sở hữu/sử dụng hàng hóa</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Mã đơn</th>
+                            <th style="width: 130px;">Ngày đặt</th>
+                            <th>Khách hàng / SĐT</th>
+                            <th style="width: 140px;" class="text-end">Tổng tiền</th>
+                            <th style="width: 150px;">Thanh toán</th>
+                            <th style="width: 130px;" class="text-center">Trạng thái đơn</th>
+                            <th style="width: 130px;" class="text-end">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ord in Model.DeliveredPendingInvoiceOrders)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@ord.MaDonHang" class="fw-bold font-monospace text-decoration-none">
+                                        #DH-@ord.MaDonHang.ToString("D5")
+                                    </a>
+                                </td>
+                                <td class="text-muted small">@(ord.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                                <td>
+                                    <strong>@ord.KhachHang</strong>
+                                    <div class="small text-muted">@ord.SoDienThoai</div>
+                                </td>
+                                <td class="text-end fw-bold">@ord.TongTien.ToString("N0") ₫</td>
+                                <td>
+                                    <span class="badge bg-secondary">@ord.PhuongThucThanhToan</span>
+                                    <small class="d-block text-muted">@ord.TrangThaiThanhToan</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">@ord.TrangThaiDonHang</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Create" asp-route-orderId="@ord.MaDonHang" class="btn btn-sm btn-primary py-1 px-2">
+                                        <i class="bi bi-file-earmark-plus me-1"></i>Lập HĐ
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- 4. DANH SÁCH HÓA ĐƠN PHÁT SINH TRONG NGÀY -->
+    <div class="panel-box">
+        <div class="panel-header">
+            <h6><i class="bi bi-receipt-cutoff me-1 text-primary"></i> DANH SÁCH HÓA ĐƠN ĐÃ LẬP TRONG NGÀY (@Model.InvoicesToday.Count HÓA ĐƠN)</h6>
+            <span class="small text-muted">Tổng giá trị thanh toán: <strong class="text-primary">@Model.TotalGrossRevenue.ToString("N0") ₫</strong></span>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Mã HĐ</th>
+                        <th style="width: 110px;">Đơn hàng</th>
+                        <th style="width: 130px;">Giờ lập</th>
+                        <th>Khách hàng / Người nhận</th>
+                        <th style="width: 130px;">Nhân viên lập</th>
+                        <th style="width: 130px;" class="text-end">Trước thuế</th>
+                        <th style="width: 110px;" class="text-end">Tiền VAT</th>
+                        <th style="width: 140px;" class="text-end">Tổng tiền</th>
+                        <th style="width: 130px;" class="text-center">Trạng thái</th>
+                        <th style="width: 100px;" class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.InvoicesToday.Any())
+                    {
+                        foreach (var inv in Model.InvoicesToday)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-primary border font-monospace">#HD-@inv.MaHoaDon.ToString("D5")</span>
+                                </td>
+                                <td>
+                                    <a asp-controller="Order" asp-action="Details" asp-route-id="@inv.MaDonHang" class="text-decoration-none fw-semibold">
+                                        #DH-@inv.MaDonHang.ToString("D5")
+                                    </a>
+                                </td>
+                                <td class="small text-muted">
+                                    @(inv.NgayLapHoaDon?.ToString("HH:mm:ss") ?? "—")
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@(inv.HoTenKhachHang ?? inv.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
+                                    <small class="text-muted">@(inv.SoDienThoai ?? inv.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted"><i class="bi bi-person me-1"></i>@(inv.TenNguoiLap ?? "Nhân viên")</small>
+                                </td>
+                                <td class="text-end text-muted">@((inv.TienTruocThue ?? 0m).ToString("N0")) ₫</td>
+                                <td class="text-end text-success fw-semibold">@((inv.TienThueVat ?? 0m).ToString("N0")) ₫</td>
+                                <td class="text-end fw-bold text-dark">@((inv.TongTien ?? 0m).ToString("N0")) ₫</td>
+                                <td class="text-center">
+                                    @if (inv.TrangThaiHoaDon == "Đã thanh toán")
+                                    {
+                                        <span class="badge bg-success">Đã thanh toán</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@inv.MaHoaDon" class="btn btn-sm btn-outline-primary py-1 px-2" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Print" asp-route-id="@inv.MaHoaDon" target="_blank" class="btn btn-sm btn-outline-secondary py-1 px-2" title="In / PDF">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+                                Không có hóa đơn nào được lập trong ngày @Model.SelectedDate.ToString("dd/MM/yyyy").
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

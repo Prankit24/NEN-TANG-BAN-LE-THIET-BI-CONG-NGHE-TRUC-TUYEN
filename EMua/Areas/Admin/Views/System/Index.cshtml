@@ -10,166 +10,156 @@
 }
 
 <div class="system-page">
-
-    
-
-    <!-- SAO LƯU DỮ LIỆU -->
-    <section class="system-section"
-             aria-labelledby="backupTitle">
-
-        <div class="system-section-title">
-            <i class="bi bi-database-down" aria-hidden="true"></i>
-
-            <div>
-                <h3 id="backupTitle">Sao lưu dữ liệu</h3>
-                <p>
-                    Lưu bản dự phòng trước khi cập nhật hoặc thay đổi hệ thống.
-                </p>
-            </div>
+    <!-- TIÊU ĐỀ HỆ THỐNG -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">Cấu hình & Quản trị Hệ thống</h2>
+            <p class="text-muted small mb-0">Theo dõi thông tin phiên bản, trạng thái dịch vụ đám mây và quy trình vận hành</p>
         </div>
-
-        <div class="system-list">
-
-            <div class="system-row">
-                <div class="system-row-info">
-                    <h4>Cơ sở dữ liệu</h4>
-                    <p>
-                        Sao lưu dữ liệu sản phẩm, tài khoản, đơn hàng
-                        và cấu trúc các bảng trên Supabase.
-                    </p>
-                </div>
-
-                <a href="https://supabase.com/dashboard"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="system-action">
-                    Mở Supabase
-                    <i class="bi bi-box-arrow-up-right"
-                       aria-hidden="true"></i>
-                </a>
-            </div>
-
-            <div class="system-row">
-                <div class="system-row-info">
-                    <h4>Hình ảnh và tệp tải lên</h4>
-                    <p>
-                        Sao lưu riêng ảnh sản phẩm, ảnh đại diện và
-                        các tệp đang lưu trên hosting.
-                    </p>
-                </div>
-
-                <a href="https://somee.com/"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="system-action">
-                    Mở Somee
-                    <i class="bi bi-box-arrow-up-right"
-                       aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-
-        <p class="system-inline-note">
-            <i class="bi bi-info-circle" aria-hidden="true"></i>
-            <span>
-                Các nút mở trang quản lý để bạn tự thực hiện sao lưu.
-                EMUA hiện chưa tự tạo bản sao.
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background:#EBF1FF; color:#315EFB; font-weight:600; padding:6px 12px; font-size:12px;">
+                Phiên bản v@(applicationVersion)
             </span>
-        </p>
-    </section>
+        </div>
+    </div>
 
-    <!-- THÔNG TIN PHIÊN BẢN -->
-    <section class="system-section"
-             aria-labelledby="versionTitle">
+    <!-- 1. THÔNG TIN ỨNG DỤNG & DỊCH VỤ LIÊN KẾT (BẢNG LABEL - VALUE) -->
+    <div class="bg-white border mb-4">
+        <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+                <h5 class="fw-bold mb-0" style="font-size: 15px; color: #172033;">Thông tin hạ tầng & Công nghệ vận hành</h5>
+            </div>
+            <span class="text-muted small">Cấu hình thời gian thực</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <tbody>
+                    <tr>
+                        <td class="ps-4 text-muted" style="width: 240px; font-size: 13px; font-weight: 500;">Tên ứng dụng</td>
+                        <td style="font-size: 13.5px;"><strong class="text-dark">EMUA — Nền tảng thương mại điện tử</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 text-muted" style="font-size: 13px; font-weight: 500;">Phiên bản triển khai</td>
+                        <td><span class="badge" style="background:#F1F5F9; color:#475569; font-size:12px; font-weight:600;">v@(applicationVersion)</span></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 text-muted" style="font-size: 13px; font-weight: 500;">Nền tảng phát triển</td>
+                        <td style="font-size: 13.5px;">ASP.NET Core 8.0 MVC · Entity Framework Core 8</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 text-muted" style="font-size: 13px; font-weight: 500;">Cơ sở dữ liệu chính</td>
+                        <td style="font-size: 13.5px;">PostgreSQL hosted trên <strong>Supabase</strong> (Singapore Cluster)</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 text-muted" style="font-size: 13px; font-weight: 500;">Máy chủ Hosting web</td>
+                        <td style="font-size: 13.5px;">Windows Server IIS hosted trên <strong>Somee.com</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 text-muted" style="font-size: 13px; font-weight: 500;">Tên miền chính thức</td>
+                        <td>
+                            <a href="https://emua-shop.somee.com" target="_blank" rel="noopener noreferrer" class="text-primary fw-semibold" style="font-size: 13.5px;">
+                                emua-shop.somee.com <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        <div class="system-section-title">
-            <i class="bi bi-info-circle" aria-hidden="true"></i>
+    <!-- 2. SAO LƯU DỮ LIỆU & QUẢN LÝ DỊCH VỤ -->
+    <div class="bg-white border mb-4">
+        <div class="p-3 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-database-down text-primary fs-5"></i>
+                <h5 class="fw-bold mb-0" style="font-size: 15px; color: #172033;">Sao lưu & Quản lý dữ liệu đám mây</h5>
+            </div>
+            <small class="text-muted d-block mt-1">Truy cập bảng điều khiển đối tác để sao lưu cơ sở dữ liệu và tệp tin tải lên</small>
+        </div>
+        <div class="p-3">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 border d-flex flex-column justify-content-between h-100" style="background:#F8FAFC;">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-bold text-dark" style="font-size:14px;">Cơ sở dữ liệu Supabase</span>
+                                <span class="badge" style="background:#DCFCE7; color:#15803D; font-weight:600;">PostgreSQL</span>
+                            </div>
+                            <p class="text-muted small mb-3">Quản lý schema, bảng sản phẩm, đơn hàng, người dùng và tạo bản sao lưu snapshot định kỳ.</p>
+                        </div>
+                        <div>
+                            <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" style="height:38px; font-size:13px; font-weight:500;">
+                                Mở Supabase Dashboard <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-            <div>
-                <h3 id="versionTitle">Thông tin ứng dụng</h3>
-                <p>Thông tin phiên bản EMUA đang hoạt động.</p>
+                <div class="col-md-6">
+                    <div class="p-3 border d-flex flex-column justify-content-between h-100" style="background:#F8FAFC;">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-bold text-dark" style="font-size:14px;">Lưu trữ Hosting Somee</span>
+                                <span class="badge" style="background:#EBF1FF; color:#315EFB; font-weight:600;">File Server</span>
+                            </div>
+                            <p class="text-muted small mb-3">Quản lý các tệp hình ảnh sản phẩm, ảnh đại diện tài khoản và cấu hình web.config trên hosting.</p>
+                        </div>
+                        <div>
+                            <a href="https://somee.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2" style="height:38px; font-size:13px; font-weight:500;">
+                                Mở Somee Control Panel <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-light border mt-3 mb-0 small text-muted d-flex align-items-center">
+                <i class="bi bi-shield-lock me-2 text-primary fs-5"></i>
+                <span>Ghi chú an ninh: Hệ thống không lưu trữ hoặc hiển thị thông tin kết nối nhạy cảm (Connection Strings, Secret Keys) trên giao diện quản trị này.</span>
             </div>
         </div>
+    </div>
 
-        <dl class="system-details">
-            <div>
-                <dt>Phiên bản</dt>
-                <dd>
-                    <span class="system-version-value">
-                        v@(applicationVersion)
-                    </span>
-                </dd>
+    <!-- 3. QUY TRÌNH CẬP NHẬT & TRIỂN KHAI PHIÊN BẢN -->
+    <div class="bg-white border mb-4">
+        <div class="p-3 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-repeat text-primary fs-5"></i>
+                <h5 class="fw-bold mb-0" style="font-size: 15px; color: #172033;">Quy trình chuẩn khi nâng cấp & cập nhật hệ thống</h5>
             </div>
-
-            <div>
-                <dt>Ứng dụng</dt>
-                <dd>EMUA</dd>
-            </div>
-
-            <div>
-                <dt>Cơ sở dữ liệu</dt>
-                <dd>Supabase</dd>
-            </div>
-
-            <div>
-                <dt>Hosting</dt>
-                <dd>Somee</dd>
-            </div>
-
-            <div>
-                <dt>Website</dt>
-                <dd>
-                    <a href="https://emua-shop.somee.com"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        emua-shop.somee.com
-                    </a>
-                </dd>
-            </div>
-        </dl>
-    </section>
-
-    <!-- CẬP NHẬT -->
-    <section class="system-section"
-             aria-labelledby="updateTitle">
-
-        <div class="system-section-title">
-            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-
-            <div>
-                <h3 id="updateTitle">Cập nhật website</h3>
-                <p>Các bước thực hiện khi có phiên bản mới.</p>
+            <small class="text-muted d-block mt-1">Các bước bắt buộc dành cho đội ngũ kỹ thuật khi phát hành bản vá</small>
+        </div>
+        <div class="p-3">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 border h-100" style="background:#FAFBFD;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary text-white" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center;">1</span>
+                            <strong class="text-dark" style="font-size:13.5px;">Sao lưu dữ liệu</strong>
+                        </div>
+                        <p class="text-muted small mb-0">Xuất file dump cơ sở dữ liệu PostgreSQL từ Supabase và sao lưu thư mục uploads ảnh trước khi tiến hành cập nhật.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border h-100" style="background:#FAFBFD;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary text-white" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center;">2</span>
+                            <strong class="text-dark" style="font-size:13.5px;">Kiểm thử Build</strong>
+                        </div>
+                        <p class="text-muted small mb-0">Chạy toàn bộ unit test, kiểm tra migration EF Core và biên dịch chế độ Release trên môi trường staging cục bộ.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border h-100" style="background:#FAFBFD;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary text-white" style="width:24px; height:24px; display:flex; align-items:center; justify-content:center;">3</span>
+                            <strong class="text-dark" style="font-size:13.5px;">Triển khai IIS Somee</strong>
+                        </div>
+                        <p class="text-muted small mb-0">Xuất bản DLL mới, cập nhật app_offline.htm trong thời gian thay thế tệp và kiểm tra thông suốt luồng đơn hàng.</p>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <ol class="system-steps">
-            <li>
-                <div class="system-step-title">
-                    <strong>Sao lưu</strong>
-                </div>
-                <p>
-                    Lưu database, ảnh và bản website hiện tại.
-                </p>
-            </li>
-
-            <li>
-                <div class="system-step-title">
-                    <strong>Chuẩn bị bản mới</strong>
-                </div>
-                <p>
-                    Kiểm tra ứng dụng trên máy và tạo bản phát hành.
-                </p>
-            </li>
-
-            <li>
-                <div class="system-step-title">
-                    <strong>Triển khai</strong>
-                </div>
-                <p>
-                    Upload lên Somee, giữ lại cấu hình và tệp tải lên,
-                    sau đó kiểm tra các chức năng chính.
-                </p>
-            </li>
-        </ol>
-    </section>
+    </div>
 </div>
