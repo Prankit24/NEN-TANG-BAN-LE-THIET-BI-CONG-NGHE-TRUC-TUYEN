@@ -17,83 +17,112 @@
     <link rel="stylesheet" href="~/css/admin/admin-dashboard.css" asp-append-version="true" />
 }
 
-<div class="dashboard-filter d-flex align-items-center gap-3 mb-3">
-    <form method="get" class="d-flex align-items-center gap-3">
-        <label class="form-label mb-0" for="filterMonth">Tháng</label>
-        <select class="form-select form-select-sm" id="filterMonth" name="month">
-            @foreach (var i in Enumerable.Range(1, 12)) {
-                <option value="@i" selected="@(i == (Model.SelectedMonth ?? DateTime.Now.Month))">Tháng @i</option>
-            }
-        </select>
-        <label class="form-label mb-0" for="filterYear">Năm</label>
-        <select class="form-select form-select-sm" id="filterYear" name="year">
-            @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year; y++) {
-                <option value="@y" selected="@(y == (Model.SelectedYear ?? DateTime.Now.Year))">@y</option>
-            }
-        </select>
-        <button type="submit" class="btn btn-primary btn-sm">Lọc</button>
-    </form>
+<!-- SECTION 1: HEADER & KPI SUMMARY -->
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+        <div>
+            <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">Tổng quan hoạt động</h2>
+            <p class="text-muted small mb-0">Theo dõi doanh thu, đơn hàng và các chỉ số vận hành quan trọng</p>
+        </div>
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0" for="filterMonth" style="font-size:13px; font-weight:500;">Tháng</label>
+            <select class="form-select form-select-sm" id="filterMonth" name="month" style="width: 110px; height:38px;">
+                @foreach (var i in Enumerable.Range(1, 12)) {
+                    <option value="@i" selected="@(i == (Model.SelectedMonth ?? DateTime.Now.Month))">Tháng @i</option>
+                }
+            </select>
+            <label class="form-label mb-0" for="filterYear" style="font-size:13px; font-weight:500;">Năm</label>
+            <select class="form-select form-select-sm" id="filterYear" name="year" style="width: 100px; height:38px;">
+                @for (int y = DateTime.Now.Year - 5; y <= DateTime.Now.Year; y++) {
+                    <option value="@y" selected="@(y == (Model.SelectedYear ?? DateTime.Now.Year))">@y</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm px-3" style="height:38px; font-weight:600;">Lọc</button>
+        </form>
+    </div>
+
+    <!-- 5 KPIs cân đối 1 hàng -->
+    <div class="dashboard-stat-grid">
+        <article class="dashboard-stat-card">
+            <div class="stat-card-icon revenue"><i class="bi bi-graph-up"></i></div>
+            <span>Doanh thu tháng</span>
+            <strong>@Model.RevenueThisMonth.ToString("N0") đ</strong>
+            <small class="@(Model.RevenueGrowth >= 0 ? "up" : "down")">
+                <i class="bi @(Model.RevenueGrowth >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                @(Model.RevenueGrowth >= 0 ? "+" : "")@Model.RevenueGrowth% so với tháng trước
+            </small>
+        </article>
+        <article class="dashboard-stat-card">
+            <div class="stat-card-icon orders"><i class="bi bi-bag-check"></i></div>
+            <span>Đơn hàng thành công</span>
+            <strong>@Model.OrderCountThisMonth</strong>
+            <small class="@(Model.OrderGrowth >= 0 ? "up" : "down")">
+                <i class="bi @(Model.OrderGrowth >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                @(Model.OrderGrowth >= 0 ? "+" : "")@Model.OrderGrowth% so với tháng trước
+            </small>
+        </article>
+        <article class="dashboard-stat-card">
+            <div class="stat-card-icon customers"><i class="bi bi-people"></i></div>
+            <span>Khách hàng mới</span>
+            <strong>@Model.NewCustomersThisMonth</strong>
+            <small class="@(Model.CustomerGrowth >= 0 ? "up" : "down")">
+                <i class="bi @(Model.CustomerGrowth >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>
+                @(Model.CustomerGrowth >= 0 ? "+" : "")@Model.CustomerGrowth% so với tháng trước
+            </small>
+        </article>
+        <article class="dashboard-stat-card">
+            <div class="stat-card-icon stock"><i class="bi bi-exclamation-triangle"></i></div>
+            <span>Cảnh báo tồn kho</span>
+            <strong>@(lowStock != null ? ((IEnumerable<dynamic>)lowStock).Count() : 0)</strong>
+            <small class="down">
+                <i class="bi bi-box-seam"></i> Biến thể tồn kho ≤ 5
+            </small>
+        </article>
+        <article class="dashboard-stat-card">
+            <div class="stat-card-icon pending"><i class="bi bi-clock-history"></i></div>
+            <span>Đơn đang xử lý</span>
+            <strong>@pendingOrders</strong>
+            <small style="color:#2563EB;">
+                <i class="bi bi-hourglass-split"></i> Cần xử lý trong tháng
+            </small>
+        </article>
+    </div>
 </div>
 
-<div class="dashboard-header d-flex align-items-center justify-content-between mb-3">
-    <h2 class="mb-0" style="color: var(--admin-text);">Tổng quan</h2>
-</div>
-
-<div class="dashboard-stat-grid">
-    <article class="dashboard-stat-card">
-        <div class="stat-card-icon revenue"><i class="bi bi-graph-up-arrow"></i></div>
-        <span>Doanh thu tháng</span>
-        <strong>@Model.RevenueThisMonth.ToString("N0") đ</strong>
-        <small class="up">+@Model.RevenueGrowth% so với tháng trước</small>
-    </article>
-    <article class="dashboard-stat-card">
-        <div class="stat-card-icon orders"><i class="bi bi-bag-check"></i></div>
-        <span>Đơn hàng</span>
-        <strong>@Model.OrderCountThisMonth</strong>
-        <small class="up">+@Model.OrderGrowth% so với tháng trước</small>
-    </article>
-    <article class="dashboard-stat-card">
-        <div class="stat-card-icon customers"><i class="bi bi-people"></i></div>
-        <span>Khách hàng mới</span>
-        <strong>@Model.NewCustomersThisMonth</strong>
-        <small class="up">+@Model.CustomerGrowth% so với tháng trước</small>
-    </article>
-    <article class="dashboard-stat-card">
-        <div class="stat-card-icon stock"><i class="bi bi-exclamation-triangle"></i></div>
-        <span>Tồn kho thấp</span>
-        <strong>@(lowStock != null ? ((IEnumerable<dynamic>)lowStock).Count() : 0)</strong>
-        <small class="up">Sản phẩm ≤5</small>
-    </article>
-    <article class="dashboard-stat-card">
-        <div class="stat-card-icon pending"><i class="bi bi-clock"></i></div>
-        <span>Đơn đang xử lý</span>
-        <strong>@pendingOrders</strong>
-        <small class="up">Trong tháng đã chọn</small>
-    </article>
-</div>
-
+<!-- SECTION 2: BIỂU ĐỒ DOANH THU & DANH MỤC -->
 <div class="dashboard-chart-grid">
-    <section class="admin-card" style="flex: 2;">
-        <h2>Doanh thu theo tháng @DateTime.Now.Year</h2>
+    <section class="admin-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2>Doanh thu 12 tháng năm @DateTime.Now.Year</h2>
+            <span class="text-muted small">Đơn vị: VNĐ</span>
+        </div>
         <div class="actual-revenue-chart">
             @for (int i = 0; i < monthlyRevenue.Count; i++) {
                 var height = monthlyRevenue[i] <= 0 ? 3 : Math.Max(8, (int)(monthlyRevenue[i] / maxMonthlyRevenue * 100));
                 <div class="revenue-column">
-                    <div class="revenue-value">@monthlyRevenue[i].ToString("N0")</div>
-                    <div class="revenue-column-area"><span style="height: @height%"></span></div>
+                    <div class="revenue-value" title="@monthlyRevenue[i].ToString("N0") đ">
+                        @(monthlyRevenue[i] >= 1000000 ? (monthlyRevenue[i] / 1000000m).ToString("0.#") + "M" : (monthlyRevenue[i] > 0 ? (monthlyRevenue[i] / 1000m).ToString("0.#") + "K" : "0"))
+                    </div>
+                    <div class="revenue-column-area">
+                        <span style="height: @height%" title="@monthNames[i]: @monthlyRevenue[i].ToString("N0") đ"></span>
+                    </div>
                     <small>@monthNames[i]</small>
                 </div>
             }
         </div>
     </section>
-    <section class="admin-card" style="flex: 1;">
-        <h2>Bán hàng theo danh mục</h2>
+
+    <section class="admin-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2>Doanh số theo danh mục</h2>
+            <span class="text-muted small">Top nhóm bán chạy</span>
+        </div>
         @if (Model.HasCategorySales) {
             <div class="actual-category-chart">
                 @foreach (dynamic category in categorySales) {
                     decimal total = category.Total;
                     decimal maxTotal = Model.MaxCategorySales;
-                    var width = Math.Max(4, (int)(total / maxTotal * 100));
+                    var width = Math.Max(5, (int)(total / maxTotal * 100));
                     <div class="actual-category-row">
                         <span title="@category.Name">@category.Name</span>
                         <div><i style="width: @width%"></i></div>
@@ -102,92 +131,179 @@
                 }
             </div>
         } else {
-            <p class="dashboard-empty">Chưa có chi tiết đơn hàng để thống kê danh mục.</p>
+            <p class="dashboard-empty">Chưa có dữ liệu danh mục cho kỳ này.</p>
         }
     </section>
 </div>
 
-<h3 class="mt-4">Thống kê nhân viên</h3>
-<div class="admin-card staff-summary">
-    <ul class="list-unstyled">
-        <li>Tổng nhân viên: <strong>@staffTotal</strong></li>
-        <li>Đang hoạt động: <strong>@staffActive</strong></li>
-        <li>Khoá: <strong>@staffLocked</strong></li>
-    </ul>
-</div>
+<!-- SECTION 3: THỐNG KÊ CHI TIẾT & BẢNG VẬN HÀNH -->
+<div class="row g-4 mb-4">
+    <!-- Cảnh báo tồn kho & Sản phẩm -->
+    <div class="col-lg-6">
+        <div class="admin-card h-100">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <h2 style="font-size: 16px; font-weight: 600;">Sản phẩm sắp hết hàng (Tồn kho ≤ 5)</h2>
+                <span class="badge" style="background:#FFFBEB; color:#B45309; font-weight:600;">
+                    @(lowStock != null ? ((IEnumerable<dynamic>)lowStock).Count() : 0) mặt hàng
+                </span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Tên sản phẩm</th>
+                            <th class="text-end" style="width: 120px;">Số lượng còn</th>
+                            <th class="text-end" style="width: 110px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (lowStock != null && ((IEnumerable<dynamic>)lowStock).Any())
+                        {
+                            foreach (dynamic item in lowStock) {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark text-truncate" style="max-width: 280px;" title="@item.ProductName">
+                                            @item.ProductName
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge" style="background:#FEF2F2; color:#DC2626; font-weight:700;">
+                                            @item.SoLuong tồn
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-area="Admin" asp-controller="ImportOrder" asp-action="Index" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size:12px;">
+                                            Nhập thêm
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Tất cả sản phẩm đều có số lượng tồn kho an toàn (>5).</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<h3 class="mt-4">Tài khoản mới (không phải khách)</h3>
-<div class="admin-card recent-accounts-card">
-    <div class="admin-table-wrap">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Ngày tạo</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (dynamic acc in recentAccounts) {
-                    <tr>
-                        <td>@acc.TenNguoiDung</td>
-                        <td>@acc.Email</td>
-                        <td>@acc.Created</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <!-- Tình trạng nhân sự & Tài khoản mới -->
+    <div class="col-lg-6">
+        <div class="admin-card h-100">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <h2 style="font-size: 16px; font-weight: 600;">Nhân viên & Tài khoản quản trị</h2>
+                <a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-sm btn-outline-primary" style="font-size:12px;">
+                    Quản lý
+                </a>
+            </div>
+
+            <!-- Thống kê nhân sự nhanh -->
+            <div class="d-flex align-items-center justify-content-between p-3 mb-3" style="background:#F8FAFC; border:1px solid #DCE3ED;">
+                <div>
+                    <span style="font-size:13px; font-weight:600; color:#172033;">Tổng nhân viên hệ thống</span>
+                    <small class="d-block text-muted">Nhân sự có quyền quản lý & bán hàng</small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end">
+                        <span class="d-block" style="font-size:18px; font-weight:700; color:#16803C;">@staffActive</span>
+                        <small style="font-size:11px; color:#16803C; font-weight:600;">Hoạt động</small>
+                    </div>
+                    <div style="width:1px; height:24px; background:#DCE3ED;"></div>
+                    <div class="text-end">
+                        <span class="d-block" style="font-size:18px; font-weight:700; color:#DC2626;">@staffLocked</span>
+                        <small style="font-size:11px; color:#DC2626; font-weight:600;">Đã khóa</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng tài khoản nhân sự mới -->
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th class="text-end">Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (recentAccounts != null && ((IEnumerable<dynamic>)recentAccounts).Any())
+                        {
+                            foreach (dynamic acc in recentAccounts) {
+                                <tr>
+                                    <td><strong>@acc.TenNguoiDung</strong></td>
+                                    <td class="text-muted">@acc.Email</td>
+                                    <td class="text-end text-muted">@acc.Created</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">Chưa có tài khoản nhân viên nào.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
-<section class="admin-card recent-orders-card mt-4">
+<!-- Đơn hàng gần đây -->
+<section class="admin-card recent-orders-card mb-4">
     <div class="card-title-row">
-        <h2>Đơn hàng gần đây</h2>
-        <span>Dữ liệu trực tiếp từ hệ thống</span>
+        <div>
+            <h2>Đơn hàng gần đây</h2>
+            <span>Danh sách các đơn hàng mới nhất cần theo dõi</span>
+        </div>
+        <a asp-area="" asp-controller="Order" asp-action="Index" class="btn btn-sm btn-outline-secondary" style="font-size:12px;">Xem tất cả</a>
     </div>
     <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>Mã đơn</th>
+                    <th style="width: 140px;">Mã đơn</th>
                     <th>Khách hàng</th>
-                    <th>Giá trị</th>
-                    <th>Trạng thái</th>
-                    <th>Ngày đặt</th>
+                    <th style="width: 160px;">Giá trị</th>
+                    <th style="width: 140px;">Trạng thái</th>
+                    <th style="width: 140px;" class="text-end">Ngày đặt</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (dynamic order in recentOrders) {
-                    var status = order.Status;
-                    var statusClass = status switch {
-                        "Đã giao" => "done",
-                        "Đang giao" => "shipping",
-                        "Chờ xử lý" => "pending",
-                        "Chờ xác nhận" => "pending",
-                        "Đã hủy" => "cancelled",
-                        "Đã huỷ" => "cancelled",
-                        _ => "shipping"
-                    };
+                @if (recentOrders != null && ((IEnumerable<dynamic>)recentOrders).Any())
+                {
+                    foreach (dynamic order in recentOrders) {
+                        var status = order.Status;
+                        var statusClass = status switch {
+                            "Đã giao" => "done",
+                            "Đang giao" => "shipping",
+                            "Chờ xử lý" => "pending",
+                            "Chờ xác nhận" => "pending",
+                            "Đã hủy" => "cancelled",
+                            "Đã huỷ" => "cancelled",
+                            _ => "shipping"
+                        };
+                        <tr>
+                            <td><strong style="color:#315EFB;">@order.OrderCode</strong></td>
+                            <td>@order.CustomerName</td>
+                            <td class="table-price">@order.TotalText</td>
+                            <td><span class="status @statusClass">@status</span></td>
+                            <td class="text-muted text-end">@order.OrderDateText</td>
+                        </tr>
+                    }
+                }
+                else
+                {
                     <tr>
-                        <td><strong>@order.OrderCode</strong></td>
-                        <td>@order.CustomerName</td>
-                        <td class="table-price">@order.TotalText</td>
-                        <td><span class="status @statusClass">@status</span></td>
-                        <td>@order.OrderDateText</td>
+                        <td colspan="5" class="text-center text-muted py-4">Chưa có đơn hàng nào trong hệ thống.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </section>
-
-<h3 class="mt-4">Điều hướng nhanh</h3>
-<div class="admin-card quick-links">
-    <ul class="list-inline">
-        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-sm btn-outline-primary">Dashboard</a></li>
-        <li class="list-inline-item"><a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-sm btn-outline-primary">Người dùng</a></li>
-        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Brand" asp-action="Index" class="btn btn-sm btn-outline-primary">Thương hiệu</a></li>
-        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Category" asp-action="Index" class="btn btn-sm btn-outline-primary">Danh mục</a></li>
-        <li class="list-inline-item"><a asp-area="Admin" asp-controller="Report" asp-action="Index" class="btn btn-sm btn-outline-primary">Báo cáo</a></li>
-    </ul>
-</div>

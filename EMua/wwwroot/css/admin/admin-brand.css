@@ -17,12 +17,12 @@
 }
 
 .brand-page {
-    max-width: 1400px;
-    height: calc(100dvh - 120px);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    min-height: auto;
+    margin: 0;
+    display: block;
+    overflow: visible;
     color: var(--ui-ink);
 }
 
@@ -94,14 +94,15 @@
 
 .brand-workspace {
     display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
-    flex: 1;
-    min-height: 0;
-    gap: 22px;
+    grid-template-columns: minmax(280px, 30%) minmax(0, 1fr);
+    gap: 20px;
+    width: 100%;
+    align-items: start;
 }
 
 .brand-list-card,
 .brand-detail-card {
+    min-width: 0;
     min-height: 0;
     border: 1px solid var(--ui-line);
     border-radius: 0 !important;
@@ -112,14 +113,11 @@
     display: flex;
     align-self: start;
     flex-direction: column;
-    max-height: 100%;
     padding: 20px;
 }
 
 .brand-detail-card {
     padding: 24px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
 }
 
 .brand-list-heading {
@@ -172,9 +170,8 @@
 
 .brand-list {
     display: grid;
-    flex: 1;
-    min-height: 0;
     gap: 8px;
+    max-height: 480px;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 4px;

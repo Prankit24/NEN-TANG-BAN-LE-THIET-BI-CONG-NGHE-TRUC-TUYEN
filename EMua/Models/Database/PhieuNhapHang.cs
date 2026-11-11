@@ -14,6 +14,8 @@ public partial class PhieuNhapHang
     [StringLength(50)]
     public string MaChungTu { get; set; } = null!;
 
+    public int? MaNhaCungCap { get; set; }
+
     [StringLength(200)]
     public string NhaCungCap { get; set; } = null!;
 
@@ -45,10 +47,28 @@ public partial class PhieuNhapHang
     [Column(TypeName = "decimal(18, 2)")]
     public decimal TongTienDuKien { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TienHangChuaThue { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TienThueVat { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ChiPhiVanChuyen { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ChiPhiKhac { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ChietKhau { get; set; } = 0.00m;
+
     [Column(TypeName = "timestamp without time zone")]
     public DateTime? NgayNhapKho { get; set; }
 
     public int? MaNguoiNhapKho { get; set; }
+
+    [ForeignKey("MaNhaCungCap")]
+    public virtual NhaCungCap? MaNhaCungCapNavigation { get; set; }
 
     [ForeignKey("MaNguoiTao")]
     public virtual NguoiDung MaNguoiTaoNavigation { get; set; } = null!;

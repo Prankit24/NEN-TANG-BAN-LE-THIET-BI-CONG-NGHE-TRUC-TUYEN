@@ -98,6 +98,7 @@ builder.Services.AddDataProtection()
 builder.Services.AddScoped<IAppEmailSender, SmtpEmailSender>();
 
 builder.Services.AddScoped<EmailVerificationService>();
+builder.Services.AddScoped<ISupplierQuotationService, SupplierQuotationService>();
 
 // ============================================================
 // 4. SESSION

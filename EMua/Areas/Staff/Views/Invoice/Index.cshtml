@@ -7,7 +7,19 @@
     var search = ViewBag.Search as string ?? "";
     var selectedStatus = ViewBag.SelectedStatus as string ?? "";
     var statusList = ViewBag.StatusList as List<string> ?? new List<string>();
-    var hasFilter = !string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus);
+    var selectedMonth = ViewBag.SelectedMonth as int?;
+    var selectedYear = ViewBag.SelectedYear as int?;
+    var fromDate = ViewBag.FromDate as string ?? "";
+    var toDate = ViewBag.ToDate as string ?? "";
+    var hasFilter = !string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus) 
+                    || selectedMonth.HasValue || selectedYear.HasValue || !string.IsNullOrWhiteSpace(fromDate) || !string.IsNullOrWhiteSpace(toDate);
+
+    int totalInvoicesCount = ViewBag.TotalInvoicesCount ?? invoices.Count;
+    decimal totalGrossRevenue = ViewBag.TotalGrossRevenue ?? 0m;
+    decimal totalNetRevenue = ViewBag.TotalNetRevenue ?? 0m;
+    decimal totalVatAmount = ViewBag.TotalVatAmount ?? 0m;
+    decimal totalDiscount = ViewBag.TotalDiscount ?? 0m;
+    var vatByRateDict = ViewBag.VatByRateDict as Dictionary<decimal, decimal> ?? new Dictionary<decimal, decimal>();
 }
 
 <style>
@@ -15,138 +27,165 @@
         box-sizing: border-box;
     }
 
-        .emua-invoice-list .invoice-toolbar {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 12px;
-            margin-bottom: 14px;
-            border: 1px solid #dfe5ed;
-            background: #fff;
+    .emua-invoice-list .invoice-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .emua-invoice-list .invoice-kpi-card {
+        background: #ffffff;
+        border: 1px solid #dfe5ed;
+        padding: 14px 16px;
+        border-radius: 0;
+    }
+
+    .emua-invoice-list .invoice-kpi-label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+    }
+
+    .emua-invoice-list .invoice-kpi-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: #172033;
+    }
+
+    .emua-invoice-list .invoice-kpi-sub {
+        font-size: 11px;
+        color: #8290a3;
+        margin-top: 4px;
+    }
+
+    .emua-invoice-list .invoice-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0;
+        margin-bottom: 14px;
+        border: none;
+        background: transparent;
+    }
+
+    .emua-invoice-list .invoice-toolbar .form-control,
+    .emua-invoice-list .invoice-toolbar .form-select,
+    .emua-invoice-list .invoice-toolbar .btn {
+        height: 40px;
+        font-size: 13px;
+        border-radius: 0 !important;
+    }
+
+    .emua-invoice-list .invoice-panel {
+        background: white;
+        border: 1px solid #dfe5ed;
+        overflow: hidden;
+    }
+
+    .emua-invoice-list .invoice-table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .emua-invoice-list .invoice-table thead th {
+        padding: 12px 14px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .025em;
+        background: #f8fafc;
+        color: #475569;
+        white-space: nowrap;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .emua-invoice-list .invoice-table tbody td {
+        padding: 12px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        color: #172033;
+    }
+
+    .emua-invoice-list .invoice-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    @@media (max-width: 991.98px) {
+        .emua-invoice-list .invoice-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-
-        .emua-invoice-list .invoice-search {
-            flex: 1 1 320px;
-            min-width: 200px;
-        }
-
-        .emua-invoice-list .invoice-status {
-            flex: 0 1 230px;
-            min-width: 170px;
-        }
-
-        .emua-invoice-list .invoice-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        .emua-invoice-list .invoice-toolbar .form-control,
-        .emua-invoice-list .invoice-toolbar .form-select,
-        .emua-invoice-list .invoice-toolbar .btn {
-            height: 40px;
-            font-size: 13px;
-            border-radius: 0 !important;
-        }
-
-        .emua-invoice-list .invoice-toolbar .btn {
-            padding: 0 16px;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .emua-invoice-list .invoice-panel {
-            background: white;
-            border: 1px solid #dfe5ed;
-            overflow: hidden;
-        }
-
-        .emua-invoice-list .invoice-table {
-            width: 100%;
-            margin-bottom: 0;
-        }
-
-            .emua-invoice-list .invoice-table thead th {
-                padding: 13px 14px;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: .025em;
-                background: #f7f9fc;
-                color: #425575;
-                white-space: nowrap;
-                border-bottom: 1px solid #e1e7ef;
-            }
-
-            .emua-invoice-list .invoice-table tbody td {
-                padding: 13px 14px;
-                font-size: 13px;
-                border-bottom: 1px solid #edf1f6;
-                vertical-align: middle;
-            }
-
-            .emua-invoice-list .invoice-table tbody tr:last-child td {
-                border-bottom: 0;
-            }
-
-        .emua-invoice-list .invoice-actions-cell {
-            white-space: nowrap;
-        }
-
-            .emua-invoice-list .invoice-actions-cell .btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                margin: 2px;
-            }
-
-        .emua-invoice-list .invoice-panel .btn,
-        .emua-invoice-list .invoice-panel .badge,
-        .emua-invoice-list .invoice-panel .page-link {
-            border-radius: 0 !important;
-            box-shadow: none !important;
-        }
-
-        .emua-invoice-list .invoice-pagination {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 14px;
-            border-top: 1px solid #e1e7ef;
-        }
-
-            .emua-invoice-list .invoice-pagination .pagination {
-                flex-wrap: wrap;
-                gap: 3px;
-            }
-
-    @@media (max-width: 767.98px) {
-        .emua-invoice-list .invoice-search,
-        .emua-invoice-list .invoice-status {
-            flex: 1 1 100%;
-            min-width: 0;
-        }
-
-        .emua-invoice-list .invoice-actions {
-            width: 100%;
-            margin-left: 0;
+    }
+    @@media (max-width: 575.98px) {
+        .emua-invoice-list .invoice-kpi-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
 <div class="emua-invoice-list">
-    <!-- Chỉ một thanh công cụ, không lặp tiêu đề trong nội dung -->
-    <form method="get" asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="invoice-toolbar">
-        <div class="invoice-search">
-            <input type="search" name="q" value="@search" class="form-control" aria-label="Tìm hóa đơn" placeholder="Tìm mã HĐ, mã ĐH hoặc tên khách hàng..." />
+    <!-- KHỐI THỐNG KÊ DOANH THU & THUẾ VAT THEO KỲ -->
+    <div class="invoice-kpi-grid">
+        <div class="invoice-kpi-card">
+            <div class="invoice-kpi-label">Số lượng hóa đơn</div>
+            <div class="invoice-kpi-val text-primary">@totalInvoicesCount.ToString("N0")</div>
+            <div class="invoice-kpi-sub">Chứng từ bán hàng đã cấp</div>
         </div>
-        <div class="invoice-status">
-            <select name="status" class="form-select" aria-label="Trạng thái hóa đơn">
+        <div class="invoice-kpi-card">
+            <div class="invoice-kpi-label">Tiền hàng trước thuế</div>
+            <div class="invoice-kpi-val text-dark">@totalNetRevenue.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="invoice-kpi-sub">Doanh thu chịu thuế thuần</div>
+        </div>
+        <div class="invoice-kpi-card">
+            <div class="invoice-kpi-label">Tổng thuế GTGT (VAT)</div>
+            <div class="invoice-kpi-val text-success">@totalVatAmount.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="invoice-kpi-sub">
+                @if (vatByRateDict.Any())
+                {
+                    <span>@string.Join(" | ", vatByRateDict.Select(kv => $"{kv.Key:G29}%: {kv.Value:N0}₫"))</span>
+                }
+                else
+                {
+                    <span>Áp dụng theo Luật GTGT 48/2024</span>
+                }
+            </div>
+        </div>
+        <div class="invoice-kpi-card">
+            <div class="invoice-kpi-label">Tổng tiền thanh toán</div>
+            <div class="invoice-kpi-val text-dark">@totalGrossRevenue.ToString("N0") <small class="fs-6">₫</small></div>
+            <div class="invoice-kpi-sub">Đã gồm VAT &amp; trừ chiết khấu</div>
+        </div>
+    </div>
+
+    <!-- THANH BỘ LỌC ĐA NĂNG (NGÀY / THÁNG / NĂM / TRẠNG THÁI / TÌM KIẾM) -->
+    <form method="get" asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="invoice-toolbar">
+        <div style="flex: 1 1 260px; min-width: 180px;">
+            <input type="search" name="q" value="@search" class="form-control" placeholder="Mã #HD, mã #DH, tên khách, SĐT, nhân viên..." />
+        </div>
+        <div style="width: 130px;">
+            <select name="month" class="form-select">
+                <option value="">Tất cả tháng</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(selectedMonth == m)">Tháng @m</option>
+                }
+            </select>
+        </div>
+        <div style="width: 110px;">
+            <select name="year" class="form-select">
+                <option value="">Tất cả năm</option>
+                @for (int y = DateTime.Today.Year - 2; y <= DateTime.Today.Year + 1; y++)
+                {
+                    <option value="@y" selected="@(selectedYear == y)">Năm @y</option>
+                }
+            </select>
+        </div>
+        <div style="width: 160px;">
+            <select name="status" class="form-select">
                 <option value="">Tất cả trạng thái</option>
                 @foreach (var st in statusList)
                 {
@@ -154,86 +193,132 @@
                 }
             </select>
         </div>
-        <div class="invoice-actions">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+        <div class="d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary px-3"><i class="bi bi-funnel me-1"></i> Lọc</button>
             @if (hasFilter)
             {
-                <a asp-area="Staff" asp-controller="Invoice" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Đặt lại</a>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Đặt lại bộ lọc"><i class="bi bi-arrow-counterclockwise"></i></a>
             }
+            <a asp-action="DailyReport" class="btn btn-outline-primary px-3" title="Báo cáo tổng hợp hóa đơn cuối ngày">
+                <i class="bi bi-calendar-check me-1"></i> Báo cáo cuối ngày
+            </a>
+            <a asp-action="ExportReportCsv" 
+               asp-route-status="@selectedStatus" 
+               asp-route-month="@selectedMonth" 
+               asp-route-year="@selectedYear" 
+               asp-route-fromDate="@fromDate" 
+               asp-route-toDate="@toDate" 
+               class="btn btn-outline-success px-3" title="Xuất báo cáo tổng hợp hóa đơn">
+                <i class="bi bi-file-earmark-excel me-1"></i> Xuất CSV
+            </a>
         </div>
     </form>
 
+    <!-- BẢNG DANH SÁCH HÓA ĐƠN -->
     <section class="invoice-panel">
         <div class="table-responsive">
-            <table class="table table-hover align-middle invoice-table">
+            <table class="table align-middle invoice-table mb-0">
                 <thead>
                     <tr>
-                        <th>Mã hóa đơn</th>
-                        <th>Đơn hàng gốc</th>
-                        <th style="min-width:170px">Khách hàng</th>
-                        <th>Người lập</th>
-                        <th>Ngày lập</th>
-                        <th class="text-end">Tổng thanh toán</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Thao tác</th>
+                        <th style="width: 110px;">Mã hóa đơn</th>
+                        <th style="width: 110px;">Đơn hàng</th>
+                        <th style="min-width: 180px;">Khách hàng / Người nhận</th>
+                        <th style="width: 140px;">Người lập</th>
+                        <th style="width: 130px;">Ngày lập</th>
+                        <th style="width: 130px;" class="text-end">Tiền trước thuế</th>
+                        <th style="width: 110px;" class="text-end">Thuế VAT</th>
+                        <th style="width: 140px;" class="text-end">Tổng thanh toán</th>
+                        <th style="width: 130px;" class="text-center">Trạng thái</th>
+                        <th style="width: 110px;" class="text-end">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var invoice in invoices)
+                    @if (invoices.Any())
+                    {
+                        foreach (var invoice in invoices)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-primary border font-monospace">#HD-@invoice.MaHoaDon.ToString("D5")</span>
+                                </td>
+                                <td>
+                                    <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@invoice.MaDonHang" class="text-decoration-none fw-semibold">
+                                        #DH-@invoice.MaDonHang.ToString("D5")
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@(invoice.HoTenKhachHang ?? invoice.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
+                                    <small class="text-muted">@(invoice.SoDienThoai ?? invoice.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted"><i class="bi bi-person me-1"></i>@(invoice.TenNguoiLap ?? invoice.MaNguoiLapNavigation?.TenNguoiDung ?? "Nhân viên")</small>
+                                </td>
+                                <td class="text-nowrap small text-muted">
+                                    @(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    @((invoice.TienTruocThue ?? 0m).ToString("N0")) ₫
+                                </td>
+                                <td class="text-end text-nowrap text-success fw-semibold">
+                                    @((invoice.TienThueVat ?? 0m).ToString("N0")) ₫
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <strong class="text-dark">@((invoice.TongTien ?? 0).ToString("N0")) ₫</strong>
+                                </td>
+                                <td class="text-center">
+                                    @if (invoice.TrangThaiHoaDon == "Đã thanh toán")
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Đã thanh toán</span>
+                                    }
+                                    else if (invoice.TrangThaiHoaDon == "Chờ thanh toán")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ thanh toán</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-primary py-1 px-2" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Print" asp-route-id="@invoice.MaHoaDon" target="_blank" class="btn btn-sm btn-outline-secondary py-1 px-2" title="In / Xuất PDF">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td><strong>#HD-@invoice.MaHoaDon.ToString("D5")</strong></td>
-                            <td>
-                                <a asp-area="Staff" asp-controller="Order" asp-action="Details" asp-route-id="@invoice.MaDonHang" class="text-decoration-none fw-semibold">#DH-@invoice.MaDonHang.ToString("D5")</a>
-                            </td>
-                            <td>
-                                <div class="fw-semibold text-dark">@(invoice.HoTenKhachHang ?? invoice.MaDonHangNavigation?.HoTenNhanHang ?? "Khách hàng")</div>
-                                <small class="text-muted">@(invoice.SoDienThoai ?? invoice.MaDonHangNavigation?.SoDienThoaiNhanHang ?? "—")</small>
-                            </td>
-                            <td>
-                                <small class="text-muted"><i class="bi bi-person-badge me-1"></i>@(invoice.TenNguoiLap ?? invoice.MaNguoiLapNavigation?.TenNguoiDung ?? invoice.MaNguoiLapNavigation?.TenDangNhap ?? "Chưa xác định")</small>
-                            </td>
-                            <td class="text-nowrap">@(invoice.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
-                            <td class="text-end text-nowrap"><strong class="text-dark">@((invoice.TongTien ?? 0).ToString("N0")) đ</strong></td>
-                            <td>
-                                @if (invoice.TrangThaiHoaDon == "Đã thanh toán")
-                                {
-                                    <span class="badge bg-success">@invoice.TrangThaiHoaDon</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark">@(invoice.TrangThaiHoaDon ?? "Đã lập")</span>
-                                }
-                            </td>
-                            <td class="text-end invoice-actions-cell">
-                                <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@invoice.MaHoaDon" class="btn btn-sm btn-outline-primary" title="Xem chi tiết"><i class="bi bi-eye"></i> Chi tiết</a>
-                                <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@invoice.MaHoaDon" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" title="In phiếu / PDF"><i class="bi bi-printer"></i> In</a>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                Chưa có hóa đơn nào phù hợp với điều kiện tìm kiếm.
                             </td>
                         </tr>
-                    }
-                    @if (invoices.Count == 0)
-                    {
-                        <tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Không tìm thấy hóa đơn nào phù hợp.</td></tr>
                     }
                 </tbody>
             </table>
         </div>
+
         @if (totalPages > 1)
         {
-            <div class="invoice-pagination">
-                <span class="text-muted small">Trang @currentPage / @totalPages</span>
+            <div class="d-flex align-items-center justify-content-between p-3 border-top">
+                <span class="small text-muted">Trang @currentPage / @totalPages (Tổng @totalInvoicesCount hóa đơn)</span>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Trước</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Trước</a>
                     </li>
-                    @for (int i = 1; i <= totalPages; i++)
+                    @for (int p = 1; p <= totalPages; p++)
                     {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selectedStatus">@i</a>
+                        <li class="page-item @(p == currentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">@p</a>
                         </li>
                     }
                     <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-area="Staff" asp-controller="Invoice" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus">Sau</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Sau</a>
                     </li>
                 </ul>
             </div>

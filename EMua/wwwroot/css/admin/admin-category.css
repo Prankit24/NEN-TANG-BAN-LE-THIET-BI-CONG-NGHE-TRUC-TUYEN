@@ -17,8 +17,9 @@
 }
 
 .category-page {
-    max-width: 1280px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     color: var(--ui-ink);
 }
 
@@ -93,8 +94,9 @@
 
 .category-workspace {
     display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
-    gap: 22px;
+    grid-template-columns: minmax(280px, 30%) minmax(0, 1fr);
+    gap: 20px;
+    width: 100%;
 }
 
 .category-list-card,
@@ -170,9 +172,8 @@
 
 .category-list {
     display: grid;
-    flex: 1;
-    min-height: 0;
     gap: 8px;
+    max-height: 480px;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 4px;
@@ -269,8 +270,6 @@
 
 .category-detail-card {
     padding: 24px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
 }
 
 .category-detail-heading {
@@ -463,20 +462,19 @@
 
 @media (min-width: 901px) {
     .category-page {
-        height: calc(100dvh - 120px);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        min-height: auto;
+        display: block;
+        overflow: visible;
     }
 
     .category-workspace {
-        flex: 1;
-        min-height: 0;
+        min-height: auto;
+        align-items: start;
     }
 
     .category-list-card,
     .category-detail-card {
-        min-height: 0;
+        min-height: auto;
     }
 }
 

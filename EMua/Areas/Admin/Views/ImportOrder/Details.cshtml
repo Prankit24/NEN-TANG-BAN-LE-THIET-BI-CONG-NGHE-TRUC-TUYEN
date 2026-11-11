@@ -33,7 +33,7 @@
 <div class="row g-3">
     <!-- Thông tin chung & Nút phê duyệt của Admin -->
     <div class="col-lg-4">
-        <div class="card border p-3 shadow-sm mb-3">
+        <div class="border p-3 bg-white mb-3">
             <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin đề nghị</h6>
 
             <div class="mb-2">
@@ -99,7 +99,7 @@
         <!-- KHỐI HÀNH ĐỘNG CỦA ADMIN -->
         @if (Model.TrangThai == "Chờ duyệt")
         {
-            <div class="card border border-primary p-3 shadow-sm">
+            <div class="border border-primary p-3 bg-white">
                 <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="bi bi-check2-all me-1"></i>Quyết định phê duyệt</h6>
 
                 <form asp-action="Approve" method="post" class="mb-2">
@@ -127,7 +127,7 @@
         }
         else if (Model.TrangThai == "Đã duyệt")
         {
-            <div class="card border border-success p-3 shadow-sm bg-light">
+            <div class="border border-success p-3 bg-white">
                 <h6 class="fw-bold text-success border-bottom pb-2 mb-2"><i class="bi bi-box-seam me-1"></i>Kiểm nhận nhập kho</h6>
                 <p class="small text-muted mb-3">Hàng đã được giao tới kho? Bấm xác nhận sau khi đã kiểm đếm hợp lệ. <strong>Tồn kho sẽ tự động được cộng vào từng biến thể.</strong></p>
 
@@ -144,7 +144,7 @@
 
     <!-- Danh sách chi tiết biến thể -->
     <div class="col-lg-8">
-        <div class="card border shadow-sm p-0 overflow-hidden">
+        <div class="border p-0 bg-white">
             <div class="p-3 border-bottom bg-light">
                 <h6 class="fw-bold mb-0">Danh sách sản phẩm &amp; biến thể yêu cầu</h6>
             </div>

@@ -33,10 +33,10 @@
     }
 
     .staff-filter-card {
-        background: #ffffff;
-        border: 1px solid #e5eaf2;
-        border-radius: 8px;
-        padding: 16px 20px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0;
     }
 
     .staff-filter-form {
@@ -48,8 +48,8 @@
 
     .staff-table-card {
         background: #ffffff;
-        border: 1px solid #e5eaf2;
-        border-radius: 8px;
+        border: none;
+        border-radius: 0;
         overflow: hidden;
     }
 
@@ -161,7 +161,7 @@
 
 <div class="staff-product-wrapper">
     <!-- Thanh lọc, tìm kiếm & thao tác -->
-    <div class="staff-filter-card">
+    
         <form method="get" class="staff-filter-form">
             <a class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" asp-action="Create">
                 <i class="bi bi-plus-lg"></i>
@@ -176,6 +176,7 @@
                     <input name="q" value="@search" class="form-control form-control-sm border-start-0" placeholder="Tìm kiếm tên sản phẩm, mã, thông số..." />
                 </div>
             </div>
+            
 
             <!-- Lọc Danh mục -->
             <div style="width: 170px;">
@@ -231,10 +232,10 @@
                 </a>
             }
         </form>
-    </div>
+    
 
     <!-- Bảng danh sách sản phẩm -->
-    <div class="staff-table-card">
+    <div class="staff-table-wrapper">
         <div class="table-responsive">
             <table class="table staff-product-table align-middle">
                 <thead>
@@ -417,3 +418,4 @@
         }
     </div>
 </div>
+

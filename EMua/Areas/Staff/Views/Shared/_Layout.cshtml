@@ -40,33 +40,6 @@
         ? "N"
         : displayName[..1].ToUpperInvariant();
 
-    // Dùng giờ Việt Nam để lời chào đúng ngày khi deploy lên Render (UTC).
-    var vietnamNow = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(7));
-    var today = vietnamNow.Date;
-    var nameParts = displayName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-    var shortName = nameParts.Length > 0 ? nameParts[^1] : "bạn";
-    var daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
-    var isNearPayday = today.Day >= daysInMonth - 2;
-
-    string greetingMessage;
-    if (isNearPayday)
-    {
-        greetingMessage = $"Cuối tháng rồi, {shortName}! Sắp nhận lương rồi, vui lên nhé!";
-    }
-    else
-    {
-        greetingMessage = today.DayOfWeek switch
-        {
-            DayOfWeek.Monday => $"Ngày mới tốt lành nhé, {shortName}! Chúc bạn một tuần thật suôn sẻ.",
-            DayOfWeek.Tuesday => $"Thứ Ba nhiều năng lượng nhé, {shortName}!",
-            DayOfWeek.Wednesday => $"Giữa tuần rồi, {shortName}! Cố lên nhé!",
-            DayOfWeek.Thursday => $"Thứ Năm thuận lợi nhé, {shortName}!",
-            DayOfWeek.Friday => $"Thứ Sáu rồi, {shortName}! Cuối tuần đang đến gần!",
-            DayOfWeek.Saturday => $"Thứ Bảy rồi, {shortName}! Sắp được nghỉ rồi!",
-            _ => $"Chủ Nhật vui vẻ nhé, {shortName}! Chúc bạn một ngày thật nhẹ nhàng."
-        };
-    }
-
     var currentController =
         ViewContext.RouteData.Values["Controller"]?.ToString();
 
@@ -126,7 +99,41 @@
           href="~/css/staff/staff-theme.css"
           asp-append-version="true" />
 
+    <link rel="stylesheet"
+          href="~/css/shared/design-system.css"
+          asp-append-version="true" />
 
+
+
+    <style>
+        /* Staff: header chỉ một dòng, không dư ngày tháng và khoảng trống */
+        body.emua-staff .admin-header {
+            min-height: 58px;
+            padding-top: 9px;
+            padding-bottom: 9px;
+        }
+
+        body.emua-staff .admin-header-left h1 {
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.35;
+            font-weight: 650;
+        }
+
+        body.emua-staff .staff-content {
+            padding-top: 14px;
+        }
+
+        @@media (max-width: 575.98px) {
+            body.emua-staff .admin-header {
+                min-height: 54px;
+            }
+
+            body.emua-staff .staff-content {
+                padding-top: 10px;
+            }
+        }
+    </style>
 
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -294,11 +301,6 @@
 
                     <div>
                         <h1>@ViewData["Title"]</h1>
-                        <p class="staff-header-sub">
-                            <span>Kênh Nhân viên</span>
-                            <span class="staff-header-dot">·</span>
-                            <span>@vietnamNow.ToString("dd/MM/yyyy")</span>
-                        </p>
                     </div>
                 </div>
 

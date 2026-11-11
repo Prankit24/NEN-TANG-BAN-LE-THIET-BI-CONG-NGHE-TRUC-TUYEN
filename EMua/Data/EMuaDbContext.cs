@@ -42,6 +42,8 @@ public partial class EMuaDbContext : DbContext
     public virtual DbSet<PhieuNhapHang> PhieuNhapHangs { get; set; }
     public virtual DbSet<ChiTietPhieuNhapHang> ChiTietPhieuNhapHangs { get; set; }
     public virtual DbSet<ChiTietHoaDon> ChiTietHoaDons { get; set; }
+    public virtual DbSet<NhaCungCap> NhaCungCaps { get; set; }
+    public virtual DbSet<BaoGiaNhapHang> BaoGiaNhapHangs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -382,11 +384,81 @@ public partial class EMuaDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<NhaCungCap>(entity =>
+        {
+            entity.ToTable("NhaCungCap", "public");
+            entity.HasKey(e => e.MaNhaCungCap);
+            entity.Property(e => e.MaNhaCungCap).HasColumnName("MaNhaCungCap");
+            entity.Property(e => e.TenNhaCungCap).HasColumnName("TenNhaCungCap");
+            entity.Property(e => e.MaSoThue).HasColumnName("MaSoThue");
+            entity.Property(e => e.SoDienThoai).HasColumnName("SoDienThoai");
+            entity.Property(e => e.Email).HasColumnName("Email");
+            entity.Property(e => e.DiaChi).HasColumnName("DiaChi");
+            entity.Property(e => e.NguoiLienHe).HasColumnName("NguoiLienHe");
+            entity.Property(e => e.GhiChu).HasColumnName("GhiChu");
+            entity.Property(e => e.TrangThai).HasColumnName("TrangThai");
+            entity.Property(e => e.NgayTao).HasColumnName("NgayTao");
+        });
+
+        modelBuilder.Entity<BaoGiaNhapHang>(entity =>
+        {
+            entity.ToTable("BaoGiaNhapHang", "public");
+            entity.HasKey(e => e.MaBaoGia);
+            entity.Property(e => e.MaBaoGia).HasColumnName("MaBaoGia");
+            entity.Property(e => e.MaNhaCungCap).HasColumnName("MaNhaCungCap");
+            entity.Property(e => e.MaBienThe).HasColumnName("MaBienThe");
+            entity.Property(e => e.SoLuongToiThieu).HasColumnName("SoLuongToiThieu");
+            entity.Property(e => e.DonGiaChuaThue).HasColumnName("DonGiaChuaThue");
+            entity.Property(e => e.ThueSuatVat).HasColumnName("ThueSuatVat");
+            entity.Property(e => e.TienThueVat).HasColumnName("TienThueVat");
+            entity.Property(e => e.DonGiaSauThue).HasColumnName("DonGiaSauThue");
+            entity.Property(e => e.ChietKhau).HasColumnName("ChietKhau");
+            entity.Property(e => e.ChiPhiVanChuyenUocTinh).HasColumnName("ChiPhiVanChuyenUocTinh");
+            entity.Property(e => e.NgayHieuLuc).HasColumnName("NgayHieuLuc");
+            entity.Property(e => e.NgayHetHan).HasColumnName("NgayHetHan");
+            entity.Property(e => e.TrangThai).HasColumnName("TrangThai");
+            entity.Property(e => e.GhiChu).HasColumnName("GhiChu");
+            entity.Property(e => e.NgayCapNhat).HasColumnName("NgayCapNhat");
+            entity.HasOne(d => d.MaNhaCungCapNavigation)
+                .WithMany(p => p.BaoGiaNhapHangs)
+                .HasForeignKey(d => d.MaNhaCungCap)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.MaBienTheNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaBienThe)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<PhieuNhapHang>(entity =>
         {
             entity.ToTable("PhieuNhapHang", "public");
             entity.HasKey(e => e.MaPhieuNhap);
+            entity.Property(e => e.MaPhieuNhap).HasColumnName("MaPhieuNhap");
+            entity.Property(e => e.MaChungTu).HasColumnName("MaChungTu");
+            entity.Property(e => e.MaNhaCungCap).HasColumnName("MaNhaCungCap");
+            entity.Property(e => e.NhaCungCap).HasColumnName("NhaCungCap");
+            entity.Property(e => e.LyDoNhap).HasColumnName("LyDoNhap");
+            entity.Property(e => e.DienGiai).HasColumnName("DienGiai");
+            entity.Property(e => e.TrangThai).HasColumnName("TrangThai");
+            entity.Property(e => e.MaNguoiTao).HasColumnName("MaNguoiTao");
+            entity.Property(e => e.NgayTao).HasColumnName("NgayTao");
+            entity.Property(e => e.MaNguoiDuyet).HasColumnName("MaNguoiDuyet");
+            entity.Property(e => e.NgayDuyet).HasColumnName("NgayDuyet");
+            entity.Property(e => e.LyDoTuChoi).HasColumnName("LyDoTuChoi");
+            entity.Property(e => e.GhiChu).HasColumnName("GhiChu");
+            entity.Property(e => e.TongTienDuKien).HasColumnName("TongTienDuKien");
+            entity.Property(e => e.TienHangChuaThue).HasColumnName("TienHangChuaThue");
+            entity.Property(e => e.TienThueVat).HasColumnName("TienThueVat");
+            entity.Property(e => e.ChiPhiVanChuyen).HasColumnName("ChiPhiVanChuyen");
+            entity.Property(e => e.ChiPhiKhac).HasColumnName("ChiPhiKhac");
+            entity.Property(e => e.ChietKhau).HasColumnName("ChietKhau");
+            entity.Property(e => e.NgayNhapKho).HasColumnName("NgayNhapKho");
+            entity.Property(e => e.MaNguoiNhapKho).HasColumnName("MaNguoiNhapKho");
             entity.HasIndex(e => e.MaChungTu).IsUnique();
+            entity.HasOne(d => d.MaNhaCungCapNavigation)
+                .WithMany(p => p.PhieuNhapHangs)
+                .HasForeignKey(d => d.MaNhaCungCap)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(d => d.MaNguoiTaoNavigation)
                 .WithMany()
                 .HasForeignKey(d => d.MaNguoiTao)
@@ -405,6 +477,18 @@ public partial class EMuaDbContext : DbContext
         {
             entity.ToTable("ChiTietPhieuNhapHang", "public");
             entity.HasKey(e => e.MaChiTietPhieuNhap);
+            entity.Property(e => e.MaChiTietPhieuNhap).HasColumnName("MaChiTietPhieuNhap");
+            entity.Property(e => e.MaPhieuNhap).HasColumnName("MaPhieuNhap");
+            entity.Property(e => e.MaBienThe).HasColumnName("MaBienThe");
+            entity.Property(e => e.SoLuongNhap).HasColumnName("SoLuongNhap");
+            entity.Property(e => e.DonGiaNhapDuKien).HasColumnName("DonGiaNhapDuKien");
+            entity.Property(e => e.DonGiaChuaThue).HasColumnName("DonGiaChuaThue");
+            entity.Property(e => e.ThueSuatVat).HasColumnName("ThueSuatVat");
+            entity.Property(e => e.TienThueVat).HasColumnName("TienThueVat");
+            entity.Property(e => e.DonGiaSauThue).HasColumnName("DonGiaSauThue");
+            entity.Property(e => e.ChietKhau).HasColumnName("ChietKhau");
+            entity.Property(e => e.ThanhTien).HasColumnName("ThanhTien");
+            entity.Property(e => e.GhiChu).HasColumnName("GhiChu");
             entity.HasOne(d => d.MaPhieuNhapNavigation)
                 .WithMany(p => p.ChiTietPhieuNhapHangs)
                 .HasForeignKey(d => d.MaPhieuNhap)
@@ -430,7 +514,9 @@ public partial class EMuaDbContext : DbContext
             // Giữ nguyên tên bảng/cột có phân biệt chữ hoa đã tạo bằng SQL.
             if (entityType.ClrType == typeof(EmailVerification) ||
                 entityType.ClrType == typeof(PhieuNhapHang) ||
-                entityType.ClrType == typeof(ChiTietPhieuNhapHang))
+                entityType.ClrType == typeof(ChiTietPhieuNhapHang) ||
+                entityType.ClrType == typeof(NhaCungCap) ||
+                entityType.ClrType == typeof(BaoGiaNhapHang))
                 continue;
 
             // Lấy mapping cột từ tên bảng gốc trước khi thay đổi metadata.

@@ -1,82 +1,166 @@
-/* Khung cột chứa các card (Phong cách Trello chuẩn) */
-    .trello-board-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        width: 340px;
-        background-color: #f1f2f4;
-        padding: 14px;
-        border-radius: 0 !important;
-        box-shadow: none;
+.admin-task-progress-page {
+    max-width: 880px;
+}
+
+/* ===== TỔNG QUAN ===== */
+.task-overview {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.task-overview-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.task-overview-stats strong {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--admin-text, #172033);
+}
+
+.task-overview-stats span {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* ===== THANH TIẾN ĐỘ (phẳng, không bo) ===== */
+.task-bar {
+    height: 4px;
+    background: #e8edf4;
+    overflow: hidden;
+}
+
+.task-bar > span {
+    display: block;
+    height: 100%;
+    background: #315cff;
+    transition: width .3s ease;
+}
+
+.task-bar-lg {
+    height: 6px;
+    margin-bottom: 8px;
+}
+
+/* ===== DANH SÁCH ===== */
+.task-list {
+    border-top: 1px solid #e2e8f0;
+    margin-top: 24px;
+}
+
+.task-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 200px 64px;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 4px;
+    border-bottom: 1px solid #eef1f5;
+    transition: background .15s ease;
+}
+
+.task-row:hover {
+    background: #f8faff;
+}
+
+.task-row-icon {
+    font-size: 18px;
+    color: #a3afc2;
+}
+
+.task-row-title {
+    font-weight: 600;
+    color: var(--admin-text, #172033);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-row-count {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hạng mục đã hoàn thành */
+.task-row.is-done .task-row-icon {
+    color: #0f9d6e;
+}
+
+.task-row.is-done .task-row-title {
+    color: #64748b;
+}
+
+.task-row.is-done .task-bar > span {
+    background: #0f9d6e;
+}
+
+/* ===== NÚT / TRẠNG THÁI RỖNG ===== */
+.task-add-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #315cff;
+    cursor: pointer;
+}
+
+.task-add-link:hover {
+    text-decoration: underline;
+}
+
+.task-empty {
+    padding: 32px 0;
+    text-align: center;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* ===== MODAL PHẲNG ===== */
+.task-modal .modal-content,
+.task-modal .form-control,
+.task-modal .btn {
+    border-radius: 0;
+}
+
+.task-modal .modal-content {
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .18);
+}
+
+.task-modal .form-control:focus {
+    box-shadow: none;
+    background: #fff !important;
+    outline: 2px solid #315cff;
+    outline-offset: -2px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 640px) {
+    .task-overview-stats {
+        gap: 24px;
     }
 
-    /* Từng thẻ card */
-    .trello-card {
-        background: #ffffff;
-        border-radius: 0 !important;
-        padding: 12px 14px;
-        box-shadow: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
+    .task-row {
+        grid-template-columns: 24px minmax(0, 1fr) 56px;
+        gap: 10px;
     }
 
-        .trello-card:hover {
-            background-color: #fafbfc;
-            border-color: #3b82f6;
-            box-shadow: none;
-            transform: translateY(-2px);
-        }
-
-        .trello-card.completed-card {
-            background-color: #f0fdf4;
-            border-color: #bbf7d0;
-        }
-
-    /* Dòng tiêu đề card */
-    .card-title-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #172b4d;
-        font-size: 0.95rem;
-        font-weight: 600;
+    .task-row .task-bar {
+        grid-column: 2 / 4;
+        grid-row: 2;
     }
-
-    .card-status-icon {
-        font-size: 0.95rem;
-        color: #626f84;
-    }
-
-    /* Dòng tiến độ công việc bên dưới */
-    .card-meta-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 8px;
-        color: #626f84;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    /* Nút Add a card ở dưới cùng */
-    .trello-add-card-btn {
-        background: transparent;
-        border: none;
-        color: #626f84;
-        text-align: left;
-        padding: 8px 10px;
-        border-radius: 0 !important;
-        font-size: 0.9rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease;
-    }
-
-        .trello-add-card-btn:hover {
-            background-color: rgba(9, 30, 66, 0.08);
-            color: #172b4d;
-        }
+}

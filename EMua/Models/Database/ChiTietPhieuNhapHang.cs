@@ -19,6 +19,24 @@ public partial class ChiTietPhieuNhapHang
     [Column(TypeName = "decimal(18, 2)")]
     public decimal DonGiaNhapDuKien { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal DonGiaChuaThue { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(5, 2)")]
+    public decimal ThueSuatVat { get; set; } = 10.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal TienThueVat { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal DonGiaSauThue { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ChietKhau { get; set; } = 0.00m;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ThanhTien { get; set; } = 0.00m;
+
     [StringLength(255)]
     public string? GhiChu { get; set; }
 

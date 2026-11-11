@@ -19,16 +19,26 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/admin-users.css" asp-append-version="true" />
-
 }
 
 <div class="users-page">
+    <!-- TIÊU ĐỀ & NÚT THÊM TÀI KHOẢN -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">Quản lý tài khoản người dùng</h2>
+            <p class="text-muted small mb-0">Tìm kiếm, phân quyền và kiểm soát trạng thái tài khoản toàn hệ thống</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3" style="height:40px; font-size:13px;">
+            <i class="bi bi-person-plus-fill"></i>
+            Thêm tài khoản mới
+        </a>
+    </div>
 
     <!-- THỐNG KÊ NHANH -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
-            <div class="mini-stat bg-white p-3   border-0 d-flex align-items-center gap-3">
-                <div class="mini-stat-icon bg-primary bg-opacity-10 text-primary p-3  fs-4"><i class="bi bi-people-fill"></i></div>
+            <div class="mini-stat bg-white p-3 border d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-primary bg-opacity-10 text-primary p-3 fs-4"><i class="bi bi-people-fill"></i></div>
                 <div>
                     <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.TotalUsers</div>
                     <div class="mini-stat-label text-muted small">Tổng tài khoản</div>
@@ -36,8 +46,8 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="mini-stat bg-white p-3   border-0 d-flex align-items-center gap-3">
-                <div class="mini-stat-icon bg-success bg-opacity-10 text-success p-3  fs-4"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="mini-stat bg-white p-3 border d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-success bg-opacity-10 text-success p-3 fs-4"><i class="bi bi-check-circle-fill"></i></div>
                 <div>
                     <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.ActiveUsers</div>
                     <div class="mini-stat-label text-muted small">Đang hoạt động</div>
@@ -45,8 +55,8 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="mini-stat bg-white p-3   border-0 d-flex align-items-center gap-3">
-                <div class="mini-stat-icon bg-danger bg-opacity-10 text-danger p-3  fs-4"><i class="bi bi-lock-fill"></i></div>
+            <div class="mini-stat bg-white p-3 border d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-danger bg-opacity-10 text-danger p-3 fs-4"><i class="bi bi-lock-fill"></i></div>
                 <div>
                     <div class="mini-stat-value fw-bold fs-4 text-dark">@ViewBag.LockedUsers</div>
                     <div class="mini-stat-label text-muted small">Đã khóa</div>
@@ -54,8 +64,8 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="mini-stat bg-white p-3   border-0 d-flex align-items-center gap-3">
-                <div class="mini-stat-icon bg-warning bg-opacity-10 text-warning p-3  fs-4"><i class="bi bi-shield-fill-check"></i></div>
+            <div class="mini-stat bg-white p-3 border d-flex align-items-center gap-3">
+                <div class="mini-stat-icon bg-warning bg-opacity-10 text-warning p-3 fs-4"><i class="bi bi-shield-fill-check"></i></div>
                 <div>
                     <div class="mini-stat-value fw-bold fs-4 text-dark">@adminCount</div>
                     <div class="mini-stat-label text-muted small">Quản trị viên</div>
@@ -64,24 +74,17 @@
         </div>
     </div>
 
-    <!-- BỘ LỌC -->
-    <div class="filter-bar bg-white p-3 border-0 mb-4">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-            <div>
-                <h5 class="fw-bold text-dark mb-1">Danh sách tài khoản</h5>
-                <span class="text-muted small">Tìm kiếm, lọc và quản lý tài khoản người dùng</span>
-            </div>
-
-        </div>
+    <!-- BỘ LỌC TÌM KIẾM -->
+    <div class="filter-bar bg-white p-3 border mb-4">
         <form method="get" asp-action="Index" class="row g-2 align-items-center" onsubmit="return false;">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 ps-3"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0 py-2" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
+                    <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0" style="height:40px; font-size:13px;" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
                 </div>
             </div>
             <div class="col-md-3">
-                <select id="maQuyen" name="maQuyen" class="form-select bg-light  py-2">
+                <select id="maQuyen" name="maQuyen" class="form-select bg-light" style="height:40px; font-size:13px;">
                     <option value="">Tất cả phân quyền</option>
                     @foreach (var r in roles)
                     {
@@ -89,41 +92,34 @@
                     }
                 </select>
             </div>
-            <div class="col-md-3">
-                <select id="trangThai" name="trangThai" class="form-select bg-light  py-2">
+            <div class="col-md-2">
+                <select id="trangThai" name="trangThai" class="form-select bg-light" style="height:40px; font-size:13px;">
                     <option value="">Tất cả trạng thái</option>
                     <option value="true" selected="@(ViewBag.SelectedStatus == true)">Đang hoạt động</option>
                     <option value="false" selected="@(ViewBag.SelectedStatus == false)">Đã khóa</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="button" id="btnResetFilter" class="btn btn-outline-secondary  w-100 py-2 d-flex align-items-center justify-content-center gap-1">
+                <button type="button" id="btnResetFilter" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1" style="height:40px; font-size:13px;">
                     <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- KHU VỰC BẢNG DỮ LIỆU (Cập nhật AJAX) -->
+    <!-- BẢNG DỮ LIỆU TÀI KHOẢN -->
     <div id="userTableContainer">
-        <div class="card border-0   overflow-hidden mb-4">
-            <div class="card-header bg-white p-3 d-flex justify-content-end">
-                <a asp-action="Create" class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2">
-                    <i class="bi bi-plus-lg"></i>
-                    Thêm tài khoản mới
-                </a>
-            </div>
-
-
+        <div class="border bg-white mb-4">
+            <div class="table-responsive">
                 <table class="table align-middle mb-0">
-                    <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                    <thead class="table-light text-secondary text-uppercase" style="font-size:12px; font-weight:600;">
                         <tr>
-                            <th class="py-3 ps-4">Tài khoản</th>
-                            <th class="py-3">Tên đăng nhập</th>
-                            <th class="py-3">Số điện thoại</th>
-                            <th class="py-3 text-center">Phân quyền</th>
-                            <th class="py-3 text-center">Trạng thái</th>
-                            <th class="py-3 text-end pe-4">Hành động</th>
+                            <th class="py-3 ps-4" style="min-width: 240px;">Tài khoản</th>
+                            <th class="py-3" style="width: 150px;">Tên đăng nhập</th>
+                            <th class="py-3" style="width: 140px;">Số điện thoại</th>
+                            <th class="py-3 text-center" style="width: 140px;">Phân quyền</th>
+                            <th class="py-3 text-center" style="width: 130px;">Trạng thái</th>
+                            <th class="py-3 text-end pe-4" style="width: 160px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -139,51 +135,52 @@
                                 <tr class="@(isSelf ? "table-active" : "")">
                                     <td class="ps-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="avatar-circle bg-primary bg-opacity-10 text-primary fw-bold  d-flex align-items-center justify-content-center " style="width: 40px; height: 40px; min-width: 40px;">
+                                            <div class="avatar-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; min-width: 38px; font-size:13px;">
                                                 @InitialsOf(item.TenNguoiDung)
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                                <div class="fw-semibold text-dark d-flex align-items-center gap-2" style="font-size:13.5px;">
                                                     @(item.TenNguoiDung ?? "Chưa cập nhật")
                                                     @if (isSelf)
                                                     {
-                                                        <span class="badge bg-primary bg-opacity-10 text-primary  px-2 py-0.5 fs-xs">Bạn</span>
+                                                        <span class="badge" style="background:#EBF1FF; color:#315EFB; font-size:11px;">Bạn</span>
                                                     }
                                                 </div>
-                                                <small class="text-muted">@item.Email</small>
+                                                <small class="text-muted" style="font-size:12px;">@item.Email</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td><code class="text-dark bg-light px-2 py-1 ">@item.TenDangNhap</code></td>
-                                    <td>@(item.SoDienThoai ?? "Không có")</td>
+                                    <td><code class="text-dark bg-light px-2 py-1" style="font-size:12px;">@item.TenDangNhap</code></td>
+                                    <td style="font-size:13px;">@(item.SoDienThoai ?? "—")</td>
                                     <td class="text-center">
-                                        <span class="badge role-badge @(isAdmin ? "bg-warning bg-opacity-10 text-warning fw-semibold px-3 py-1.5 " : "bg-light text-secondary px-3 py-1.5 ")">
+                                        <span class="badge" style="background:@(isAdmin ? "#FEF3C7" : "#F1F5F9"); color:@(isAdmin ? "#B45309" : "#475569"); font-size:12px; font-weight:600; padding:5px 10px;">
                                             @(item.MaQuyenNavigation?.TenQuyen ?? "Khách hàng")
                                         </span>
                                     </td>
                                     <td class="text-center">
                                         @if (item.TrangThai)
                                         {
-                                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-1.5  fw-normal">Hoạt động</span>
+                                            <span class="badge" style="background:#DCFCE7; color:#15803D; font-size:12px; font-weight:600; padding:5px 10px;">Hoạt động</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-1.5  fw-normal">Đã khóa</span>
+                                            <span class="badge" style="background:#FEE2E2; color:#B91C1C; font-size:12px; font-weight:600; padding:5px 10px;">Đã khóa</span>
                                         }
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-inline-flex gap-2">
-                                            <a asp-action="Edit" asp-route-id="@item.MaNguoiDung" class="btn btn-sm btn-outline-secondary  px-3 py-1 d-flex align-items-center gap-1">
+                                            <a asp-action="Edit" asp-route-id="@item.MaNguoiDung" class="btn btn-sm btn-outline-secondary px-2 py-1 d-flex align-items-center gap-1" style="font-size:12px; height:32px;">
                                                 <i class="bi bi-pencil-square"></i> Sửa
                                             </a>
                                             <form asp-action="ToggleStatus" asp-route-id="@item.MaNguoiDung" method="post" class="d-inline"
                                                   onsubmit="return confirm('Xác nhận đổi trạng thái tài khoản #@item.MaNguoiDung ?');">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit"
-                                                        class="btn btn-sm @(item.TrangThai ? "btn-outline-danger" : "btn-outline-success")  px-3 py-1"
+                                                        class="btn btn-sm @(item.TrangThai ? "btn-outline-danger" : "btn-outline-success") px-2 py-1"
+                                                        style="font-size:12px; height:32px;"
                                                         title="@(lockDisabled ? (isSelf ? "Không thể tự khóa tài khoản đang đăng nhập" : "Đây là quản trị viên cuối cùng") : "Đổi trạng thái")"
                                                         @(lockDisabled ? "disabled" : "")>
-                                                    @(item.TrangThai ? "Khóa" : "Mở khóa")
+                                                    @(item.TrangThai ? "Khóa" : "Mở")
                                                 </button>
                                             </form>
                                         </div>
@@ -195,7 +192,7 @@
                         {
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="bi bi-folder2-open fs-2 d-block mb-2"></i> Không tìm thấy tài khoản người dùng nào.
+                                    <i class="bi bi-folder2-open fs-2 d-block mb-2"></i> Không tìm thấy tài khoản người dùng nào phù hợp.
                                 </td>
                             </tr>
                         }
@@ -206,15 +203,16 @@
             <!-- Phân trang -->
             @if (totalPages > 1)
             {
-                <div class="d-flex justify-content-center py-3 bg-white border-top">
+                <div class="d-flex justify-content-between align-items-center p-3 bg-white border-top">
+                    <span class="text-muted small">Trang @(page) / @totalPages</span>
                     <nav>
                         <ul class="pagination pagination-sm mb-0">
                             @for (int p = 1; p <= totalPages; p++)
                             {
                                 <li class="page-item @(p == page ? "active" : "")">
-                                    <a class="page-link ajax-page-link  mx-1 border-0 @(p == page ? "bg-primary text-white" : "text-dark")"
+                                    <a class="page-link ajax-page-link mx-1 @(p == page ? "bg-primary text-white border-primary" : "text-dark")"
                                        href="javascript:void(0);"
-                                       data-page="@p" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">@p</a>
+                                       data-page="@p" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size:12px;">@p</a>
                                 </li>
                             }
                         </ul>
@@ -225,22 +223,22 @@
     </div>
 
     <!-- Lưu ý hệ thống -->
-    <div class="alert alert-light border-0   p-3 text-muted small d-flex align-items-center">
+    <div class="alert alert-light border p-3 text-muted small d-flex align-items-center mb-0">
         <i class="bi bi-shield-lock-fill text-primary fs-5 me-2"></i>
-        <span>Để đảm bảo an toàn: một tài khoản không thể tự khóa hoặc tự đổi phân quyền của chính mình, và hệ thống luôn giữ lại ít nhất một tài khoản Admin đang hoạt động.</span>
+        <span>Quy tắc an toàn: Quản trị viên không thể tự khóa tài khoản của chính mình. Hệ thống luôn đảm bảo duy trì ít nhất một tài khoản Quản trị viên hoạt động.</span>
     </div>
 </div>
 
 <!-- Modal Dialog Thông báo thành công -->
 <div class="modal fade" id="successDialogModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content  border-0  text-center p-4">
+        <div class="modal-content border text-center p-4">
             <div class="mb-3 text-success">
                 <i class="bi bi-check-circle-fill display-4"></i>
             </div>
             <h5 class="fw-bold mb-2">Thành công!</h5>
             <p class="text-muted small mb-4" id="successDialogMessage">Thao tác thực hiện thành công.</p>
-            <button type="button" class="btn btn-primary  w-100 py-2" data-bs-dismiss="modal">Đóng</button>
+            <button type="button" class="btn btn-primary w-100 py-2" data-bs-dismiss="modal">Đóng</button>
         </div>
     </div>
 </div>
@@ -248,14 +246,13 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Hiển thị Modal Dialog nếu có TempData["SuccessMessage"]
             @if (TempData["SuccessMessage"] != null)
             {
-                        <text>
-                        document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
-                        var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
-                        successModal.show();
-                        </text>
+                <text>
+                document.getElementById("successDialogMessage").innerText = "@TempData["SuccessMessage"]";
+                var successModal = new bootstrap.Modal(document.getElementById('successDialogModal'));
+                successModal.show();
+                </text>
             }
 
             const searchInput = document.getElementById("searchString");

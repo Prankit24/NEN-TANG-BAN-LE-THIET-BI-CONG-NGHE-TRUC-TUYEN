@@ -384,20 +384,18 @@ body {
         width: var(--admin-sidebar-small);
     }
 
-    
     body.admin-sidebar-collapsed .admin-main {
-        width: 100%;
-        margin-left: 0;
+        width: calc(100% - var(--admin-sidebar-small));
+        margin-left: var(--admin-sidebar-small);
     }
 
     body.admin-sidebar-collapsed .admin-header {
         padding-left: 25px;
     }
 
-    
     body.admin-sidebar-collapsed .admin-content {
-        width: calc(100% - var(--admin-sidebar-small));
-        margin-left: var(--admin-sidebar-small);
+        width: 100%;
+        margin-left: 0;
     }
 
     body.admin-sidebar-collapsed .admin-logo {
@@ -1521,14 +1519,15 @@ body {
             top: 0;
             z-index: 1020;
             display: flex;
-            min-height: 84px;
+            min-height: 64px;
+            height: 64px;
             align-items: center;
             justify-content: space-between;
             gap: 20px;
-            padding: 16px 28px;
-            border-bottom: 1px solid #e5eaf2;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--admin-border, #e5eaf2);
             background: #fff;
-            color: #26344c;
+            color: #172033;
             box-shadow: none;
         }
 
@@ -1544,78 +1543,87 @@ body {
             }
 
         .emua-admin .admin-menu-toggle {
-            display: grid;
+            display: inline-flex;
             box-sizing: border-box;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             flex-shrink: 0;
             place-items: center;
+            align-items: center;
+            justify-content: center;
             padding: 0;
-            border: 1px solid #e2e8f1;
+            border: 0;
             border-radius: 0 !important;
-            background: #fff;
-            color: #66758e;
+            background: transparent;
+            color: #64748B;
             font-family: inherit;
-            font-size: 21px;
+            font-size: 20px;
             cursor: pointer;
             box-shadow: none;
+            transition: color .15s ease;
+        }
+
+        .emua-admin .admin-menu-toggle:hover {
+            border: 0;
+            background: transparent;
+            color: #315efb;
         }
 
         .emua-admin .admin-header h1 {
-            margin: 0 0 5px;
-            color: #26344c;
+            margin: 0;
+            color: #172033;
             font-family: "Inter", sans-serif;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-            line-height: 1.4;
-            letter-spacing: -.5px;
+            line-height: 1.25;
+            letter-spacing: -.3px;
         }
 
         .emua-admin .admin-header p {
-            margin: 0;
-            color: #7b879a;
-            font-size: 11px;
-            line-height: 1.5;
+            margin: 2px 0 0;
+            color: #64748B;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .emua-admin .admin-header-actions {
             display: flex;
             flex-shrink: 0;
             align-items: center;
-            gap: 9px;
+            gap: 12px;
         }
 
         .emua-admin .admin-header-link {
             display: inline-flex;
             box-sizing: border-box;
-            min-height: 37px;
+            min-height: 36px;
             align-items: center;
             justify-content: center;
-            gap: 7px;
-            padding: 8px 11px;
-            border: 1px solid #e5eaf2;
+            gap: 6px;
+            padding: 6px 8px;
+            border: 0;
             border-radius: 0 !important;
-            background: #fff;
-            color: #71809a;
+            background: transparent;
+            color: #64748B;
             font-family: inherit;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 500;
             line-height: 1.4;
             text-decoration: none;
             cursor: pointer;
             box-shadow: none;
+            transition: color .15s ease;
         }
 
             .emua-admin .admin-header-link > i {
-                font-size: 16px;
+                font-size: 18px;
             }
 
             .emua-admin .admin-header-link:hover,
-            .emua-admin .admin-header-link.active,
-            .emua-admin .admin-menu-toggle:hover {
-                border-color: #cad7fa;
-                background: #f0f4ff;
+            .emua-admin .admin-header-link.active {
+                border: 0;
                 color: #315efb;
+                background: transparent;
             }
 
         /* =====================================
@@ -1627,50 +1635,60 @@ body {
             min-width: 0;
             align-items: center;
             gap: 10px;
-            margin-left: 5px;
-            padding: 0 0 0 15px;
-            border-left: 1px solid #e5eaf2;
+            margin-left: 6px;
+            padding: 0 0 0 16px;
+            border-left: 1px solid #E2E8F0;
             border-radius: 0 !important;
             background: transparent;
-            color: #34435b;
+            color: #172033;
         }
 
         .emua-admin .admin-avatar {
             display: grid;
             box-sizing: border-box;
-            width: 37px;
-            height: 37px;
+            width: 36px;
+            height: 36px;
             flex-shrink: 0;
             place-items: center;
             border: 1px solid #dbe5ff;
-            border-radius: 0 !important;
+            border-radius: 50% !important;
             background: #edf2ff;
             color: #315efb;
             font-size: 13px;
             font-weight: 700;
             box-shadow: none;
+            overflow: hidden;
+        }
+
+        .emua-admin .admin-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50% !important;
         }
 
         .emua-admin .admin-account-info {
             display: flex;
             min-width: 0;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
 
             .emua-admin .admin-account-info strong {
                 display: block;
                 max-width: 170px;
                 overflow: hidden;
-                color: #34435b;
-                font-size: 11px;
+                color: #172033;
+                font-size: 13px;
                 font-weight: 600;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
             .emua-admin .admin-account-info small {
-                color: #7b879a;
+                color: #64748B;
+                font-size: 11px;
+            }
                 font-size: 10px;
             }
 
@@ -1679,11 +1697,17 @@ body {
                 ===================================== */
 
         .emua-admin.admin-sidebar-collapsed .admin-sidebar {
-            width: var(--sidebar-mini-width);
+            width: 76px;
         }
 
         .emua-admin.admin-sidebar-collapsed .admin-main {
-            margin-left: var(--sidebar-mini-width);
+            margin-left: 76px;
+            width: calc(100% - 76px);
+        }
+
+        .emua-admin.admin-sidebar-collapsed .admin-content {
+            margin-left: 0;
+            width: 100%;
         }
 
         .emua-admin.admin-sidebar-collapsed .admin-logo {

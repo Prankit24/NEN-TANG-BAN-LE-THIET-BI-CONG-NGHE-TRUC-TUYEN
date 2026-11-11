@@ -41,16 +41,25 @@
     }
 
     .emua-report .report-filter-bar {
-        background: #fff;
-        border: 1px solid #e5eaf2;
-        border-radius: 10px;
-        padding: 12px 18px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
+    }
+
+    .emua-report .report-filter-bar .form-select,
+    .emua-report .report-filter-bar .btn {
+        height: 40px;
+        border-radius: 0 !important;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
     }
 
     .emua-report .report-stat-grid {

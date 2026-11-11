@@ -63,7 +63,7 @@ html, body.emua-staff {
     display: flex !important;
     flex-direction: column !important;
     z-index: 1020 !important;
-    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: none !important;
     transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -186,7 +186,7 @@ html, body.emua-staff {
     background: var(--staff-navy-active) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    
 }
 
 .staff-sidebar .admin-nav a.active i {
@@ -492,6 +492,64 @@ html, body.emua-staff {
 }
 
 /* Buttons */
+.btn,
+.report-control-button,
+.staff-search button {
+    border-radius: var(--staff-radius) !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    padding: 6px 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    border: 1px solid transparent !important;
+    transition: all 0.15s ease !important;
+    min-height: 40px !important;
+    line-height: 1.2 !important;
+}
+
+/* Remove outer borders for wrapper cards and panels */
+.staff-filter-card,
+.staff-table-card,
+.dash-urgent-card,
+.dash-panel,
+.dash-kpi,
+.card {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+}
+
+/* Ensure toolbar and filter forms have no borders */
+.staff-toolbar,
+.staff-filter-form,
+.staff-filter {
+    border: none !important;
+}
+
+
+/* Toolbar and filter forms */
+.staff-toolbar,
+.staff-filter-form,
+.staff-filter {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+}
+
+.staff-toolbar .form-control,
+.staff-toolbar .form-select,
+.staff-toolbar button,
+.staff-filter-form .form-control,
+.staff-filter-form .form-select,
+.staff-filter-form button {
+    min-height: 40px !important;
+    line-height: 1.2 !important;
+}
+
 .btn,
 .report-control-button,
 .staff-search button {
@@ -838,4 +896,66 @@ html, body.emua-staff {
 
 .form-control, .form-select, .btn, .badge {
     border-radius: 0 !important;
+}
+
+
+/* --- Flat Toolbar Rules: No Outer Borders or White Card Background --- */
+.staff-filter-card,
+.staff-filter-form,
+.staff-toolbar,
+.import-toolbar,
+.promo-toolbar,
+.invoice-toolbar,
+.report-filter-bar {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+.staff-toolbar .form-control,
+.staff-toolbar .form-select,
+.staff-toolbar .btn,
+.staff-filter-form .form-control,
+.staff-filter-form .form-select,
+.staff-filter-form .btn,
+.import-toolbar .form-control,
+.import-toolbar .form-select,
+.import-toolbar .btn,
+.promo-toolbar .form-control,
+.promo-toolbar .form-select,
+.promo-toolbar .btn,
+.invoice-toolbar .form-control,
+.invoice-toolbar .form-select,
+.invoice-toolbar .btn,
+.report-filter-bar .form-control,
+.report-filter-bar .form-select,
+.report-filter-bar .btn {
+    height: 40px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+/* HEADER STAFF - KHÔNG VIỀN, KHÔNG BO GÓC */
+
+.emua-staff .admin-header .admin-menu-toggle,
+.emua-staff .admin-header .staff-notification,
+.emua-staff .admin-header .admin-user {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Ảnh đại diện giữ hình tròn, không có viền */
+.emua-staff .admin-header .admin-avatar {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Hiệu ứng hover nhẹ, không tạo khung */
+.emua-staff .admin-header .admin-menu-toggle:hover,
+.emua-staff .admin-header .staff-notification:hover,
+.emua-staff .admin-header .admin-user:hover {
+    background: #f4f6fa !important;
 }
