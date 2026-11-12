@@ -11,8 +11,10 @@ using Microsoft.Extensions.Logging;
 
 namespace EMua.Services.AI
 {
-    public class GeminiService
+    public class GeminiService : IAIService
     {
+        public string ProviderName => "Gemini";
+
         private static DateTimeOffset? _quotaExhaustedUntil;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;

@@ -13,7 +13,6 @@
     var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     // Chi truy van bang ID so khi claim thuc su chua MaNguoiDung.
-    // Neu identity dung ID khac, can doi chieu luong dang nhap truoc khi sua.
     if (int.TryParse(userIdClaim, out var staffUserId))
     {
         var staffUser = await DbContext.NguoiDungs
@@ -40,11 +39,8 @@
         ? "N"
         : displayName[..1].ToUpperInvariant();
 
-    var currentController =
-        ViewContext.RouteData.Values["Controller"]?.ToString();
-
-    var currentStatusFilter =
-        Context.Request.Query["status"].ToString();
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var currentStatusFilter = Context.Request.Query["status"].ToString();
 
     var isReturnPage =
         currentController == "Order" &&
@@ -55,73 +51,330 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>@ViewData["Title"] - EMUA Nhân viên</title>
 
-    <link rel="icon"
-          type="image/png"
-          href="~/images/logo/chicken.png"
-          asp-append-version="true" />
-
-    <link rel="apple-touch-icon"
-          href="~/images/logo/chicken.png"
-          asp-append-version="true" />
+    <link rel="icon" type="image/png" href="~/images/logo/chicken.png" asp-append-version="true" />
+    <link rel="apple-touch-icon" href="~/images/logo/chicken.png" asp-append-version="true" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
-    <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
-    <link rel="stylesheet"
-          href="~/css/admin/admin-layout.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/staff/staff-layout.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/staff/staff-dialog.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/staff/staff-theme.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/css/shared/design-system.css"
-          asp-append-version="true" />
-
-
+    <link rel="stylesheet" href="~/css/admin/admin-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staff/staff-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staff/staff-dialog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/staff/staff-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/shared/design-system.css" asp-append-version="true" />
 
     <style>
-        /* Staff: header chỉ một dòng, không dư ngày tháng và khoảng trống */
+        /* Header Staff: nhỏ gọn, nhất quán, không có khung viền dư */
         body.emua-staff .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
             min-height: 58px;
-            padding-top: 9px;
-            padding-bottom: 9px;
+            padding-left: 22px;
+            padding-right: 22px;
+            background: #fff;
+        }
+
+        body.emua-staff .staff-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+            body.emua-staff .staff-header-actions .dropdown {
+                position: relative;
+            }
+
+        body.emua-staff .staff-notification {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            color: #475569;
+            cursor: pointer;
+        }
+
+            body.emua-staff .staff-notification:hover,
+            body.emua-staff .staff-notification[aria-expanded="true"] {
+                color: #315EFB;
+                background: #F2F5FC;
+            }
+
+            body.emua-staff .staff-notification.dropdown-toggle::after {
+                display: none !important;
+            }
+
+            body.emua-staff .staff-notification .bi-bell {
+                font-size: 19px;
+                line-height: 1;
+            }
+
+        /* Quan trọng: [hidden] phải thắng style của badge/dropdown trong CSS chung. */
+        body.emua-staff #headerNotificationBadge[hidden],
+        body.emua-staff .staff-notification-item[hidden] {
+            display: none !important;
+        }
+
+        body.emua-staff #headerNotificationBadge {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            background: #DC2626;
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            font: 700 10px/1 Inter, sans-serif;
+            pointer-events: none;
+        }
+
+        body.emua-staff .staff-notification-menu {
+            width: min(370px, calc(100vw - 24px));
+            padding: 0;
+            margin-top: 10px !important;
+            border: 1px solid #DCE3ED;
+            border-radius: 0 !important;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .10);
+        }
+
+            body.emua-staff .staff-notification-menu .dropdown-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 14px 16px;
+                margin: 0;
+                border-bottom: 1px solid #DCE3ED;
+                color: #172033;
+                font-size: 14px;
+            }
+
+                body.emua-staff .staff-notification-menu .dropdown-header span {
+                    color: #64748B;
+                    font-size: 11px;
+                    font-weight: 400;
+                }
+
+        body.emua-staff .staff-notification-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            padding: 12px 16px;
+            border-bottom: 1px solid #F0F2F6;
+            color: #172033;
+            text-decoration: none;
+        }
+
+            body.emua-staff .staff-notification-item:hover {
+                color: #172033;
+                background: #F4F6FA;
+            }
+
+        body.emua-staff .staff-notification-item-icon {
+            flex: 0 0 32px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 32px;
+            height: 32px;
+            background: #EBF1FF;
+            color: #315EFB;
+            border-radius: 0 !important;
+        }
+
+        body.emua-staff .staff-notification-item-copy {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            gap: 2px;
+        }
+
+            body.emua-staff .staff-notification-item-copy strong {
+                font-size: 12.5px;
+                font-weight: 600;
+                color: #172033;
+            }
+
+            body.emua-staff .staff-notification-item-copy small {
+                font-size: 11px;
+                color: #64748B;
+            }
+
+        body.emua-staff .staff-notification-item-count {
+            flex: 0 0 auto;
+            min-width: 24px;
+            padding: 3px 6px;
+            text-align: center;
+            background: #EBF1FF;
+            color: #315EFB;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 0 !important;
+        }
+
+        body.emua-staff .staff-notification-empty {
+            margin: 0;
+            padding: 22px 14px;
+            text-align: center;
+            color: #64748B;
+            font-size: 12px;
+        }
+
+        body.emua-staff .staff-header-actions .admin-user {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            text-decoration: none;
+        }
+
+        body.emua-staff .staff-header-actions .admin-avatar {
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+        }
+
+        body.emua-staff .staff-header-actions .staff-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #172033;
+        }
+
+        @@media (max-width: 575.98px) {
+            body.emua-staff .admin-header {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+        }
+
+        /* Staff: header chỉ một dòng, gọn */
+        body.emua-staff .admin-header {
+            min-height: 52px;
+            padding-top: 6px;
+            padding-bottom: 6px;
         }
 
         body.emua-staff .admin-header-left h1 {
             margin: 0;
-            font-size: 17px;
+            font-size: 16px;
             line-height: 1.35;
             font-weight: 650;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body.emua-staff .admin-header-left {
+            min-width: 0;
         }
 
         body.emua-staff .staff-content {
-            padding-top: 14px;
+            padding-top: 12px;
+        }
+
+        /* Tên người dùng không đẩy header giãn rộng */
+        body.emua-staff .staff-user-name {
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Menu thông báo không tràn màn hình thấp */
+        body.emua-staff .staff-notification-menu {
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        /* Sidebar cuộn được khi màn hình thấp (laptop 768px) để không mất nút Đăng xuất */
+        body.emua-staff .admin-sidebar {
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh;
+        }
+
+        body.emua-staff .admin-nav {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        body.emua-staff .admin-sidebar-bottom {
+            flex: 0 0 auto;
+        }
+
+        /* ===== Tối ưu cho laptop (851px – 1439px) ===== */
+        @@media (min-width: 851px) and (max-width: 1439.98px) {
+            body.emua-staff {
+                font-size: 14px;
+            }
+
+                body.emua-staff .staff-content {
+                    padding-top: 10px;
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    padding-bottom: 14px;
+                }
+
+                body.emua-staff .admin-nav a {
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+                    font-size: 13px;
+                }
+
+                body.emua-staff .admin-nav-label {
+                    margin-top: 10px;
+                    margin-bottom: 4px;
+                    font-size: 11px;
+                }
+
+                body.emua-staff .admin-bottom-link {
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+                    font-size: 13px;
+                }
+        }
+
+        /* Laptop màn hình thấp (cao ≤ 800px) */
+        @@media (min-width: 851px) and (max-height: 800px) {
+            body.emua-staff .admin-header {
+                min-height: 48px;
+                padding-top: 4px;
+                padding-bottom: 4px;
+            }
+
+            body.emua-staff .staff-content {
+                padding-top: 8px;
+            }
         }
 
         @@media (max-width: 575.98px) {
@@ -131,6 +384,10 @@
 
             body.emua-staff .staff-content {
                 padding-top: 10px;
+            }
+
+            body.emua-staff .staff-user-name {
+                display: none;
             }
         }
     </style>
@@ -142,34 +399,20 @@
     <div class="admin-shell staff-shell">
 
         <!-- BACKDROP MENU ĐIỆN THOẠI -->
-        <div class="admin-sidebar-backdrop"
-             id="staffSidebarBackdrop"></div>
+        <div class="admin-sidebar-backdrop" id="staffSidebarBackdrop"></div>
 
         <!-- SIDEBAR -->
-        <aside class="admin-sidebar staff-sidebar"
-               id="staffSidebar">
+        <aside class="admin-sidebar staff-sidebar" id="staffSidebar">
 
             <!-- LOGO -->
-            <a asp-area="Staff"
-               asp-controller="Dashboard"
-               asp-action="Index"
-               class="admin-logo staff-brand"
-               title="EMUA Nhân viên">
-
+            <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index"
+               class="admin-logo staff-brand" title="EMUA Nhân viên">
                 <span class="admin-logo-text">
-                    <img src="~/images/logo/icon-logo.png"
-                         asp-append-version="true"
-                         alt="EMUA"
-                         class="staff-brand-wordmark" />
-
+                    <img src="~/images/logo/icon-logo.png" asp-append-version="true" alt="EMUA" class="staff-brand-wordmark" />
                     <small>Nhân viên</small>
                 </span>
-
                 <span class="admin-logo-mini">
-                    <img src="~/images/logo/icon-logo-v2.png"
-                         asp-append-version="true"
-                         alt="EMUA"
-                         class="staff-brand-icon" />
+                    <img src="~/images/logo/chicken.png" asp-append-version="true" alt="EMUA" class="staff-brand-icon" />
                 </span>
             </a>
 
@@ -179,106 +422,61 @@
                 <span class="admin-nav-label">Tổng quan</span>
 
                 <a class="@(currentController == "Dashboard" ? "active" : "")"
-                   data-tooltip="Tổng quan"
-                   asp-area="Staff"
-                   asp-controller="Dashboard"
-                   asp-action="Index">
-                    <i class="bi bi-grid-1x2"></i>
-                    <span>Tổng quan</span>
+                   data-tooltip="Tổng quan" asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-grid-1x2"></i><span>Tổng quan</span>
                 </a>
 
-                <span class="admin-nav-label">
-                    Quản lý bán hàng
-                </span>
+                <span class="admin-nav-label">Quản lý bán hàng</span>
 
                 <a class="@(currentController == "Product" ? "active" : "")"
-                   data-tooltip="Sản phẩm"
-                   asp-area="Staff"
-                   asp-controller="Product"
-                   asp-action="Index">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Sản phẩm</span>
+                   data-tooltip="Sản phẩm" asp-area="Staff" asp-controller="Product" asp-action="Index">
+                    <i class="bi bi-box-seam"></i><span>Sản phẩm</span>
                 </a>
 
                 <a class="@(currentController == "ImportOrder" ? "active" : "")"
-                   data-tooltip="Đề nghị nhập hàng"
-                   asp-area="Staff"
-                   asp-controller="ImportOrder"
-                   asp-action="Index">
-                    <i class="bi bi-box-arrow-in-down"></i>
-                    <span>Nhập hàng</span>
+                   data-tooltip="Đề nghị nhập hàng" asp-area="Staff" asp-controller="ImportOrder" asp-action="Index">
+                    <i class="bi bi-box-arrow-in-down"></i><span>Nhập hàng</span>
                 </a>
 
                 <a class="@(currentController == "Order" && !isReturnPage ? "active" : "")"
-                   data-tooltip="Đơn hàng"
-                   asp-area="Staff"
-                   asp-controller="Order"
-                   asp-action="Index">
-                    <i class="bi bi-receipt"></i>
-                    <span>Tất cả đơn hàng</span>
+                   data-tooltip="Đơn hàng" asp-area="Staff" asp-controller="Order" asp-action="Index">
+                    <i class="bi bi-receipt"></i><span>Tất cả đơn hàng</span>
                 </a>
 
                 <a class="@(currentController == "Promotion" ? "active" : "")"
-                   data-tooltip="Khuyến mãi"
-                   asp-area="Staff"
-                   asp-controller="Promotion"
-                   asp-action="Index">
-                    <i class="bi bi-ticket-perforated"></i>
-                    <span>Khuyến mãi</span>
+                   data-tooltip="Khuyến mãi" asp-area="Staff" asp-controller="Promotion" asp-action="Index">
+                    <i class="bi bi-ticket-perforated"></i><span>Khuyến mãi</span>
                 </a>
 
                 <a class="@(currentController == "Invoice" ? "active" : "")"
-                   data-tooltip="Hóa đơn"
-                   asp-area="Staff"
-                   asp-controller="Invoice"
-                   asp-action="Index">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>Hóa đơn</span>
+                   data-tooltip="Hóa đơn" asp-area="Staff" asp-controller="Invoice" asp-action="Index">
+                    <i class="bi bi-file-earmark-text"></i><span>Hóa đơn</span>
                 </a>
 
                 <a class="@(currentController == "Report" ? "active" : "")"
-                   data-tooltip="Báo cáo"
-                   asp-area="Staff"
-                   asp-controller="Report"
-                   asp-action="Index">
-                    <i class="bi bi-bar-chart"></i>
-                    <span>Báo cáo thống kê</span>
+                   data-tooltip="Báo cáo" asp-area="Staff" asp-controller="Report" asp-action="Index">
+                    <i class="bi bi-bar-chart"></i><span>Báo cáo thống kê</span>
                 </a>
 
                 <span class="admin-nav-label">Tài khoản</span>
 
                 <a class="@(currentController == "Profile" ? "active" : "")"
-                   data-tooltip="Cài đặt"
-                   asp-area="Staff"
-                   asp-controller="Profile"
-                   asp-action="Index">
-                    <i class="bi bi-gear"></i>
-                    <span>Cài đặt</span>
+                   data-tooltip="Cài đặt" asp-area="Staff" asp-controller="Profile" asp-action="Index">
+                    <i class="bi bi-gear"></i><span>Cài đặt</span>
                 </a>
             </nav>
 
             <!-- MENU DƯỚI -->
             <div class="admin-sidebar-bottom">
-                <a asp-area=""
-                   asp-controller="Home"
-                   asp-action="Index"
-                   class="admin-bottom-link"
-                   data-tooltip="Xem website">
-                    <i class="bi bi-eye"></i>
-                    <span>Xem website</span>
+                <a asp-area="" asp-controller="Home" asp-action="Index"
+                   class="admin-bottom-link" data-tooltip="Xem website">
+                    <i class="bi bi-eye"></i><span>Xem website</span>
                 </a>
 
-                <form asp-area=""
-                      asp-controller="Auth"
-                      asp-action="Logout"
-                      method="post">
+                <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post">
                     @Html.AntiForgeryToken()
-
-                    <button type="submit"
-                            class="admin-bottom-link logout"
-                            data-tooltip="Đăng xuất">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Đăng xuất</span>
+                    <button type="submit" class="admin-bottom-link logout" data-tooltip="Đăng xuất">
+                        <i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span>
                     </button>
                 </form>
             </div>
@@ -290,33 +488,23 @@
             <!-- HEADER -->
             <header class="admin-header">
                 <div class="admin-header-left">
-                    <button type="button"
-                            class="admin-menu-toggle"
-                            id="staffMenuToggle"
-                            aria-label="Thu gọn menu"
-                            aria-controls="staffSidebar"
-                            aria-expanded="true">
+                    <button type="button" class="admin-menu-toggle" id="staffMenuToggle"
+                            aria-label="Thu gọn menu" aria-controls="staffSidebar" aria-expanded="true">
                         <i class="bi bi-list"></i>
                     </button>
 
-                    <div>
+                    <div style="min-width: 0;">
                         <h1>@ViewData["Title"]</h1>
                     </div>
                 </div>
 
                 <div class="admin-header-actions staff-header-actions">
                     <div class="dropdown">
-                        <button type="button"
-                                class="staff-notification dropdown-toggle"
-                                id="staffNotificationToggle"
-                                data-bs-toggle="dropdown"
-                                data-bs-auto-close="outside"
-                                aria-expanded="false"
-                                aria-label="Mở thông báo">
+                        <button type="button" class="staff-notification dropdown-toggle" id="staffNotificationToggle"
+                                data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                aria-expanded="false" aria-label="Mở thông báo">
                             <i class="bi bi-bell" aria-hidden="true"></i>
-                            <span class="staff-notification-badge"
-                                  id="headerNotificationBadge"
-                                  style="display: none;">0</span>
+                            <span class="staff-notification-badge" id="headerNotificationBadge" hidden aria-hidden="true"></span>
                         </button>
 
                         <div class="dropdown-menu dropdown-menu-end staff-notification-menu"
@@ -326,70 +514,44 @@
                                 <span>Cập nhật tự động</span>
                             </div>
 
-                            <a class="staff-notification-item"
-                               data-notification="returns"
-                               asp-area="Staff"
-                               asp-controller="Order"
-                               asp-action="Index"
-                               asp-route-status="Yêu cầu đổi trả">
-                                <span class="staff-notification-item-icon">
-                                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                                </span>
+                            <a class="staff-notification-item" data-notification="returns" hidden
+                               asp-area="Staff" asp-controller="Order" asp-action="Index" asp-route-status="Yêu cầu đổi trả">
+                                <span class="staff-notification-item-icon"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
                                 <span class="staff-notification-item-copy">
                                     <strong>Yêu cầu đổi trả</strong>
                                     <small>Đơn hàng cần xử lý đổi trả</small>
                                 </span>
-                                <span class="staff-notification-item-count"
-                                      id="headerReturnCount">0</span>
+                                <span class="staff-notification-item-count" id="headerReturnCount">0</span>
                             </a>
 
-                            <a class="staff-notification-item"
-                               data-notification="orders"
-                               asp-area="Staff"
-                               asp-controller="Order"
-                               asp-action="Index"
-                               asp-route-status="Chờ xử lý">
-                                <span class="staff-notification-item-icon">
-                                    <i class="bi bi-box-seam" aria-hidden="true"></i>
-                                </span>
+                            <a class="staff-notification-item" data-notification="orders" hidden
+                               asp-area="Staff" asp-controller="Order" asp-action="Index" asp-route-status="Chờ xử lý">
+                                <span class="staff-notification-item-icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
                                 <span class="staff-notification-item-copy">
                                     <strong>Đơn hàng chờ xử lý</strong>
                                     <small>Đơn mới cần xác nhận</small>
                                 </span>
-                                <span class="staff-notification-item-count"
-                                      id="headerPendingOrderCount">0</span>
+                                <span class="staff-notification-item-count" id="headerPendingOrderCount">0</span>
                             </a>
 
-                            <a class="staff-notification-item"
-                               data-notification="stock"
-                               asp-area="Staff"
-                               asp-controller="Product"
-                               asp-action="Index"
-                               asp-route-lowStock="true">
-                                <span class="staff-notification-item-icon">
-                                    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                                </span>
+                            <a class="staff-notification-item" data-notification="stock" hidden
+                               asp-area="Staff" asp-controller="Product" asp-action="Index" asp-route-lowStock="true">
+                                <span class="staff-notification-item-icon"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span>
                                 <span class="staff-notification-item-copy">
                                     <strong>Tồn kho thấp</strong>
                                     <small>Biến thể còn không quá 10 sản phẩm</small>
                                 </span>
-                                <span class="staff-notification-item-count"
-                                      id="headerLowStockCount">0</span>
+                                <span class="staff-notification-item-count" id="headerLowStockCount">0</span>
                             </a>
 
-                            <p class="staff-notification-empty"
-                               id="staffNotificationEmpty">
+                            <p class="staff-notification-empty" id="staffNotificationEmpty">
                                 Bạn đã xử lý hết thông báo.
                             </p>
                         </div>
                     </div>
 
                     <!-- TÀI KHOẢN NHÂN VIÊN -->
-                    <a class="admin-user"
-                       asp-area=""
-                       asp-controller="Account"
-                       asp-action="Profile"
-                       title="Hồ sơ của tôi">
+                    <a class="admin-user" asp-area="" asp-controller="Account" asp-action="Profile" title="Hồ sơ của tôi">
                         <div class="admin-avatar">
                             @if (!string.IsNullOrWhiteSpace(avatarUrl))
                             {
@@ -402,9 +564,7 @@
                             }
                         </div>
 
-                        <span class="staff-user-name">
-                            @displayName
-                        </span>
+                        <span class="staff-user-name">@displayName</span>
                     </a>
                 </div>
             </header>
@@ -429,6 +589,8 @@
             const menuToggle = document.getElementById("staffMenuToggle");
 
             const desktopBreakpoint = 850;
+            // Dưới ngưỡng này (laptop nhỏ), lần đầu vào sẽ tự thu gọn menu để nhường chỗ cho nội dung.
+            const autoCollapseBreakpoint = 1280;
             const sidebarStorageKey = "emua_staff_sidebar_collapsed";
 
             function isMobile() {
@@ -437,18 +599,19 @@
 
             function getSavedSidebarState() {
                 try {
-                    return localStorage.getItem(sidebarStorageKey) === "true";
+                    const saved = localStorage.getItem(sidebarStorageKey);
+                    if (saved === "true") return true;
+                    if (saved === "false") return false;
                 } catch {
-                    return false;
+                    // Trình duyệt chặn lưu trữ: dùng mặc định theo độ rộng màn hình.
                 }
+                // Chưa có lựa chọn của người dùng: laptop nhỏ → thu gọn, màn lớn → mở rộng.
+                return window.innerWidth < autoCollapseBreakpoint;
             }
 
             function saveSidebarState(isCollapsed) {
                 try {
-                    localStorage.setItem(
-                        sidebarStorageKey,
-                        isCollapsed.toString()
-                    );
+                    localStorage.setItem(sidebarStorageKey, isCollapsed.toString());
                 } catch {
                     // Menu vẫn hoạt động khi trình duyệt chặn lưu trữ.
                 }
@@ -469,73 +632,36 @@
                 backdrop?.classList.remove("is-visible");
 
                 if (isMobile()) {
-                    document.body.classList.remove(
-                        "admin-sidebar-collapsed"
-                    );
-
+                    document.body.classList.remove("admin-sidebar-collapsed");
                     closeMobileSidebar();
                     return;
                 }
 
                 const isCollapsed = getSavedSidebarState();
 
-                document.body.classList.toggle(
-                    "admin-sidebar-collapsed",
-                    isCollapsed
-                );
+                document.body.classList.toggle("admin-sidebar-collapsed", isCollapsed);
 
-                menuToggle?.setAttribute(
-                    "aria-expanded",
-                    (!isCollapsed).toString()
-                );
-
-                menuToggle?.setAttribute(
-                    "aria-label",
-                    isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
-                );
+                menuToggle?.setAttribute("aria-expanded", (!isCollapsed).toString());
+                menuToggle?.setAttribute("aria-label", isCollapsed ? "Mở rộng menu" : "Thu gọn menu");
             }
 
             menuToggle?.addEventListener("click", function () {
                 if (isMobile()) {
-                    const isOpen =
-                        sidebar?.classList.toggle("is-open") ?? false;
+                    const isOpen = sidebar?.classList.toggle("is-open") ?? false;
 
                     backdrop?.classList.toggle("is-visible", isOpen);
-
-                    menuToggle.setAttribute(
-                        "aria-expanded",
-                        isOpen.toString()
-                    );
-
-                    menuToggle.setAttribute(
-                        "aria-label",
-                        isOpen ? "Đóng menu" : "Mở menu"
-                    );
-
+                    menuToggle.setAttribute("aria-expanded", isOpen.toString());
+                    menuToggle.setAttribute("aria-label", isOpen ? "Đóng menu" : "Mở menu");
                     return;
                 }
 
-                const isCollapsed =
-                    !document.body.classList.contains(
-                        "admin-sidebar-collapsed"
-                    );
+                const isCollapsed = !document.body.classList.contains("admin-sidebar-collapsed");
 
-                document.body.classList.toggle(
-                    "admin-sidebar-collapsed",
-                    isCollapsed
-                );
-
+                document.body.classList.toggle("admin-sidebar-collapsed", isCollapsed);
                 saveSidebarState(isCollapsed);
 
-                menuToggle.setAttribute(
-                    "aria-expanded",
-                    (!isCollapsed).toString()
-                );
-
-                menuToggle.setAttribute(
-                    "aria-label",
-                    isCollapsed ? "Mở rộng menu" : "Thu gọn menu"
-                );
+                menuToggle.setAttribute("aria-expanded", (!isCollapsed).toString());
+                menuToggle.setAttribute("aria-label", isCollapsed ? "Mở rộng menu" : "Thu gọn menu");
             });
 
             backdrop?.addEventListener("click", closeMobileSidebar);
@@ -577,17 +703,12 @@
                 try {
                     const response = await fetch(notificationCountsUrl, {
                         method: "GET",
-                        headers: {
-                            "Accept": "application/json"
-                        },
+                        headers: { "Accept": "application/json" },
                         cache: "no-store"
                     });
 
                     if (!response.ok) {
-                        throw new Error(
-                            "Không thể lấy số lượng thông báo: " +
-                            response.status
-                        );
+                        throw new Error("Không thể lấy số lượng thông báo: " + response.status);
                     }
 
                     const data = await response.json();
@@ -626,7 +747,8 @@
                     const badge = document.getElementById("headerNotificationBadge");
                     if (badge) {
                         badge.textContent = totalCount > 99 ? "99+" : totalCount.toString();
-                        badge.style.display = totalCount > 0 ? "flex" : "none";
+                        badge.hidden = totalCount === 0;
+                        badge.setAttribute("aria-hidden", (totalCount === 0).toString());
                     }
 
                     const toggle = document.getElementById("staffNotificationToggle");
@@ -637,23 +759,22 @@
                             : "Mở thông báo, không có mục cần xử lý"
                     );
 
-                    const hasNotifications = totalCount > 0;
                     const emptyMessage = document.getElementById("staffNotificationEmpty");
                     if (emptyMessage) {
-                        emptyMessage.style.display = hasNotifications ? "none" : "block";
+                        emptyMessage.style.display = totalCount > 0 ? "none" : "block";
                     }
                 } catch (error) {
-                    console.error(
-                        "Lỗi lấy số lượng thông báo:",
-                        error
-                    );
+                    console.error("Lỗi lấy số lượng thông báo:", error);
                 } finally {
                     isFetchingNotificationCounts = false;
                 }
             }
 
             fetchNotificationCounts();
-            setInterval(fetchNotificationCounts, 10000);
+            // Làm mới nhẹ 30 giây/lần; khi mở chuông sẽ cập nhật ngay.
+            setInterval(fetchNotificationCounts, 30000);
+            document.getElementById("staffNotificationToggle")
+                ?.addEventListener("show.bs.dropdown", fetchNotificationCounts);
 
             document.addEventListener("visibilitychange", function () {
                 if (!document.hidden) {

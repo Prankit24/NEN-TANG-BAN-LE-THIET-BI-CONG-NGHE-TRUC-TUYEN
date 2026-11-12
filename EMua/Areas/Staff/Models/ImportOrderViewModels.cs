@@ -94,3 +94,63 @@ public class ImportOrderCreateViewModel
 
     public List<ImportOrderItemViewModel> Items { get; set; } = new();
 }
+
+public class ImportOrderReceiveItemViewModel
+{
+    public int MaChiTietPhieuNhap { get; set; }
+    public int MaBienThe { get; set; }
+    public string? TenSanPham { get; set; }
+    public string? MauSac { get; set; }
+    public string? PhienBan { get; set; }
+    public int TonKhoHienTai { get; set; }
+    public int SoLuongDeNghi { get; set; }
+
+    [Range(0, 100000, ErrorMessage = "Số lượng thực nhận không hợp lệ.")]
+    public int SoLuongThucNhan { get; set; }
+
+    public string? GhiChu { get; set; }
+}
+
+public class ImportOrderReceiveViewModel
+{
+    public int MaPhieuNhap { get; set; }
+    public string MaChungTu { get; set; } = string.Empty;
+    public string NhaCungCap { get; set; } = string.Empty;
+    public string LyDoNhap { get; set; } = string.Empty;
+    public string? DienGiai { get; set; }
+    public string TrangThai { get; set; } = string.Empty;
+    public DateTime NgayTao { get; set; }
+    public string NguoiTao { get; set; } = string.Empty;
+    public string? NguoiDuyet { get; set; }
+    public DateTime? NgayDuyet { get; set; }
+    public decimal TongTienDuKien { get; set; }
+
+    [StringLength(500)]
+    public string? GhiChuKiemNhan { get; set; }
+
+    public List<ImportOrderReceiveItemViewModel> Items { get; set; } = new();
+}
+
+// Chỉ nhận các trường được phép POST; không xác thực các nhãn chỉ dùng hiển thị.
+public class ImportOrderReceiveCommand
+{
+    [Range(1, int.MaxValue)]
+    public int MaPhieuNhap { get; set; }
+
+    [StringLength(500, ErrorMessage = "Ghi chú kiểm nhận tối đa 500 ký tự.")]
+    public string? GhiChuKiemNhan { get; set; }
+
+    public List<ImportOrderReceiveCommandItem> Items { get; set; } = new();
+}
+
+public class ImportOrderReceiveCommandItem
+{
+    [Range(1, int.MaxValue)]
+    public int MaChiTietPhieuNhap { get; set; }
+    [Range(1, int.MaxValue)]
+    public int MaBienThe { get; set; }
+    [Required(ErrorMessage = "Vui lòng nhập số lượng thực nhận.")]
+    [Range(0, 100000, ErrorMessage = "Số lượng thực nhận phải là số nguyên từ 0 đến 100.000.")]
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]
+    public int SoLuongThucNhan { get; set; }
+}
