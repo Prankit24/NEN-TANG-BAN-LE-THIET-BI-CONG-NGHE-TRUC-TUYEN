@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using EMua.Data;
+using EMua.Services;
+using EMua.Areas.Staff.Models;
 using EMua.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +17,12 @@ namespace EMua.Areas.Admin.Controllers;
 public class ImportOrderController : Controller
 {
     private readonly EMuaDbContext _db;
+    private readonly ImportOrderReceivingService _receiving;
 
-    public ImportOrderController(EMuaDbContext db)
+    public ImportOrderController(EMuaDbContext db, ImportOrderReceivingService receiving)
     {
         _db = db;
+        _receiving = receiving;
     }
 
     private static DateTime GetVietnamNow()
@@ -38,6 +42,7 @@ public class ImportOrderController : Controller
 
     public async Task<IActionResult> Index(string? status, string? search, int page = 1, int pageSize = 12)
     {
+        pageSize = Math.Clamp(pageSize, 1, 100);
         var query = _db.PhieuNhapHangs
             .Include(x => x.MaNguoiTaoNavigation)
             .Include(x => x.MaNguoiDuyetNavigation)
@@ -111,15 +116,19 @@ public class ImportOrderController : Controller
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        int adminId = 1;
-        if (int.TryParse(adminIdClaim, out var parsed)) adminId = parsed;
-
-        phieu.TrangThai = "Đã duyệt";
-        phieu.MaNguoiDuyet = adminId;
-        phieu.NgayDuyet = GetVietnamNow();
-
-        await _db.SaveChangesAsync();
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var adminId) || adminId <= 0)
+            return Challenge();
+        var now = ImportOrderReceivingService.VietnamNow();
+        var changed = await _db.PhieuNhapHangs
+            .Where(x => x.MaPhieuNhap == id && x.TrangThai == "Chờ duyệt")
+            .ExecuteUpdateAsync(set => set.SetProperty(x => x.TrangThai, "Đã duyệt")
+                .SetProperty(x => x.MaNguoiDuyet, (int?)adminId)
+                .SetProperty(x => x.NgayDuyet, (DateTime?)now));
+        if (changed != 1)
+        {
+            TempData["Error"] = "Phiếu vừa được xử lý. Vui lòng tải lại trang.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
 
         TempData["Success"] = $"Đã phê duyệt phiếu đề nghị nhập hàng [{phieu.MaChungTu}].";
         return RedirectToAction(nameof(Details), new { id });
@@ -145,75 +154,59 @@ public class ImportOrderController : Controller
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        int adminId = 1;
-        if (int.TryParse(adminIdClaim, out var parsed)) adminId = parsed;
-
-        phieu.TrangThai = "Từ chối";
-        phieu.MaNguoiDuyet = adminId;
-        phieu.NgayDuyet = GetVietnamNow();
-        phieu.LyDoTuChoi = lyDoTuChoi.Trim();
-
-        await _db.SaveChangesAsync();
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var adminId) || adminId <= 0)
+            return Challenge();
+        if (lyDoTuChoi.Trim().Length > 500)
+        {
+            TempData["Error"] = "Lý do từ chối tối đa 500 ký tự.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        var now = ImportOrderReceivingService.VietnamNow();
+        var reason = lyDoTuChoi.Trim();
+        var changed = await _db.PhieuNhapHangs
+            .Where(x => x.MaPhieuNhap == id && x.TrangThai == "Chờ duyệt")
+            .ExecuteUpdateAsync(set => set.SetProperty(x => x.TrangThai, "Từ chối")
+                .SetProperty(x => x.MaNguoiDuyet, (int?)adminId)
+                .SetProperty(x => x.NgayDuyet, (DateTime?)now)
+                .SetProperty(x => x.LyDoTuChoi, reason));
+        if (changed != 1)
+        {
+            TempData["Error"] = "Phiếu vừa được xử lý. Vui lòng tải lại trang.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
 
         TempData["Success"] = $"Đã từ chối phiếu [{phieu.MaChungTu}]. Lý do: {lyDoTuChoi}";
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    // Kiểm nhận nhập kho & cộng tồn kho thực tế (Transaction an toàn, chống cộng trùng)
+    [HttpGet]
+    public async Task<IActionResult> Receive(int id)
+    {
+        var vm = await _receiving.LoadAsync(id);
+        if (vm == null) return NotFound();
+        if (vm.TrangThai != "Đã duyệt")
+        {
+            TempData["Error"] = "Chỉ kiểm nhận phiếu đã duyệt và chưa nhập kho.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        ViewData["ReceiveArea"] = "Admin";
+        ViewData["ReceiveAction"] = "ConfirmReceived";
+        return View("Receive", vm);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConfirmReceived(int id)
+    public async Task<IActionResult> ConfirmReceived([FromForm] ImportOrderReceiveCommand model)
     {
-        using var tx = await _db.Database.BeginTransactionAsync();
-        try
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || userId <= 0)
+            return Challenge();
+        if (!ModelState.IsValid)
         {
-            var phieu = await _db.PhieuNhapHangs
-                .Include(x => x.ChiTietPhieuNhapHangs)
-                    .ThenInclude(ct => ct.MaBienTheNavigation)
-                .FirstOrDefaultAsync(x => x.MaPhieuNhap == id);
-
-            if (phieu == null) return NotFound();
-
-            if (phieu.TrangThai != "Đã duyệt")
-            {
-                TempData["Error"] = "Chỉ có thể kiểm nhận nhập kho cho phiếu đã được Admin phê duyệt.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            int adminId = 1;
-            if (int.TryParse(adminIdClaim, out var parsed)) adminId = parsed;
-
-            // Tăng tồn kho từng biến thể
-            foreach (var ct in phieu.ChiTietPhieuNhapHangs)
-            {
-                var variant = await _db.BienTheSanPhams.FirstOrDefaultAsync(b => b.MaBienThe == ct.MaBienThe);
-                if (variant != null)
-                {
-                    variant.SoLuong += ct.SoLuongNhap;
-                    if (variant.TrangThai == "Hết hàng" && variant.SoLuong > 0)
-                    {
-                        variant.TrangThai = "Còn hàng";
-                    }
-                }
-            }
-
-            phieu.TrangThai = "Đã nhập kho";
-            phieu.NgayNhapKho = GetVietnamNow();
-            phieu.MaNguoiNhapKho = adminId;
-
-            await _db.SaveChangesAsync();
-            await tx.CommitAsync();
-
-            TempData["Success"] = $"Đã kiểm nhận hàng thành công cho phiếu [{phieu.MaChungTu}]. Tồn kho các sản phẩm đã được tự động cộng tăng.";
-            return RedirectToAction(nameof(Details), new { id });
+            TempData["Error"] = "Dữ liệu kiểm nhận không hợp lệ. Nhập số nguyên từ 0 đến 100.000, ghi chú tối đa 500 ký tự.";
+            return RedirectToAction(nameof(Receive), new { id = model.MaPhieuNhap });
         }
-        catch (Exception ex)
-        {
-            await tx.RollbackAsync();
-            TempData["Error"] = $"Lỗi khi xác nhận nhập kho: {ex.Message}";
-            return RedirectToAction(nameof(Details), new { id });
-        }
+        var result = await _receiving.ConfirmAsync(model, userId);
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
+        return RedirectToAction(result.Success ? nameof(Details) : nameof(Receive), new { id = model.MaPhieuNhap });
     }
 }

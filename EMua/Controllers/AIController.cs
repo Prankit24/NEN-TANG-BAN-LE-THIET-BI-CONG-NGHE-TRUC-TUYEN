@@ -12,18 +12,18 @@ namespace EMua.Controllers
     public class AIController : Controller
     {
         private readonly DomainClassifier _domainClassifier;
-        private readonly GeminiService _geminiService;
+        private readonly AIServiceOrchestrator _aiOrchestrator;
         private readonly RecommendationService _recommendationService;
         private readonly ILogger<AIController> _logger;
 
         public AIController(
             DomainClassifier domainClassifier,
-            GeminiService geminiService,
+            AIServiceOrchestrator aiOrchestrator,
             RecommendationService recommendationService,
             ILogger<AIController> logger)
         {
             _domainClassifier = domainClassifier;
-            _geminiService = geminiService;
+            _aiOrchestrator = aiOrchestrator;
             _recommendationService = recommendationService;
             _logger = logger;
         }
@@ -260,9 +260,9 @@ namespace EMua.Controllers
                   "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
                   request.Message;
 
-            // 3. Gọi Gemini với fallback thông minh hỗ trợ câu hỏi tiếp nối
+            // 3. Gọi AI với cơ chế fallback thông minh: Gemini → Groq → Supabase
             _logger.LogInformation(
-                "EMUA AI: [Bước 3/4] Gọi Gemini. Độ dài prompt: {Length} ký tự.",
+                "EMUA AI: [Bước 3/4] Gọi AI (Gemini → Groq). Độ dài prompt: {Length} ký tự.",
                 promptWithContext.Length);
 
             var geminiTimer = System.Diagnostics.Stopwatch.StartNew();
@@ -270,10 +270,11 @@ namespace EMua.Controllers
 
             try
             {
-                answer = await _geminiService.AskAsync(promptWithContext, cancellationToken);
+                answer = await _aiOrchestrator.AskAsync(promptWithContext, cancellationToken);
                 geminiTimer.Stop();
                 _logger.LogInformation(
-                    "EMUA AI: [Bước 3/4] Gemini trả lời thành công sau {ElapsedMs} ms.",
+                    "EMUA AI: [Bước 3/4] AI ({Provider}) trả lời thành công sau {ElapsedMs} ms.",
+                    _aiOrchestrator.LastUsedProvider,
                     geminiTimer.ElapsedMilliseconds);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -285,7 +286,7 @@ namespace EMua.Controllers
                 geminiTimer.Stop();
                 _logger.LogWarning(
                     ex,
-                    "EMUA AI: Gọi Gemini thất bại/hết quota/timeout ({ExType}) sau {ElapsedMs} ms. Kích hoạt fallback Supabase.",
+                    "EMUA AI: Cả Gemini và Groq đều thất bại/hết quota/timeout ({ExType}) sau {ElapsedMs} ms. Kích hoạt fallback Supabase.",
                     ex.GetType().Name,
                     geminiTimer.ElapsedMilliseconds);
 

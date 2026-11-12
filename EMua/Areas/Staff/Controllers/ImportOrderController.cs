@@ -15,11 +15,13 @@ namespace EMua.Areas.Staff.Controllers;
 public class ImportOrderController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
+    private readonly ImportOrderReceivingService _receiving;
     private readonly ISupplierQuotationService _quotationService;
 
-    public ImportOrderController(EMuaDbContext db, ISupplierQuotationService quotationService)
+    public ImportOrderController(EMuaDbContext db, ISupplierQuotationService quotationService, ImportOrderReceivingService receiving)
     {
         _db = db;
+        _receiving = receiving;
         _quotationService = quotationService;
     }
 
@@ -41,6 +43,7 @@ public class ImportOrderController : StaffControllerBase
     // Danh sách phiếu đề nghị nhập hàng
     public async Task<IActionResult> Index(string? status, string? search, int page = 1, int pageSize = 12)
     {
+        pageSize = Math.Clamp(pageSize, 1, 100);
         var query = _db.PhieuNhapHangs
             .Include(x => x.MaNguoiTaoNavigation)
             .Include(x => x.MaNguoiDuyetNavigation)
@@ -310,12 +313,8 @@ public class ImportOrderController : StaffControllerBase
         }
 
         // Kiểm tra và lấy danh tính nhân viên lập phiếu
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        int currentUserId = 1;
-        if (int.TryParse(userIdClaim, out var parsedId))
-        {
-            currentUserId = parsedId;
-        }
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId) || currentUserId <= 0)
+            return Challenge();
 
         // Sinh mã chứng từ chuẩn hệ thống
         var nowVn = GetVietnamNow();
@@ -409,5 +408,36 @@ public class ImportOrderController : StaffControllerBase
 
         TempData["Success"] = $"Đã tạo phiếu đề nghị nhập hàng [{maChungTu}] thành công (Tổng tiền: {phieu.TongTienDuKien:N0}₫) và gửi Admin phê duyệt.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Receive(int id)
+    {
+        var vm = await _receiving.LoadAsync(id);
+        if (vm == null) return NotFound();
+        if (vm.TrangThai != "Đã duyệt")
+        {
+            TempData["Error"] = "Chỉ kiểm nhận phiếu đã duyệt và chưa nhập kho.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        ViewData["ReceiveArea"] = "Staff";
+        ViewData["ReceiveAction"] = "ConfirmReceive";
+        return View("~/Areas/Staff/Views/ImportOrder/Receive.cshtml", vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmReceive([FromForm] ImportOrderReceiveCommand model)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || userId <= 0)
+            return Challenge();
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Dữ liệu kiểm nhận không hợp lệ. Nhập số nguyên từ 0 đến 100.000, ghi chú tối đa 500 ký tự.";
+            return RedirectToAction(nameof(Receive), new { id = model.MaPhieuNhap });
+        }
+        var result = await _receiving.ConfirmAsync(model, userId);
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
+        return RedirectToAction(result.Success ? nameof(Details) : nameof(Receive), new { id = model.MaPhieuNhap });
     }
 }

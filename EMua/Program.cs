@@ -99,6 +99,7 @@ builder.Services.AddScoped<IAppEmailSender, SmtpEmailSender>();
 
 builder.Services.AddScoped<EmailVerificationService>();
 builder.Services.AddScoped<ISupplierQuotationService, SupplierQuotationService>();
+builder.Services.AddScoped<EMua.Services.ImportOrderReceivingService>();
 
 // ============================================================
 // 4. SESSION
@@ -138,14 +139,21 @@ builder.Services.AddSession(options =>
 // Dịch vụ phân loại câu hỏi thuộc lĩnh vực công nghệ.
 //
 // GeminiService:
-// Dịch vụ gọi Gemini API.
+// Dịch vụ gọi Gemini API (provider chính).
+//
+// GroqService:
+// Dịch vụ gọi Groq API (provider dự phòng).
+// API Key đọc từ Groq:ApiKey (User Secrets).
+// Model đọc từ Groq:Model (appsettings.json).
+//
+// AIServiceOrchestrator:
+// Cơ chế fallback: Gemini → Groq khi gặp lỗi tạm thời.
+// Không chuyển provider khi lỗi cấu hình hoặc dữ liệu.
 //
 // RecommendationService:
 // Dịch vụ tư vấn/gợi ý sản phẩm.
 //
-// Giữ nguyên lifetime như source gốc.
-//
-// AddHttpClient<GeminiService>() sử dụng HttpClientFactory
+// AddHttpClient<T>() sử dụng HttpClientFactory
 // để quản lý HttpClient hiệu quả hơn.
 // ============================================================
 
@@ -156,6 +164,14 @@ builder.Services.AddHttpClient<GeminiService>(client =>
     // Giới hạn timeout mỗi request Gemini là 15 giây để tránh treo 100s mặc định của HttpClient
     client.Timeout = TimeSpan.FromSeconds(15);
 });
+
+builder.Services.AddHttpClient<GroqService>(client =>
+{
+    // Giới hạn timeout mỗi request Groq là 15 giây
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
+builder.Services.AddScoped<AIServiceOrchestrator>();
 
 builder.Services.AddScoped<RecommendationService>();
 

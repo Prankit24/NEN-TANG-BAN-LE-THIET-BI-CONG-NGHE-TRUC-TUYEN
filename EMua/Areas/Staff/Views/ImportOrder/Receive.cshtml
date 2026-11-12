@@ -1,0 +1,337 @@
+@model EMua.Areas.Staff.Models.ImportOrderReceiveViewModel
+@{
+    var receiveArea = ViewData["ReceiveArea"] as string ?? "Staff";
+    var receiveAction = ViewData["ReceiveAction"] as string ?? "ConfirmReceive";
+    Layout = receiveArea == "Admin"
+        ? "~/Areas/Admin/Views/Shared/_Layout.cshtml"
+        : "~/Areas/Staff/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = $"Kiểm nhận nhập kho: {Model.MaChungTu}";
+}
+
+<style>
+    .staff-card, .btn, .form-control, .form-select, .badge, .alert, .table {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+        .form-control.is-invalid {
+            border-color: #DC2626 !important;
+            background-color: #FEF2F2 !important;
+        }
+
+    .field-validation-error {
+        color: #DC2626 !important;
+        font-size: 11.5px;
+        margin-top: 3px;
+        display: block;
+        font-weight: 500;
+    }
+
+    /* ===== Tối ưu cho laptop ===== */
+    .rc-page {
+        font-size: 0.875rem;
+    }
+
+        .rc-page .rc-table-wrap {
+            max-height: calc(100vh - 460px);
+            min-height: 180px;
+            overflow: auto;
+        }
+
+            .rc-page .rc-table-wrap thead th {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: #f8f9fa;
+                white-space: nowrap;
+            }
+
+        .rc-page .table > :not(caption) > * > * {
+            padding: .35rem .55rem;
+        }
+
+        .rc-page .rc-info {
+            padding: .5rem .75rem;
+        }
+
+        .rc-page .rc-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+            background: #fff;
+            border-top: 1px solid #dee2e6;
+            margin: 0 -1rem -1rem;
+            padding: .6rem 1rem;
+        }
+</style>
+
+<div class="rc-page">
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+        <div>
+            <h5 class="fw-bold mb-0" style="color: #172033;"><i class="bi bi-box-seam me-2 text-primary"></i>Kiểm nhận hàng nhập kho</h5>
+            <div class="text-muted small">
+                Mã chứng từ: <strong class="text-primary">@Model.MaChungTu</strong> | Người lập: <strong>@Model.NguoiTao</strong> | Người duyệt: <strong class="text-success">@(Model.NguoiDuyet ?? "Admin")</strong>
+            </div>
+        </div>
+        <a asp-area="@receiveArea" asp-controller="ImportOrder" asp-action="Details" asp-route-id="@Model.MaPhieuNhap" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại chi tiết phiếu
+        </a>
+    </div>
+
+    <form asp-area="@receiveArea" asp-controller="ImportOrder" asp-action="@receiveAction" method="post" id="receiveImportOrderForm" class="staff-card p-3 bg-white border">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MaPhieuNhap" />
+        <input type="hidden" asp-for="MaChungTu" />
+
+        <div class="row g-2 mb-2">
+            <div class="col-md-4">
+                <div class="rc-info bg-light border h-100">
+                    <span class="text-muted small d-block">Nhà cung cấp:</span>
+                    <strong class="text-dark">@Model.NhaCungCap</strong>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="rc-info bg-light border h-100">
+                    <span class="text-muted small d-block">Lý do nhập hàng:</span>
+                    <span class="text-dark">@Model.LyDoNhap</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="rc-info bg-light border h-100">
+                    <span class="text-muted small d-block">Trạng thái phiếu:</span>
+                    <span class="badge bg-info text-dark"><i class="bi bi-check2-circle me-1"></i>@Model.TrangThai (Chờ nhận hàng)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="border p-0 mb-2">
+            <div class="px-3 py-2 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <h6 class="fw-bold mb-0 small text-uppercase">Danh sách mặt hàng kiểm đếm thực tế</h6>
+                <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Nhập số lượng thực nhận vào từng dòng.</span>
+            </div>
+            <div class="table-responsive rc-table-wrap">
+                <table class="table table-sm table-hover align-middle mb-0" id="receiveItemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;" class="text-center">#</th>
+                            <th>Sản phẩm / Biến thể</th>
+                            <th class="text-center" style="width: 90px;">Tồn kho</th>
+                            <th class="text-center" style="width: 90px;">SL Duyệt</th>
+                            <th class="text-center" style="width: 130px;">SL Thực nhận <span class="text-danger">*</span></th>
+                            <th class="text-center" style="width: 110px;">Chênh lệch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Items.Count; i++)
+                        {
+                            var item = Model.Items[i];
+                            <tr class="receive-row" data-index="@i">
+                                <td class="text-center text-muted">@(i + 1)</td>
+                                <td>
+                                    <input type="hidden" name="Items[@i].MaChiTietPhieuNhap" value="@item.MaChiTietPhieuNhap" />
+                                    <input type="hidden" name="Items[@i].MaBienThe" value="@item.MaBienThe" />
+                                    <input type="hidden" name="Items[@i].SoLuongDeNghi" value="@item.SoLuongDeNghi" class="approved-qty" />
+                                    <strong class="text-dark d-block">@item.TenSanPham</strong>
+                                    <small class="text-muted">Phân loại: @(item.MauSac ?? "—") - @(item.PhienBan ?? "—") (Mã biến thể: #@item.MaBienThe)</small>
+                                </td>
+                                <td class="text-center"><span class="badge bg-secondary">@item.TonKhoHienTai</span></td>
+                                <td class="text-center"><span class="badge bg-light text-dark border fw-bold">@item.SoLuongDeNghi</span></td>
+                                <td>
+                                    <input type="number"
+                                           name="Items[@i].SoLuongThucNhan"
+                                           value="@item.SoLuongThucNhan"
+                                           min="0"
+                                           step="1"
+                                           max="100000"
+                                           class="form-control form-control-sm text-center fw-bold receive-qty-input"
+                                           oninput="onReceiveQtyChange(this)"
+                                           required />
+                                    <span class="field-validation-error text-center" id="error_@i"></span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="diff-badge badge bg-success-subtle text-success border border-success-subtle">Khớp (0)</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="receiveClientError" class="text-danger small mb-1" role="alert"></div>
+        <p class="small text-muted mb-2">Phiếu được chốt một lần theo số lượng thực nhận. Nếu giao thiếu/thừa, bắt buộc ghi lý do; phần thiếu không được tự động cộng thêm sau này.</p>
+
+        <!-- Cảnh báo nếu có chênh lệch -->
+        <div id="diffAlertBox" class="alert alert-warning d-none mb-2 py-2" role="alert">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 text-warning"></i>
+                <div>
+                    <strong>Cảnh báo chênh lệch số lượng kiểm nhận:</strong>
+                    <div id="diffAlertMessage" class="small mt-1">Một số sản phẩm có số lượng thực nhận khác với số lượng đã được Admin phê duyệt. Hệ thống sẽ ghi nhận lịch sử kiểm đếm này vào nhật ký phiếu.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label asp-for="GhiChuKiemNhan" class="form-label fw-bold small mb-1">Ghi chú kiểm nhận nhập kho (nếu có)</label>
+            <textarea asp-for="GhiChuKiemNhan" class="form-control form-control-sm" rows="2" maxlength="500" placeholder="Ghi chú tình trạng hàng hóa, bao bì, lý do giao thiếu hoặc giao thừa (nếu có)..."></textarea>
+        </div>
+
+        <!-- Thanh nút luôn hiển thị ở đáy -->
+        <div class="rc-actions d-flex align-items-center justify-content-end gap-2 flex-wrap">
+            <a asp-area="@receiveArea" asp-controller="ImportOrder" asp-action="Details" asp-route-id="@Model.MaPhieuNhap" class="btn btn-outline-secondary btn-sm px-3">Hủy bỏ</a>
+            <button type="button" class="btn btn-primary btn-sm px-3 fw-bold" onclick="submitReceiveOrder()">
+                <i class="bi bi-box-arrow-in-down me-1"></i> Xác nhận nhập kho &amp; Cộng tồn
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function onReceiveQtyChange(input) {
+            const row = input.closest('tr');
+            if (!row) return;
+
+            const idx = row.getAttribute('data-index');
+            const errSpan = document.getElementById(`error_${idx}`);
+            const approvedQty = parseInt(row.querySelector('.approved-qty')?.value || '0', 10);
+            const val = input.value.trim();
+            const actualQty = Number(val);
+
+            if (val === '' || !Number.isInteger(actualQty) || actualQty < 0 || actualQty > 100000) {
+                input.classList.add('is-invalid');
+                if (errSpan) errSpan.textContent = 'Nhập số nguyên từ 0 đến 100.000.';
+                return;
+            } else {
+                input.classList.remove('is-invalid');
+                if (errSpan) errSpan.textContent = '';
+            }
+
+            const diffBadge = row.querySelector('.diff-badge');
+            const diff = actualQty - approvedQty;
+
+            if (diff === 0) {
+                diffBadge.className = 'diff-badge badge bg-success-subtle text-success border border-success-subtle';
+                diffBadge.textContent = 'Khớp (0)';
+            } else if (diff > 0) {
+                diffBadge.className = 'diff-badge badge bg-warning-subtle text-warning border border-warning-subtle';
+                diffBadge.textContent = `Thừa (+${diff})`;
+            } else {
+                diffBadge.className = 'diff-badge badge bg-danger-subtle text-danger border border-danger-subtle';
+                diffBadge.textContent = `Thiếu (${diff})`;
+            }
+
+            checkAllDifferences();
+        }
+
+        function checkAllDifferences() {
+            let hasDiff = false;
+            let diffDetails = [];
+
+            document.querySelectorAll('#receiveItemsTable .receive-row').forEach(row => {
+                const approvedQty = parseInt(row.querySelector('.approved-qty')?.value || '0', 10);
+                const actualQty = parseInt(row.querySelector('.receive-qty-input')?.value || '0', 10);
+                const name = row.querySelector('strong')?.textContent || 'Sản phẩm';
+
+                if (actualQty !== approvedQty) {
+                    hasDiff = true;
+                    const diff = actualQty - approvedQty;
+                    diffDetails.push(`${name}: Duyệt ${approvedQty}, nhận ${actualQty} (${diff > 0 ? '+' + diff : diff})`);
+                }
+            });
+
+            const alertBox = document.getElementById('diffAlertBox');
+            const alertMsg = document.getElementById('diffAlertMessage');
+
+            if (hasDiff) {
+                alertBox.classList.remove('d-none');
+                alertMsg.textContent = 'Phát hiện chênh lệch: ' + diffDetails.join('; ');
+            } else {
+                alertBox.classList.add('d-none');
+            }
+        }
+
+        async function submitReceiveOrder() {
+            let isValid = true;
+            let firstInvalid = null;
+            let totalQty = 0;
+
+            document.querySelectorAll('#receiveItemsTable .receive-row').forEach(row => {
+                const input = row.querySelector('.receive-qty-input');
+                const idx = row.getAttribute('data-index');
+                const errSpan = document.getElementById(`error_${idx}`);
+                const val = input.value.trim();
+                const actualQty = Number(val);
+
+                if (val === '' || !Number.isInteger(actualQty) || actualQty < 0 || actualQty > 100000) {
+                    input.classList.add('is-invalid');
+                    if (errSpan) errSpan.textContent = 'Số lượng không hợp lệ.';
+                    isValid = false;
+                    if (!firstInvalid) firstInvalid = input;
+                } else {
+                    totalQty += actualQty;
+                }
+            });
+
+            if (!isValid) {
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            const form = document.getElementById('receiveImportOrderForm');
+            const clientError = document.getElementById('receiveClientError');
+            clientError.textContent = '';
+            if (form.dataset.submitting === 'true' || form.dataset.confirming === 'true') return;
+            if (!form.reportValidity()) return;
+            const hasDifference = Array.from(document.querySelectorAll('.receive-row')).some(row =>
+                Number(row.querySelector('.receive-qty-input').value) !== Number(row.querySelector('.approved-qty').value));
+            if (hasDifference && !form.querySelector('[name="GhiChuKiemNhan"]').value.trim()) {
+                clientError.textContent = 'Vui lòng ghi lý do giao thiếu hoặc giao thừa.';
+                form.querySelector('[name="GhiChuKiemNhan"]').focus();
+                return;
+            }
+            if (totalQty === 0) {
+                clientError.textContent = 'Tổng số lượng thực nhận phải lớn hơn 0.';
+                if (window.StaffDialog) {
+                    StaffDialog.warning('Không có số lượng', 'Tổng số lượng thực nhận phải lớn hơn 0 để tiến hành nhập kho.');
+                }
+                return;
+            }
+
+            form.dataset.confirming = 'true';
+            if (window.StaffDialog && window.StaffDialog.confirm) {
+                const confirmed = await StaffDialog.confirm({
+                    title: 'Xác nhận kiểm nhận nhập kho',
+                    message: 'Xác nhận kiểm đếm hoàn tất? Hành động này sẽ cộng trực tiếp số lượng thực nhận vào tồn kho của từng biến thể sản phẩm.',
+                    confirmText: 'Xác nhận & Tăng tồn',
+                    cancelText: 'Kiểm tra lại',
+                    isDanger: false
+                });
+                form.dataset.confirming = 'false';
+                if (confirmed) {
+                    form.dataset.submitting = 'true';
+                    form.querySelector('button[onclick]').disabled = true;
+                    HTMLFormElement.prototype.submit.call(form);
+                }
+            } else {
+                const confirmed = window.confirm('Xác nhận nhập kho theo số lượng thực nhận? Phiếu sẽ được chốt một lần.');
+                form.dataset.confirming = 'false';
+                if (!confirmed) return;
+                form.dataset.submitting = 'true';
+                form.querySelector('button[onclick]').disabled = true;
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('receiveImportOrderForm').addEventListener('submit', event => {
+                event.preventDefault();
+                submitReceiveOrder();
+            });
+            document.querySelectorAll('#receiveItemsTable .receive-qty-input').forEach(input => {
+                onReceiveQtyChange(input);
+            });
+        });
+    </script>
+}

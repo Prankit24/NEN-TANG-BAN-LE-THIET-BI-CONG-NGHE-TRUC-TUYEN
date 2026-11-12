@@ -3,173 +3,242 @@
     ViewData["Title"] = $"Phê duyệt phiếu nhập {Model.MaChungTu}";
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-        <h4 class="mb-1 fw-bold"><i class="bi bi-shield-check me-2"></i>Chi tiết phiếu nhập hàng: @Model.MaChungTu</h4>
-        <span class="text-muted small">Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong> (@Model.NgayTao.ToString("dd/MM/yyyy HH:mm"))</span>
-    </div>
-    <div>
+<style>
+    /* ===== Tối ưu cho laptop ===== */
+    .po-page {
+        font-size: 0.875rem;
+    }
+
+        .po-page .po-side {
+            position: sticky;
+            top: 8px;
+        }
+
+        .po-page .po-table-wrap {
+            max-height: calc(100vh - 250px);
+            min-height: 200px;
+            overflow: auto;
+        }
+
+            .po-page .po-table-wrap thead th {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: #f8f9fa;
+            }
+
+            .po-page .po-table-wrap tfoot td {
+                position: sticky;
+                bottom: 0;
+                z-index: 2;
+                background: #f8f9fa;
+            }
+
+        .po-page .table > :not(caption) > * > * {
+            padding: .4rem .6rem;
+        }
+
+        .po-page .po-info-item {
+            margin-bottom: .5rem;
+        }
+
+            .po-page .po-info-item .badge {
+                font-size: .8rem !important;
+            }
+
+    @@media (max-width: 991.98px) {
+        .po-page .po-side {
+            position: static;
+        }
+
+        .po-page .po-table-wrap {
+            max-height: none;
+        }
+    }
+</style>
+
+<div class="po-page">
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+        <div>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-shield-check me-2"></i>Chi tiết phiếu nhập hàng: @Model.MaChungTu</h5>
+            <span class="text-muted small">Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong> (@Model.NgayTao.ToString("dd/MM/yyyy HH:mm"))</span>
+        </div>
         <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
         </a>
     </div>
-</div>
 
-<div class="row g-3">
-    <!-- Thông tin chung & Nút phê duyệt của Admin -->
-    <div class="col-lg-4">
-        <div class="border p-3 bg-white mb-3">
-            <h6 class="fw-bold border-bottom pb-2 mb-3">Thông tin đề nghị</h6>
+    <div class="row g-2">
+        <!-- Thông tin chung & Nút phê duyệt của Admin -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="po-side">
+                <div class="border p-2 bg-white mb-2">
+                    <h6 class="fw-bold border-bottom pb-2 mb-2 small text-uppercase">Thông tin đề nghị</h6>
 
-            <div class="mb-2">
-                <span class="text-muted small d-block">Trạng thái hiện tại:</span>
+                    <div class="po-info-item">
+                        <span class="text-muted small d-block">Trạng thái hiện tại:</span>
+                        @if (Model.TrangThai == "Chờ duyệt")
+                        {
+                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ Admin duyệt</span>
+                        }
+                        else if (Model.TrangThai == "Đã duyệt")
+                        {
+                            <span class="badge bg-info text-dark"><i class="bi bi-check2-circle me-1"></i>Đã duyệt (Chờ nhận hàng)</span>
+                        }
+                        else if (Model.TrangThai == "Đã nhập kho")
+                        {
+                            <span class="badge bg-success"><i class="bi bi-box-seam me-1"></i>Đã nhập kho (Tồn kho đã cộng)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>@Model.TrangThai</span>
+                        }
+                    </div>
+
+                    <div class="po-info-item">
+                        <span class="text-muted small d-block">Nhà cung cấp:</span>
+                        <span class="fw-bold text-dark">@Model.NhaCungCap</span>
+                    </div>
+
+                    <div class="po-info-item">
+                        <span class="text-muted small d-block">Lý do nhập hàng:</span>
+                        <span class="text-dark">@Model.LyDoNhap</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.DienGiai))
+                    {
+                        <div class="po-info-item">
+                            <span class="text-muted small d-block">Diễn giải:</span>
+                            <span class="text-muted">@Model.DienGiai</span>
+                        </div>
+                    }
+
+                    <div class="po-info-item border-top pt-2">
+                        <span class="text-muted small d-block">Tổng tiền dự kiến:</span>
+                        <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N0") ₫</span>
+                    </div>
+
+                    @if (Model.MaNguoiDuyetNavigation != null)
+                    {
+                        <div class="po-info-item border-top pt-2">
+                            <span class="text-muted small d-block">Người duyệt:</span>
+                            <span class="fw-semibold">@Model.MaNguoiDuyetNavigation.TenNguoiDung</span>
+                            <span class="small text-muted ms-1">@Model.NgayDuyet?.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    }
+
+                    @if (Model.NgayNhapKho.HasValue)
+                    {
+                        <div class="po-info-item border-top pt-2">
+                            <span class="text-muted small d-block">Nhập kho lúc:</span>
+                            <span class="fw-semibold">@Model.NgayNhapKho.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            <div class="small text-muted">Người nhận: @(Model.MaNguoiNhapKhoNavigation?.TenNguoiDung ?? "—")</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.GhiChu))
+                    {
+                        <div class="small border-top pt-2 mb-1"><strong>Ghi chú / kiểm nhận:</strong> @Model.GhiChu</div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.LyDoTuChoi))
+                    {
+                        <div class="alert alert-danger mt-2 mb-0 p-2 small">
+                            <strong>Lý do từ chối:</strong> @Model.LyDoTuChoi
+                        </div>
+                    }
+                </div>
+
+                <!-- KHỐI HÀNH ĐỘNG CỦA ADMIN -->
                 @if (Model.TrangThai == "Chờ duyệt")
                 {
-                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-hourglass-split me-1"></i>Chờ Admin duyệt</span>
+                    <div class="border border-primary p-2 bg-white">
+                        <h6 class="fw-bold text-primary border-bottom pb-2 mb-2 small text-uppercase"><i class="bi bi-check2-all me-1"></i>Quyết định phê duyệt</h6>
+
+                        <button type="button" class="btn btn-success btn-sm w-100 fw-bold mb-2"
+                                data-bs-toggle="modal" data-bs-target="#approveConfirmModal">
+                            <i class="bi bi-check-lg me-1"></i> Phê duyệt đề nghị nhập hàng
+                        </button>
+
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="collapse" data-bs-target="#boxReject">
+                            <i class="bi bi-x-lg me-1"></i> Từ chối phê duyệt
+                        </button>
+
+                        <div class="collapse mt-2" id="boxReject">
+                            <form asp-area="Admin" asp-controller="ImportOrder" asp-action="Reject" method="post" class="p-2 border bg-light">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
+                                <label class="form-label small fw-bold">Lý do từ chối <span class="text-danger">*</span></label>
+                                <textarea name="lyDoTuChoi" required class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập lý do không duyệt..."></textarea>
+                                <button type="submit" class="btn btn-danger btn-sm w-100">Xác nhận từ chối</button>
+                            </form>
+                        </div>
+                    </div>
                 }
                 else if (Model.TrangThai == "Đã duyệt")
                 {
-                    <span class="badge bg-info text-dark fs-6"><i class="bi bi-check2-circle me-1"></i>Đã duyệt (Chờ nhận hàng)</span>
+                    <div class="border border-success p-2 bg-white">
+                        <h6 class="fw-bold text-success border-bottom pb-2 mb-2 small text-uppercase"><i class="bi bi-box-seam me-1"></i>Kiểm nhận nhập kho</h6>
+                        <p class="small text-muted mb-2">Hàng đã được giao tới kho? Bấm xác nhận sau khi đã kiểm đếm hợp lệ. <strong>Tồn kho sẽ tự động được cộng vào từng biến thể.</strong></p>
+
+                        <a href="@Url.Action("Receive", "ImportOrder", new { area = "Admin", id = Model.MaPhieuNhap })"
+                           class="btn btn-success btn-sm w-100 fw-bold">
+                            <i class="bi bi-box-seam me-1"></i> Kiểm đếm và nhập số lượng thực nhận
+                        </a>
+                    </div>
                 }
-                else if (Model.TrangThai == "Đã nhập kho")
-                {
-                    <span class="badge bg-success fs-6"><i class="bi bi-box-seam me-1"></i>Đã nhập kho (Tồn kho đã cộng)</span>
-                }
-                else
-                {
-                    <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>@Model.TrangThai</span>
-                }
             </div>
-
-            <div class="mb-2">
-                <span class="text-muted small d-block">Nhà cung cấp:</span>
-                <span class="fw-bold text-dark">@Model.NhaCungCap</span>
-            </div>
-
-            <div class="mb-2">
-                <span class="text-muted small d-block">Lý do nhập hàng:</span>
-                <span class="text-dark">@Model.LyDoNhap</span>
-            </div>
-
-            @if (!string.IsNullOrWhiteSpace(Model.DienGiai))
-            {
-                <div class="mb-2">
-                    <span class="text-muted small d-block">Diễn giải:</span>
-                    <span class="text-muted">@Model.DienGiai</span>
-                </div>
-            }
-
-            <div class="mb-2 border-top pt-2">
-                <span class="text-muted small d-block">Tổng tiền dự kiến:</span>
-                <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N0") ₫</span>
-            </div>
-
-            @if (Model.MaNguoiDuyetNavigation != null)
-            {
-                <div class="mb-2 border-top pt-2">
-                    <span class="text-muted small d-block">Người duyệt:</span>
-                    <span class="fw-semibold">@Model.MaNguoiDuyetNavigation.TenNguoiDung</span>
-                    <div class="small text-muted">@Model.NgayDuyet?.ToString("dd/MM/yyyy HH:mm")</div>
-                </div>
-            }
-
-            @if (!string.IsNullOrWhiteSpace(Model.LyDoTuChoi))
-            {
-                <div class="alert alert-danger mt-2 mb-0 p-2 small">
-                    <strong>Lý do từ chối:</strong> @Model.LyDoTuChoi
-                </div>
-            }
         </div>
 
-        <!-- KHỐI HÀNH ĐỘNG CỦA ADMIN -->
-        @if (Model.TrangThai == "Chờ duyệt")
-        {
-            <div class="border border-primary p-3 bg-white">
-                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="bi bi-check2-all me-1"></i>Quyết định phê duyệt</h6>
-
-                <button type="button" class="btn btn-success w-100 fw-bold mb-2" data-bs-toggle="modal" data-bs-target="#approveConfirmModal">
-                    <i class="bi bi-check-lg me-1"></i> Phê duyệt phiếu
-                </button>
-
-                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="collapse" data-bs-target="#boxReject">
-                    <i class="bi bi-x-lg me-1"></i> Từ chối phê duyệt
-                </button>
-
-                <div class="collapse mt-2" id="boxReject">
-                    <form asp-action="Reject" method="post" class="p-2 border bg-light">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
-                        <label class="form-label small fw-bold">Lý do từ chối <span class="text-danger">*</span></label>
-                        <textarea name="lyDoTuChoi" required class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập lý do không duyệt..."></textarea>
-                        <button type="submit" class="btn btn-danger btn-sm w-100">Xác nhận từ chối</button>
-                    </form>
+        <!-- Danh sách chi tiết biến thể -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="border p-0 bg-white">
+                <div class="px-3 py-2 border-bottom bg-light">
+                    <h6 class="fw-bold mb-0 small text-uppercase">Danh sách sản phẩm &amp; biến thể yêu cầu</h6>
                 </div>
-            </div>
-        }
-        else if (Model.TrangThai == "Đã duyệt")
-        {
-            <div class="border border-success p-3 bg-white">
-                <h6 class="fw-bold text-success border-bottom pb-2 mb-2"><i class="bi bi-box-seam me-1"></i>Kiểm nhận nhập kho</h6>
-                <p class="small text-muted mb-3">Hàng đã được giao tới kho? Bấm xác nhận sau khi đã kiểm đếm hợp lệ. <strong>Tồn kho sẽ tự động được cộng vào từng biến thể.</strong></p>
-
-                <button type="button" class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#receiveConfirmModal">
-                    <i class="bi bi-check-circle-fill me-1"></i> Xác nhận nhập kho &amp; Cộng tồn
-                </button>
-            </div>
-        }
-    </div>
-
-    <!-- Danh sách chi tiết biến thể -->
-    <div class="col-lg-8">
-        <div class="border p-0 bg-white">
-            <div class="p-3 border-bottom bg-light">
-                <h6 class="fw-bold mb-0">Danh sách sản phẩm &amp; biến thể yêu cầu</h6>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Sản phẩm / Biến thể</th>
-                            <th class="text-center" style="width: 120px;">Tồn hiện tại</th>
-                            <th class="text-center" style="width: 120px;">SL Đề nghị</th>
-                            <th class="text-end" style="width: 150px;">Đơn giá dự kiến</th>
-                            <th class="text-end" style="width: 160px;">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.ChiTietPhieuNhapHangs)
-                        {
-                            var variant = item.MaBienTheNavigation;
-                            var prod = variant?.MaSanPhamNavigation;
+                <div class="table-responsive po-table-wrap">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td>
-                                    <div class="fw-bold text-dark">@(prod?.TenSanPham ?? "Sản phẩm")</div>
-                                    <small class="text-muted">Phân loại: @(variant?.MauSac ?? "—") - @(variant?.PhienBan ?? "—")</small>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge @(variant?.SoLuong == 0 ? "bg-danger" : (variant?.SoLuong <= 10 ? "bg-warning text-dark" : "bg-secondary"))">
-                                        @(variant?.SoLuong ?? 0)
-                                    </span>
-                                </td>
-                                <td class="text-center fw-bold text-primary">
-                                    +@item.SoLuongNhap
-                                </td>
-                                <td class="text-end">
-                                    @item.DonGiaNhapDuKien.ToString("N0") ₫
-                                </td>
-                                <td class="text-end fw-bold text-dark">
-                                    @((item.SoLuongNhap * item.DonGiaNhapDuKien).ToString("N0")) ₫
-                                </td>
+                                <th>Sản phẩm / Biến thể</th>
+                                <th class="text-center" style="width: 90px;">Tồn hiện tại</th>
+                                <th class="text-center" style="width: 90px;">SL Đề nghị</th>
+                                <th class="text-end" style="width: 120px;">Đơn giá dự kiến</th>
+                                <th class="text-end" style="width: 130px;">Thành tiền</th>
                             </tr>
-                        }
-                    </tbody>
-                    <tfoot class="table-light">
-                        <tr>
-                            <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
-                            <td class="text-end fw-bold text-primary fs-6">@Model.TongTienDuKien.ToString("N0") ₫</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ChiTietPhieuNhapHangs)
+                            {
+                                var variant = item.MaBienTheNavigation;
+                                var prod = variant?.MaSanPhamNavigation;
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">@(prod?.TenSanPham ?? "Sản phẩm")</div>
+                                        <small class="text-muted">Phân loại: @(variant?.MauSac ?? "—") - @(variant?.PhienBan ?? "—")</small>
+                                        @if (!string.IsNullOrWhiteSpace(item.GhiChu))
+                                        {
+                                            <div class="small text-muted">@item.GhiChu</div>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge @(variant?.SoLuong == 0 ? "bg-danger" : (variant?.SoLuong <= 10 ? "bg-warning text-dark" : "bg-secondary"))">
+                                            @(variant?.SoLuong ?? 0)
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-bold text-primary">@item.SoLuongNhap</td>
+                                    <td class="text-end">@item.DonGiaNhapDuKien.ToString("N0") ₫</td>
+                                    <td class="text-end fw-bold text-dark">@((item.SoLuongNhap * item.DonGiaNhapDuKien).ToString("N0")) ₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                                <td class="text-end fw-bold text-primary">@Model.TongTienDuKien.ToString("N0") ₫</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -191,39 +260,11 @@
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button>
-                <form asp-action="Approve" method="post" class="d-inline">
+                <form asp-area="Admin" asp-controller="ImportOrder" asp-action="Approve" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
                     <button type="submit" class="btn btn-success btn-sm fw-bold">
                         <i class="bi bi-check-lg me-1"></i> Đồng ý phê duyệt
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Xác nhận nhập kho thực tế -->
-<div class="modal fade" id="receiveConfirmModal" tabindex="-1" aria-labelledby="receiveConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border">
-            <div class="modal-header border-bottom">
-                <h6 class="modal-title fw-bold" id="receiveConfirmModalLabel"><i class="bi bi-box-seam text-success me-2"></i>Xác nhận kiểm nhận hàng vào kho</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-2">Xác nhận hàng thực tế từ phiếu <strong>[@Model.MaChungTu]</strong> đã được vận chuyển đến kho và kiểm đếm đầy đủ?</p>
-                <div class="alert alert-success border-success mb-0 p-2 small">
-                    <i class="bi bi-check-circle-fill me-1"></i> Hệ thống sẽ tự động <strong>cộng trực tiếp số lượng</strong> vào tồn kho thực tế của các biến thể sản phẩm.
-                </div>
-            </div>
-            <div class="modal-footer border-top">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button>
-                <form asp-action="ConfirmReceived" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.MaPhieuNhap" />
-                    <button type="submit" class="btn btn-success btn-sm fw-bold">
-                        <i class="bi bi-check-circle-fill me-1"></i> Xác nhận &amp; Tăng tồn kho
                     </button>
                 </form>
             </div>
