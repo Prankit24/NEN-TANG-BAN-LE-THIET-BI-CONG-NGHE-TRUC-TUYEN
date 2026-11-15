@@ -78,6 +78,7 @@
 </style>
 
 <div class="po-list">
+    <partial name="~/Views/Shared/_ImportOrderMessages.cshtml" />
     <form method="get" asp-action="Index" class="import-toolbar">
         <div style="flex: 1 1 260px; min-width: 200px;">
             <input type="search" name="search" value="@search" class="form-control" placeholder="Tìm theo mã chứng từ, nhà cung cấp, lý do..." aria-label="Tìm kiếm phiếu nhập" />
@@ -123,7 +124,7 @@
                         {
                             var itemCount = item.ChiTietPhieuNhapHangs?.Count ?? 0;
                             <tr>
-                                <td><span class="badge bg-light text-primary border font-monospace">@item.MaChungTu</span></td>
+                                <td><span class="badge bg-light text-primary border font-monospace" title="@item.MaChungTu">@(item.MaChungTu.Length > 25 ? item.MaChungTu[..13] + "…" + item.MaChungTu[^8..] : item.MaChungTu)</span></td>
                                 <td><div class="fw-bold text-dark clamp-2">@item.NhaCungCap</div></td>
                                 <td>
                                     <div class="text-dark clamp-2">@item.LyDoNhap</div>
@@ -185,7 +186,7 @@
                     @for (int p = 1; p <= totalPages; p++)
                     {
                         <li class="page-item @(p == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-status="@status" asp-route-search="@search">@p</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-status="@status" asp-route-search="@search" asp-route-pageSize="@(ViewBag.PageSize ?? 12)">@p</a>
                         </li>
                     }
                 </ul>

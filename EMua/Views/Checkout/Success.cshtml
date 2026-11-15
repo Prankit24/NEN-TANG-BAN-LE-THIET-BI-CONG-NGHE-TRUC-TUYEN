@@ -1,3 +1,4 @@
+@using EMua.Services
 @model EMua.ViewModels.CheckoutSuccessViewModel
 
 @{
@@ -8,9 +9,10 @@
 
     string transferContent = Model.TransferContent ?? $"EMUA{Model.OrderId:D6}";
     string bankQrUrl = Model.BankQrUrl ?? $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
-    string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+    string web3WalletAddress = ViewBag.Web3WalletAddress as string ?? "";
 
-    bool isPaid = Model.PaymentStatus == "Đã thanh toán" || Model.PaymentMethod.Contains("COD");
+    bool isPaid = OrderRules.IsPaid(Model.PaymentStatus);
+    bool isCod = OrderRules.IsCod(Model.PaymentMethod);
 }
 
 <link rel="stylesheet" href="~/css/customer/payment.css" asp-append-version="true" />
@@ -39,7 +41,7 @@
 
     <div class="card border-0 shadow-sm mx-auto overflow-hidden mt-4" style="max-width: 680px; border-radius: 16px;">
 
-        @if (isPaid)
+        @if (isPaid || isCod)
         {
             <div class="card-header bg-white border-0 text-center pt-4 pb-2">
                 <div class="mb-3">
@@ -116,7 +118,7 @@
                     </div>
                 </div>
 
-                @if (Model.PaymentMethod.Contains("WEB3"))
+                @if (OrderRules.IsWeb3(Model.PaymentMethod))
                 {
                     <div class="qr-box text-center p-4 border rounded bg-light mb-4">
                         <span class="badge bg-warning text-dark mb-2">Thanh toán Ví Web3</span>
@@ -127,14 +129,17 @@
                             Đơn hàng sẽ được xử lý sau khi nhân viên xác nhận nhận được tiền.
                         </div>
                         <p class="small text-muted mb-2">Chuyển đúng số tiền vào địa chỉ ví bên dưới:</p>
-                        <code class="d-block p-2 bg-dark text-warning rounded text-break mb-2 fs-6">@web3WalletAddress</code>
+                        @if (!string.IsNullOrWhiteSpace(web3WalletAddress) && !string.IsNullOrWhiteSpace(ViewBag.Web3Network as string)) {
+                            <p>Mạng: <strong>@ViewBag.Web3Network</strong>. Liên hệ cửa hàng để xác nhận loại token và số lượng cần chuyển.</p>
+                            <code class="d-block p-2 bg-dark text-warning text-break mb-2">@web3WalletAddress</code>
+                        } else { <p class="text-danger">Cửa hàng chưa cấu hình thông tin ví/mạng. Vui lòng liên hệ nhân viên, chưa thực hiện chuyển tiền.</p> }
                     </div>
                 }
                 else
                 {
                     <div class="qr-box text-center p-4 border border-primary-subtle rounded bg-light mb-4">
                         <span class="badge bg-primary mb-2">Chuyển khoản MB Bank</span>
-                        <h5 class="fw-bold mb-3">Quét mã QR để thanh toán tự động</h5>
+                        <h5 class="fw-bold mb-3">Quét mã QR để chuyển khoản</h5>
 
                         <div class="d-inline-block p-2 bg-white rounded shadow-sm mb-3">
                             <img src="@bankQrUrl" alt="VietQR MB Bank" class="img-fluid" style="max-width: 220px;" />

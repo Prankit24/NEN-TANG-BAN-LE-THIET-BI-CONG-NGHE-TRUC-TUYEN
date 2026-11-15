@@ -1,6 +1,17 @@
 @model EMua.Models.Database.HoaDon
 @using EMua.Services
 @{
+    if (!InvoiceSnapshotRules.IsComplete(Model))
+    {
+        <div role="alert" style="padding:24px;font-family:Arial,sans-serif">
+            <h3>Hóa đơn chưa đủ dữ liệu để hiển thị hoặc in</h3>
+            <p>Chi tiết hàng, phí giao, giảm giá hoặc tổng tiền đã lưu chưa đầy đủ hay không khớp. Vui lòng nhờ nhân viên đối chiếu và hoàn thiện chứng từ.</p>
+            <p>Mã hóa đơn: #HD-@Model.MaHoaDon.ToString("D5")</p>
+        </div>
+        return;
+    }
+}
+@{
     ViewData["Title"] = $"Chi tiết hóa đơn #HD-{Model.MaHoaDon:D5}";
     var order = Model.MaDonHangNavigation;
     var hasSnapshot = Model.ChiTietHoaDons != null && Model.ChiTietHoaDons.Any();
@@ -13,13 +24,13 @@
             ? (!string.IsNullOrWhiteSpace(Model.MaNguoiLapNavigation.TenNguoiDung) ? Model.MaNguoiLapNavigation.TenNguoiDung : Model.MaNguoiLapNavigation.TenDangNhap)
             : "Chưa xác định");
 
-    decimal finalTotal = Model.TongTien ?? (order?.TongTien ?? 0m);
+    decimal finalTotal = Model.TongTien!.Value;
 
     decimal itemsTotal = hasSnapshot
         ? (Model.ChiTietHoaDons?.Sum(x => x.ThanhTien) ?? 0m)
         : (legacyDetails?.Sum(x => x.ThanhTien) ?? 0m);
 
-    decimal shippingFee = Model.PhiVanChuyen ?? Math.Max(0m, finalTotal - itemsTotal);
+    decimal shippingFee = Model.PhiVanChuyen!.Value;
     decimal vatTotal = Model.TienThueVat ?? (hasSnapshot ? (Model.ChiTietHoaDons?.Sum(x => x.TienThueVat) ?? 0m) : 0m);
     decimal netTotal = Model.TienTruocThue ?? (itemsTotal - vatTotal);
 }
@@ -173,34 +184,10 @@
                 <!-- THÔNG TIN CHỮ KÝ SỐ KỸ THUẬT DEMO -->
                 <div class="border p-2 bg-light">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fw-bold text-success small"><i class="bi bi-patch-check-fill me-1"></i> THÔNG TIN KÝ SỐ KỸ THUẬT</span>
+                        <span class="fw-bold text-muted small"><i class="bi bi-info-circle me-1"></i> TRẠNG THÁI CHỮ KÝ</span>
                         <span class="badge bg-secondary font-monospace" style="font-size: 10px;">X.509 TECHNICAL</span>
                     </div>
-                    @if (digitalSig != null && digitalSig.IsSigned)
-                    {
-                        <table class="w-100 small" style="font-size: 11.5px;">
-                            <tr>
-                                <td class="text-muted" style="width: 110px;">Chủ thể ký:</td>
-                                <td class="fw-semibold text-truncate" title="@digitalSig.CertificateSubject">@digitalSig.CertificateSubject</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Tổ chức cấp:</td>
-                                <td class="text-truncate" title="@digitalSig.CertificateIssuer">@digitalSig.CertificateIssuer</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Serial / Thuật toán:</td>
-                                <td>@digitalSig.SerialNumber (@digitalSig.SignatureAlgorithm)</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Phân loại:</td>
-                                <td class="text-primary fw-semibold">@digitalSig.CertificateTypeDescription</td>
-                            </tr>
-                        </table>
-                    }
-                    else
-                    {
-                        <div class="small text-muted fst-italic">Chứng thư số demo đã sẵn sàng cho thao tác ký duyệt kỹ thuật.</div>
-                    }
+                    <div class="small text-muted">CHƯA KÝ SỐ — chưa có chữ ký được tạo và xác minh cho hóa đơn này.</div>
                 </div>
             </div>
         </div>

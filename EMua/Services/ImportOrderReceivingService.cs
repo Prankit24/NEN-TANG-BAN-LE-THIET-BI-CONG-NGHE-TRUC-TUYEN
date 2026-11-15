@@ -1,4 +1,4 @@
-﻿using EMua.Areas.Staff.Models;
+using EMua.Areas.Staff.Models;
 using EMua.Data;
 using EMua.Models.Database;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +63,7 @@ public sealed class ImportOrderReceivingService
         if (userId <= 0 || command.MaPhieuNhap <= 0)
             return (false, "Phiên đăng nhập hoặc mã phiếu không hợp lệ.");
         var items = command.Items;
-        if (items == null || items.Count == 0 ||
+        if (items == null || items.Count == 0 || items.Count > 500 ||
             items.Any(x => x.MaChiTietPhieuNhap <= 0 || x.MaBienThe <= 0 ||
                            x.SoLuongThucNhan < 0 || x.SoLuongThucNhan > 100000) ||
             items.Select(x => x.MaChiTietPhieuNhap).Distinct().Count() != items.Count ||
@@ -72,8 +72,10 @@ public sealed class ImportOrderReceivingService
         if (command.GhiChuKiemNhan?.Length > 500)
             return (false, "Ghi chú kiểm nhận tối đa 500 ký tự.");
 
-        if (!await _db.NguoiDungs.AsNoTracking().AnyAsync(x => x.MaNguoiDung == userId))
-            return (false, "Tài khoản thực hiện không còn tồn tại. Vui lòng đăng nhập lại.");
+        var allowedRoles = new[] { "Admin", "Quản trị viên", "QuanTriVien", "NhanVien", "Nhân viên" };
+        if (!await _db.NguoiDungs.AsNoTracking().AnyAsync(x => x.MaNguoiDung == userId && x.TrangThai &&
+            (x.MaQuyen == 1 || x.MaQuyen == 2 || allowedRoles.Contains(x.MaQuyenNavigation.TenQuyen))))
+            return (false, "Tài khoản không còn hoạt động hoặc không có quyền nhập kho. Vui lòng đăng nhập lại.");
 
         try
         {
@@ -94,8 +96,12 @@ public sealed class ImportOrderReceivingService
                         .SetProperty(x => x.MaNguoiNhapKho, (int?)userId));
                 if (claimed != 1)
                 {
+                    var alreadyReceived = await _db.PhieuNhapHangs.AsNoTracking()
+                        .AnyAsync(x => x.MaPhieuNhap == command.MaPhieuNhap && x.TrangThai == "Đã nhập kho");
                     await tx.RollbackAsync();
-                    return (false, "Phiếu không tồn tại, chưa được duyệt hoặc đã nhập kho. Không cộng tồn lần nữa.");
+                    return alreadyReceived
+                        ? (true, "Phiếu đã được nhập kho trước đó. Không cộng tồn lần nữa.")
+                        : (false, "Phiếu không tồn tại hoặc chưa được duyệt. Không cộng tồn kho.");
                 }
 
                 var receipt = await _db.PhieuNhapHangs

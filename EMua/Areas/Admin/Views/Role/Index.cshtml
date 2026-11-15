@@ -1,7 +1,10 @@
-﻿@model IEnumerable<EMua.Models.Database.PhanQuyen>
+﻿@using System.Collections.Generic
+@using System.Linq
+@model IEnumerable<EMua.Models.Database.PhanQuyen>
 @{
     ViewData["Title"] = "Quản lý phân quyền";
-    string adminRoleName = ViewBag.AdminRoleName ?? "Admin";
+    var protectedRoleIds = ViewBag.ProtectedRoleIds as HashSet<int> ?? new HashSet<int> { 1, 2, 3 };
+    var descriptions = ViewBag.RoleDescriptions as Dictionary<int, string> ?? new Dictionary<int, string>();
     var roles = Model?.ToList() ?? new List<EMua.Models.Database.PhanQuyen>();
     var successMessage = TempData["SuccessMessage"]?.ToString();
     var errorMessage = TempData["ErrorMessage"]?.ToString();
@@ -15,12 +18,17 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
             <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">Quản lý phân quyền hệ thống</h2>
-            <p class="text-muted small mb-0">Thiết lập các nhóm vai trò và phạm vi quyền hạn tài khoản trong EMUA</p>
+            <p class="text-muted small mb-0">Quản lý các nhóm vai trò đang được sử dụng trong EMUA</p>
         </div>
         <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3" style="height:40px; font-size:13px;" data-bs-toggle="modal" data-bs-target="#createRoleModal">
             <i class="bi bi-shield-plus"></i> Thêm nhóm quyền mới
         </button>
     </div>
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success border mb-4" role="status">@successMessage</div>
+    }
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
@@ -76,7 +84,7 @@
                         foreach (var role in roles)
                         {
                             int userCount = role.NguoiDungs?.Count ?? 0;
-                            bool isProtected = role.TenQuyen.Equals(adminRoleName, StringComparison.OrdinalIgnoreCase);
+                            bool isProtected = protectedRoleIds.Contains(role.MaQuyen);
 
                             <tr>
                                 <td class="ps-4 py-3">
@@ -90,20 +98,17 @@
                                 </td>
                                 <td>
                                     <span class="text-muted small">
-                                        @(isProtected 
-                                            ? "Quyền quản trị cao nhất toàn hệ thống. Có toàn quyền cấu hình, quản lý nhân viên và duyệt nhập hàng." 
-                                            : (role.TenQuyen.Contains("Nhân viên") || role.TenQuyen.Contains("Staff") 
-                                                ? "Quyền nhân sự vận hành cửa hàng, xử lý đơn hàng, nhập kho và xuất hóa đơn." 
-                                                : "Quyền khách hàng mua sắm và quản lý thông tin cá nhân."))
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge" style="background:#F1F5F9; color:#475569; font-size:12px; font-weight:600; padding:5px 12px;">
-                                        <i class="bi bi-people me-1"></i>@userCount tài khoản
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    @if (isProtected)
+                                        @(descriptions.TryGetValue(role.MaQuyen, out var description)
+                                                                        ? description : "Nhóm vai trò trong hệ thống.")
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#F1F5F9; color:#475569; font-size:12px; font-weight:600; padding:5px 12px;">
+                                <i class="bi bi-people me-1"></i>@userCount tài khoản
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            @if (isProtected)
                                     {
                                         <span class="badge" style="background:#FEF3C7; color:#B45309; font-size:12px; font-weight:600; padding:5px 10px;">
                                             <i class="bi bi-lock-fill me-1"></i>Hệ thống
@@ -126,16 +131,13 @@
                                                 title="@(isProtected ? "Quyền hệ thống được bảo vệ" : "Sửa tên nhóm quyền")">
                                             <i class="bi bi-pencil-square"></i> Sửa
                                         </button>
-                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Xác nhận xóa nhóm quyền @role.TenQuyen?');" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="maQuyen" value="@role.MaQuyen" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"
-                                                    style="font-size:12px; height:32px;"
-                                                    disabled="@(isProtected || userCount > 0)"
-                                                    title="@(isProtected ? "Không thể xóa quyền hệ thống" : userCount > 0 ? "Vẫn còn tài khoản trực thuộc" : "Xóa nhóm quyền")">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1"
+                                                style="font-size:12px; height:32px;"
+                                                data-bs-toggle="modal" data-bs-target="#deleteRoleModal-@role.MaQuyen"
+                                                disabled="@(isProtected || userCount > 0)"
+                                                title="@(isProtected ? "Không thể xóa quyền hệ thống" : userCount > 0 ? "Vẫn còn tài khoản trực thuộc" : "Xóa nhóm quyền")">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -157,19 +159,19 @@
     <!-- Lưu ý an toàn -->
     <div class="alert alert-light border p-3 text-muted small d-flex align-items-center mb-0">
         <i class="bi bi-shield-check text-primary fs-5 me-2"></i>
-        <span>Quy chuẩn hệ thống: Nhóm quyền <strong>@adminRoleName</strong> được bảo vệ vĩnh viễn, không thể đổi tên hoặc xóa nhằm bảo toàn khả năng quản trị EMUA.</span>
+        <span>Ba nhóm quyền hệ thống <strong>Admin, Nhân viên và Khách hàng</strong> không được đổi tên hoặc xóa. Thêm nhóm tùy biến chỉ tạo tên vai trò; không tự cấp quyền truy cập chức năng.</span>
     </div>
 </div>
 
 <!-- Modal Sửa nhóm quyền -->
 @foreach (var role in roles)
 {
-    if (!role.TenQuyen.Equals(adminRoleName, StringComparison.OrdinalIgnoreCase))
+    if (!protectedRoleIds.Contains(role.MaQuyen))
     {
         <div class="modal fade" id="editRoleModal-@role.MaQuyen" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border">
-                    <form asp-action="Edit" method="post">
+                    <form asp-area="Admin" asp-controller="Role" asp-action="Edit" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="maQuyen" value="@role.MaQuyen" />
                         <div class="modal-header border-bottom">
@@ -178,8 +180,8 @@
                         </div>
                         <div class="modal-body p-4">
                             <label class="form-label" for="role-name-@role.MaQuyen" style="font-size:13px; font-weight:500;">Tên nhóm quyền <span class="text-danger">*</span></label>
-                            <input id="role-name-@role.MaQuyen" type="text" name="tenQuyen" class="form-control" style="height:40px; font-size:14px;" value="@role.TenQuyen" required />
-                            <small class="text-muted d-block mt-2">Thay đổi tên nhóm quyền sẽ áp dụng ngay cho tất cả tài khoản trực thuộc.</small>
+                            <input id="role-name-@role.MaQuyen" type="text" name="tenQuyen" class="form-control" style="height:40px; font-size:14px;" value="@role.TenQuyen" maxlength="50" required />
+                            <small class="text-muted d-block mt-2">Tên tối đa 50 ký tự, không trùng tên nhóm khác và không chứa dấu phẩy. Thay đổi tên không tự bổ sung quyền chức năng.</small>
                         </div>
                         <div class="modal-footer border-top">
                             <button type="button" class="btn btn-outline-secondary" style="height:38px; font-size:13px;" data-bs-dismiss="modal">Hủy bỏ</button>
@@ -198,7 +200,7 @@
 <div class="modal fade" id="createRoleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border">
-            <form asp-action="Create" method="post">
+            <form asp-area="Admin" asp-controller="Role" asp-action="Create" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title fw-bold" style="font-size:16px;">Thêm nhóm quyền mới</h5>
@@ -206,8 +208,8 @@
                 </div>
                 <div class="modal-body p-4">
                     <label class="form-label" for="new-role-name" style="font-size:13px; font-weight:500;">Tên nhóm quyền <span class="text-danger">*</span></label>
-                    <input id="new-role-name" type="text" name="tenQuyen" class="form-control" style="height:40px; font-size:14px;" placeholder="Ví dụ: Kế toán trưởng, Quản lý kho..." required />
-                    <small class="text-muted d-block mt-2">Tên nhóm quyền không được trùng lặp với các nhóm đã có.</small>
+                    <input id="new-role-name" type="text" name="tenQuyen" class="form-control" style="height:40px; font-size:14px;" placeholder="Ví dụ: Nhóm hỗ trợ" maxlength="50" required />
+                    <small class="text-muted d-block mt-2">Tối đa 50 ký tự. Nhóm mới chưa tự động có quyền Admin hoặc Nhân viên; cần triển khai chính sách tương ứng nếu muốn sử dụng quyền mới.</small>
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary" style="height:38px; font-size:13px;" data-bs-dismiss="modal">Hủy bỏ</button>
@@ -220,28 +222,29 @@
     </div>
 </div>
 
-<!-- Modal Thông báo thành công -->
-<div class="modal fade" id="successDialogModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border text-center p-4">
-            <div class="mb-3 text-success">
-                <i class="bi bi-check-circle-fill display-4"></i>
+<!-- Xác nhận xóa bằng modal; tên nhóm được Razor mã hóa khi hiển thị. -->
+@foreach (var role in roles.Where(r => !protectedRoleIds.Contains(r.MaQuyen) && !r.NguoiDungs.Any()))
+{
+    <div class="modal fade" id="deleteRoleModal-@role.MaQuyen" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border">
+                <form asp-area="Admin" asp-controller="Role" asp-action="Delete" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="maQuyen" value="@role.MaQuyen" />
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xác nhận xóa nhóm quyền</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        Bạn có muốn xóa nhóm quyền <strong>@role.TenQuyen</strong>?
+                        <p class="text-muted small mt-2 mb-0">Chỉ xóa được nhóm tùy biến không có tài khoản sử dụng.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xóa nhóm quyền</button>
+                    </div>
+                </form>
             </div>
-            <h5 class="fw-bold mb-2">Thành công!</h5>
-            <p class="text-muted small mb-4" id="successDialogMessage">Thao tác thực hiện thành công.</p>
-            <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">Đóng</button>
         </div>
     </div>
-</div>
-
-@section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const message = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMessage));
-            if (message) {
-                document.getElementById("successDialogMessage").textContent = message;
-                new bootstrap.Modal(document.getElementById("successDialogModal")).show();
-            }
-        });
-    </script>
 }

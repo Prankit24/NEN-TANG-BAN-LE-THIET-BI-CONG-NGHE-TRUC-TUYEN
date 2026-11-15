@@ -12,16 +12,13 @@ namespace EMua.Services.AI
     /// Cơ chế lựa chọn AI provider thông minh:
     ///
     /// 1. Ưu tiên Gemini (provider chính).
-    /// 2. Chỉ chuyển sang Groq khi Gemini gặp LỖI TẠM THỜI:
-    ///    - HTTP 429 (Too Many Requests / Quota Exhausted)
-    ///    - HTTP 503 (Service Unavailable)
-    ///    - Timeout / OperationCanceledException (không do client cancel)
-    ///    - TaskCanceledException do timeout
+    /// 2. Chuyển sang Groq khi Gemini thất bại vì BẤT KỲ lý do phía dịch vụ nào, để khách không bị gián đoạn:
+    ///    - Lỗi tạm thời: HTTP 429/500/502/503/504, timeout, mất kết nối
+    ///    - Lỗi cấu hình/xác thực Gemini (thiếu key, HTTP 400/401/403): ghi log mức Error để dev sửa,
+    ///      nhưng vẫn để Groq phục vụ khách thay vì trả lỗi.
     /// 3. KHÔNG chuyển sang Groq khi:
-    ///    - Lỗi dữ liệu đầu vào (ArgumentException)
-    ///    - Lỗi cấu hình (InvalidOperationException)
-    ///    - Lỗi xác thực API (HTTP 401, 403)
-    ///    - Lỗi nội dung (HTTP 400)
+    ///    - Lỗi dữ liệu đầu vào (ArgumentException) - Groq cũng sẽ lỗi y hệt
+    ///    - Client chủ động hủy request
     /// 4. Giới hạn: Chỉ thử Groq tối đa 1 lần.
     ///    Nếu Groq cũng thất bại → throw để AIController xử lý fallback Supabase.
     /// </summary>
@@ -76,18 +73,20 @@ namespace EMua.Services.AI
                 // Client thực sự hủy request → không fallback
                 throw;
             }
-            catch (Exception ex) when (IsTransientError(ex))
+            catch (Exception ex) when (ex is not ArgumentException)
             {
-                // Lỗi tạm thời → chuyển sang Groq
-                _logger.LogWarning(
+                // Lỗi tạm thời → Warning; lỗi cấu hình/xác thực → Error (cần dev xử lý) - cả hai đều chuyển sang Groq
+                var transient = IsTransientError(ex);
+                _logger.Log(
+                    transient ? LogLevel.Warning : LogLevel.Error,
                     ex,
-                    "EMUA AI Orchestrator: Gemini gặp lỗi tạm thời ({ExType}: {Message}). " +
+                    "EMUA AI Orchestrator: Gemini gặp lỗi {Kind} ({ExType}: {Message}). " +
                     "Kích hoạt fallback sang Groq.",
+                    transient ? "tạm thời" : "cấu hình/xác thực",
                     ex.GetType().Name,
                     SanitizeErrorMessage(ex.Message));
             }
-            // Các exception khác (ArgumentException, InvalidOperationException, HTTP 400/401/403)
-            // sẽ KHÔNG bị catch ở đây → throw lên cho caller xử lý
+            // ArgumentException (dữ liệu đầu vào sai) KHÔNG bị catch → throw lên cho caller xử lý
 
             // === Bước 2: Thử Groq (provider dự phòng) ===
             try
@@ -149,10 +148,15 @@ namespace EMua.Services.AI
                 return true;
 
             // HttpRequestException với status code tạm thời
-            if (ex is HttpRequestException httpEx && httpEx.StatusCode.HasValue)
+            if (ex is HttpRequestException httpEx)
             {
+                // Không có status code = lỗi mạng/DNS/kết nối bị ngắt → coi là tạm thời
+                if (!httpEx.StatusCode.HasValue) return true;
+
                 var code = (int)httpEx.StatusCode.Value;
                 return code == 429  // Too Many Requests / Quota Exhausted
+                    || code == 500  // Internal Server Error
+                    || code == 502  // Bad Gateway
                     || code == 503  // Service Unavailable
                     || code == 504; // Gateway Timeout
             }

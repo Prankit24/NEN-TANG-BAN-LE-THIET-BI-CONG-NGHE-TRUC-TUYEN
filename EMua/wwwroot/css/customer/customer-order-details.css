@@ -17,8 +17,8 @@
             content: "";
             position: absolute;
             top: 20px;
-            left: 6%;
-            right: 6%;
+            left: var(--half, 6%);
+            right: var(--half, 6%);
             height: 3px;
             background: #e5e7eb;
             z-index: 0;
@@ -27,7 +27,7 @@
     .delivery-progress-fill {
         position: absolute;
         top: 20px;
-        left: 6%;
+        left: var(--half, 6%);
         height: 3px;
         background: linear-gradient(90deg, #ee4d2d, #ff7337);
         z-index: 1;
@@ -40,7 +40,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 33.33%;
+        width: calc(100% / var(--steps, 3));
         text-align: center;
     }
 

@@ -78,6 +78,7 @@
         </a>
     </div>
 
+    <partial name="~/Views/Shared/_ImportOrderMessages.cshtml" />
     <form asp-area="@receiveArea" asp-controller="ImportOrder" asp-action="@receiveAction" method="post" id="receiveImportOrderForm" class="staff-card p-3 bg-white border">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="MaPhieuNhap" />
@@ -138,8 +139,7 @@
                                 <td class="text-center"><span class="badge bg-light text-dark border fw-bold">@item.SoLuongDeNghi</span></td>
                                 <td>
                                     <input type="number"
-                                           name="Items[@i].SoLuongThucNhan"
-                                           value="@item.SoLuongThucNhan"
+                                           asp-for="Items[i].SoLuongThucNhan"
                                            min="0"
                                            step="1"
                                            max="100000"
@@ -185,6 +185,29 @@
             </button>
         </div>
     </form>
+</div>
+
+<div class="modal fade" id="receiveConfirmationModal" tabindex="-1"
+     aria-labelledby="receiveConfirmationTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-0 border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fs-6 fw-bold" id="receiveConfirmationTitle">
+                    <i class="bi bi-box-seam me-2 text-primary"></i>Xác nhận nhập kho
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Bạn xác nhận đã kiểm đếm hàng của phiếu <strong>@Model.MaChungTu</strong>?</p>
+                <p class="mb-2">Tổng số lượng thực nhận: <strong id="receiveConfirmationQuantity" class="text-primary"></strong>.</p>
+                <p class="small text-muted mb-0">Hệ thống sẽ cộng tồn theo số lượng bạn vừa nhập và chốt phiếu. Hãy kiểm tra lại trước khi xác nhận.</p>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary rounded-0" data-bs-dismiss="modal">Kiểm tra lại</button>
+                <button type="button" class="btn btn-primary rounded-0" id="receiveConfirmationAccept">Xác nhận nhập kho</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -293,35 +316,52 @@
             }
             if (totalQty === 0) {
                 clientError.textContent = 'Tổng số lượng thực nhận phải lớn hơn 0.';
-                if (window.StaffDialog) {
-                    StaffDialog.warning('Không có số lượng', 'Tổng số lượng thực nhận phải lớn hơn 0 để tiến hành nhập kho.');
-                }
                 return;
             }
 
             form.dataset.confirming = 'true';
-            if (window.StaffDialog && window.StaffDialog.confirm) {
-                const confirmed = await StaffDialog.confirm({
-                    title: 'Xác nhận kiểm nhận nhập kho',
-                    message: 'Xác nhận kiểm đếm hoàn tất? Hành động này sẽ cộng trực tiếp số lượng thực nhận vào tồn kho của từng biến thể sản phẩm.',
-                    confirmText: 'Xác nhận & Tăng tồn',
-                    cancelText: 'Kiểm tra lại',
-                    isDanger: false
-                });
-                form.dataset.confirming = 'false';
-                if (confirmed) {
-                    form.dataset.submitting = 'true';
-                    form.querySelector('button[onclick]').disabled = true;
-                    HTMLFormElement.prototype.submit.call(form);
-                }
-            } else {
-                const confirmed = window.confirm('Xác nhận nhập kho theo số lượng thực nhận? Phiếu sẽ được chốt một lần.');
-                form.dataset.confirming = 'false';
+            try {
+                const confirmed = await showReceiveConfirmation(totalQty);
                 if (!confirmed) return;
                 form.dataset.submitting = 'true';
                 form.querySelector('button[onclick]').disabled = true;
                 HTMLFormElement.prototype.submit.call(form);
+            } catch (error) {
+                clientError.textContent = 'Không thể mở hộp xác nhận. Vui lòng tải lại trang và thử lại.';
+                console.error('Không thể mở hộp xác nhận nhập kho.', error);
+            } finally {
+                form.dataset.confirming = 'false';
             }
+        }
+
+        function showReceiveConfirmation(totalQty) {
+            return new Promise((resolve, reject) => {
+                const element = document.getElementById('receiveConfirmationModal');
+                const accept = document.getElementById('receiveConfirmationAccept');
+                if (!element || !accept || !window.bootstrap?.Modal) {
+                    reject(new Error('Thiếu thành phần popup hoặc Bootstrap.'));
+                    return;
+                }
+                document.getElementById('receiveConfirmationQuantity').textContent =
+                    totalQty.toLocaleString('vi-VN');
+                const modal = window.bootstrap.Modal.getOrCreateInstance(element);
+                let accepted = false;
+                const onAccept = () => { accepted = true; modal.hide(); };
+                const onHidden = () => {
+                    accept.removeEventListener('click', onAccept);
+                    element.removeEventListener('hidden.bs.modal', onHidden);
+                    resolve(accepted);
+                };
+                accept.addEventListener('click', onAccept);
+                element.addEventListener('hidden.bs.modal', onHidden);
+                try {
+                    modal.show();
+                } catch (error) {
+                    accept.removeEventListener('click', onAccept);
+                    element.removeEventListener('hidden.bs.modal', onHidden);
+                    reject(error);
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {

@@ -238,8 +238,8 @@ public class InvoiceController : StaffControllerBase
         }
 
         // Ngăn lập trùng hóa đơn
-        var existingInvoice = await _db.HoaDons.FirstOrDefaultAsync(x => x.MaDonHang == orderId);
-        if (existingInvoice != null)
+        var existingInvoice = await _db.HoaDons.Include(x => x.ChiTietHoaDons).FirstOrDefaultAsync(x => x.MaDonHang == orderId);
+        if (existingInvoice != null && (existingInvoice.MaNguoiLap.HasValue || existingInvoice.ChiTietHoaDons.Any()))
         {
             TempData["Warning"] = $"Đơn hàng #DH-{orderId:D5} đã có hóa đơn #HD-{existingInvoice.MaHoaDon:D5}. Không thể lập hóa đơn trùng.";
             return RedirectToAction(nameof(Details), new { id = existingInvoice.MaHoaDon });
@@ -340,26 +340,16 @@ public class InvoiceController : StaffControllerBase
         }
 
         // Tính chiết khấu voucher
-        decimal voucherDiscount = 0m;
-        string? voucherCode = order.MaKhuyenMaiNavigation?.MaCode;
-
-        if (order.MaKhuyenMaiNavigation != null)
+        decimal voucherDiscount, shippingFee;
+        try
         {
-            var km = order.MaKhuyenMaiNavigation;
-            if (km.LoaiGiamGia != null && (km.LoaiGiamGia.Contains("%") || km.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)))
-            {
-                voucherDiscount = Math.Round(itemsGrossTotal * km.GiaTriGiam / 100m, 0, MidpointRounding.AwayFromZero);
-            }
-            else
-            {
-                voucherDiscount = km.GiaTriGiam;
-            }
-            voucherDiscount = Math.Clamp(voucherDiscount, 0m, itemsGrossTotal);
+            OrderWorkflowService.ValidateExistingPricing(order);
+            voucherDiscount = order.TienGiamGiaDaChot ?? 0m;
+            shippingFee = order.PhiVanChuyenDaChot ?? OrderRules.ShippingFee(itemsGrossTotal, OrderRules.IsExpress(order.PhuongThucVanChuyen));
         }
-
-        // Tính phí vận chuyển thực tế từ đơn hàng:
-        decimal finalTotal = order.TongTien ?? Math.Max(0m, itemsGrossTotal - voucherDiscount);
-        decimal shippingFee = Math.Max(0m, finalTotal + voucherDiscount - itemsGrossTotal);
+        catch (ArgumentException ex) { TempData["Error"] = ex.Message; return RedirectToAction("Details", "Order", new { id = orderId }); }
+        string? voucherCode = order.MaKhuyenMaiNavigation?.MaCode;
+        decimal finalTotal = order.TongTien ?? 0m;
 
         var vatSummaries = vatGroupDict.Select(kv => new VatRateSummaryItem
         {
@@ -401,150 +391,71 @@ public class InvoiceController : StaffControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(InvoiceCreateViewModel model)
     {
-        if (!ModelState.IsValid)
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var staffId) || staffId <= 0) return Challenge();
+        if (!ModelState.IsValid || string.IsNullOrWhiteSpace(model.HoTenKhachHang) || model.HoTenKhachHang.Length > 100 || string.IsNullOrWhiteSpace(model.SoDienThoai) || model.SoDienThoai.Length > 20 || string.IsNullOrWhiteSpace(model.DiaChiGiaoHang) || model.DiaChiGiaoHang.Length > 255 || (model.GhiChu?.Length ?? 0) > 350 || (model.MaSoThueNguoiMua?.Length ?? 0) > 50)
+        { TempData["Error"] = "Dữ liệu chưa hợp lệ: ghi chú tối đa 350 ký tự, mã số thuế tối đa 50 ký tự."; return RedirectToAction(nameof(Create), new { orderId = model.MaDonHang }); }
+        try
         {
-            TempData["Error"] = "Dữ liệu hóa đơn không hợp lệ. Vui lòng kiểm tra lại.";
-            return View(model);
-        }
-
-        // Ngăn lập trùng hóa đơn
-        var existingInvoice = await _db.HoaDons.FirstOrDefaultAsync(x => x.MaDonHang == model.MaDonHang);
-        if (existingInvoice != null)
-        {
-            TempData["Warning"] = $"Đơn hàng #DH-{model.MaDonHang:D5} đã có hóa đơn #HD-{existingInvoice.MaHoaDon:D5}.";
-            return RedirectToAction(nameof(Details), new { id = existingInvoice.MaHoaDon });
-        }
-
-        var order = await _db.DonHangs
-            .Include(d => d.ChiTietDonHangs)
-                .ThenInclude(ct => ct.MaBienTheNavigation)
-                    .ThenInclude(bt => bt.MaSanPhamNavigation)
-                        .ThenInclude(sp => sp.MaDanhMucNavigation)
-            .Include(d => d.ThanhToans)
-            .FirstOrDefaultAsync(d => d.MaDonHang == model.MaDonHang);
-
-        if (order == null)
-        {
-            TempData["Error"] = "Không tìm thấy đơn hàng tương ứng.";
-            return RedirectToAction("Index", "Order");
-        }
-
-        // Xác thực danh tính nhân viên
-        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(currentUserIdStr, out int currentUserId) || currentUserId <= 0)
-        {
-            TempData["Error"] = "Phiên làm việc đã hết hạn hoặc không xác thực được tài khoản. Vui lòng đăng nhập lại.";
-            return RedirectToAction("Index", "Order");
-        }
-
-        var currentUser = await _db.NguoiDungs
-            .Include(u => u.MaQuyenNavigation)
-            .FirstOrDefaultAsync(u => u.MaNguoiDung == currentUserId);
-
-        if (currentUser == null || !currentUser.TrangThai)
-        {
-            TempData["Error"] = "Tài khoản thực hiện không tồn tại hoặc đã bị khóa.";
-            return RedirectToAction("Index", "Order");
-        }
-
-        var staffName = !string.IsNullOrWhiteSpace(currentUser.TenNguoiDung)
-            ? currentUser.TenNguoiDung.Trim()
-            : (!string.IsNullOrWhiteSpace(currentUser.TenDangNhap) ? currentUser.TenDangNhap.Trim() : User.Identity?.Name?.Trim());
-
-        // Kiểm tra đối soát tổng tiền bằng backend
-        if (order.TongTien.HasValue && Math.Abs(order.TongTien.Value - model.TongThanhToan) > 100m)
-        {
-            TempData["Error"] = $"Tổng tiền hóa đơn ({model.TongThanhToan:N0} đ) không khớp với số tiền thanh toán của đơn hàng ({order.TongTien.Value:N0} đ). Vui lòng kiểm tra lại.";
-            return View(model);
-        }
-
-        // Xác định trạng thái hóa đơn dựa vào tình trạng thanh toán
-        // COD chưa nhận hàng -> "Chưa thanh toán" / "Đã lập"; Đã giao/chuyển khoản thành công -> "Đã thanh toán"
-        var latestPayment = order.ThanhToans.OrderByDescending(p => p.NgayTao).FirstOrDefault();
-        bool isPaymentCompleted = (latestPayment != null && (latestPayment.TrangThai == "Thành công" || latestPayment.TrangThai == "Đã thanh toán"))
-            || (order.TrangThaiDonHang == "Đã hoàn thành" || order.TrangThaiDonHang == "Đã giao");
-
-        string invoiceStatus = isPaymentCompleted ? "Đã thanh toán" : "Chờ thanh toán";
-
-        var strategy = _db.Database.CreateExecutionStrategy();
-        int createdInvoiceId = 0;
-
-        await strategy.ExecuteAsync(async () =>
-        {
-            await using var transaction = await _db.Database.BeginTransactionAsync();
-            try
+            var invoiceId = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                var now = DateTime.Now;
-                var invoice = new HoaDon
+                _db.ChangeTracker.Clear();
+                await using var tx = await _db.Database.BeginTransactionAsync();
+                await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT madonhang FROM public.donhang WHERE madonhang = {model.MaDonHang} FOR UPDATE");
+                var order = await _db.DonHangs.Include(x => x.ChiTietDonHangs).ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation).ThenInclude(x => x.MaDanhMucNavigation)
+                    .Include(x => x.ThanhToans).Include(x => x.MaKhuyenMaiNavigation).Include(x => x.HoaDon).ThenInclude(x => x!.ChiTietHoaDons)
+                    .AsSplitQuery().FirstOrDefaultAsync(x => x.MaDonHang == model.MaDonHang);
+                var actor = await _db.NguoiDungs.Include(x => x.MaQuyenNavigation).AsNoTracking().FirstOrDefaultAsync(x => x.MaNguoiDung == staffId && x.TrangThai);
+                if (actor == null || !(new[] { "Admin", "Quản trị viên", "QuanTriVien", "NhanVien", "Nhân viên" }.Contains(actor.MaQuyenNavigation.TenQuyen)))
+                    throw new ArgumentException("Tài khoản đã khóa hoặc không có quyền lập hóa đơn.");
+                if (order == null) throw new ArgumentException("Không tìm thấy đơn hàng.");
+                if (OrderRules.Normalize(order.TrangThaiDonHang) == OrderRules.Cancelled || new[] { OrderRules.ReturnRequested, OrderRules.Returning, OrderRules.ReturnReceived, OrderRules.Refunded }.Contains(OrderRules.Normalize(order.TrangThaiDonHang)))
+                    throw new ArgumentException("Đơn hủy/đổi trả phải xử lý chứng từ riêng, không lập mới hóa đơn bán hàng tại đây.");
+                if (order.HoaDon != null && (order.HoaDon.MaNguoiLap.HasValue || order.HoaDon.ChiTietHoaDons.Any())) return order.HoaDon.MaHoaDon;
+                OrderWorkflowService.ValidateExistingPricing(order);
+                if (order.ThanhToans.Count != 1 || order.ThanhToans.Single().SoTien != order.TongTien)
+                    throw new ArgumentException("Số tiền thanh toán chưa khớp đơn. Cần đối soát trước khi lập hóa đơn.");
+                if (model.TongThanhToan != order.TongTien) throw new ArgumentException("Đơn đã thay đổi tổng tiền. Mở lại màn hình lập hóa đơn để kiểm tra số tiền mới.");
+                var payment = order.ThanhToans.Single();
+                var gross = order.ChiTietDonHangs.Sum(x => x.ThanhTien);
+                var fee = order.PhiVanChuyenDaChot ?? OrderRules.ShippingFee(gross, OrderRules.IsExpress(order.PhuongThucVanChuyen));
+                var discount = order.TienGiamGiaDaChot ?? 0m;
+                var now = OrderRules.VietnamNow();
+                var invoice = order.HoaDon ?? new HoaDon { MaDonHang = order.MaDonHang };
+                if (order.HoaDon == null) _db.HoaDons.Add(invoice);
+                invoice.NgayLapHoaDon = now; invoice.TongTien = order.TongTien;
+                invoice.TrangThaiHoaDon = OrderRules.IsPaid(payment.TrangThai) ? OrderRules.Paid : "Chờ thanh toán";
+                invoice.MaNguoiLap = staffId; invoice.TenNguoiLap = actor.TenNguoiDung ?? actor.TenDangNhap;
+                invoice.HoTenKhachHang = model.HoTenKhachHang.Trim(); invoice.SoDienThoai = model.SoDienThoai.Trim();
+                invoice.DiaChiGiaoHang = model.DiaChiGiaoHang.Trim(); invoice.PhiVanChuyen = fee; invoice.TienGiamGia = discount;
+                invoice.MaKhm = order.MaKhuyenMaiNavigation?.MaCode; invoice.PhuongThucThanhToan = payment.PhuongThuc;
+                invoice.GhiChu = (model.GhiChu ?? "").Trim() + (string.IsNullOrWhiteSpace(model.MaSoThueNguoiMua) ? "" : $" [MST Người Mua: {model.MaSoThueNguoiMua.Trim()}]");
+                decimal tax = 0m, net = 0m;
+                foreach (var ct in order.ChiTietDonHangs)
                 {
-                    MaDonHang = model.MaDonHang,
-                    NgayLapHoaDon = now,
-                    TongTien = model.TongThanhToan,
-                    TrangThaiHoaDon = invoiceStatus,
-                    MaNguoiLap = currentUserId,
-                    TenNguoiLap = staffName,
-                    HoTenKhachHang = model.HoTenKhachHang?.Trim(),
-                    SoDienThoai = model.SoDienThoai?.Trim(),
-                    DiaChiGiaoHang = model.DiaChiGiaoHang?.Trim(),
-                    TienTruocThue = model.TongTienTruocThue,
-                    TienThueVat = model.TongTienThueVat,
-                    PhiVanChuyen = model.PhiVanChuyen,
-                    TienGiamGia = model.GiamGiaVoucher,
-                    MaKhm = model.MaVoucher,
-                    GhiChu = (model.GhiChu ?? "") + (!string.IsNullOrWhiteSpace(model.MaSoThueNguoiMua) ? $" [MST Người Mua: {model.MaSoThueNguoiMua.Trim()}]" : ""),
-                    PhuongThucThanhToan = model.PhuongThucThanhToan
-                };
-
-                _db.HoaDons.Add(invoice);
-                await _db.SaveChangesAsync();
-                createdInvoiceId = invoice.MaHoaDon;
-
-                // Thêm snapshot từng dòng chi tiết với thuế suất và tiền thuế cố định tại thời điểm lập
-                if (order.ChiTietDonHangs != null && order.ChiTietDonHangs.Count > 0)
-                {
-                    foreach (var ct in order.ChiTietDonHangs)
-                    {
-                        var sp = ct.MaBienTheNavigation?.MaSanPhamNavigation;
-                        var bt = ct.MaBienTheNavigation;
-                        var catName = sp?.MaDanhMucNavigation?.TenDanhMuc ?? "";
-                        var prodName = sp?.TenSanPham ?? "Sản phẩm";
-
-                        var vatRule = VatConfigService.DetermineVatRate(catName, prodName, now);
-                        decimal lineGross = ct.ThanhTien;
-                        decimal lineVat = VatConfigService.CalculateVatAmount(lineGross, vatRule.RatePercent);
-                        decimal lineNet = lineGross - lineVat;
-                        decimal unitNet = Math.Round(lineNet / ct.SoLuong, 2, MidpointRounding.AwayFromZero);
-
-                        var detail = new ChiTietHoaDon
-                        {
-                            MaHoaDon = invoice.MaHoaDon,
-                            MaBienThe = ct.MaBienThe,
-                            TenSanPham = prodName,
-                            BienThe = $"{bt?.MauSac ?? ""} {bt?.PhienBan ?? ""}".Trim(),
-                            SoLuong = ct.SoLuong,
-                            DonGiaChuaThue = unitNet,
-                            ThueSuatVat = vatRule.RatePercent,
-                            TienThueVat = lineVat,
-                            DonGiaSauThue = ct.DonGia,
-                            ChietKhau = 0m,
-                            ThanhTien = lineGross
-                        };
-                        _db.ChiTietHoaDons.Add(detail);
-                    }
-                    await _db.SaveChangesAsync();
+                    var product = ct.MaBienTheNavigation?.MaSanPhamNavigation;
+                    var variant = ct.MaBienTheNavigation;
+                    // Giữ quy tắc VAT hiện có; toàn bộ giá trị được tính từ dữ liệu đơn ở máy chủ.
+                    var rule = VatConfigService.DetermineVatRate(product?.MaDanhMucNavigation?.TenDanhMuc ?? "", product?.TenSanPham ?? "", order.NgayDat ?? now);
+                    var lineTax = VatConfigService.CalculateVatAmount(ct.ThanhTien, rule.RatePercent);
+                    tax += lineTax; net += ct.ThanhTien - lineTax;
+                    invoice.ChiTietHoaDons.Add(new ChiTietHoaDon { MaBienThe = ct.MaBienThe, TenSanPham = product?.TenSanPham ?? "Sản phẩm",
+                        BienThe = $"{variant?.MauSac} {variant?.PhienBan}".Trim(), SoLuong = ct.SoLuong,
+                        DonGiaChuaThue = Math.Round((ct.ThanhTien - lineTax) / ct.SoLuong, 2, MidpointRounding.AwayFromZero),
+                        ThueSuatVat = rule.RatePercent, TienThueVat = lineTax, DonGiaSauThue = ct.DonGia, ChietKhau = 0m, ThanhTien = ct.ThanhTien });
                 }
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("Lỗi khi lưu snapshot hóa đơn VAT: " + ex.Message, ex);
-            }
-        });
-
-        TempData["Success"] = $"Đã lập hóa đơn bán hàng #HD-{createdInvoiceId:D5} thành công!";
-        return RedirectToAction(nameof(Details), new { id = createdInvoiceId });
+                invoice.TienTruocThue = net; invoice.TienThueVat = tax;
+                await _db.SaveChangesAsync(); await tx.CommitAsync(); return invoice.MaHoaDon;
+            });
+            TempData["Success"] = "Đã lưu hóa đơn theo số tiền của đơn hàng. Đơn đã lập hóa đơn sẽ khóa sửa số lượng.";
+            return RedirectToAction(nameof(Details), new { id = invoiceId });
+        }
+        catch (ArgumentException ex) { TempData["Error"] = ex.Message; return RedirectToAction(nameof(Create), new { orderId = model.MaDonHang }); }
+        catch (Exception ex)
+        {
+            HttpContext.RequestServices.GetRequiredService<ILogger<InvoiceController>>().LogError(ex, "Lỗi lập hóa đơn đơn {OrderId}", model.MaDonHang);
+            TempData["Error"] = "Chưa xác định được kết quả lập hóa đơn. Kiểm tra danh sách hóa đơn trước khi thử lại.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 
     // 5. XEM CHI TIẾT HÓA ĐƠN
@@ -624,7 +535,7 @@ public class InvoiceController : StaffControllerBase
     [HttpGet]
     public async Task<IActionResult> DailyReport(DateTime? date)
     {
-        var targetDate = (date ?? DateTime.Today).Date;
+        var targetDate = (date ?? OrderRules.VietnamNow()).Date;
         var startOfDay = targetDate;
         var endOfDay = targetDate.AddDays(1).AddTicks(-1);
 
@@ -640,18 +551,7 @@ public class InvoiceController : StaffControllerBase
             .Distinct()
             .ToListAsync();
 
-        // Bổ sung đơn có trạng thái hoàn thành trong ngày nếu lịch sử vận chuyển chưa ghi
-        var directDelivered = await _db.DonHangs.AsNoTracking()
-            .Where(d => d.NgayDat >= startOfDay && d.NgayDat <= endOfDay && (d.TrangThaiDonHang == "Đã hoàn thành" || d.TrangThaiDonHang == "Đã giao"))
-            .Select(d => d.MaDonHang)
-            .ToListAsync();
-
-        foreach (var did in directDelivered)
-        {
-            if (!deliveredOrderIds.Contains(did))
-                deliveredOrderIds.Add(did);
-        }
-
+        // Chỉ tính giao hàng theo sự kiện bàn giao thực tế; không dùng ngày đặt hàng.
         int totalOrdersDelivered = deliveredOrderIds.Count;
 
         // 3. Danh sách hóa đơn phát sinh trong ngày (theo NGÀY LẬP HÓA ĐƠN)
@@ -681,7 +581,7 @@ public class InvoiceController : StaffControllerBase
                 TongTien = d.TongTien ?? 0m,
                 TrangThaiDonHang = d.TrangThaiDonHang ?? "Đã giao",
                 PhuongThucThanhToan = d.ThanhToans.OrderByDescending(t => t.NgayTao).Select(t => t.PhuongThuc).FirstOrDefault() ?? "COD",
-                TrangThaiThanhToan = d.ThanhToans.OrderByDescending(t => t.NgayTao).Select(t => t.TrangThai).FirstOrDefault() ?? (d.TrangThaiDonHang == "Đã hoàn thành" ? "Đã thanh toán" : "Chưa thanh toán")
+                TrangThaiThanhToan = d.ThanhToans.OrderByDescending(t => t.NgayTao).Select(t => t.TrangThai).FirstOrDefault() ?? "Chưa xác định"
             })
             .ToListAsync();
 
@@ -713,9 +613,7 @@ public class InvoiceController : StaffControllerBase
         foreach (var inv in invoicesToday)
         {
             var p = inv.MaDonHangNavigation?.ThanhToans?.OrderByDescending(x => x.NgayTao).FirstOrDefault();
-            bool isPaid = inv.TrangThaiHoaDon == "Đã thanh toán" 
-                || (p != null && (p.TrangThai == "Thành công" || p.TrangThai == "Đã thanh toán"))
-                || (inv.MaDonHangNavigation?.TrangThaiDonHang == "Đã hoàn thành" || inv.MaDonHangNavigation?.TrangThaiDonHang == "Đã giao");
+            bool isPaid = p != null && OrderRules.IsPaid(p.TrangThai);
 
             if (isPaid)
                 totalPaid += (inv.TongTien ?? 0m);
@@ -749,7 +647,7 @@ public class InvoiceController : StaffControllerBase
     [HttpGet]
     public async Task<IActionResult> ExportDailyReportCsv(DateTime? date)
     {
-        var targetDate = (date ?? DateTime.Today).Date;
+        var targetDate = (date ?? OrderRules.VietnamNow()).Date;
         var startOfDay = targetDate;
         var endOfDay = targetDate.AddDays(1).AddTicks(-1);
 

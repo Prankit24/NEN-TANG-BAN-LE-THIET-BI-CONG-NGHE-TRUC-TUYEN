@@ -8,12 +8,13 @@ using EMua.Areas.Staff.Models;
 using EMua.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMua.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin,Quản trị viên")]
+[Authorize(Roles = "Admin,Quản trị viên,QuanTriVien")]
 public class ImportOrderController : Controller
 {
     private readonly EMuaDbContext _db;
@@ -25,19 +26,15 @@ public class ImportOrderController : Controller
         _receiving = receiving;
     }
 
-    private static DateTime GetVietnamNow()
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        try
-        {
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var vnTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
-            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
-        }
-        catch
-        {
-            var vnTime = DateTime.UtcNow.AddHours(7);
-            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
-        }
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) || id <= 0)
+        { context.Result = Challenge(); return; }
+        var names = new[] { "Admin", "Quản trị viên", "QuanTriVien" };
+        var allowed = await _db.NguoiDungs.AsNoTracking().AnyAsync(u => u.MaNguoiDung == id && u.TrangThai &&
+            (u.MaQuyen == 1 || names.Contains(u.MaQuyenNavigation.TenQuyen)));
+        if (!allowed) { context.Result = Forbid(); return; }
+        await next();
     }
 
     public async Task<IActionResult> Index(string? status, string? search, int page = 1, int pageSize = 12)
@@ -69,10 +66,10 @@ public class ImportOrderController : Controller
         }
 
         var totalItems = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize));
         page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
 
-        var items = await query.OrderByDescending(x => x.NgayTao)
+        var items = await query.OrderByDescending(x => x.NgayTao).ThenByDescending(x => x.MaPhieuNhap)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -82,6 +79,7 @@ public class ImportOrderController : Controller
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = totalItems;
+        ViewBag.PageSize = pageSize;
 
         return View(items);
     }
@@ -95,7 +93,7 @@ public class ImportOrderController : Controller
             .Include(x => x.ChiTietPhieuNhapHangs)
                 .ThenInclude(ct => ct.MaBienTheNavigation)
                     .ThenInclude(b => b.MaSanPhamNavigation)
-            .FirstOrDefaultAsync(x => x.MaPhieuNhap == id);
+            .AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(x => x.MaPhieuNhap == id);
 
         if (phieu == null) return NotFound();
 
@@ -113,6 +111,17 @@ public class ImportOrderController : Controller
         if (phieu.TrangThai != "Chờ duyệt")
         {
             TempData["Error"] = "Chỉ có thể phê duyệt phiếu đang ở trạng thái 'Chờ duyệt'.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var lines = await _db.ChiTietPhieuNhapHangs.AsNoTracking().Where(x => x.MaPhieuNhap == id).ToListAsync();
+        var expectedTotal = lines.Sum(x => (x.DonGiaNhapDuKien - x.ChietKhau) * x.SoLuongNhap)
+            + phieu.ChiPhiVanChuyen + phieu.ChiPhiKhac - phieu.ChietKhau;
+        if (lines.Count == 0 || lines.Any(x => x.SoLuongNhap <= 0 || x.DonGiaNhapDuKien < 0 ||
+            x.ChietKhau < 0 || x.ChietKhau > x.DonGiaNhapDuKien) || phieu.TongTienDuKien < 0 ||
+            Math.Abs(expectedTotal - phieu.TongTienDuKien) > 0.01m)
+        {
+            TempData["Error"] = "Chi tiết hoặc tổng tiền phiếu không hợp lệ/không khớp. Vui lòng yêu cầu nhân viên đối chiếu và lập lại phiếu trước khi duyệt.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -198,15 +207,23 @@ public class ImportOrderController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmReceived([FromForm] ImportOrderReceiveCommand model)
     {
-        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || userId <= 0)
-            return Challenge();
-        if (!ModelState.IsValid)
+        var result = ModelState.IsValid
+            ? await _receiving.ConfirmAsync(model, int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!))
+            : (Success: false, Message: "Số lượng hoặc ghi chú kiểm nhận không hợp lệ.");
+        if (result.Success)
+        { TempData["Success"] = result.Message; return RedirectToAction(nameof(Details), new { id = model.MaPhieuNhap }); }
+        var vm = await _receiving.LoadAsync(model.MaPhieuNhap);
+        if (vm == null) return NotFound();
+        if (vm.TrangThai != "Đã duyệt")
+        { TempData["Error"] = result.Message; return RedirectToAction(nameof(Details), new { id = model.MaPhieuNhap }); }
+        foreach (var line in vm.Items)
         {
-            TempData["Error"] = "Dữ liệu kiểm nhận không hợp lệ. Nhập số nguyên từ 0 đến 100.000, ghi chú tối đa 500 ký tự.";
-            return RedirectToAction(nameof(Receive), new { id = model.MaPhieuNhap });
+            var posted = model.Items?.FirstOrDefault(x => x.MaChiTietPhieuNhap == line.MaChiTietPhieuNhap);
+            if (posted != null) line.SoLuongThucNhan = posted.SoLuongThucNhan;
         }
-        var result = await _receiving.ConfirmAsync(model, userId);
-        TempData[result.Success ? "Success" : "Error"] = result.Message;
-        return RedirectToAction(result.Success ? nameof(Details) : nameof(Receive), new { id = model.MaPhieuNhap });
+        vm.GhiChuKiemNhan = model.GhiChuKiemNhan;
+        ModelState.AddModelError("", result.Message);
+        ViewData["ReceiveArea"] = "Admin"; ViewData["ReceiveAction"] = "ConfirmReceived";
+        return View("Receive", vm);
     }
 }

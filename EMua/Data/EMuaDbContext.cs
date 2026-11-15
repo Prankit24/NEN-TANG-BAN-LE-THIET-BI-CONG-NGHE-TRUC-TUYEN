@@ -162,6 +162,10 @@ public partial class EMuaDbContext : DbContext
 
             entity.Property(e => e.TrangThaiDonHang)
                 .HasDefaultValue("Chờ xử lý");
+            entity.HasIndex(e => new { e.MaNguoiDung, e.YeuCauDatHang })
+                .HasDatabaseName("IX_donhang_checkoutrequest")
+                .IsUnique().HasFilter("yeucaudathang IS NOT NULL");
+
 
             entity.HasOne(d => d.MaKhuyenMaiNavigation)
                 .WithMany(p => p.DonHangs)

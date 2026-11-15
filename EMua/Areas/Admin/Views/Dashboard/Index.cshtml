@@ -293,7 +293,9 @@
                             var statusClass = status switch
                             {
                                 "Đã giao" => "done",
-                                "Đang giao" => "shipping",
+                                "Đang giao" or "Đang giao hàng" => "shipping",
+                                "Giao thất bại" => "cancelled",
+                                "Đã hoàn thành" => "done",
                                 "Chờ xử lý" => "pending",
                                 "Chờ xác nhận" => "pending",
                                 "Đã hủy" => "cancelled",

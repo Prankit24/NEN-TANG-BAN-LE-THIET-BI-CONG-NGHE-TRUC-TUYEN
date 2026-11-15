@@ -45,6 +45,7 @@
 </style>
 
 <div class="po-list">
+    <partial name="~/Views/Shared/_ImportOrderMessages.cshtml" />
     <div class="mb-2">
         <h5 class="mb-0 fw-bold" style="color: var(--admin-text);"><i class="bi bi-box-arrow-in-down me-2 text-primary"></i>Phê duyệt đề nghị nhập hàng</h5>
         <span class="text-muted small">Xem xét, phê duyệt hoặc từ chối các đề nghị nhập hàng từ nhân viên và xác nhận nhập kho thực tế.</span>
@@ -98,7 +99,7 @@
                         {
                             var itemCount = item.ChiTietPhieuNhapHangs?.Count ?? 0;
                             <tr>
-                                <td><span class="badge bg-light text-primary border font-monospace">@item.MaChungTu</span></td>
+                                <td><span class="badge bg-light text-primary border font-monospace" title="@item.MaChungTu">@(item.MaChungTu.Length > 25 ? item.MaChungTu[..13] + "…" + item.MaChungTu[^8..] : item.MaChungTu)</span></td>
                                 <td><div class="fw-bold text-dark clamp-2">@item.NhaCungCap</div></td>
                                 <td>
                                     <div class="text-dark clamp-2">@item.LyDoNhap</div>
@@ -160,7 +161,7 @@
                     @for (int p = 1; p <= totalPages; p++)
                     {
                         <li class="page-item @(p == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-status="@status" asp-route-search="@search">@p</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-status="@status" asp-route-search="@search" asp-route-pageSize="@(ViewBag.PageSize ?? 12)">@p</a>
                         </li>
                     }
                 </ul>

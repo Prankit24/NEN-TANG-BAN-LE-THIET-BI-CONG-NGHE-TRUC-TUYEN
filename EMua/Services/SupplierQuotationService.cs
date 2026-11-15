@@ -34,10 +34,10 @@ public class QuotationComparisonItemDto
     public decimal GiaBanHienTai { get; set; }
 
     // Thuế GTGT đầu ra giả định (10%)
-    public decimal ThueVatDauRaUocTinh => Math.Round(GiaBanHienTai * 0.10m, 2);
+    public decimal ThueVatDauRaUocTinh => VatConfigService.CalculateVatAmount(GiaBanHienTai, 10m);
 
     // Lợi nhuận gộp dự kiến trên 1 đơn vị
-    public decimal LoiNhuanGopDuKien => Math.Max(0, GiaBanHienTai - GiaVonThucTeMotDonVi);
+    public decimal LoiNhuanGopDuKien => GiaBanHienTai - GiaVonThucTeMotDonVi;
 
     // Tỷ suất lợi nhuận gộp (%)
     public decimal TySuatLoiNhuan => GiaBanHienTai > 0 ? Math.Round((LoiNhuanGopDuKien / GiaBanHienTai) * 100, 2) : 0;
@@ -63,6 +63,8 @@ public class SupplierQuotationService : ISupplierQuotationService
 
     public async Task<List<QuotationComparisonItemDto>> GetQuotationsForVariantAsync(int variantId, int quantity = 1)
     {
+        if (quantity < 1 || quantity > 100000) return new List<QuotationComparisonItemDto>();
+        var now = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
         var variant = await _db.BienTheSanPhams
             .Include(b => b.MaSanPhamNavigation)
             .AsNoTracking()
@@ -73,7 +75,9 @@ public class SupplierQuotationService : ISupplierQuotationService
         var quotations = await _db.BaoGiaNhapHangs
             .Include(bg => bg.MaNhaCungCapNavigation)
             .AsNoTracking()
-            .Where(bg => bg.MaBienThe == variantId && bg.TrangThai == "Hiệu lực")
+            .Where(bg => bg.MaBienThe == variantId && bg.TrangThai == "Hiệu lực" &&
+                bg.SoLuongToiThieu >= 1 && bg.SoLuongToiThieu <= quantity && bg.NgayHieuLuc <= now &&
+                (bg.NgayHetHan == null || bg.NgayHetHan >= now) && bg.MaNhaCungCapNavigation.TrangThai == "Đang hợp tác")
             .OrderBy(bg => bg.DonGiaSauThue - bg.ChietKhau + bg.ChiPhiVanChuyenUocTinh)
             .ToListAsync();
 
@@ -81,6 +85,10 @@ public class SupplierQuotationService : ISupplierQuotationService
 
         foreach (var q in quotations)
         {
+            ImportLineAmounts amounts;
+            try { amounts = ImportOrderAmounts.CalculateLine(1, q.DonGiaChuaThue, q.ThueSuatVat, q.ChietKhau); }
+            catch (ArgumentException) { continue; }
+            if (q.ChiPhiVanChuyenUocTinh < 0) continue;
             var item = new QuotationComparisonItemDto
             {
                 MaBaoGia = q.MaBaoGia,
@@ -91,17 +99,19 @@ public class SupplierQuotationService : ISupplierQuotationService
                 MauSac = variant.MauSac,
                 PhienBan = variant.PhienBan,
                 SoLuongToiThieu = q.SoLuongToiThieu,
-                DonGiaChuaThue = q.DonGiaChuaThue,
+                DonGiaChuaThue = amounts.NetUnit,
                 ThueSuatVat = q.ThueSuatVat,
-                TienThueVat = q.TienThueVat,
-                DonGiaSauThue = q.DonGiaSauThue,
-                ChietKhau = q.ChietKhau,
+                TienThueVat = amounts.VatUnit,
+                DonGiaSauThue = amounts.GrossUnit,
+                ChietKhau = amounts.DiscountUnit,
                 ChiPhiVanChuyenUocTinh = q.ChiPhiVanChuyenUocTinh,
                 GiaBanHienTai = variant.Gia,
                 GhiChu = q.GhiChu
             };
             result.Add(item);
         }
+
+        result = result.OrderBy(x => x.GiaVonThucTeMotDonVi).ThenBy(x => x.MaBaoGia).ToList();
 
         if (result.Any())
         {

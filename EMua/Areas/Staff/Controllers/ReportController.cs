@@ -42,7 +42,7 @@ public class ReportController : StaffControllerBase
         var successfulStatuses = new[] { "Đã hoàn thành", "Đã giao" };
         var cancelledStatuses = new[] { "Đã hủy", "Đã huỷ" };
         var returnStatuses = new[] { "Yêu cầu đổi trả", "Đang đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền", "Đã hoàn" };
-        var pendingStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Chờ xác nhận" };
+        var pendingStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Chờ xác nhận", "Chờ thanh toán", "Đang giao hàng", "Đang giao", "Giao thất bại" };
 
         var successfulOrderIds = monthlyOrders
             .Where(x => successfulStatuses.Contains(x.TrangThaiDonHang ?? string.Empty))

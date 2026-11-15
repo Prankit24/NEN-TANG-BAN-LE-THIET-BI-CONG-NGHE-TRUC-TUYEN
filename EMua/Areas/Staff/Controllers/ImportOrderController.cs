@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using EMua.Areas.Staff.Models;
 using EMua.Data;
 using EMua.Models.Database;
 using EMua.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMua.Areas.Staff.Controllers;
@@ -17,397 +14,236 @@ public class ImportOrderController : StaffControllerBase
     private readonly EMuaDbContext _db;
     private readonly ImportOrderReceivingService _receiving;
     private readonly ISupplierQuotationService _quotationService;
+    private readonly ILogger<ImportOrderController> _logger;
+    private static readonly string[] ImportRoles = { "Admin", "Quản trị viên", "QuanTriVien", "NhanVien", "Nhân viên" };
 
-    public ImportOrderController(EMuaDbContext db, ISupplierQuotationService quotationService, ImportOrderReceivingService receiving)
+    public ImportOrderController(EMuaDbContext db, ISupplierQuotationService quotationService,
+        ImportOrderReceivingService receiving, ILogger<ImportOrderController> logger)
     {
-        _db = db;
-        _receiving = receiving;
-        _quotationService = quotationService;
+        _db = db; _quotationService = quotationService; _receiving = receiving; _logger = logger;
     }
 
-    private static DateTime GetVietnamNow()
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        try
-        {
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var vnTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
-            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
-        }
-        catch
-        {
-            var vnTime = DateTime.UtcNow.AddHours(7);
-            return DateTime.SpecifyKind(vnTime, DateTimeKind.Unspecified);
-        }
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) || id <= 0)
+        { context.Result = Challenge(); return; }
+        var allowed = await _db.NguoiDungs.AsNoTracking().AnyAsync(u => u.MaNguoiDung == id && u.TrangThai &&
+            (u.MaQuyen == 1 || u.MaQuyen == 2 || ImportRoles.Contains(u.MaQuyenNavigation.TenQuyen)));
+        if (!allowed) { context.Result = Forbid(); return; }
+        await next();
     }
 
-    // Danh sách phiếu đề nghị nhập hàng
     public async Task<IActionResult> Index(string? status, string? search, int page = 1, int pageSize = 12)
     {
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var query = _db.PhieuNhapHangs
-            .Include(x => x.MaNguoiTaoNavigation)
-            .Include(x => x.MaNguoiDuyetNavigation)
-            .Include(x => x.MaNhaCungCapNavigation)
-            .Include(x => x.ChiTietPhieuNhapHangs)
-                .ThenInclude(ct => ct.MaBienTheNavigation)
-                    .ThenInclude(b => b.MaSanPhamNavigation)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(status) && status != "all")
-        {
-            query = query.Where(x => x.TrangThai == status);
-        }
-
+        var query = _db.PhieuNhapHangs.AsNoTracking()
+            .Include(x => x.MaNguoiTaoNavigation).Include(x => x.MaNguoiDuyetNavigation)
+            .Include(x => x.ChiTietPhieuNhapHangs).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(status) && status != "all") query = query.Where(x => x.TrangThai == status);
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var s = search.Trim();
-            var pattern = $"%{s}%";
-            query = query.Where(x =>
-                EF.Functions.ILike(x.MaChungTu, pattern) ||
-                EF.Functions.ILike(x.NhaCungCap, pattern) ||
-                EF.Functions.ILike(x.LyDoNhap, pattern) ||
-                (x.DienGiai != null && EF.Functions.ILike(x.DienGiai, pattern)));
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(x => EF.Functions.ILike(x.MaChungTu, pattern) || EF.Functions.ILike(x.NhaCungCap, pattern) ||
+                EF.Functions.ILike(x.LyDoNhap, pattern) || (x.DienGiai != null && EF.Functions.ILike(x.DienGiai, pattern)));
         }
-
-        var totalItems = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
-
-        var items = await query.OrderByDescending(x => x.NgayTao)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        ViewBag.Status = status ?? "all";
-        ViewBag.Search = search;
-        ViewBag.CurrentPage = page;
-        ViewBag.TotalPages = totalPages;
-        ViewBag.TotalItems = totalItems;
-
-        return View(items);
+        var total = await query.CountAsync();
+        var pages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
+        page = Math.Clamp(page, 1, pages);
+        ViewBag.Status = status ?? "all"; ViewBag.Search = search;
+        ViewBag.CurrentPage = page; ViewBag.TotalPages = pages; ViewBag.TotalItems = total; ViewBag.PageSize = pageSize;
+        return View(await query.OrderByDescending(x => x.NgayTao).ThenByDescending(x => x.MaPhieuNhap)
+            .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync());
     }
 
-    // Chi tiết phiếu
     public async Task<IActionResult> Details(int id)
     {
-        var phieu = await _db.PhieuNhapHangs
-            .Include(x => x.MaNguoiTaoNavigation)
-            .Include(x => x.MaNguoiDuyetNavigation)
-            .Include(x => x.MaNguoiNhapKhoNavigation)
-            .Include(x => x.MaNhaCungCapNavigation)
-            .Include(x => x.ChiTietPhieuNhapHangs)
-                .ThenInclude(ct => ct.MaBienTheNavigation)
-                    .ThenInclude(b => b.MaSanPhamNavigation)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.MaPhieuNhap == id);
-
-        if (phieu == null) return NotFound();
-
-        return View(phieu);
+        var receipt = await _db.PhieuNhapHangs.AsNoTracking()
+            .Include(x => x.MaNguoiTaoNavigation).Include(x => x.MaNguoiDuyetNavigation)
+            .Include(x => x.MaNguoiNhapKhoNavigation).Include(x => x.MaNhaCungCapNavigation)
+            .Include(x => x.ChiTietPhieuNhapHangs).ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
+            .AsSplitQuery().FirstOrDefaultAsync(x => x.MaPhieuNhap == id);
+        return receipt == null ? NotFound() : View(receipt);
     }
 
-    // API lấy danh sách nhà cung cấp từ CSDL (kết hợp bảng NhaCungCap và PhieuNhapHang)
     [HttpGet]
-    public async Task<IActionResult> GetSuppliers()
-    {
-        var listFromTable = await _db.NhaCungCaps
-            .AsNoTracking()
-            .Where(x => x.TrangThai == "Đang hợp tác")
-            .OrderBy(x => x.TenNhaCungCap)
-            .Select(x => new { id = x.MaNhaCungCap, name = x.TenNhaCungCap, tax = x.MaSoThue, phone = x.SoDienThoai })
-            .ToListAsync();
+    public async Task<IActionResult> GetSuppliers() => Json(await _db.NhaCungCaps.AsNoTracking()
+        .Where(x => x.TrangThai == "Đang hợp tác").OrderBy(x => x.TenNhaCungCap)
+        .Select(x => new { id = x.MaNhaCungCap, name = x.TenNhaCungCap, tax = x.MaSoThue, phone = x.SoDienThoai }).ToListAsync());
 
-        return Json(listFromTable);
-    }
-
-    // API so sánh báo giá các nhà cung cấp cho 1 biến thể
     [HttpGet]
     public async Task<IActionResult> CompareQuotations(int variantId, int qty = 1)
     {
-        if (variantId <= 0) return BadRequest("Mã biến thể không hợp lệ.");
-
-        var quotations = await _quotationService.GetQuotationsForVariantAsync(variantId, qty);
-        return Json(new { success = true, data = quotations });
+        if (variantId <= 0 || qty < 1 || qty > 100000)
+            return BadRequest(new { success = false, message = "Chọn biến thể và số lượng từ 1 đến 100.000." });
+        return Json(new { success = true, data = await _quotationService.GetQuotationsForVariantAsync(variantId, qty) });
     }
 
-    // API thêm nhanh nhà cung cấp mới lưu trực tiếp vào bảng NhaCungCap
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateSupplierAjax([FromBody] SupplierQuickCreateModel model)
+    public async Task<IActionResult> CreateSupplierAjax([FromBody] SupplierQuickCreateModel? model)
     {
-        if (model == null || string.IsNullOrWhiteSpace(model.TenNhaCungCap))
+        if (model == null || !ModelState.IsValid || string.IsNullOrWhiteSpace(model.TenNhaCungCap))
+            return BadRequest(new { success = false, message = ModelState.Values.SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage).FirstOrDefault() ?? "Thông tin nhà cung cấp không hợp lệ." });
+        var name = model.TenNhaCungCap.Trim();
+        try
         {
-            return Json(new { success = false, message = "Tên nhà cung cấp không được để trống." });
+            var result = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                _db.ChangeTracker.Clear();
+                await using var tx = await _db.Database.BeginTransactionAsync();
+                // Chung với Create: tránh hai yêu cầu cùng tự tạo một NCC hoặc một phiếu.
+                await _db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(681126, 1)");
+                var key = name.ToLowerInvariant();
+                var supplier = await _db.NhaCungCaps.FirstOrDefaultAsync(x => x.TenNhaCungCap.Trim().ToLower() == key);
+                if (supplier != null && supplier.TrangThai != "Đang hợp tác")
+                    return (Success: false, Id: 0, Name: name, Message: "Nhà cung cấp này đã ngừng hợp tác. Vui lòng chọn NCC khác.");
+                if (supplier == null)
+                {
+                    supplier = new NhaCungCap { TenNhaCungCap = name, SoDienThoai = model.SoDienThoai?.Trim(),
+                        MaSoThue = model.MaSoThue?.Trim(), Email = model.Email?.Trim(), DiaChi = model.DiaChi?.Trim(),
+                        GhiChu = model.GhiChu?.Trim(), TrangThai = "Đang hợp tác", NgayTao = ImportOrderReceivingService.VietnamNow() };
+                    _db.NhaCungCaps.Add(supplier);
+                    await _db.SaveChangesAsync();
+                }
+                await tx.CommitAsync();
+                return (Success: true, Id: supplier.MaNhaCungCap, Name: supplier.TenNhaCungCap, Message: "Đã chọn nhà cung cấp.");
+            });
+            return Json(new { success = result.Success, id = result.Id, name = result.Name, message = result.Message });
         }
-
-        var supplierName = model.TenNhaCungCap.Trim();
-
-        // Kiểm tra xem đã tồn tại chưa
-        var existing = await _db.NhaCungCaps
-            .FirstOrDefaultAsync(x => EF.Functions.ILike(x.TenNhaCungCap, supplierName));
-
-        if (existing != null)
+        catch (Exception ex)
         {
-            return Json(new { success = true, id = existing.MaNhaCungCap, name = existing.TenNhaCungCap, message = "Nhà cung cấp đã có trong hệ thống." });
+            _logger.LogError(ex, "Không thể thêm nhà cung cấp nhập hàng");
+            return StatusCode(500, new { success = false, message = "Không lưu được nhà cung cấp. Vui lòng thử lại." });
         }
-
-        var newNcc = new NhaCungCap
-        {
-            TenNhaCungCap = supplierName,
-            SoDienThoai = model.SoDienThoai?.Trim(),
-            MaSoThue = model.MaSoThue?.Trim(),
-            Email = model.Email?.Trim(),
-            DiaChi = model.DiaChi?.Trim(),
-            GhiChu = model.GhiChu?.Trim(),
-            TrangThai = "Đang hợp tác",
-            NgayTao = GetVietnamNow()
-        };
-
-        _db.NhaCungCaps.Add(newNcc);
-        await _db.SaveChangesAsync();
-
-        return Json(new { success = true, id = newNcc.MaNhaCungCap, name = newNcc.TenNhaCungCap, message = $"Đã thêm nhà cung cấp [{supplierName}] thành công." });
     }
 
-    // Tạo phiếu đề nghị nhập hàng (GET)
     [HttpGet]
     public async Task<IActionResult> Create(int? productId, int? variantId)
     {
-        var model = new ImportOrderCreateViewModel();
-
-        if (variantId.HasValue && variantId.Value > 0)
+        var vm = new ImportOrderCreateViewModel
+        { MaYeuCau = $"PNN-{ImportOrderReceivingService.VietnamNow():yyyyMMdd}-{Guid.NewGuid():N}".ToUpperInvariant() };
+        var query = _db.BienTheSanPhams.AsNoTracking().Include(x => x.MaSanPhamNavigation).AsQueryable();
+        if (variantId is > 0) query = query.Where(x => x.MaBienThe == variantId);
+        else if (productId is > 0) query = query.Where(x => x.MaSanPham == productId);
+        else query = query.Where(x => false);
+        foreach (var v in await query.OrderBy(x => x.MaBienThe).Take(100).ToListAsync())
         {
-            var variant = await _db.BienTheSanPhams
-                .Include(b => b.MaSanPhamNavigation)
-                .FirstOrDefaultAsync(b => b.MaBienThe == variantId.Value);
-
-            if (variant != null)
-            {
-                var pendingPhieu = await _db.ChiTietPhieuNhapHangs
-                    .Include(ct => ct.MaPhieuNhapNavigation)
-                    .Where(ct => ct.MaBienThe == variant.MaBienThe && ct.MaPhieuNhapNavigation.TrangThai == "Chờ duyệt")
-                    .Select(ct => ct.MaPhieuNhapNavigation.MaChungTu)
-                    .FirstOrDefaultAsync();
-
-                ViewBag.PendingWarning = pendingPhieu != null
-                    ? $"Biến thể này đang nằm trong phiếu [{pendingPhieu}] đang chờ phê duyệt. Vui lòng cân nhắc trước khi lập thêm yêu cầu."
-                    : null;
-
-                // Thử tìm báo giá tốt nhất cho biến thể này
-                var bestQuotation = await _quotationService.GetBestQuotationAsync(variant.MaBienThe, 10);
-                decimal netPrice = bestQuotation != null ? bestQuotation.DonGiaChuaThue : Math.Round((variant.Gia * 0.7m) / 1.10m, 2);
-                decimal vatRate = bestQuotation != null ? bestQuotation.ThueSuatVat : 10.00m;
-                decimal vatAmount = bestQuotation != null ? bestQuotation.TienThueVat : Math.Round(netPrice * (vatRate / 100m), 2);
-                decimal grossPrice = bestQuotation != null ? bestQuotation.DonGiaSauThue : (netPrice + vatAmount);
-
-                model.Items.Add(new ImportOrderItemViewModel
-                {
-                    MaBienThe = variant.MaBienThe,
-                    TenSanPham = variant.MaSanPhamNavigation?.TenSanPham,
-                    MauSac = variant.MauSac,
-                    PhienBan = variant.PhienBan,
-                    HinhAnh = variant.HinhAnh,
-                    TonKhoHienTai = variant.SoLuong,
-                    SoLuongNhap = 10,
-                    DonGiaChuaThue = netPrice,
-                    ThueSuatVat = vatRate,
-                    TienThueVat = vatAmount,
-                    DonGiaNhapDuKien = grossPrice,
-                    GiaBanHienTai = variant.Gia
-                });
-            }
+            // 70% là giá dự kiến khi chưa có báo giá; không tự coi đó là giá NCC.
+            vm.Items.Add(new ImportOrderItemViewModel { MaBienThe = v.MaBienThe, SoLuongNhap = 10,
+                DonGiaChuaThue = ImportOrderAmounts.Money(v.Gia * 0.7m / 1.1m), ThueSuatVat = 10m });
         }
-        else if (productId.HasValue && productId.Value > 0)
-        {
-            var variants = await _db.BienTheSanPhams
-                .Include(b => b.MaSanPhamNavigation)
-                .Where(b => b.MaSanPham == productId.Value)
-                .ToListAsync();
-
-            foreach (var variant in variants)
-            {
-                var netPrice = Math.Round((variant.Gia * 0.7m) / 1.10m, 2);
-                var vatAmount = Math.Round(netPrice * 0.10m, 2);
-                var grossPrice = netPrice + vatAmount;
-
-                model.Items.Add(new ImportOrderItemViewModel
-                {
-                    MaBienThe = variant.MaBienThe,
-                    TenSanPham = variant.MaSanPhamNavigation?.TenSanPham,
-                    MauSac = variant.MauSac,
-                    PhienBan = variant.PhienBan,
-                    HinhAnh = variant.HinhAnh,
-                    TonKhoHienTai = variant.SoLuong,
-                    SoLuongNhap = 10,
-                    DonGiaChuaThue = netPrice,
-                    ThueSuatVat = 10.00m,
-                    TienThueVat = vatAmount,
-                    DonGiaNhapDuKien = grossPrice,
-                    GiaBanHienTai = variant.Gia
-                });
-            }
-        }
-
-        // Danh sách nhà cung cấp từ bảng độc lập NhaCungCap
-        var suppliersFromDb = await _db.NhaCungCaps
-            .AsNoTracking()
-            .Where(x => x.TrangThai == "Đang hợp tác")
-            .OrderBy(x => x.TenNhaCungCap)
-            .ToListAsync();
-
-        ViewBag.Suppliers = suppliersFromDb;
-
-        // Danh sách biến thể gợi ý để thêm nhiều dòng
-        ViewBag.AllVariants = await _db.BienTheSanPhams
-            .Include(b => b.MaSanPhamNavigation)
-            .OrderBy(b => b.MaSanPhamNavigation.TenSanPham)
-            .Select(b => new
-            {
-                b.MaBienThe,
-                Display = $"{b.MaSanPhamNavigation.TenSanPham} ({b.MauSac} - {b.PhienBan}) - Tồn: {b.SoLuong} - Giá bán: {b.Gia:N0}₫",
-                b.Gia,
-                b.SoLuong
-            })
-            .ToListAsync();
-
-        return View(model);
+        await PopulateAsync(vm);
+        return View(vm);
     }
 
-    // Xác nhận lập đề nghị nhập hàng (POST)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ImportOrderCreateViewModel model)
     {
-        if (model.Items == null || !model.Items.Any(x => x.MaBienThe > 0 && x.SoLuongNhap > 0))
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        model.Items ??= new();
+        if (model.Items.Count < 1 || model.Items.Count > 100)
+            ModelState.AddModelError("", "Một phiếu cần từ 1 đến 100 dòng sản phẩm.");
+        if (model.Items.Select(x => x.MaBienThe).Distinct().Count() != model.Items.Count)
+            ModelState.AddModelError("", "Không chọn trùng biến thể trong cùng một phiếu. Hãy gộp số lượng vào một dòng.");
+        if (!ModelState.IsValid) return await InvalidCreateAsync(model);
+
+        // Mã yêu cầu giữ nguyên khi người dùng gửi lại; unique index bảo vệ ở database.
+        var documentCode = model.MaYeuCau.Trim().ToUpperInvariant();
+        try
         {
-            ModelState.AddModelError("", "Vui lòng chọn ít nhất một biến thể sản phẩm cần nhập hàng với số lượng hợp lệ.");
-        }
-
-        if (string.IsNullOrWhiteSpace(model.NhaCungCap))
-        {
-            ModelState.AddModelError(nameof(model.NhaCungCap), "Vui lòng chọn hoặc nhập tên nhà cung cấp.");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            ViewBag.Suppliers = await _db.NhaCungCaps
-                .AsNoTracking()
-                .Where(x => x.TrangThai == "Đang hợp tác")
-                .OrderBy(x => x.TenNhaCungCap)
-                .ToListAsync();
-
-            ViewBag.AllVariants = await _db.BienTheSanPhams
-                .Include(b => b.MaSanPhamNavigation)
-                .OrderBy(b => b.MaSanPhamNavigation.TenSanPham)
-                .Select(b => new
-                {
-                    b.MaBienThe,
-                    Display = $"{b.MaSanPhamNavigation.TenSanPham} ({b.MauSac} - {b.PhienBan}) - Tồn: {b.SoLuong} - Giá bán: {b.Gia:N0}₫",
-                    b.Gia,
-                    b.SoLuong
-                })
-                .ToListAsync();
-
-            return View(model);
-        }
-
-        // Kiểm tra và lấy danh tính nhân viên lập phiếu
-        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId) || currentUserId <= 0)
-            return Challenge();
-
-        // Sinh mã chứng từ chuẩn hệ thống
-        var nowVn = GetVietnamNow();
-        var maChungTu = $"PNN-{nowVn:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-
-        // Đồng bộ hoặc tìm MaNhaCungCap
-        int? nccId = model.MaNhaCungCap;
-        var supplierName = model.NhaCungCap.Trim();
-        if (!nccId.HasValue || nccId.Value <= 0)
-        {
-            var existingNcc = await _db.NhaCungCaps
-                .FirstOrDefaultAsync(x => EF.Functions.ILike(x.TenNhaCungCap, supplierName));
-            if (existingNcc != null)
+            var result = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                nccId = existingNcc.MaNhaCungCap;
-            }
-            else
-            {
-                // Tự động tạo bản ghi mới trong bảng NhaCungCap
-                var newNcc = new NhaCungCap
+                _db.ChangeTracker.Clear();
+                await using var tx = await _db.Database.BeginTransactionAsync();
+                await _db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(681126, 1)");
+                var existing = await _db.PhieuNhapHangs.AsNoTracking().FirstOrDefaultAsync(x => x.MaChungTu == documentCode);
+                if (existing != null)
                 {
-                    TenNhaCungCap = supplierName,
-                    TrangThai = "Đang hợp tác",
-                    NgayTao = nowVn
-                };
-                _db.NhaCungCaps.Add(newNcc);
+                    if (existing.MaNguoiTao != userId) throw new ArgumentException("Mã yêu cầu đã được sử dụng. Vui lòng mở lại trang lập phiếu.");
+                    return existing.MaPhieuNhap;
+                }
+                var supplier = model.MaNhaCungCap is > 0
+                    ? await _db.NhaCungCaps.FirstOrDefaultAsync(x => x.MaNhaCungCap == model.MaNhaCungCap)
+                    : await _db.NhaCungCaps.FirstOrDefaultAsync(x => x.TenNhaCungCap.Trim().ToLower() == model.NhaCungCap.Trim().ToLower());
+                if (model.MaNhaCungCap is > 0 && supplier == null)
+                    throw new ArgumentException("Nhà cung cấp không còn tồn tại. Vui lòng chọn lại.");
+                if (supplier != null && supplier.TrangThai != "Đang hợp tác")
+                    throw new ArgumentException("Nhà cung cấp đã ngừng hợp tác. Vui lòng chọn lại.");
+                if (supplier == null)
+                {
+                    supplier = new NhaCungCap { TenNhaCungCap = model.NhaCungCap.Trim(), TrangThai = "Đang hợp tác",
+                        NgayTao = ImportOrderReceivingService.VietnamNow() };
+                    _db.NhaCungCaps.Add(supplier);
+                    await _db.SaveChangesAsync();
+                }
+                var ids = model.Items.Select(x => x.MaBienThe).ToList();
+                if (await _db.BienTheSanPhams.CountAsync(x => ids.Contains(x.MaBienThe)) != ids.Count)
+                    throw new ArgumentException("Có biến thể không tồn tại. Vui lòng tải lại danh sách sản phẩm.");
+                var amounts = new List<ImportLineAmounts>();
+                var receipt = new PhieuNhapHang { MaChungTu = documentCode, MaNhaCungCap = supplier.MaNhaCungCap,
+                    NhaCungCap = supplier.TenNhaCungCap, LyDoNhap = model.LyDoNhap.Trim(), DienGiai = model.DienGiai?.Trim(),
+                    GhiChu = model.GhiChu?.Trim(), TrangThai = "Chờ duyệt", MaNguoiTao = userId,
+                    NgayTao = ImportOrderReceivingService.VietnamNow(), ChiPhiVanChuyen = ImportOrderAmounts.Money(model.ChiPhiVanChuyen),
+                    ChiPhiKhac = ImportOrderAmounts.Money(model.ChiPhiKhac), ChietKhau = ImportOrderAmounts.Money(model.ChietKhauTong) };
+                var quoteNow = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+                foreach (var item in model.Items)
+                {
+                    var net = item.DonGiaChuaThue; var vat = item.ThueSuatVat; var discount = item.ChietKhau;
+                    if (item.MaBaoGia is > 0)
+                    {
+                        var quote = await _db.BaoGiaNhapHangs.AsNoTracking().FirstOrDefaultAsync(q => q.MaBaoGia == item.MaBaoGia &&
+                            q.MaBienThe == item.MaBienThe && q.MaNhaCungCap == supplier.MaNhaCungCap && q.TrangThai == "Hiệu lực" &&
+                            q.SoLuongToiThieu >= 1 && q.SoLuongToiThieu <= item.SoLuongNhap && q.NgayHieuLuc <= quoteNow && (q.NgayHetHan == null || q.NgayHetHan >= quoteNow));
+                        if (quote == null) throw new ArgumentException("Báo giá không còn phù hợp nhà cung cấp, thời hạn hoặc số lượng. Vui lòng chọn lại báo giá.");
+                        if (ImportOrderAmounts.Money(item.DonGiaChuaThue) != ImportOrderAmounts.Money(quote.DonGiaChuaThue) ||
+                            item.ThueSuatVat != quote.ThueSuatVat || ImportOrderAmounts.Money(item.ChietKhau) != ImportOrderAmounts.Money(quote.ChietKhau))
+                            throw new ArgumentException("Báo giá vừa thay đổi. Vui lòng mở lại bảng báo giá và xác nhận giá mới.");
+                        net = quote.DonGiaChuaThue; vat = quote.ThueSuatVat; discount = quote.ChietKhau;
+                    }
+                    var a = ImportOrderAmounts.CalculateLine(item.SoLuongNhap, net, vat, discount);
+                    amounts.Add(a);
+                    receipt.ChiTietPhieuNhapHangs.Add(new ChiTietPhieuNhapHang { MaBienThe = item.MaBienThe, SoLuongNhap = item.SoLuongNhap,
+                        DonGiaChuaThue = a.NetUnit, ThueSuatVat = vat, DonGiaNhapDuKien = a.GrossUnit, DonGiaSauThue = a.GrossUnit,
+                        TienThueVat = a.Vat, ChietKhau = a.DiscountUnit, ThanhTien = a.Total, GhiChu = item.GhiChu?.Trim() });
+                }
+                receipt.TienHangChuaThue = amounts.Sum(x => x.Net); receipt.TienThueVat = amounts.Sum(x => x.Vat);
+                receipt.TongTienDuKien = ImportOrderAmounts.CalculateTotal(amounts, model.ChiPhiVanChuyen, model.ChiPhiKhac, model.ChietKhauTong);
+                _db.PhieuNhapHangs.Add(receipt);
                 await _db.SaveChangesAsync();
-                nccId = newNcc.MaNhaCungCap;
-            }
-        }
-
-        // Tính toán các đại lượng tài chính chính xác ở backend
-        decimal totalNet = 0;
-        decimal totalVat = 0;
-        decimal totalGross = 0;
-
-        var phieu = new PhieuNhapHang
-        {
-            MaChungTu = maChungTu,
-            MaNhaCungCap = nccId,
-            NhaCungCap = supplierName,
-            LyDoNhap = model.LyDoNhap.Trim(),
-            DienGiai = model.DienGiai?.Trim(),
-            GhiChu = model.GhiChu?.Trim(),
-            TrangThai = "Chờ duyệt",
-            MaNguoiTao = currentUserId,
-            NgayTao = nowVn,
-            ChiPhiVanChuyen = model.ChiPhiVanChuyen,
-            ChiPhiKhac = model.ChiPhiKhac,
-            ChietKhau = model.ChietKhauTong
-        };
-
-        foreach (var item in model.Items.Where(x => x.MaBienThe > 0 && x.SoLuongNhap > 0))
-        {
-            // Nếu DonGiaChuaThue chưa có, tính ngược từ DonGiaNhapDuKien theo ThueSuatVat
-            var vatRate = item.ThueSuatVat > 0 ? item.ThueSuatVat : 10.00m;
-            var grossUnitPrice = item.DonGiaNhapDuKien;
-            var netUnitPrice = item.DonGiaChuaThue > 0 
-                ? item.DonGiaChuaThue 
-                : Math.Round(grossUnitPrice / (1 + (vatRate / 100m)), 2);
-            var itemVatUnit = Math.Round(grossUnitPrice - netUnitPrice, 2);
-            var lineSubtotal = grossUnitPrice * item.SoLuongNhap;
-            var lineVat = itemVatUnit * item.SoLuongNhap;
-            var lineNet = lineSubtotal - lineVat;
-
-            totalNet += lineNet;
-            totalVat += lineVat;
-            totalGross += lineSubtotal;
-
-            phieu.ChiTietPhieuNhapHangs.Add(new ChiTietPhieuNhapHang
-            {
-                MaBienThe = item.MaBienThe,
-                SoLuongNhap = item.SoLuongNhap,
-                DonGiaNhapDuKien = grossUnitPrice,
-                DonGiaChuaThue = netUnitPrice,
-                ThueSuatVat = vatRate,
-                TienThueVat = lineVat,
-                DonGiaSauThue = grossUnitPrice,
-                ChietKhau = item.ChietKhau,
-                ThanhTien = lineSubtotal,
-                GhiChu = item.GhiChu?.Trim()
+                await tx.CommitAsync();
+                return receipt.MaPhieuNhap;
             });
+            TempData["Success"] = "Đã lưu phiếu đề nghị nhập hàng.";
+            return RedirectToAction(nameof(Details), new { id = result });
         }
+        catch (ArgumentException ex) { ModelState.AddModelError("", ex.Message); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Không thể tạo phiếu nhập {DocumentCode}", documentCode);
+            ModelState.AddModelError("", "Chưa xác nhận được kết quả lưu phiếu. Vui lòng kiểm tra danh sách trước khi thử lại; giữ nguyên mã yêu cầu để tránh tạo trùng.");
+        }
+        _db.ChangeTracker.Clear();
+        return await InvalidCreateAsync(model);
+    }
 
-        phieu.TienHangChuaThue = totalNet;
-        phieu.TienThueVat = totalVat;
-        phieu.TongTienDuKien = totalGross + phieu.ChiPhiVanChuyen + phieu.ChiPhiKhac - phieu.ChietKhau;
+    private async Task<IActionResult> InvalidCreateAsync(ImportOrderCreateViewModel model)
+    { await PopulateAsync(model); return View("Create", model); }
 
-        _db.PhieuNhapHangs.Add(phieu);
-        await _db.SaveChangesAsync();
-
-        TempData["Success"] = $"Đã tạo phiếu đề nghị nhập hàng [{maChungTu}] thành công (Tổng tiền: {phieu.TongTienDuKien:N0}₫) và gửi Admin phê duyệt.";
-        return RedirectToAction(nameof(Index));
+    private async Task PopulateAsync(ImportOrderCreateViewModel model)
+    {
+        ViewBag.Suppliers = await _db.NhaCungCaps.AsNoTracking().Where(x => x.TrangThai == "Đang hợp tác")
+            .OrderBy(x => x.TenNhaCungCap).ToListAsync();
+        var variants = await _db.BienTheSanPhams.AsNoTracking().Include(x => x.MaSanPhamNavigation)
+            .OrderBy(x => x.MaSanPhamNavigation.TenSanPham).ToListAsync();
+        var byId = variants.ToDictionary(x => x.MaBienThe);
+        foreach (var item in model.Items ?? new())
+            if (byId.TryGetValue(item.MaBienThe, out var v))
+            { item.TenSanPham = v.MaSanPhamNavigation?.TenSanPham; item.MauSac = v.MauSac; item.PhienBan = v.PhienBan;
+              item.TonKhoHienTai = v.SoLuong; item.GiaBanHienTai = v.Gia; }
+        ViewBag.AllVariants = variants.Select(v => new { id = v.MaBienThe,
+            name = $"{v.MaSanPhamNavigation?.TenSanPham} ({v.MauSac} - {v.PhienBan})", price = v.Gia, stock = v.SoLuong }).ToList();
     }
 
     [HttpGet]
@@ -416,12 +252,8 @@ public class ImportOrderController : StaffControllerBase
         var vm = await _receiving.LoadAsync(id);
         if (vm == null) return NotFound();
         if (vm.TrangThai != "Đã duyệt")
-        {
-            TempData["Error"] = "Chỉ kiểm nhận phiếu đã duyệt và chưa nhập kho.";
-            return RedirectToAction(nameof(Details), new { id });
-        }
-        ViewData["ReceiveArea"] = "Staff";
-        ViewData["ReceiveAction"] = "ConfirmReceive";
+        { TempData["Error"] = "Chỉ kiểm nhận phiếu đã duyệt và chưa nhập kho."; return RedirectToAction(nameof(Details), new { id }); }
+        ViewData["ReceiveArea"] = "Staff"; ViewData["ReceiveAction"] = "ConfirmReceive";
         return View("~/Areas/Staff/Views/ImportOrder/Receive.cshtml", vm);
     }
 
@@ -429,15 +261,23 @@ public class ImportOrderController : StaffControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmReceive([FromForm] ImportOrderReceiveCommand model)
     {
-        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || userId <= 0)
-            return Challenge();
-        if (!ModelState.IsValid)
+        var result = ModelState.IsValid
+            ? await _receiving.ConfirmAsync(model, int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!))
+            : (Success: false, Message: "Số lượng hoặc ghi chú kiểm nhận không hợp lệ.");
+        if (result.Success)
+        { TempData["Success"] = result.Message; return RedirectToAction(nameof(Details), new { id = model.MaPhieuNhap }); }
+        var vm = await _receiving.LoadAsync(model.MaPhieuNhap);
+        if (vm == null) return NotFound();
+        if (vm.TrangThai != "Đã duyệt")
+        { TempData["Error"] = result.Message; return RedirectToAction(nameof(Details), new { id = model.MaPhieuNhap }); }
+        foreach (var line in vm.Items)
         {
-            TempData["Error"] = "Dữ liệu kiểm nhận không hợp lệ. Nhập số nguyên từ 0 đến 100.000, ghi chú tối đa 500 ký tự.";
-            return RedirectToAction(nameof(Receive), new { id = model.MaPhieuNhap });
+            var posted = model.Items?.FirstOrDefault(x => x.MaChiTietPhieuNhap == line.MaChiTietPhieuNhap);
+            if (posted != null) line.SoLuongThucNhan = posted.SoLuongThucNhan;
         }
-        var result = await _receiving.ConfirmAsync(model, userId);
-        TempData[result.Success ? "Success" : "Error"] = result.Message;
-        return RedirectToAction(result.Success ? nameof(Details) : nameof(Receive), new { id = model.MaPhieuNhap });
+        vm.GhiChuKiemNhan = model.GhiChuKiemNhan;
+        ModelState.AddModelError("", result.Message);
+        ViewData["ReceiveArea"] = "Staff"; ViewData["ReceiveAction"] = "ConfirmReceive";
+        return View("~/Areas/Staff/Views/ImportOrder/Receive.cshtml", vm);
     }
 }

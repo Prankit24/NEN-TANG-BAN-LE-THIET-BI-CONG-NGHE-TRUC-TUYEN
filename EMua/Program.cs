@@ -100,6 +100,7 @@ builder.Services.AddScoped<IAppEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<EmailVerificationService>();
 builder.Services.AddScoped<ISupplierQuotationService, SupplierQuotationService>();
 builder.Services.AddScoped<EMua.Services.ImportOrderReceivingService>();
+builder.Services.AddScoped<OrderWorkflowService>();
 
 // ============================================================
 // 4. SESSION
@@ -174,6 +175,9 @@ builder.Services.AddHttpClient<GroqService>(client =>
 builder.Services.AddScoped<AIServiceOrchestrator>();
 
 builder.Services.AddScoped<RecommendationService>();
+
+// Tra cứu tình trạng đơn hàng của khách bằng dữ liệu thật (không để AI đoán).
+builder.Services.AddScoped<OrderTrackingAssistant>();
 
 // ============================================================
 // 6. MVC VÀ HTTP CLIENT

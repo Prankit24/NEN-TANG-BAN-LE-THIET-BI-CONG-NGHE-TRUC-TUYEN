@@ -1,3 +1,4 @@
+@using EMua.Services
 @using EMua.ViewModels
 @model OrderDetailsViewModel
 @{
@@ -34,7 +35,7 @@
         return "/images/" + url;
     }
 
-    bool canEdit = Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán";
+    bool canEdit = Model.CanEdit;
     bool canActionAfterDelivery = Model.Status == "Đã hoàn thành" || Model.Status == "Đã giao";
 
     bool isReturnProcess = Model.Status == "Yêu cầu đổi trả" || Model.Status == "Đang đổi trả" || Model.Status == "Đã nhận đổi trả" || Model.Status == "Đã hoàn tiền" || Model.Status == "Từ chối đổi trả";
@@ -45,19 +46,21 @@
 
     if (isReturnProcess)
     {
-        progressSteps = new[] { "Yêu cầu đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền" };
-        stepIcons = new[] { "bi-exclamation-triangle-fill", "bi-arrow-repeat", "bi-cash-coin" };
-        stepLabels = new[] { "Đã gửi yêu cầu", "Shop đã nhận & xử lý", "Hoàn tất hoàn tiền" };
+        progressSteps = new[] { "Yêu cầu đổi trả", "Đang đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền" };
+        stepIcons = new[] { "bi-exclamation-triangle-fill", "bi-truck", "bi-arrow-repeat", "bi-cash-coin" };
+        stepLabels = new[] { "Đã gửi yêu cầu", "Shop duyệt & nhận hàng", "Shop đã nhận hàng trả", "Hoàn tất xử lý" };
     }
     else
     {
-        progressSteps = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành" };
-        stepIcons = new[] { "bi-receipt", "bi-truck", "bi-house-check-fill" };
-        stepLabels = new[] { "Đã đặt hàng", "Đang giao hàng", "Đã giao hàng" };
+        progressSteps = new[] { "Chờ xử lý", "Đang xử lý", "Đang giao hàng", "Đã hoàn thành" };
+        stepIcons = new[] { "bi-receipt", "bi-box-seam", "bi-truck", "bi-house-check-fill" };
+        stepLabels = new[] { "Đã đặt hàng", "Đang chuẩn bị hàng", "Đang giao hàng", "Đã giao hàng" };
     }
 
     var isCancelled = Model.Status == "Đã hủy";
-    var currentStepIndex = Array.IndexOf(progressSteps, Model.Status);
+    var isDeliveryFailed = Model.Status == OrderRules.DeliveryFailed;
+    // Giao thất bại vẫn nằm ở chặng "Đang giao hàng"; Chờ thanh toán / trạng thái lạ => bước đầu.
+    var currentStepIndex = Array.IndexOf(progressSteps, isDeliveryFailed ? OrderRules.Shipping : Model.Status);
     if (currentStepIndex < 0) currentStepIndex = 0;
 }
 
@@ -100,14 +103,36 @@
                 <i class="bi bi-x-octagon-fill me-1"></i> Đơn hàng đã bị hủy.
             </div>
         }
+        else if (Model.Status == "Từ chối đổi trả")
+        {
+            var rejectLog = Model.StatusHistory?.LastOrDefault(x => x.Status == "Từ chối đổi trả");
+            <div class="order-alert error mb-0">
+                <div class="fw-bold mb-1"><i class="bi bi-x-circle-fill me-1"></i> Yêu cầu đổi trả đã bị từ chối</div>
+                <div class="small">@(rejectLog?.Description ?? "Đơn hàng không đáp ứng đủ điều kiện chính sách đổi trả.")</div>
+            </div>
+        }
         else
         {
-            var pct = currentStepIndex * 50;
-            <div class="delivery-progress-track">
-                <div class="delivery-progress-fill" style="width:calc(@(pct)% * 0.88)"></div>
+            var pct = progressSteps.Length > 1 ? (currentStepIndex * 100.0 / (progressSteps.Length - 1)) : 0;
+            // Tâm của bước đầu/cuối nằm cách mép 50%/số bước; đoạn nối trải giữa hai tâm đó.
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            var halfPct = 50.0 / progressSteps.Length;
+            var fillPct = pct * (100.0 - 2 * halfPct) / 100.0;
+            var halfStr = halfPct.ToString("0.##", inv);
+            var fillStr = fillPct.ToString("0.##", inv);
+            var truckStr = (halfPct + fillPct).ToString("0.##", inv);
+            if (isDeliveryFailed)
+            {
+                <div class="order-alert error">
+                    <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Giao hàng chưa thành công</div>
+                    <div class="small">Đơn vị vận chuyển chưa giao được đơn của bạn. EMUA sẽ liên hệ để giao lại hoặc hỗ trợ hủy đơn. Bạn cũng có thể gọi hotline để được hỗ trợ nhanh hơn.</div>
+                </div>
+            }
+            <div class="delivery-progress-track" style="--steps:@progressSteps.Length; --half:@(halfStr)%">
+                <div class="delivery-progress-fill" style="width:@(fillStr)%"></div>
                 @if (currentStepIndex < progressSteps.Length - 1)
                 {
-                    <div class="delivery-truck-icon" style="left:calc(6% + @(pct)% * 0.88)">
+                    <div class="delivery-truck-icon" style="left:@(truckStr)%">
                         <i class="bi @(isReturnProcess ? "bi-arrow-repeat" : "bi-truck")"></i>
                     </div>
                 }
@@ -191,7 +216,7 @@
                 {
                     decimal unitPrice = item.Quantity > 0 ? (item.LineTotal / item.Quantity) : 0;
 
-                    <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice">
+                    <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                         <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-thumb-box">
                             <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" onerror="this.onerror=null; this.src='/images/default-product.png';" />
                         </a>
@@ -243,6 +268,12 @@
                 }
             </div>
 
+            <div class="small mb-3">
+                <div>Tiền hàng: <strong id="itemsSubtotal">@Model.Subtotal.ToString("N0") đ</strong></div>
+                <div>Phí giao: <strong id="shippingFeeDisplay">@(Model.ShippingFee.HasValue ? Model.ShippingFee.Value.ToString("N0") + " đ" : "Chưa có dữ liệu đã chốt")</strong></div>
+                <div>Giảm giá: <strong id="discountDisplay">@(Model.Discount.HasValue ? Model.Discount.Value.ToString("N0") + " đ" : "Chưa có dữ liệu đã chốt")</strong></div>
+            </div>
+            @if (!canEdit && Model.CanCancel) { <p class="small text-muted">@Model.EditBlockedReason</p> }
             <div class="summary-total mb-4">
                 <span>Tổng thanh toán</span>
                 <strong id="orderTotalDisplay">@Model.Total.ToString("N0") đ</strong>
@@ -362,13 +393,13 @@
 
                             <div class="mb-3">
                                 <label class="form-label text-dark fw-semibold small mb-1">Mô tả chi tiết sự cố <span class="text-danger">*</span></label>
-                                <textarea class="form-control" name="Description" rows="3" placeholder="Mô tả rõ tình trạng sản phẩm gặp sự cố..." required></textarea>
+                                <textarea class="form-control" name="Description" maxlength="200" rows="3" placeholder="Mô tả rõ tình trạng sản phẩm gặp sự cố..." required></textarea>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label text-dark fw-semibold small mb-1">Hình ảnh bằng chứng (nếu có)</label>
                                 <input type="file" name="EvidenceImages" class="form-control" accept="image/*" multiple onchange="previewReturnImages(this)">
-                                <small class="text-muted d-block mt-1">Có thể tải lên 1 hoặc nhiều ảnh chụp cận cảnh lỗi sản phẩm/mã đơn hàng.</small>
+                                <small class="text-muted d-block mt-1">Tối đa 5 ảnh JPG, PNG hoặc WebP; mỗi ảnh không quá 5 MB.</small>
                                 <div id="imagePreviewContainer" class="d-flex gap-2 flex-wrap mt-2"></div>
                             </div>
 
@@ -387,7 +418,8 @@
                                         <i class="bi bi-telephone-outbound-fill fs-6"></i>
                                     </a>
                                 </div>
-                                <input type="hidden" name="ContactPhone" value="0963453170" />
+                                <label class="form-label mt-2">Số điện thoại để cửa hàng liên hệ</label>
+                                <input type="tel" class="form-control" name="ContactPhone" maxlength="20" value="@Model.RecipientPhone" required />
                             </div>
 
                             <button type="submit" id="btnSubmitReturn" class="order-btn-action danger-button w-auto px-4">
@@ -418,14 +450,24 @@
                     </p>
                 </div>
 
-                @if (Model.PaymentMethod != "COD" && Model.PaymentStatus != "Đã thanh toán" && Model.Status != "Đã hủy")
+                @if (!OrderRules.IsCod(Model.PaymentMethod) && !OrderRules.IsPaid(Model.PaymentStatus) && Model.PaymentStatus != OrderRules.PaymentReported && Model.CanCancel)
                 {
                     <a asp-controller="Checkout" asp-action="Success" asp-route-id="@Model.OrderId" class="order-btn-action btn-primary-action mt-3">
                         <i class="bi bi-qr-code-scan me-1"></i> Tiếp tục thanh toán
                     </a>
                 }
 
-                @if (Model.Status == "Chờ xử lý" || Model.Status == "Chờ thanh toán")
+                @if (!OrderRules.IsCod(Model.PaymentMethod) && !OrderRules.IsPaid(Model.PaymentStatus) && Model.CanCancel) {
+                    @if (Model.PaymentStatus == OrderRules.PaymentReported) { <p class="small text-muted mt-2">Đang chờ nhân viên đối soát. Không chuyển tiền thêm.</p> }
+                    else {
+                        <form asp-action="ConfirmPayment" method="post" class="mt-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.OrderId" />
+                            <button type="submit" class="order-btn-action btn-primary-action">Tôi đã chuyển tiền — báo nhân viên kiểm tra</button>
+                        </form>
+                    }
+                }
+                @if (Model.CanCancel)
                 {
                     <form asp-action="Cancel" method="post" class="mt-3" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
                         @Html.AntiForgeryToken()
@@ -490,9 +532,9 @@
                 return;
             }
 
-            sendUpdateToServer(orderId, variantId, newQty, () => {
+            sendUpdateToServer(orderId, variantId, newQty, (result) => {
                 input.value = newQty;
-                recalculateTotals();
+                recalculateTotals(result);
             });
         }
 
@@ -505,38 +547,30 @@
 
             if (!confirm("Bạn có chắc muốn xóa sản phẩm này khỏi đơn hàng?")) return;
 
-            sendUpdateToServer(orderId, variantId, 0, () => {
+            sendUpdateToServer(orderId, variantId, 0, (result) => {
                 const row = document.getElementById(`product-row-${variantId}`);
                 if (row) row.remove();
-                recalculateTotals();
+                recalculateTotals(result);
             });
         }
 
-        function recalculateTotals() {
-            let totalOrder = 0;
-            const rows = document.querySelectorAll(".order-product-item");
-
-            rows.forEach(row => {
-                const unitPrice = parseFloat(row.getAttribute("data-unit-price")) || 0;
-                const qtyInput = row.querySelector(".input-qty");
-                const qty = qtyInput ? (parseInt(qtyInput.value) || 0) : 1;
-
-                const lineTotal = unitPrice * qty;
-                totalOrder += lineTotal;
-
-                const lineTotalElem = row.querySelector(".line-total-val");
-                if (lineTotalElem) {
-                    lineTotalElem.textContent = lineTotal.toLocaleString('vi-VN') + " đ";
-                }
+        function recalculateTotals(result) {
+            document.querySelectorAll(".order-product-item").forEach(row => {
+                const qty = Number(row.querySelector(".input-qty")?.value || 0);
+                const total = Number(row.getAttribute("data-unit-price")) * qty;
+                const target = row.querySelector(".line-total-val");
+                if (target) target.textContent = total.toLocaleString('vi-VN') + ' đ';
             });
-
-            const totalDisplay = document.getElementById("orderTotalDisplay");
-            if (totalDisplay) {
-                totalDisplay.textContent = totalOrder.toLocaleString('vi-VN') + " đ";
+            for (const [id, value] of [['orderTotalDisplay', result.orderTotal], ['itemsSubtotal', result.subtotal], ['shippingFeeDisplay', result.shippingFee], ['discountDisplay', result.discount]]) {
+                const target = document.getElementById(id);
+                if (target && value != null) target.textContent = Number(value).toLocaleString('vi-VN') + ' đ';
             }
         }
+        let updatingOrder = false;
 
         async function sendUpdateToServer(orderId, variantId, quantity, onSuccess) {
+            if (updatingOrder) return;
+            updatingOrder = true;
             try {
                 const response = await fetch('/Order/UpdateOrderItem', {
                     method: 'POST',
@@ -555,8 +589,8 @@
                 if (onSuccess) onSuccess(result);
             } catch (err) {
                 console.error("Lỗi khi kết nối server:", err);
-                alert("Không thể kết nối tới server, vui lòng thử lại.");
-            }
+                alert("Chưa xác định được kết quả cập nhật. Hãy tải lại đơn trước khi sửa tiếp.");
+            } finally { updatingOrder = false; }
         }
 
         function previewReturnImages(input) {

@@ -58,6 +58,16 @@
 </style>
 
 <div class="po-page">
+    <partial name="~/Views/Shared/_ImportOrderMessages.cshtml" />
+    @{
+        var expectedTotal = Model.ChiTietPhieuNhapHangs.Sum(x => (x.DonGiaNhapDuKien - x.ChietKhau) * x.SoLuongNhap)
+            + Model.ChiPhiVanChuyen + Model.ChiPhiKhac - Model.ChietKhau;
+    }
+    @if (Math.Abs(expectedTotal - Model.TongTienDuKien) > 0.01m)
+    {
+        <div class="alert alert-warning py-2 mb-2">Tổng tiền lưu trong phiếu chưa khớp chi tiết và chiết khấu. Cần đối chiếu phiếu lịch sử; hệ thống không tự sửa số tiền đã lưu.</div>
+    }
+
     <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
         <div class="text-muted small">
             Mã chứng từ: <strong class="text-primary">@Model.MaChungTu</strong> | Ngày lập: <strong>@Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</strong> | Người lập: <strong>@(Model.MaNguoiTaoNavigation?.TenNguoiDung ?? "Nhân viên")</strong>
@@ -112,7 +122,7 @@
 
                     <div class="po-info-item border-top pt-2">
                         <span class="text-muted small d-block">Tổng giá trị dự kiến:</span>
-                        <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N0") ₫</span>
+                        <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N2") ₫</span>
                     </div>
 
                     @if (Model.MaNguoiDuyetNavigation != null)
@@ -169,8 +179,8 @@
                                 <th>Sản phẩm / Biến thể</th>
                                 <th class="text-center" style="width: 90px;">Tồn hiện tại</th>
                                 <th class="text-center" style="width: 90px;">SL Đề nghị</th>
-                                <th class="text-end" style="width: 120px;">Đơn giá dự kiến</th>
-                                <th class="text-end" style="width: 130px;">Thành tiền</th>
+                                <th class="text-end" style="width: 120px;">Giá sau VAT / SP</th>
+                                <th class="text-end" style="width: 130px;">Sau chiết khấu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -182,6 +192,8 @@
                                     <td>
                                         <div class="fw-bold text-dark">@(prod?.TenSanPham ?? "Sản phẩm")</div>
                                         <small class="text-muted">Phân loại: @(variant?.MauSac ?? "—") - @(variant?.PhienBan ?? "—")</small>
+                                        @if (item.ChietKhau > 0)
+                                        { <div class="small text-success">Chiết khấu / SP: @item.ChietKhau.ToString("N2") ₫</div> }
                                         @if (!string.IsNullOrWhiteSpace(item.GhiChu))
                                         {
                                             <div class="small text-muted">@item.GhiChu</div>
@@ -193,15 +205,19 @@
                                         </span>
                                     </td>
                                     <td class="text-center fw-bold text-primary">@item.SoLuongNhap</td>
-                                    <td class="text-end">@item.DonGiaNhapDuKien.ToString("N0") ₫</td>
-                                    <td class="text-end fw-bold text-dark">@((item.SoLuongNhap * item.DonGiaNhapDuKien).ToString("N0")) ₫</td>
+                                    <td class="text-end">@item.DonGiaNhapDuKien.ToString("N2") ₫</td>
+                                    <td class="text-end fw-bold text-dark">@((Math.Max(0m, item.DonGiaNhapDuKien - item.ChietKhau) * item.SoLuongNhap).ToString("N2")) ₫</td>
                                 </tr>
                             }
                         </tbody>
                         <tfoot class="table-light">
+                            <tr><td colspan="4" class="text-end">Tiền hàng sau VAT, trước chiết khấu:</td><td class="text-end">@Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.DonGiaNhapDuKien).ToString("N2") ₫</td></tr>
+                            <tr><td colspan="4" class="text-end">Chiết khấu từng dòng:</td><td class="text-end">-@Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.ChietKhau).ToString("N2") ₫</td></tr>
+                            <tr><td colspan="4" class="text-end">Vận chuyển và chi phí khác:</td><td class="text-end">@((Model.ChiPhiVanChuyen + Model.ChiPhiKhac).ToString("N2")) ₫</td></tr>
+                            <tr><td colspan="4" class="text-end">Chiết khấu toàn phiếu:</td><td class="text-end">-@Model.ChietKhau.ToString("N2") ₫</td></tr>
                             <tr>
                                 <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
-                                <td class="text-end fw-bold text-primary">@Model.TongTienDuKien.ToString("N0") ₫</td>
+                                <td class="text-end fw-bold text-primary">@Model.TongTienDuKien.ToString("N2") ₫</td>
                             </tr>
                         </tfoot>
                     </table>

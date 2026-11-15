@@ -137,6 +137,13 @@ public class OrderItemSummaryViewModel
 
 public class OrderDetailsViewModel
 {
+    public decimal Subtotal { get; set; }
+    public decimal? ShippingFee { get; set; }
+    public decimal? Discount { get; set; }
+    public bool CanEdit { get; set; }
+    public bool CanCancel { get; set; }
+    public string? EditBlockedReason { get; set; }
+
     public int OrderId { get; set; }
     public DateTime? OrderedAt { get; set; }
     public decimal Total { get; set; }
