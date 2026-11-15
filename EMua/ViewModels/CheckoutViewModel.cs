@@ -19,7 +19,7 @@ public class CheckoutViewModel
     }
 
     [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "Số điện thoại không hợp lệ (Phải đúng định dạng SĐT Việt Nam 10 số).")]
+    [RegularExpression(@"^0[35789][0-9]{8}$", ErrorMessage = "Số điện thoại không hợp lệ (Phải đúng định dạng SĐT Việt Nam 10 số).")]
     public string PhoneNumber { get; set; } = string.Empty;
 
     public string RecipientPhone
@@ -38,7 +38,7 @@ public class CheckoutViewModel
         set => Address = value;
     }
 
-    [StringLength(500, ErrorMessage = "Ghi chú không được quá 500 ký tự.")]
+    [StringLength(255, ErrorMessage = "Ghi chú không được quá 255 ký tự.")]
     public string? Note { get; set; }
 
 
@@ -133,7 +133,7 @@ public class PlaceOrderRequest
     public string FullName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
-    [RegularExpression(@"^(0[3|5|7|8|9])+([0-9]{8})$", ErrorMessage = "Số điện thoại không hợp lệ.")]
+    [RegularExpression(@"^0[35789][0-9]{8}$", ErrorMessage = "Số điện thoại không hợp lệ.")]
     public string PhoneNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập địa chỉ nhận hàng.")]

@@ -14,11 +14,13 @@ public class OrderController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly OrderWorkflowService _workflow;
 
-    public OrderController(EMuaDbContext db, IWebHostEnvironment env)
+    public OrderController(EMuaDbContext db, IWebHostEnvironment env, OrderWorkflowService workflow)
     {
         _db = db;
         _env = env;
+        _workflow = workflow;
     }
 
     [HttpGet]
@@ -44,13 +46,14 @@ public class OrderController : Controller
 
                     ProductImageUrl = !string.IsNullOrEmpty(i.MaBienTheNavigation.HinhAnh)
                         ? i.MaBienTheNavigation.HinhAnh
-                        : i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.FirstOrDefault().DuongDanAnh,
+                        : i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.Select(a => a.DuongDanAnh).FirstOrDefault() ?? "/images/no-image.png",
 
                     Quantity = i.SoLuong,
                     Price = i.DonGia
                 }).ToList()
             }).ToListAsync();
 
+        foreach (var item in orders) item.Status = OrderRules.Normalize(item.Status);
         return View(orders);
     }
 
@@ -60,6 +63,7 @@ public class OrderController : Controller
         var order = await _db.DonHangs.AsNoTracking()
             .Include(x => x.ChiTietDonHangs).ThenInclude(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
             .Include(x => x.ThanhToans).Include(x => x.LichSuVanChuyens)
+            .Include(x => x.HoaDon).ThenInclude(x => x!.ChiTietHoaDons)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.MaDonHang == id && x.MaNguoiDung == CurrentUserId());
 
@@ -79,12 +83,20 @@ public class OrderController : Controller
             OrderId = order.MaDonHang,
             OrderedAt = order.NgayDat,
             Total = order.TongTien ?? 0,
-            Status = order.TrangThaiDonHang ?? "Chờ xử lý",
+            Status = OrderRules.Normalize(order.TrangThaiDonHang),
+            Subtotal = order.ChiTietDonHangs.Sum(x => x.ThanhTien),
+            ShippingFee = order.PhiVanChuyenDaChot,
+            Discount = order.TienGiamGiaDaChot,
+            CanEdit = OrderWorkflowService.EditBlockedReason(order) == null,
+            CanCancel = OrderRules.IsPending(order.TrangThaiDonHang),
+            EditBlockedReason = OrderWorkflowService.EditBlockedReason(order),
             RecipientName = order.HoTenNhanHang ?? string.Empty,
             RecipientPhone = order.SoDienThoaiNhanHang ?? string.Empty,
             ShippingAddress = order.DiaChiNhanHang ?? string.Empty,
             PaymentMethod = payment?.PhuongThuc ?? "COD",
-            PaymentStatus = payment?.TrangThai ?? "Chưa thanh toán",
+            PaymentStatus = payment?.TrangThai ?? "Chưa xác định",
+            EstimatedDeliveryDate = order.NgayDuKienGiao?.AddHours(7),
+            DeliveryProofImageUrl = order.AnhXacNhanGiao,
             Items = order.ChiTietDonHangs.Select(x => new CartItemViewModel
             {
                 ProductId = x.MaBienTheNavigation.MaSanPham,
@@ -111,21 +123,8 @@ public class OrderController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id)
     {
-        var order = await _db.DonHangs.Include(x => x.ChiTietDonHangs)
-            .FirstOrDefaultAsync(x => x.MaDonHang == id && x.MaNguoiDung == CurrentUserId());
-        if (order == null) return NotFound();
-        if (order.TrangThaiDonHang != "Chờ xử lý")
-        {
-            TempData["Error"] = "Đơn hàng chỉ được hủy khi đang chờ xử lý.";
-            return RedirectToAction(nameof(Details), new { id });
-        }
-        var ids = order.ChiTietDonHangs.Select(x => x.MaBienThe).ToList();
-        var variants = await _db.BienTheSanPhams.Where(x => ids.Contains(x.MaBienThe)).ToListAsync();
-        foreach (var item in order.ChiTietDonHangs) variants.First(x => x.MaBienThe == item.MaBienThe).SoLuong += item.SoLuong;
-        order.TrangThaiDonHang = "Đã hủy";
-        _db.LichSuVanChuyens.Add(new LichSuVanChuyen { MaDonHang = id, TrangThai = "Đã hủy", MoTa = "Khách hàng đã hủy đơn.", ThoiGian = DateTime.Now });
-        await _db.SaveChangesAsync();
-        TempData["Success"] = "Đã hủy đơn hàng.";
+        var result = await _workflow.CancelAsync(id, CurrentUserId());
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -133,97 +132,38 @@ public class OrderController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmPayment(int id)
     {
-        var payment = await _db.ThanhToans.Include(x => x.MaDonHangNavigation)
-            .FirstOrDefaultAsync(x => x.MaDonHang == id && x.MaDonHangNavigation.MaNguoiDung == CurrentUserId());
-        if (payment == null) return NotFound();
-        if (payment.PhuongThuc != "COD")
-        {
-            payment.TrangThai = "Đã thanh toán";
-            payment.MaGiaoDich = $"LOCAL-{Guid.NewGuid():N}"[..20];
-            payment.NgayThanhToan = DateTime.Now;
-            await _db.SaveChangesAsync();
-            TempData["Success"] = "Thanh toán đã được ghi nhận.";
-        }
+        var result = await _workflow.ReportPaymentAsync(id, CurrentUserId());
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
         return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RequestReturn(
-        int orderId,
-        List<int> selectedVariantIds,
-        string reason,
-        string description,
-        string contactPhone,
-        List<IFormFile>? evidenceImages)
+    public async Task<IActionResult> RequestReturn(int orderId, List<int>? selectedVariantIds,
+        string? reason, string? description, string? contactPhone, List<IFormFile>? evidenceImages)
     {
-        var userId = CurrentUserId();
-        var order = await _db.DonHangs
-            .Include(x => x.ChiTietDonHangs)
-            .FirstOrDefaultAsync(x => x.MaDonHang == orderId && x.MaNguoiDung == userId);
-
-        if (order == null) return NotFound();
-
-        if (order.TrangThaiDonHang != "Đã hoàn thành" && order.TrangThaiDonHang != "Đã giao")
+        var paths = new List<string>();
+        try
         {
-            TempData["Error"] = "Đơn hàng chưa hoàn thành nên không thể yêu cầu đổi trả.";
-            return RedirectToAction(nameof(Details), new { id = orderId });
+            if (evidenceImages?.Count > 5) throw new ArgumentException("Tối đa 5 ảnh bằng chứng.");
+            if (!await _db.DonHangs.AnyAsync(x => x.MaDonHang == orderId && x.MaNguoiDung == CurrentUserId())) return NotFound();
+            foreach (var image in evidenceImages ?? new List<IFormFile>())
+                paths.Add(await OrderEvidenceStorage.SaveAsync(_env.WebRootPath, image, "returns"));
+            var result = await _workflow.RequestReturnAsync(orderId, CurrentUserId(), (selectedVariantIds ?? new()).Distinct().ToArray(),
+                reason ?? "", description ?? "", contactPhone ?? "", paths);
+            if (!result.ProofUsed && !result.Uncertain) foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
         }
-
-        if (selectedVariantIds == null || !selectedVariantIds.Any())
+        catch (ArgumentException ex)
         {
-            TempData["Error"] = "Vui lòng chọn ít nhất một sản phẩm cần đổi trả.";
-            return RedirectToAction(nameof(Details), new { id = orderId });
+            foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
+            TempData["Error"] = ex.Message;
         }
-
-        var savedImagePaths = new List<string>();
-        if (evidenceImages != null && evidenceImages.Count > 0)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            string uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "returns");
-            if (!Directory.Exists(uploadFolder))
-            {
-                Directory.CreateDirectory(uploadFolder);
-            }
-
-            foreach (var file in evidenceImages)
-            {
-                if (file.Length > 0)
-                {
-                    string fileName = $"return_{orderId}_{Guid.NewGuid():N}{Path.GetExtension(file.FileName)}";
-                    string filePath = Path.Combine(uploadFolder, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    savedImagePaths.Add($"/uploads/returns/{fileName}");
-                }
-            }
+            foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
+            TempData["Error"] = "Không lưu được ảnh bằng chứng. Kiểm tra thư mục tải ảnh rồi thử lại.";
         }
-
-        order.TrangThaiDonHang = "Yêu cầu đổi trả";
-
-        string imageEvidenceText = savedImagePaths.Any()
-            ? $"\n- Ảnh bằng chứng: {string.Join(", ", savedImagePaths)}"
-            : "";
-
-        string returnDescription = $"[YÊU CẦU ĐỔI TRẢ/HOÀN TIỀN]\n" +
-                                  $"- Sản phẩm Variant IDs: {string.Join(", ", selectedVariantIds)}\n" +
-                                  $"- Lý do: {reason}\n" +
-                                  $"- Mô tả: {description}\n" +
-                                  $"- SĐT Hotline cửa hàng hỗ trợ: {contactPhone}" +
-                                  imageEvidenceText;
-
-        _db.LichSuVanChuyens.Add(new LichSuVanChuyen
-        {
-            MaDonHang = orderId,
-            TrangThai = "Yêu cầu đổi trả",
-            MoTa = returnDescription,
-            ThoiGian = DateTime.Now
-        });
-
-        await _db.SaveChangesAsync();
-
-        TempData["Success"] = "Yêu cầu đổi trả của bạn đã được gửi thành công. EMUA sẽ liên hệ hỗ trợ bạn sớm nhất!";
         return RedirectToAction(nameof(Details), new { id = orderId });
     }
 
@@ -234,60 +174,15 @@ public class OrderController : Controller
         public int Quantity { get; set; }
     }
 
-    private static readonly string[] EditableOrderStatuses = { "Chờ xử lý", "Chờ thanh toán" };
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateOrderItem([FromBody] UpdateOrderItemRequest req)
+    public async Task<IActionResult> UpdateOrderItem([FromBody] UpdateOrderItemRequest? req)
     {
-        var order = await _db.DonHangs
-            .Include(x => x.ChiTietDonHangs)
-            .FirstOrDefaultAsync(x => x.MaDonHang == req.OrderId && x.MaNguoiDung == CurrentUserId());
-
-        if (order == null)
-            return Json(new { success = false, message = "Không tìm thấy đơn hàng." });
-
-        if (!EditableOrderStatuses.Contains(order.TrangThaiDonHang))
-            return Json(new { success = false, message = "Đơn hàng này không còn ở trạng thái cho phép chỉnh sửa." });
-
-        var line = order.ChiTietDonHangs.FirstOrDefault(x => x.MaBienThe == req.VariantId);
-        if (line == null)
-            return Json(new { success = false, message = "Không tìm thấy sản phẩm trong đơn hàng." });
-
-        var variant = await _db.BienTheSanPhams.FirstOrDefaultAsync(x => x.MaBienThe == req.VariantId);
-        int oldQty = line.SoLuong;
-
-        if (req.Quantity <= 0)
-        {
-            if (order.ChiTietDonHangs.Count <= 1)
-                return Json(new { success = false, message = "Đơn hàng phải có ít nhất 1 sản phẩm. Nếu muốn huỷ toàn bộ đơn, vui lòng dùng nút \"Hủy đơn hàng\"." });
-
-            if (variant != null) variant.SoLuong += oldQty;
-            _db.ChiTietDonHangs.Remove(line);
-        }
-        else
-        {
-            int delta = req.Quantity - oldQty;
-            if (delta > 0 && variant != null && variant.SoLuong < delta)
-                return Json(new { success = false, message = $"Chỉ còn {variant.SoLuong} sản phẩm trong kho." });
-
-            if (variant != null) variant.SoLuong -= delta;
-            line.SoLuong = req.Quantity;
-            line.ThanhTien = line.DonGia * req.Quantity;
-        }
-
-        await _db.SaveChangesAsync();
-
-        var remaining = await _db.ChiTietDonHangs.Where(x => x.MaDonHang == order.MaDonHang).ToListAsync();
-        order.TongTien = remaining.Sum(x => x.ThanhTien);
-        await _db.SaveChangesAsync();
-
-        return Json(new
-        {
-            success = true,
-            orderTotal = order.TongTien,
-            orderStatus = order.TrangThaiDonHang
-        });
+        if (req == null || !ModelState.IsValid) return BadRequest(new { success = false, message = "Dữ liệu số lượng không hợp lệ." });
+        var result = await _workflow.EditItemAsync(req.OrderId, CurrentUserId(), req.VariantId, req.Quantity);
+        return Json(new { success = result.Success, message = result.Message, orderTotal = result.Totals?.Total,
+            subtotal = result.Totals?.Subtotal, shippingFee = result.Totals?.Shipping, discount = result.Totals?.Discount, orderStatus = result.Status });
     }
 
     // =========================================================
@@ -402,7 +297,7 @@ public class OrderController : Controller
         public int OrderId { get; set; }
     }
 
-    private int CurrentUserId() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private int CurrentUserId() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : 0;
 
     // XEM / IN PHIẾU TẠM TÍNH (PROFORMA INVOICE) CHO KHÁCH HÀNG HOẶC STAFF
     [HttpGet]
@@ -417,7 +312,9 @@ public class OrderController : Controller
             .Include(d => d.MaKhuyenMaiNavigation)
             .Include(d => d.ThanhToans)
             .Include(d => d.HoaDon)
-            .FirstOrDefaultAsync(d => d.MaDonHang == id && d.MaNguoiDung == userId);
+             .FirstOrDefaultAsync(d => d.MaDonHang == id);
+        if (order != null && order.MaNguoiDung != userId && !await _db.NguoiDungs.AsNoTracking().AnyAsync(u => u.MaNguoiDung == userId && u.TrangThai &&
+            new[] { "Admin", "Quản trị viên", "NhanVien", "Nhân viên" }.Contains(u.MaQuyenNavigation.TenQuyen))) return Forbid();
 
         if (order == null) return NotFound("Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.");
 
@@ -438,7 +335,7 @@ public class OrderController : Controller
             decimal grossTotal = ct.ThanhTien;
             decimal vatAmt = VatConfigService.CalculateVatAmount(grossTotal, vatRule.RatePercent);
             decimal netTotal = grossTotal - vatAmt;
-            decimal netUnit = Math.Round(netTotal / ct.SoLuong, 2, MidpointRounding.AwayFromZero);
+            decimal netUnit = Math.Round(netTotal / Math.Max(1, ct.SoLuong), 2, MidpointRounding.AwayFromZero);
 
             itemsGrossTotal += grossTotal;
             itemsNetTotal += netTotal;
@@ -460,35 +357,28 @@ public class OrderController : Controller
             });
         }
 
-        decimal voucherDiscount = 0m;
-        string? voucherCode = order.MaKhuyenMaiNavigation?.MaCode;
-        if (order.MaKhuyenMaiNavigation != null)
+        var finalTotal = order.TongTien ?? 0m;
+        decimal? fee = order.PhiVanChuyenDaChot;
+        decimal? discount = order.TienGiamGiaDaChot;
+        if (!fee.HasValue || !discount.HasValue)
         {
-            var km = order.MaKhuyenMaiNavigation;
-            if (km.LoaiGiamGia != null && (km.LoaiGiamGia.Contains("%") || km.LoaiGiamGia.Contains("trăm", StringComparison.OrdinalIgnoreCase)))
-            {
-                voucherDiscount = Math.Round(itemsGrossTotal * km.GiaTriGiam / 100m, 0, MidpointRounding.AwayFromZero);
-            }
-            else
-            {
-                voucherDiscount = km.GiaTriGiam;
-            }
-            voucherDiscount = Math.Clamp(voucherDiscount, 0m, itemsGrossTotal);
+            try { OrderWorkflowService.ValidateExistingPricing(order); fee = OrderRules.ShippingFee(itemsGrossTotal, OrderRules.IsExpress(order.PhuongThucVanChuyen)); discount = 0m; }
+            catch (ArgumentException) { return Conflict("Đơn cũ thiếu dữ liệu phí giao và giảm giá đã chốt. Cần nhân viên đối chiếu trước khi in phiếu chi tiết tiền."); }
         }
-
-        decimal finalTotal = order.TongTien ?? Math.Max(0m, itemsGrossTotal - voucherDiscount);
-        decimal shippingFee = Math.Max(0m, finalTotal + voucherDiscount - itemsGrossTotal);
+        decimal voucherDiscount = discount.Value;
+        decimal shippingFee = fee.Value;
+        string? voucherCode = order.MaKhuyenMaiNavigation?.MaCode;
 
         var vm = new ProformaInvoiceViewModel
         {
             OrderId = order.MaDonHang,
             OrderDate = order.NgayDat ?? DateTime.Now,
-            OrderStatus = order.TrangThaiDonHang ?? "Chờ xử lý",
+            OrderStatus = OrderRules.Normalize(order.TrangThaiDonHang),
             CustomerName = order.HoTenNhanHang ?? "Khách hàng",
             CustomerPhone = order.SoDienThoaiNhanHang ?? "",
             ShippingAddress = order.DiaChiNhanHang ?? "",
             PaymentMethod = payment?.PhuongThuc ?? "Thanh toán khi nhận hàng (COD)",
-            PaymentStatus = payment?.TrangThai ?? (order.TrangThaiDonHang == "Đã hoàn thành" ? "Đã thanh toán" : "Chưa thanh toán"),
+            PaymentStatus = payment?.TrangThai ?? "Chưa xác định",
             ShippingMethod = order.PhuongThucVanChuyen ?? "Giao hàng tiêu chuẩn",
             Note = order.GhiChu,
             ItemsGrossTotal = itemsGrossTotal,

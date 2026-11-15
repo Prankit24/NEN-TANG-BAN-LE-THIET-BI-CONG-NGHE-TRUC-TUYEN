@@ -1,3 +1,4 @@
+using EMua.Services;
 using EMua.Areas.Staff.Models;
 using EMua.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -59,9 +60,11 @@ public class DashboardController : StaffControllerBase
         var orders = _db.DonHangs.AsNoTracking();
 
         // 1. Số liệu việc cần xử lý ngay (toàn hệ thống)
-        var pendingOrderCount = await orders.CountAsync(x => x.TrangThaiDonHang == null || x.TrangThaiDonHang == "Chờ xử lý" || x.TrangThaiDonHang == "Chờ xác nhận");
+        var pendingOrderCount = await orders.CountAsync(x => string.IsNullOrWhiteSpace(x.TrangThaiDonHang) || OrderRules.PendingAliases.Contains(x.TrangThaiDonHang!));
         var returnRequestCount = await orders.CountAsync(x => x.TrangThaiDonHang != null && (x.TrangThaiDonHang.Contains("đổi trả") || x.TrangThaiDonHang.Contains("Đổi trả") || x.TrangThaiDonHang.Contains("hoàn tiền")));
-        var processingOrderCount = await orders.CountAsync(x => x.TrangThaiDonHang == "Đang xử lý");
+        // Đơn đang trong quá trình giao: đang xử lý + đang giao hàng + giao thất bại (chưa kết thúc).
+        var inDeliveryStatuses = OrderRules.ProcessingAliases.Concat(OrderRules.ShippingAliases).Concat(OrderRules.DeliveryFailedAliases).ToArray();
+        var processingOrderCount = await orders.CountAsync(x => inDeliveryStatuses.Contains(x.TrangThaiDonHang!));
 
         var successfulOrders = orders.Where(x =>
             x.NgayDat != null &&

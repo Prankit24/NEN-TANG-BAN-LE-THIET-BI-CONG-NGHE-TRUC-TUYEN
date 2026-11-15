@@ -2,6 +2,18 @@
 @using EMua.Services
 @{
     Layout = null;
+    if (!InvoiceSnapshotRules.IsComplete(Model))
+    {
+        <div role="alert" style="padding:24px;font-family:Arial,sans-serif">
+            <h3>Hóa đơn chưa đủ dữ liệu để hiển thị hoặc in</h3>
+            <p>Chi tiết hàng, phí giao, giảm giá hoặc tổng tiền đã lưu chưa đầy đủ hay không khớp. Vui lòng nhờ nhân viên đối chiếu và hoàn thiện chứng từ.</p>
+            <p>Mã hóa đơn: #HD-@Model.MaHoaDon.ToString("D5")</p>
+        </div>
+        return;
+    }
+}
+@{
+    Layout = null;
     var order = Model.MaDonHangNavigation;
     var hasSnapshot = Model.ChiTietHoaDons != null && Model.ChiTietHoaDons.Any();
     var legacyDetails = ViewBag.LegacyDetails as List<EMua.Models.Database.ChiTietDonHang>;
@@ -13,13 +25,13 @@
             ? (!string.IsNullOrWhiteSpace(Model.MaNguoiLapNavigation.TenNguoiDung) ? Model.MaNguoiLapNavigation.TenNguoiDung : Model.MaNguoiLapNavigation.TenDangNhap)
             : "Chưa xác định");
 
-    decimal finalTotal = Model.TongTien ?? (order?.TongTien ?? 0m);
+    decimal finalTotal = Model.TongTien!.Value;
 
     decimal itemsTotal = hasSnapshot
         ? (Model.ChiTietHoaDons?.Sum(x => x.ThanhTien) ?? 0m)
         : (legacyDetails?.Sum(x => x.ThanhTien) ?? 0m);
 
-    decimal shippingFee = Model.PhiVanChuyen ?? Math.Max(0m, finalTotal - itemsTotal);
+    decimal shippingFee = Model.PhiVanChuyen!.Value;
     decimal vatTotal = Model.TienThueVat ?? (hasSnapshot ? (Model.ChiTietHoaDons?.Sum(x => x.TienThueVat) ?? 0m) : 0m);
     decimal netTotal = Model.TienTruocThue ?? (itemsTotal - vatTotal);
 }
@@ -335,26 +347,9 @@
             </div>
             <div class="col-6">
                 <p class="fw-bold mb-1 small text-uppercase">ĐẠI DIỆN ĐƠN VỊ BÁN HÀNG</p>
-                <p class="text-muted" style="font-size: 11px;">(Ký số kỹ thuật / đóng dấu điện tử)</p>
+                <p class="text-muted" style="font-size: 11px;">(Chưa ký số)</p>
                 
-                @if (digitalSig != null && digitalSig.IsSigned)
-                {
-                    <div class="digital-sign-box mt-2">
-                        <i class="bi bi-shield-fill-check digital-sign-stamp"></i>
-                        <div class="fw-bold text-success small mb-1"><i class="bi bi-check-circle-fill me-1"></i> ĐÃ KÝ SỐ KỸ THUẬT (DEMO)</div>
-                        <div style="font-size: 10.5px; line-height: 1.35;" class="text-dark">
-                            <div><strong>Ký bởi:</strong> @digitalSig.CertificateSubject</div>
-                            <div><strong>Cơ quan chứng thực:</strong> @digitalSig.CertificateIssuer</div>
-                            <div><strong>Ngày ký:</strong> @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm:ss") ?? DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"))</div>
-                            <div class="text-muted mt-1 fst-italic">Bản mô phỏng kỹ thuật, không có giá trị pháp lý hóa đơn thuế thực tế.</div>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div style="height: 60px;"></div>
-                    <p class="fw-semibold small">@nguoiLap</p>
-                }
+                <div class="small text-muted">CHƯA KÝ SỐ — chưa có chữ ký được tạo và xác minh cho hóa đơn này.</div>
             </div>
         </div>
     </main>

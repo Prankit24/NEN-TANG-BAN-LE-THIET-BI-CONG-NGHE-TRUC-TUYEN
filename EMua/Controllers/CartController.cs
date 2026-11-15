@@ -220,6 +220,7 @@ public class CartController : Controller
         {
             // Không ghi vào bảng giỏ hàng: thanh toán riêng đúng phiên bản và số lượng đã chọn.
             TempData["Checkout_BuyNowExpected"] = true;
+            TempData.Remove("Checkout_RequestKey");
             HttpContext.Session.SetInt32("Checkout_BuyNowUserId", userId.Value);
             HttpContext.Session.SetInt32("Checkout_BuyNowVariantId", variantId);
             HttpContext.Session.SetInt32("Checkout_BuyNowQuantity", quantity);

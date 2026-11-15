@@ -78,6 +78,7 @@
         </a>
     </div>
 
+    <partial name="~/Views/Shared/_ImportOrderMessages.cshtml" />
     <form asp-area="@receiveArea" asp-controller="ImportOrder" asp-action="@receiveAction" method="post" id="receiveImportOrderForm" class="staff-card p-3 bg-white border">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="MaPhieuNhap" />
@@ -138,8 +139,7 @@
                                 <td class="text-center"><span class="badge bg-light text-dark border fw-bold">@item.SoLuongDeNghi</span></td>
                                 <td>
                                     <input type="number"
-                                           name="Items[@i].SoLuongThucNhan"
-                                           value="@item.SoLuongThucNhan"
+                                           asp-for="Items[i].SoLuongThucNhan"
                                            min="0"
                                            step="1"
                                            max="100000"

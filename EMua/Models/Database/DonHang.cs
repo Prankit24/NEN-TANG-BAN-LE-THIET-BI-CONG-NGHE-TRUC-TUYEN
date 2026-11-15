@@ -40,6 +40,21 @@ public partial class DonHang
 
     public int? MaKhuyenMai { get; set; }
 
+    // Giá trị và điều kiện ưu đãi lưu tại lúc chốt đơn, không phụ thuộc thay đổi mã sau này.
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? PhiVanChuyenDaChot { get; set; }
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? TienGiamGiaDaChot { get; set; }
+    [StringLength(30)]
+    public string? LoaiKhuyenMaiDaChot { get; set; }
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? GiaTriKhuyenMaiDaChot { get; set; }
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? DonToiThieuKhuyenMaiDaChot { get; set; }
+    [StringLength(32)]
+    public string? YeuCauDatHang { get; set; }
+
+
     [InverseProperty("MaDonHangNavigation")]
     public virtual ICollection<ChiTietDonHang> ChiTietDonHangs { get; set; } = new List<ChiTietDonHang>();
 

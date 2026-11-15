@@ -51,8 +51,9 @@
                     string statusClass = order.Status switch
                     {
                         "Đã hoàn thành" => "status-completed",
-                        "Chờ thanh toán" => "status-pending",
-                        "Đã hủy" => "status-cancelled",
+                        "Chờ thanh toán" or "Chờ xử lý" or "Chờ xác nhận" => "status-pending",
+                        "Đã hủy" or "Giao thất bại" => "status-cancelled",
+                        "Yêu cầu đổi trả" or "Đang đổi trả" or "Đã nhận đổi trả" or "Từ chối đổi trả" or "Đã hoàn tiền" => "status-cancelled",
                         _ => "status-processing"
                     };
 

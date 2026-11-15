@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using EMua.Models.AI;
 using EMua.Services.AI;
@@ -14,17 +15,20 @@ namespace EMua.Controllers
         private readonly DomainClassifier _domainClassifier;
         private readonly AIServiceOrchestrator _aiOrchestrator;
         private readonly RecommendationService _recommendationService;
+        private readonly OrderTrackingAssistant _orderTracking;
         private readonly ILogger<AIController> _logger;
 
         public AIController(
             DomainClassifier domainClassifier,
             AIServiceOrchestrator aiOrchestrator,
             RecommendationService recommendationService,
+            OrderTrackingAssistant orderTracking,
             ILogger<AIController> logger)
         {
             _domainClassifier = domainClassifier;
             _aiOrchestrator = aiOrchestrator;
             _recommendationService = recommendationService;
+            _orderTracking = orderTracking;
             _logger = logger;
         }
 
@@ -43,6 +47,40 @@ namespace EMua.Controllers
             }
 
             var totalTimer = System.Diagnostics.Stopwatch.StartNew();
+
+            // 0a. Hỏi về tình trạng đơn hàng/giao hàng của chính khách: trả lời bằng dữ liệu THẬT trong DB.
+            // Không đưa cho AI (AI không có dữ liệu đơn, sẽ đoán sai) và không bị bộ phân loại chủ đề từ chối nhầm.
+            if (OrderTrackingAssistant.IsOrderTrackingQuery(request.Message))
+            {
+                try
+                {
+                    int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId);
+                    var tracking = await _orderTracking.AnswerAsync(currentUserId, request.Message, cancellationToken);
+                    _logger.LogInformation("EMUA AI: Tra cứu đơn hàng trực tiếp từ DB trong {TotalMs} ms.", totalTimer.ElapsedMilliseconds);
+                    return Json(new
+                    {
+                        domain = "Order",
+                        message = tracking.Message,
+                        products = new List<ChatProductItemDto>(),
+                        isLimitReached = false
+                    });
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return new EmptyResult();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "EMUA AI: Lỗi tra cứu đơn hàng.");
+                    return StatusCode(500, new
+                    {
+                        domain = "Order",
+                        message = "Mình chưa tra cứu được đơn hàng lúc này. Bạn vui lòng xem trong mục Đơn hàng của tôi hoặc thử lại sau nhé.",
+                        errorCode = "ORDER_LOOKUP_ERROR",
+                        isLimitReached = false
+                    });
+                }
+            }
 
             // 0. Đọc ngữ cảnh phiên chat hiện tại từ Session
             const string sessionKey = "EMUA_CHAT_SESSION_CONTEXT";
@@ -255,7 +293,7 @@ namespace EMua.Controllers
 
             var promptWithContext = string.IsNullOrWhiteSpace(productContext)
                 ? request.Message
-                : "NGỮ CẢNH SẢN PHẨM CỬA HÀNG:\n" +
+                : AIPrompts.StoreContextHeader + "\n" +
                   productContext +
                   "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
                   request.Message;
@@ -281,12 +319,14 @@ namespace EMua.Controllers
             {
                 return new EmptyResult();
             }
-            catch (Exception ex) when (ex is HttpRequestException || ex is TimeoutException || ex is OperationCanceledException)
+            catch (Exception ex)
             {
+                // Mọi lỗi AI (hết quota, timeout, thiếu cấu hình, lỗi provider...) đều rơi về câu trả lời từ DB,
+                // thay vì để khách thấy lỗi 500.
                 geminiTimer.Stop();
                 _logger.LogWarning(
                     ex,
-                    "EMUA AI: Cả Gemini và Groq đều thất bại/hết quota/timeout ({ExType}) sau {ElapsedMs} ms. Kích hoạt fallback Supabase.",
+                    "EMUA AI: AI không phản hồi được ({ExType}) sau {ElapsedMs} ms. Kích hoạt fallback Supabase.",
                     ex.GetType().Name,
                     geminiTimer.ElapsedMilliseconds);
 
@@ -408,8 +448,8 @@ namespace EMua.Controllers
             }
 
             // Chào hỏi, cảm ơn
-            if (q.Contains("chào") || q.Contains("hello") || q.Contains("hi ") ||
-                q.Equals("hi") || q.Contains("cảm ơn") || q.Contains("thanks") || q.Contains("bạn là ai"))
+            if (q.Contains("chào") || TextMatch.HasWord(q, "hello") || TextMatch.HasWord(q, "hi") ||
+                q.Contains("cảm ơn") || q.Contains("thanks") || q.Contains("bạn là ai"))
             {
                 return "Dạ em chào bạn! Em là trợ lý của EMUA. Em có thể hỗ trợ tư vấn các dòng laptop, điện thoại, thiết bị công nghệ chính hãng hoặc giải đáp thông tin mua hàng. Bạn đang quan tâm đến sản phẩm nào tại EMUA ạ?";
             }
@@ -422,7 +462,7 @@ namespace EMua.Controllers
         {
             if (string.IsNullOrWhiteSpace(message)) return false;
             var q = message.Trim().ToLowerInvariant();
-            return q.Contains("chào") || q.Contains("hello") || q.Contains("hi ") || q.Equals("hi") ||
+            return q.Contains("chào") || TextMatch.HasWord(q, "hello") || TextMatch.HasWord(q, "hi") ||
                    q.Contains("cảm ơn") || q.Contains("thanks") || q.Contains("bạn là ai") ||
                    q.Contains("địa chỉ") || q.Contains("ở đâu") || q.Contains("mở cửa") ||
                    q.Contains("liên hệ") || q.Contains("hotline") || q.Contains("sđt") ||
@@ -443,7 +483,7 @@ namespace EMua.Controllers
             // 0. Nhu cầu học Trí tuệ nhân tạo (AI) / Machine Learning / Data Science
             if (q.Contains("học ai") || q.Contains("trí tuệ nhân tạo") || q.Contains("máy học") ||
                 q.Contains("machine learning") || q.Contains("deep learning") || q.Contains("data science") ||
-                q.Contains("khoa học dữ liệu") || (q.Contains("ai") && (q.Contains("ổn không") || q.Contains("được không") || q.Contains("phù hợp") || q.Contains("mượt không"))))
+                q.Contains("khoa học dữ liệu") || (TextMatch.HasWord(q, "ai") && (q.Contains("ổn không") || q.Contains("được không") || q.Contains("phù hợp") || q.Contains("mượt không"))))
             {
                 bool has16GbOrMore = fullInfo.Contains("16gb") || fullInfo.Contains("16 gb") || fullInfo.Contains("32gb") || fullInfo.Contains("32 gb");
                 bool has8Gb = fullInfo.Contains("8gb") || fullInfo.Contains("8 gb");
@@ -480,7 +520,7 @@ namespace EMua.Controllers
 
             // 1. Nhu cầu lập trình / code / IT / chạy máy ảo
             if (q.Contains("lập trình") || q.Contains("code") || q.Contains("coder") ||
-                q.Contains("it") || q.Contains("visual studio") || q.Contains("dev") || q.Contains("máy ảo"))
+                TextMatch.HasWord(q, "it") || q.Contains("visual studio") || TextMatch.HasWord(q, "dev") || q.Contains("máy ảo"))
             {
                 bool has16Gb = fullInfo.Contains("16gb") || fullInfo.Contains("16 gb") || fullInfo.Contains("32gb");
                 bool has8Gb = fullInfo.Contains("8gb") || fullInfo.Contains("8 gb");
@@ -516,7 +556,7 @@ namespace EMua.Controllers
 
             // 2. Chơi game / Gaming
             if (q.Contains("chơi game") || q.Contains("gaming") || q.Contains("game") ||
-                q.Contains("fifa") || q.Contains("lol") || q.Contains("valorant") || q.Contains("genshin"))
+                q.Contains("fifa") || TextMatch.HasWord(q, "lol") || q.Contains("valorant") || q.Contains("genshin"))
             {
                 bool hasGpu = fullInfo.Contains("rtx") || fullInfo.Contains("gtx") || fullInfo.Contains("geforce") || fullInfo.Contains("radeon rx");
                 if (hasGpu)

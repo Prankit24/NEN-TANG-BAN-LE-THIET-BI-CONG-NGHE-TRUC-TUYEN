@@ -1,7 +1,17 @@
+@using EMua.Services
 @model IEnumerable<DonHang>
 @{
     ViewData["Title"] = "Quản lý đơn hàng";
-    var statuses = (string[])ViewBag.Statuses;
+    var statuses = (ViewBag.Statuses as string[]) ?? new[]
+    {
+        "Chờ xử lý",
+        "Đang xử lý",
+        "Đang giao hàng",
+        "Giao thất bại",
+        "Đã hoàn thành",
+        "Yêu cầu đổi trả",
+        "Đã hủy"
+    };
     var selected = (string)(ViewBag.Status ?? "all");
     var search = ViewBag.Search as string ?? "";
 
@@ -13,6 +23,9 @@
     int pendingCount = ViewBag.PendingCount ?? 0;
     int returnCount = ViewBag.ReturnCount ?? 0;
     int shippingCount = ViewBag.ShippingCount ?? 0;
+    int processingCount = ViewBag.ProcessingCount ?? 0;
+    int failedCount = ViewBag.FailedCount ?? 0;
+    int completedCount = ViewBag.CompletedCount ?? 0;
 
     bool hasFilter = !string.IsNullOrWhiteSpace(search) || (selected != "all" && !string.IsNullOrWhiteSpace(selected));
 }
@@ -79,7 +92,7 @@
         color: #ffffff;
     }
 
-    /* 2. Thanh tìm kiếm & lọc: Nằm trực tiếp trên nền trang, không khung viền ngoài */
+    /* 2. Thanh tìm kiếm & lọc */
     .order-filter-bar {
         display: flex;
         align-items: center;
@@ -159,7 +172,7 @@
         color: #111827;
     }
 
-    /* 3. Bảng đơn hàng: Nền trắng sạch, không khung viền bao quanh toàn bộ, đường phân cách nhẹ */
+    /* 3. Bảng đơn hàng */
     .order-table-container {
         width: 100%;
         background: #ffffff;
@@ -192,14 +205,13 @@
         font-size: 13px;
         vertical-align: middle;
         border-bottom: 1px solid #f3f4f6;
-        background: #ffffff !important; /* Tuyệt đối không tô màu nền cho dòng */
+        background: #ffffff !important;
     }
 
     .staff-order-tbl tbody tr:hover td {
         background: #fafafa !important;
     }
 
-    /* Mã đơn hiển thị 1 dòng duy nhất */
     .order-code {
         font-weight: 600;
         color: #315efb;
@@ -208,7 +220,6 @@
         text-decoration: none;
     }
 
-    /* Khách hàng */
     .customer-name {
         font-weight: 500;
         color: #111827;
@@ -220,14 +231,13 @@
         color: #6b7280;
     }
 
-    /* Tổng tiền căn phải, chữ rõ nhưng không quá đậm */
     .order-total {
         font-weight: 600;
         color: #1f2937;
         white-space: nowrap;
     }
 
-    /* 4. Badge trạng thái đơn hàng: Màu nhẹ, tinh tế, không chói */
+    /* 4. Badge trạng thái đơn hàng */
     .order-status-badge {
         display: inline-flex;
         align-items: center;
@@ -270,7 +280,7 @@
         border-color: #fecaca;
     }
 
-    /* 5. Cột thao tác: Tách biệt rõ ràng */
+    /* 5. Cột thao tác */
     .order-actions-cell {
         white-space: nowrap;
     }
@@ -373,6 +383,13 @@
 
 <div class="staff-order-page">
     <!-- 1. Tabs lọc theo tình trạng xử lý -->
+    @{
+        var errMsg = TempData["ErrorMessage"] as string ?? TempData["Error"] as string;
+        var succMsg = TempData["SuccessMessage"] as string ?? TempData["Success"] as string;
+    }
+    @if (!string.IsNullOrEmpty(errMsg)) { <div class="alert alert-danger">@errMsg</div> }
+    @if (!string.IsNullOrEmpty(succMsg)) { <div class="alert alert-success">@succMsg</div> }
+
     <div class="order-status-tabs mt-1">
         <a asp-action="Index" asp-route-status="all" asp-route-q="@search" class="order-tab-btn @(selected == "all" ? "active" : "")">
             Tất cả <span class="order-tab-badge">@totalOrders</span>
@@ -384,17 +401,27 @@
             <i class="bi bi-arrow-counterclockwise"></i> Yêu cầu đổi trả <span class="order-tab-badge">@returnCount</span>
         </a>
         <a asp-action="Index" asp-route-status="Đang xử lý" asp-route-q="@search" class="order-tab-btn @(selected == "Đang xử lý" ? "active" : "")">
-            <i class="bi bi-box-seam"></i> Đang xử lý <span class="order-tab-badge">@shippingCount</span>
+            <i class="bi bi-box-seam"></i> Đang xử lý <span class="order-tab-badge">@processingCount</span>
         </a>
-        <a asp-action="Index" asp-route-status="Đã hoàn thành" asp-route-q="@search" class="order-tab-btn @(selected == "Đã hoàn thành" ? "active" : "")">
+        <a asp-action="Index" asp-route-status="Đang giao hàng" asp-route-q="@search" class="order-tab-btn @(selected == "Đang giao hàng" ? "active" : "")">
+            <i class="bi bi-truck"></i> Đang giao hàng <span class="order-tab-badge">@shippingCount</span>
+        </a>
+        <a asp-action="Index" asp-route-status="Giao thất bại" asp-route-q="@search" class="order-tab-btn @(selected == "Giao thất bại" ? "active" : "")">
+            <i class="bi bi-exclamation-triangle"></i> Giao thất bại <span class="order-tab-badge">@failedCount</span>
+        </a>
+        <a asp-action="Index" asp-route-status="Đã hoàn thành" asp-route-q="@search" class="order-tab-btn @(selected.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase) || selected.Equals("Hoàn thành", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
             <i class="bi bi-check2-circle"></i> Đã hoàn thành
+            @if (completedCount > 0)
+            {
+                <span class="order-tab-badge">@completedCount</span>
+            }
         </a>
         <a asp-action="Index" asp-route-status="Đã hủy" asp-route-q="@search" class="order-tab-btn @(selected == "Đã hủy" ? "active" : "")">
             <i class="bi bi-x-circle"></i> Đã hủy
         </a>
     </div>
 
-    <!-- 2. Thanh tìm kiếm nằm trực tiếp trên nền trang, không khung viền bao quanh -->
+    <!-- 2. Thanh tìm kiếm -->
     <form method="get" asp-action="Index" class="order-filter-bar">
         <div class="order-filter-search">
             <input type="search" name="q" value="@search" class="form-control" placeholder="Tìm theo mã đơn (#DH-00001), khách hàng, SĐT..." aria-label="Tìm kiếm đơn hàng" />
@@ -404,7 +431,11 @@
                 <option value="all" selected="@(selected == "all")">Tất cả trạng thái</option>
                 @foreach (var st in statuses)
                 {
-                    <option value="@st" selected="@(selected == st)">@st</option>
+                    <option value="@st" selected="@(selected.Equals(st, StringComparison.OrdinalIgnoreCase))">@st</option>
+                }
+                @if (!statuses.Any(s => s.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase)))
+                {
+                    <option value="Đã hoàn thành" selected="@(selected.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase))">Đã hoàn thành</option>
                 }
             </select>
         </div>
@@ -438,12 +469,29 @@
             <tbody>
                 @foreach (var order in Model)
                 {
-                    var st = order.TrangThaiDonHang ?? "";
+                    var rawStatus = string.IsNullOrWhiteSpace(order.TrangThaiDonHang) ? "Chờ xử lý" : order.TrangThaiDonHang.Trim();
+                    var st = OrderRules.Normalize(rawStatus);
+                    var payment = order.ThanhToans.Count == 1 ? order.ThanhToans.Single() : null;
+
+                    var quickTargets = OrderRules.QuickTargets(
+                        st,
+                        OrderRules.IsCod(payment?.PhuongThuc),
+                        OrderRules.IsPaid(payment?.TrangThai)
+                    ).ToList();
+
                     var isReturn = st.Contains("đổi trả", StringComparison.OrdinalIgnoreCase);
                     var isFailed = st.Contains("thất bại", StringComparison.OrdinalIgnoreCase);
                     var isCancelled = st.Contains("hủy", StringComparison.OrdinalIgnoreCase) || st.Contains("huỷ", StringComparison.OrdinalIgnoreCase);
-                    var isCompleted = st == "Đã hoàn thành" || st == "Đã giao";
-                    var isShipping = st == "Đang xử lý" || st == "Đang giao" || st == "Đang giao hàng";
+                    var isCompleted = st.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase) || st.Equals("Đã giao", StringComparison.OrdinalIgnoreCase);
+                    var isShipping = st.Equals(OrderRules.Processing, StringComparison.OrdinalIgnoreCase)
+                                  || st.Equals(OrderRules.Shipping, StringComparison.OrdinalIgnoreCase);
+                    // Hoàn thành/giao thất bại cần ảnh, ghi chú hoặc thu COD nên chỉ làm ở trang chi tiết đơn.
+
+                    // Đảm bảo trạng thái hiện tại luôn có trong dropdown để hiển thị đúng selected
+                    if (!quickTargets.Any(x => x.Equals(st, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        quickTargets.Insert(0, st);
+                    }
 
                     string badgeClass = isCompleted ? "status-completed" :
                                         isCancelled ? "status-cancelled" :
@@ -452,7 +500,6 @@
 
                     <tr>
                         <td>
-                            <!-- Mã đơn 1 dòng duy nhất, không xuống hàng -->
                             <a asp-action="Details" asp-route-id="@order.MaDonHang" class="order-code">#DH-@order.MaDonHang.ToString("D5")</a>
                         </td>
                         <td>
@@ -490,7 +537,7 @@
                                 {
                                     <i class="bi bi-clock"></i>
                                 }
-                                @(string.IsNullOrWhiteSpace(order.TrangThaiDonHang) ? "Chờ xử lý" : order.TrangThaiDonHang)
+                                @rawStatus
                             </span>
                         </td>
                         <td class="text-end order-actions-cell">
@@ -503,9 +550,9 @@
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@order.MaDonHang" />
                                     <select name="status" class="form-select form-select-sm status-update-select" onchange="this.form.submit()" title="Thay đổi trạng thái đơn hàng">
-                                        @foreach (var s in statuses)
+                                        @foreach (var s in quickTargets)
                                         {
-                                            <option value="@s" selected="@(order.TrangThaiDonHang == s)">@s</option>
+                                            <option value="@s" selected="@(st.Equals(s, StringComparison.OrdinalIgnoreCase))">@s</option>
                                         }
                                     </select>
                                 </form>

@@ -1,9 +1,12 @@
+@using EMua.Services
 @model DonHang
 @{
     ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}";
 
     var allStatuses = (ViewBag.Statuses as string[]) ?? Array.Empty<string>();
-    var currentStatus = (Model.TrangThaiDonHang ?? "Chờ xử lý").Trim();
+    var currentStatus = OrderRules.Normalize(Model.TrangThaiDonHang);
+    var payment = Model.ThanhToans.Count == 1 ? Model.ThanhToans.Single() : null;
+    bool isCod = OrderRules.IsCod(payment?.PhuongThuc);
 
     var isCancelled = currentStatus.Equals("Đã hủy", StringComparison.OrdinalIgnoreCase) ||
                       currentStatus.Contains("hủy", StringComparison.OrdinalIgnoreCase) ||
@@ -15,31 +18,19 @@
     string[] progressStatuses;
     if (hasReturnWorkflow)
     {
-        progressStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành", "Yêu cầu đổi trả", "Đang đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền" };
+        progressStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Đang giao hàng", "Đã hoàn thành", "Yêu cầu đổi trả", "Đang đổi trả", "Đã nhận đổi trả", "Đã hoàn tiền" };
     }
     else
     {
-        progressStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Đã hoàn thành" };
+        progressStatuses = new[] { "Chờ xử lý", "Đang xử lý", "Đang giao hàng", "Đã hoàn thành" };
     }
 
-    var currentIndex = Array.FindIndex(progressStatuses, s => string.Equals(s, currentStatus, StringComparison.OrdinalIgnoreCase));
-    if (currentIndex < 0)
-    {
-        if (currentStatus.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase) || currentStatus.Equals("Đã giao", StringComparison.OrdinalIgnoreCase))
-        {
-            currentIndex = Array.IndexOf(progressStatuses, "Đã hoàn thành");
-        }
-        else if (currentStatus.Equals("Đang xử lý", StringComparison.OrdinalIgnoreCase) || currentStatus.Equals("Đang giao", StringComparison.OrdinalIgnoreCase))
-        {
-            currentIndex = Array.IndexOf(progressStatuses, "Đang xử lý");
-        }
-        else
-        {
-            currentIndex = 0;
-        }
-    }
+    // Giao thất bại vẫn nằm ở chặng "Đang giao hàng" (có thể giao lại hoặc hủy).
+    var isDeliveryFailed = currentStatus == OrderRules.DeliveryFailed;
+    var currentIndex = Array.FindIndex(progressStatuses, s => string.Equals(s, isDeliveryFailed ? OrderRules.Shipping : currentStatus, StringComparison.OrdinalIgnoreCase));
+    if (currentIndex < 0) currentIndex = 0; // Chờ thanh toán / trạng thái chưa xác định => bước đầu
 
-    var isCompleted = currentStatus.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase) || currentStatus.Equals("Đã giao", StringComparison.OrdinalIgnoreCase);
+    var isCompleted = currentStatus.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase);
     var isReturnRequested = currentStatus == "Yêu cầu đổi trả" || currentStatus == "Đang đổi trả" || currentStatus == "Đã nhận đổi trả";
 
     var returnLog = Model.LichSuVanChuyens
@@ -51,6 +42,9 @@
     <link rel="stylesheet" href="~/css/staff/staff-order-details.css" asp-append-version="true" />
 }
 
+@if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger">@error</div> }
+@if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success">@success</div> }
+@if (TempData["Error"] is string error2) { <div class="alert alert-danger">@error2</div> }
 <!-- 1. Thanh công cụ gọn gàng nằm trên cùng một hàng -->
 <div class="staff-toolbar">
     <a class="btn btn-outline-secondary" asp-action="Index">
@@ -60,7 +54,7 @@
         <i class="bi bi-receipt me-1"></i> Phiếu tạm tính
     </a>
 
-    @if (Model.HoaDon != null)
+    @if (Model.HoaDon != null && (Model.HoaDon.MaNguoiLap.HasValue || Model.HoaDon.ChiTietHoaDons.Any()))
     {
         <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@Model.HoaDon.MaHoaDon" class="btn btn-outline-primary">
             <i class="bi bi-file-earmark-text me-1"></i> Xem hóa đơn #HD-@Model.HoaDon.MaHoaDon.ToString("D5")
@@ -98,9 +92,13 @@
             <div class="p-2 px-3 bg-white border mb-2">
                 <div class="small mb-1 text-muted"><strong>Thời gian gửi:</strong> @returnLog.ThoiGian.ToString("dd/MM/yyyy HH:mm")</div>
                 <div class="small text-dark" style="white-space: pre-line;">@returnLog.MoTa</div>
+                @foreach (var evidence in Model.LichSuVanChuyens.Where(x => x.HinhAnhNguoiNhan != null && x.HinhAnhNguoiNhan.StartsWith("/uploads/returns/"))) {
+                    <a href="@evidence.HinhAnhNguoiNhan" target="_blank" rel="noopener"><img src="@evidence.HinhAnhNguoiNhan" alt="Bằng chứng đổi trả" style="max-width:120px;max-height:100px;margin:4px" /></a>
+                }
             </div>
         }
 
+        @if (currentStatus == OrderRules.ReturnRequested) {
         <div class="d-flex gap-2 flex-wrap pt-2 border-top">
             <form id="formAcceptReturn" asp-action="ProcessReturnAction" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
@@ -126,11 +124,46 @@
                 <input type="hidden" name="id" value="@Model.MaDonHang" />
                 <input type="hidden" name="actionType" value="Reject" />
                 <label class="form-label text-danger fw-bold small">Lý do từ chối yêu cầu đổi trả <span class="text-danger">*</span></label>
-                <textarea name="rejectReason" class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập rõ lý do từ chối để thông báo cho khách hàng..." required></textarea>
+                <textarea maxlength="200" name="rejectReason" class="form-control form-control-sm mb-2" rows="2" placeholder="Nhập rõ lý do từ chối để thông báo cho khách hàng..." required></textarea>
                 <button type="submit" class="btn btn-sm btn-danger">Xác nhận Từ chối</button>
             </form>
         </div>
 
+        }
+        else if (currentStatus == OrderRules.Returning || currentStatus == OrderRules.ReturnReceived)
+        {
+            <div class="p-3 bg-white border mt-2">
+                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-box-arrow-in-down me-1"></i> Xử lý & Hoàn tất Đổi trả</h6>
+                <p class="small text-muted mb-3">Sau khi nhận lại hàng và kiểm tra thực tế, xác nhận nhập lại kho hoặc hoàn tiền theo giao dịch thực tế:</p>
+                <form asp-action="CompleteReturn" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.MaDonHang" />
+                    <div class="mb-2">
+                        <label class="form-check-label small fw-semibold">
+                            <input type="checkbox" name="restock" value="true" class="form-check-input me-1" checked />
+                            Hàng còn nguyên vẹn, nhập lại số lượng vào tồn kho
+                        </label>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-check-label small fw-semibold">
+                            <input type="checkbox" name="refund" value="true" id="chkRefund" class="form-check-input me-1" onchange="document.getElementById('refundRefBox').style.display = this.checked ? 'block' : 'none';" />
+                            Hoàn lại tiền cho khách (Chỉ đánh dấu khi đã thực hiện giao dịch hoàn tiền)
+                        </label>
+                    </div>
+                    <div id="refundRefBox" class="mb-2" style="display:none;">
+                        <label class="form-label small text-danger fw-semibold">Mã giao dịch hoàn tiền thực tế <span class="text-danger">*</span></label>
+                        <input type="text" name="refundReference" class="form-control form-control-sm" placeholder="VD: REFUND-VCB-123456 hoặc mã giao dịch ngân hàng..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Ghi chú xử lý hoàn tất</label>
+                        <input type="text" name="note" class="form-control form-control-sm" placeholder="Ghi chú thêm về tình trạng hàng nhận lại..." />
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-check2-all me-1"></i> Xác nhận Hoàn tất Đổi trả
+                    </button>
+                </form>
+            </div>
+        }
         <div class="staff-return-chat" id="staffReturnChatCard">
             <div id="staffChatWaiting" class="staff-chat-waiting">
                 <i class="bi bi-chat-square-text text-muted fs-5"></i>
@@ -156,6 +189,22 @@
 }
 
 <!-- 3. Thanh tiến trình đơn hàng (Thấp, phẳng, thanh thoát) -->
+@if (payment != null && !isCod && !OrderRules.IsPaid(payment.TrangThai) && payment.TrangThai != OrderRules.RefundPending &&
+    (OrderRules.IsPending(currentStatus) || currentStatus == OrderRules.Cancelled))
+{
+    <section class="bg-white p-3 mb-3 border">
+        <h5>Đối soát khoản thanh toán</h5>
+        <p class="small text-muted">Chỉ xác nhận sau khi kiểm tra tiền thực nhận tại ngân hàng/ví. Thông báo của khách chưa phải xác nhận thanh toán.</p>
+        <form asp-action="ConfirmPayment" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.MaDonHang" />
+            <input type="number" name="amount" min="0.01" step="0.01" required class="form-control" style="max-width:220px" aria-label="Số tiền thực nhận" placeholder="Số tiền thực nhận (VND)" />
+            <input type="text" name="reference" minlength="3" maxlength="100" required class="form-control" style="max-width:300px" placeholder="Mã giao dịch thực tế" />
+            <label><input type="checkbox" name="verified" value="true" required /> Đã đối soát và nhận đủ tiền</label>
+            <button type="submit" class="btn btn-primary">Xác nhận khoản tiền</button>
+        </form>
+    </section>
+}
 <section class="staff-tracker-card">
     <div class="staff-tracker-header">
         <h2>Tiến trình đơn hàng</h2>
@@ -194,6 +243,7 @@
                 {
                     "Chờ xử lý" => "bi-hourglass-split",
                     "Đang xử lý" => "bi-box-seam",
+                    "Đang giao hàng" => "bi-truck",
                     "Đã hoàn thành" => "bi-check-circle-fill",
                     "Yêu cầu đổi trả" => "bi-arrow-left-right",
                     "Đang đổi trả" => "bi-truck",
@@ -211,11 +261,19 @@
             }
         </div>
 
+        @if (isDeliveryFailed)
+        {
+            <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>Giao hàng không thành công. Chọn <strong>Đang giao hàng</strong> để giao lại, hoặc <strong>Đã hủy</strong> để hoàn kho (đơn đã thanh toán sẽ chuyển sang chờ hoàn tiền).</div>
+            </div>
+        }
+
         @if (Model.NgayDuKienGiao.HasValue && !isCompleted && !hasReturnWorkflow)
         {
             <div class="staff-eta-banner">
                 <i class="bi bi-calendar-check"></i>
-                <span>Dự kiến giao hàng: @Model.NgayDuKienGiao.Value.ToString("HH:mm, dd/MM/yyyy")</span>
+                <span>Dự kiến giao hàng: @Model.NgayDuKienGiao.Value.AddHours(7).ToString("HH:mm, dd/MM/yyyy")</span>
             </div>
         }
     }
@@ -321,26 +379,40 @@
                         <option value="@status" selected="@(currentStatus == status)">@status</option>
                     }
                 </select>
+                @if (currentStatus == OrderRules.Processing)
+                {
+                    <small class="text-info d-block mt-1"><i class="bi bi-info-circle me-1"></i>Sau khi bàn giao cho đơn vị vận chuyển, chọn <strong>Đang giao hàng</strong> và nhập ngày dự kiến giao / mã vận đơn.</small>
+                }
+                else if (currentStatus == OrderRules.Shipping)
+                {
+                    <small class="text-info d-block mt-1"><i class="bi bi-info-circle me-1"></i>Giao xong: chọn <strong>Đã hoàn thành</strong>, tải ảnh xác nhận và đánh dấu đã thu COD (nếu là đơn COD). Khách không nhận/không liên lạc được: chọn <strong>Giao thất bại</strong> và ghi rõ lý do.</small>
+                }
             </div>
 
             <div>
                 <label class="form-label"><i class="bi bi-calendar-event me-1"></i>Ngày dự kiến giao</label>
                 <input type="datetime-local" name="ngayDuKienGiao" id="etaInput" class="form-control"
-                       value="@((Model.NgayDuKienGiao ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm"))" />
+                       value="@((Model.NgayDuKienGiao?.AddHours(7) ?? OrderRules.VietnamNow()).ToString("yyyy-MM-ddTHH:mm"))" />
             </div>
 
             <div>
                 <label class="form-label">Ghi chú giao nhận</label>
-                <input type="text" name="ghiChuGiaoHang" id="ghiChuGiaoHang" class="form-control" placeholder="Nhập ghi chú hoặc mã vận đơn..." />
+                <input type="text" name="ghiChuGiaoHang" maxlength="200" id="ghiChuGiaoHang" class="form-control" placeholder="Nhập ghi chú, mã vận đơn hoặc lý do giao thất bại..." />
             </div>
 
             <div id="proofBox" style="display:none;">
                 <label class="form-label"><i class="bi bi-camera me-1"></i>Ảnh xác nhận giao <span class="text-danger">*</span></label>
                 <input type="file" name="anhXacNhanGiao" id="proofInput" accept="image/*" class="form-control" />
+                @if (isCod && !OrderRules.IsPaid(payment?.TrangThai)) {
+                    <label class="d-block mt-2"><input type="checkbox" name="daThuTienCod" value="true" /> Đã thu đủ tiền COD của đơn</label>
+                }
                 <img id="proofPreview" class="staff-proof-photo" style="display:none;" alt="Xem trước ảnh" />
             </div>
         </div>
 
+        <div id="returnedBox" style="display:none;" class="my-2">
+            <label><input type="checkbox" name="daNhanHangTra" value="true" /> Đã thực nhận và kiểm tra hàng trả. Chưa tự cộng tồn hoặc hoàn tiền.</label>
+        </div>
         <div class="d-flex justify-content-end">
             <button type="submit" class="btn btn-primary px-4">
                 <i class="bi bi-check2 me-1"></i> Lưu cập nhật
@@ -348,6 +420,50 @@
         </div>
     </form>
 </section>
+
+<!-- 6. Lịch sử thay đổi trạng thái đơn hàng -->
+@if (Model.LichSuVanChuyens != null && Model.LichSuVanChuyens.Any())
+{
+    <section class="staff-section-card mt-3">
+        <div class="staff-section-title">
+            <span><i class="bi bi-clock-history me-1"></i> Lịch sử xử lý đơn hàng (@Model.LichSuVanChuyens.Count)</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 13px;">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 140px;">Thời gian</th>
+                        <th style="width: 150px;">Trạng thái</th>
+                        <th>Mô tả chi tiết</th>
+                        <th style="width: 100px;">Bằng chứng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.LichSuVanChuyens.OrderByDescending(x => x.ThoiGian))
+                    {
+                        <tr>
+                            <td class="text-muted">@log.ThoiGian.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="badge bg-secondary">@log.TrangThai</span></td>
+                            <td>@log.MoTa</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(log.HinhAnhNguoiNhan))
+                                {
+                                    <a href="@log.HinhAnhNguoiNhan" target="_blank" rel="noopener">
+                                        <img src="@log.HinhAnhNguoiNhan" style="width: 36px; height: 36px; object-fit: cover;" class="rounded border" alt="Bằng chứng" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
 
 @section Scripts {
     <script>
@@ -361,6 +477,9 @@
                 var isDelivered = statusSelect.value === 'Đã hoàn thành' || statusSelect.value === 'Đã giao';
                 proofBox.style.display = isDelivered ? 'block' : 'none';
                 proofInput.required = isDelivered;
+                // Giao thất bại bắt buộc có lý do trong ô ghi chú (server cũng kiểm tra lại).
+                document.getElementById('ghiChuGiaoHang').required = statusSelect.value === 'Giao thất bại';
+                document.getElementById('returnedBox').style.display = statusSelect.value === 'Đã nhận đổi trả' ? 'block' : 'none';
             }
 
             statusSelect.addEventListener('change', toggleProofBox);

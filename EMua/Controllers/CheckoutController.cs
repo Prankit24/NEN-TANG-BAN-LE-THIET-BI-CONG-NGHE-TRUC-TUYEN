@@ -12,15 +12,16 @@ namespace EMua.Controllers;
 [Authorize]
 public class CheckoutController : Controller
 {
-    private const decimal StandardShippingFee = 30000m;
-    private const decimal ExpressShippingFee = 25000m;
+    private const decimal StandardShippingFee = OrderRules.StandardFee;
+    private const decimal ExpressShippingFee = OrderRules.ExpressFee;
     private const string BuyNowUserKey = "Checkout_BuyNowUserId";
     private const string BuyNowVariantKey = "Checkout_BuyNowVariantId";
     private const string BuyNowQuantityKey = "Checkout_BuyNowQuantity";
     private const string BuyNowExpectedKey = "Checkout_BuyNowExpected";
     private readonly EMuaDbContext _db;
 
-    public CheckoutController(EMuaDbContext db) => _db = db;
+    private readonly IConfiguration _configuration;
+    public CheckoutController(EMuaDbContext db, IConfiguration configuration) { _db = db; _configuration = configuration; }
 
     // Các phương thức thanh toán hợp lệ
     private static readonly string[] AllowedPaymentMethods = { "COD", "BANK_TRANSFER", "WEB3" };
@@ -36,6 +37,7 @@ public class CheckoutController : Controller
         if (fromCart)
         {
             ClearBuyNowSession();
+            TempData.Remove("Checkout_RequestKey");
             TempData.Remove(BuyNowExpectedKey);
             TempData["Checkout_CouponCode"] = HttpContext.Session.GetString("Cart_CouponCode") ?? "";
         }
@@ -86,7 +88,8 @@ public class CheckoutController : Controller
             return RedirectToAction("Index", "Cart");
         }
 
-        if (string.IsNullOrWhiteSpace(model.FullName) ||
+        if ((model.Note?.Trim().Length ?? 0) > 255) ModelState.AddModelError(nameof(model.Note), "Ghi chú tối đa 255 ký tự.");
+        if (!ModelState.IsValid || string.IsNullOrWhiteSpace(model.FullName) ||
             string.IsNullOrWhiteSpace(model.PhoneNumber) ||
             string.IsNullOrWhiteSpace(model.Address))
         {
@@ -236,6 +239,10 @@ public class CheckoutController : Controller
         }
 
         ViewBag.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() ?? "COD";
+        if (TempData.Peek("Checkout_RequestKey") == null) TempData["Checkout_RequestKey"] = Guid.NewGuid().ToString("N");
+        ViewBag.CheckoutRequestKey = TempData.Peek("Checkout_RequestKey");
+        TempData["Checkout_ReviewTotal"] = model.Total.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        TempData["Checkout_ReviewItems"] = Fingerprint(model.Items.Select(x => (x.VariantId, (long)x.Quantity, x.UnitPrice)));
         TempData.Keep();
 
         return View(model);
@@ -247,215 +254,98 @@ public class CheckoutController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> PlaceOrder()
+    public async Task<IActionResult> PlaceOrder([FromForm] string? checkoutToken)
     {
         var user = await GetCurrentUserAsync();
-        if (user == null)
-        {
-            return Unauthorized(new { success = false, message = "Phiên đăng nhập đã hết hạn." });
-        }
-
-        var fullName = TempData.Peek("Checkout_FullName")?.ToString();
-        var phoneNumber = TempData.Peek("Checkout_PhoneNumber")?.ToString();
-        var address = TempData.Peek("Checkout_Address")?.ToString();
-        var note = TempData.Peek("Checkout_Note")?.ToString();
-        var paymentMethod = TempData.Peek("Checkout_PaymentMethod")?.ToString();
+        if (user == null) return Unauthorized(new { success = false, message = "Phiên đăng nhập không hợp lệ hoặc tài khoản đã khóa." });
+        if (!Guid.TryParseExact(checkoutToken, "N", out _)) return BadRequest(new { success = false, message = "Vui lòng tải lại trang xác nhận đặt hàng." });
+        var fullName = TempData.Peek("Checkout_FullName")?.ToString()?.Trim();
+        var phone = TempData.Peek("Checkout_PhoneNumber")?.ToString()?.Trim();
+        var address = TempData.Peek("Checkout_Address")?.ToString()?.Trim();
+        var note = TempData.Peek("Checkout_Note")?.ToString()?.Trim();
+        var method = TempData.Peek("Checkout_PaymentMethod")?.ToString();
         var couponCode = TempData.Peek("Checkout_CouponCode")?.ToString();
         var shippingMethod = TempData.Peek("Checkout_ShippingMethod")?.ToString();
-
-        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(address))
-        {
-            return BadRequest(new { success = false, message = "Thiếu thông tin giao hàng. Vui lòng quay lại bước 1." });
-        }
-
-        if (string.IsNullOrWhiteSpace(paymentMethod) || !AllowedPaymentMethods.Contains(paymentMethod))
-        {
-            return BadRequest(new { success = false, message = "Phương thức thanh toán không hợp lệ." });
-        }
-
-        // Xác định chế độ trước khi tạo đơn, tránh xóa giỏ hàng khi người dùng chọn Mua ngay.
-        bool isBuyNow = IsBuyNowCheckout(user.MaNguoiDung);
-        if (IsExpectedBuyNowLost(user.MaNguoiDung))
-            return BadRequest(new { success = false, message = "Phiên Mua ngay đã hết hạn. Vui lòng chọn lại sản phẩm." });
-
-        var strategy = _db.Database.CreateExecutionStrategy();
-
+        var expectedKey = TempData.Peek("Checkout_RequestKey")?.ToString();
+        var reviewTotalText = TempData.Peek("Checkout_ReviewTotal")?.ToString();
+        var reviewItems = TempData.Peek("Checkout_ReviewItems")?.ToString();
+        var isBuyNow = IsBuyNowCheckout(user.MaNguoiDung);
+        var lostBuyNow = IsExpectedBuyNowLost(user.MaNguoiDung);
         try
         {
-            var result = await strategy.ExecuteAsync(async () =>
+            var orderId = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                await using var transaction = await _db.Database.BeginTransactionAsync();
-
-                try
+                _db.ChangeTracker.Clear();
+                await using var tx = await _db.Database.BeginTransactionAsync();
+                // Cùng một tài khoản chỉ chốt một yêu cầu tại một thời điểm.
+                await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({739451}, {user.MaNguoiDung})");
+                var existing = await _db.DonHangs.AsNoTracking().FirstOrDefaultAsync(x => x.MaNguoiDung == user.MaNguoiDung && x.YeuCauDatHang == checkoutToken);
+                if (existing != null) return existing.MaDonHang;
+                if (expectedKey != checkoutToken || lostBuyNow) throw new ArgumentException("Phiên đặt hàng đã thay đổi hoặc hết hạn. Vui lòng kiểm tra lại giỏ hàng.");
+                if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 100 || string.IsNullOrWhiteSpace(address) || address.Length > 255 ||
+                    string.IsNullOrWhiteSpace(phone) || !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^0[35789]\d{8}$") || note?.Length > 255)
+                    throw new ArgumentException("Thông tin nhận hàng không hợp lệ. Kiểm tra họ tên, địa chỉ, số điện thoại và ghi chú tối đa 255 ký tự.");
+                if (method == null || !AllowedPaymentMethods.Contains(method) || shippingMethod is not ("STANDARD" or "EXPRESS"))
+                    throw new ArgumentException("Vui lòng chọn lại phương thức giao hàng và thanh toán.");
+                if (!await _db.NguoiDungs.AnyAsync(x => x.MaNguoiDung == user.MaNguoiDung && x.TrangThai)) throw new ArgumentException("Tài khoản đã bị khóa.");
+                var cart = await GetCheckoutItemsAsync(user.MaNguoiDung);
+                if (cart.Count == 0 || cart.Any(x => x.SoLuong <= 0 || x.SoLuong > 100000 || x.MaBienTheNavigation.Gia <= 0))
+                    throw new ArgumentException("Giỏ hàng không có sản phẩm hợp lệ.");
+                var lines = cart.GroupBy(x => x.MaBienThe).Select(g => new { Id = g.Key, Qty = g.Sum(x => (long)x.SoLuong), Price = g.First().MaBienTheNavigation.Gia }).OrderBy(x => x.Id).ToList();
+                if (lines.Any(x => x.Qty > 100000)) throw new ArgumentException("Số lượng một mặt hàng tối đa 100.000.");
+                if (reviewItems != Fingerprint(lines.Select(x => (x.Id, x.Qty, x.Price)))) throw new ArgumentException("Giỏ hàng hoặc đơn giá đã thay đổi. Tải lại trang xác nhận trước khi đặt.");
+                var subtotal = lines.Sum(x => x.Qty * x.Price);
+                var coupon = await FindValidCouponAsync(couponCode, subtotal);
+                if (!string.IsNullOrWhiteSpace(couponCode) && coupon == null) throw new ArgumentException("Mã giảm giá không còn hợp lệ. Vui lòng chọn lại.");
+                var totals = OrderRules.Calculate(subtotal, shippingMethod == "EXPRESS", coupon?.LoaiGiamGia, coupon?.GiaTriGiam ?? 0m, coupon?.GiaTriDonHangToiThieu ?? 0m);
+                if (!decimal.TryParse(reviewTotalText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var reviewedTotal) || reviewedTotal != totals.Total)
+                    throw new ArgumentException("Giá hoặc ưu đãi đã thay đổi. Tải lại trang xác nhận để xem tổng tiền mới trước khi đặt.");
+                if (coupon != null)
                 {
-                    // 1. Lấy danh sách thanh toán (Mua ngay hoặc giỏ hàng).
-                    var cartItems = await GetCheckoutItemsAsync(user.MaNguoiDung);
-                    if (cartItems.Count == 0)
-                    {
-                        return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Không có sản phẩm hợp lệ để đặt hàng." } };
-                    }
-
-                    // 2. Kiểm tra tồn kho
-                    if (cartItems.Any(x => x.SoLuong <= 0 ||
-                        x.SoLuong > x.MaBienTheNavigation.SoLuong ||
-                        x.MaBienTheNavigation.TrangThai != "Còn hàng" ||
-                        x.MaBienTheNavigation.Gia <= 0 ||
-                        x.MaBienTheNavigation.MaSanPhamNavigation?.TrangThaiSanPham == "Ẩn"))
-                    {
-                        return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Một số sản phẩm không còn đủ số lượng trong kho." } };
-                    }
-
-                    // 3. Tính toán số tiền
-                    var subtotal = cartItems.Sum(x => x.SoLuong * (x.MaBienTheNavigation.Gia));
-
-                    // Phí vận chuyển theo phương thức đã chọn
-                    decimal shipping;
-                    bool isExpress = shippingMethod == "EXPRESS";
-                    if (isExpress)
-                    {
-                        shipping = ExpressShippingFee;
-                    }
-                    else
-                    {
-                        shipping = subtotal >= 500000m ? 0m : StandardShippingFee;
-                    }
-
-                    var coupon = await FindValidCouponAsync(couponCode, subtotal);
-                    if (!string.IsNullOrWhiteSpace(couponCode) && coupon == null)
-                    {
-                        return new { Success = false, StatusCode = 400, Data = (object)new { success = false, message = "Mã giảm giá không còn hợp lệ. Vui lòng quay lại bước thanh toán để chọn lại hoặc bỏ mã." } };
-                    }
-                    var discount = coupon == null ? 0m : CalculateDiscount(coupon, subtotal);
-                    var total = Math.Max(0m, subtotal + shipping - discount);
-
-                    // 4. Tạo DonHang
-                    var order = new DonHang
-                    {
-                        MaNguoiDung = user.MaNguoiDung,
-                        NgayDat = DateTime.Now,
-                        TongTien = total,
-                        TrangThaiDonHang = paymentMethod == "COD" ? "Chờ xác nhận" : "Chờ thanh toán",
-                        HoTenNhanHang = fullName.Trim(),
-                        SoDienThoaiNhanHang = phoneNumber.Trim(),
-                        DiaChiNhanHang = address.Trim(),
-                        GhiChu = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
-                        PhuongThucVanChuyen = isExpress ? "Giao hàng nhanh" : "Giao hàng tiêu chuẩn",
-                        MaKhuyenMai = coupon?.MaKhuyenMai
-                    };
-
-                    _db.DonHangs.Add(order);
-                    await _db.SaveChangesAsync();
-
-                    // 5. Thêm ChiTietDonHang & Trừ kho
-                    foreach (var item in cartItems)
-                    {
-                        var variant = item.MaBienTheNavigation;
-                        var price = variant.Gia;
-
-                        _db.ChiTietDonHangs.Add(new ChiTietDonHang
-                        {
-                            MaDonHang = order.MaDonHang,
-                            MaBienThe = variant.MaBienThe,
-                            SoLuong = item.SoLuong,
-                            DonGia = price,
-                            ThanhTien = price * item.SoLuong
-                        });
-
-                        variant.SoLuong -= item.SoLuong;
-                    }
-
-                    // 6. Giảm lượt dùng Coupon
-                    if (coupon != null && coupon.SoLuong > 0)
-                    {
-                        coupon.SoLuong--;
-                    }
-
-                    // 7. Chỉ xóa giỏ sau khi đặt hàng từ giỏ. "Mua ngay" không thay đổi giỏ.
-                    if (!isBuyNow)
-                        _db.ChiTietGioHangs.RemoveRange(cartItems);
-
-                    // 8. Đặt tên phương thức hiển thị chuẩn
-                    var paymentName = paymentMethod switch
-                    {
-                        "BANK_TRANSFER" => "Chuyển khoản ngân hàng (QR)",
-                        "WEB3" => "Ví Web3 (Crypto)",
-                        _ => "Thanh toán khi nhận hàng (COD)"
-                    };
-
-                    var payment = new ThanhToan
-                    {
-                        MaDonHang = order.MaDonHang,
-                        PhuongThuc = paymentName,
-                        SoTien = total,
-                        TrangThai = paymentMethod == "COD" ? "Chưa thanh toán" : "Chờ thanh toán",
-                        MaGiaoDich = $"EMUA{order.MaDonHang:D6}",
-                        NgayTao = DateTime.Now
-                    };
-
-                    _db.ThanhToans.Add(payment);
-
-                    // =========================================================
-                    // 9. BỔ SUNG TỰ ĐỘNG TẠO HÓA ĐƠN ĐỂ HIỂN THỊ BÊN TRANG NHÂN VIÊN
-                    // =========================================================
-                    var hoaDonMoi = new HoaDon
-                    {
-                        MaDonHang = order.MaDonHang,
-                        NgayLapHoaDon = DateTime.Now,
-                        TongTien = total,
-                        TrangThaiHoaDon = paymentMethod == "COD" ? "Đã lập" : "Chờ thanh toán"
-                    };
-                    _db.HoaDons.Add(hoaDonMoi);
-                    // =========================================================
-
-                    await _db.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-
-                    return new
-                    {
-                        Success = true,
-                        StatusCode = 200,
-                        Data = (object)new
-                        {
-                            success = true,
-                            orderId = order.MaDonHang,
-                            redirectUrl = Url.Action("Success", "Checkout", new { id = order.MaDonHang })
-                        }
-                    };
+                    var now = OrderRules.VietnamNow();
+                    var reserved = await _db.KhuyenMais.Where(x => x.MaKhuyenMai == coupon.MaKhuyenMai && x.TrangThai &&
+                        (x.SoLuong == null || x.SoLuong > 0) && (x.NgayBatDau == null || x.NgayBatDau <= now) && (x.NgayKetThuc == null || x.NgayKetThuc >= now) &&
+                        x.GiaTriGiam == coupon.GiaTriGiam && x.LoaiGiamGia == coupon.LoaiGiamGia && x.GiaTriDonHangToiThieu == coupon.GiaTriDonHangToiThieu)
+                        .ExecuteUpdateAsync(set => set.SetProperty(x => x.SoLuong, x => x.SoLuong == null ? (int?)null : x.SoLuong - 1));
+                    if (reserved != 1) throw new ArgumentException("Mã giảm giá vừa hết lượt hoặc thay đổi. Vui lòng kiểm tra lại.");
                 }
-                catch
+                foreach (var line in lines)
                 {
-                    await transaction.RollbackAsync();
-                    throw;
+                    var qty = (int)line.Qty;
+                    var changed = await _db.BienTheSanPhams.Where(v => v.MaBienThe == line.Id && v.SoLuong >= qty && v.TrangThai == "Còn hàng" &&
+                        v.Gia == line.Price && v.MaSanPhamNavigation.TrangThaiSanPham != "Ẩn")
+                        .ExecuteUpdateAsync(set => set.SetProperty(v => v.SoLuong, v => v.SoLuong - qty)
+                            .SetProperty(v => v.TrangThai, v => v.SoLuong - qty == 0 ? "Hết hàng" : v.TrangThai));
+                    if (changed != 1) throw new ArgumentException("Sản phẩm vừa hết hàng, đổi giá hoặc ngừng bán. Chưa tạo đơn; hãy kiểm tra lại giỏ.");
                 }
+                var order = new DonHang { MaNguoiDung = user.MaNguoiDung, NgayDat = OrderRules.VietnamNow(), TongTien = totals.Total,
+                    TrangThaiDonHang = method == "COD" || totals.Total == 0 ? OrderRules.Pending : OrderRules.AwaitingPayment,
+                    HoTenNhanHang = fullName, SoDienThoaiNhanHang = phone, DiaChiNhanHang = address, GhiChu = note,
+                    PhuongThucVanChuyen = shippingMethod == "EXPRESS" ? "Giao hàng nhanh" : "Giao hàng tiêu chuẩn",
+                    MaKhuyenMai = coupon?.MaKhuyenMai, PhiVanChuyenDaChot = totals.Shipping, TienGiamGiaDaChot = totals.Discount,
+                    LoaiKhuyenMaiDaChot = coupon?.LoaiGiamGia, GiaTriKhuyenMaiDaChot = coupon?.GiaTriGiam ?? 0m,
+                    DonToiThieuKhuyenMaiDaChot = coupon?.GiaTriDonHangToiThieu ?? 0m, YeuCauDatHang = checkoutToken };
+                _db.DonHangs.Add(order); await _db.SaveChangesAsync();
+                foreach (var line in lines) _db.ChiTietDonHangs.Add(new ChiTietDonHang { MaDonHang = order.MaDonHang, MaBienThe = line.Id,
+                    SoLuong = (int)line.Qty, DonGia = line.Price, ThanhTien = OrderRules.Money(line.Price * line.Qty) });
+                _db.ThanhToans.Add(new ThanhToan { MaDonHang = order.MaDonHang, SoTien = totals.Total,
+                    PhuongThuc = method == "COD" ? "Thanh toán khi nhận hàng (COD)" : method == "WEB3" ? "Ví Web3 (Crypto)" : "Chuyển khoản ngân hàng (QR)",
+                    TrangThai = totals.Total == 0 ? OrderRules.Paid : method == "COD" ? "Chưa thanh toán" : OrderRules.AwaitingPayment,
+                    MaGiaoDich = $"EMUA{order.MaDonHang:D6}", NgayTao = OrderRules.VietnamNow() });
+                _db.LichSuVanChuyens.Add(new LichSuVanChuyen { MaDonHang = order.MaDonHang, TrangThai = order.TrangThaiDonHang,
+                    MoTa = "Đã chốt đơn, lưu phí giao và điều kiện giảm giá; giữ tồn kho.", ThoiGian = OrderRules.VietnamNow() });
+                if (!isBuyNow) _db.ChiTietGioHangs.RemoveRange(cart);
+                await _db.SaveChangesAsync(); await tx.CommitAsync(); return order.MaDonHang;
             });
-
-            if (!result.Success)
-            {
-                return StatusCode(result.StatusCode, result.Data);
-            }
-
-            TempData.Remove("Checkout_FullName");
-            TempData.Remove("Checkout_PhoneNumber");
-            TempData.Remove("Checkout_Address");
-            TempData.Remove("Checkout_Note");
-            TempData.Remove("Checkout_PaymentMethod");
-            TempData.Remove("Checkout_CouponCode");
-            TempData.Remove("Checkout_ShippingMethod");
-            TempData.Remove(BuyNowExpectedKey);
-            if (isBuyNow) ClearBuyNowSession();
-            else HttpContext.Session.Remove("Cart_CouponCode");
-
-            return Json(result.Data);
+            foreach (var key in new[] { "Checkout_FullName", "Checkout_PhoneNumber", "Checkout_Address", "Checkout_Note", "Checkout_PaymentMethod", "Checkout_CouponCode", "Checkout_ShippingMethod", "Checkout_RequestKey", "Checkout_ReviewTotal", "Checkout_ReviewItems", BuyNowExpectedKey }) TempData.Remove(key);
+            if (isBuyNow) ClearBuyNowSession(); else HttpContext.Session.Remove("Cart_CouponCode");
+            return Json(new { success = true, orderId, redirectUrl = Url.Action("Success", "Checkout", new { id = orderId }) });
         }
+        catch (ArgumentException ex) { return BadRequest(new { success = false, message = ex.Message }); }
         catch (Exception ex)
         {
-            Console.WriteLine($"PLACE ORDER ERROR: {ex}");
-            return StatusCode(500, new
-            {
-                success = false,
-                message = "Không thể tạo đơn hàng. Vui lòng thử lại."
-            });
+            HttpContext.RequestServices.GetRequiredService<ILogger<CheckoutController>>().LogError(ex, "Lỗi chốt đơn cho người dùng {UserId}", user.MaNguoiDung);
+            return StatusCode(500, new { success = false, message = "Chưa xác định được kết quả đặt hàng. Kiểm tra mục Đơn hàng trước khi tạo yêu cầu mới." });
         }
     }
 
@@ -486,17 +376,15 @@ public class CheckoutController : Controller
         string mbAccountNo = "0963453170";
         string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
         var bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)orderTotal}&addInfo={transferContent}&accountName={mbAccountName}";
-        string web3WalletAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+        string web3WalletAddress = _configuration["Payments:Web3WalletAddress"] ?? "";
+        ViewBag.Web3Network = _configuration["Payments:Web3Network"] ?? "";
 
         ViewBag.BankQrUrl = bankQrUrl;
         ViewBag.Web3WalletAddress = web3WalletAddress;
         ViewBag.TransferContent = transferContent;
 
         var realPaymentStatus = payment?.TrangThai ?? "Chờ xác nhận";
-        if (order.TrangThaiDonHang == "Đã hoàn thành" || order.TrangThaiDonHang == "Đã giao")
-        {
-            realPaymentStatus = "Đã thanh toán";
-        }
+        if (OrderRules.Normalize(order.TrangThaiDonHang) == OrderRules.Cancelled || payment?.TrangThai == OrderRules.PaymentReported) return RedirectToAction("Details", "Order", new { id });
 
         var viewModel = new CheckoutSuccessViewModel
         {
@@ -564,6 +452,10 @@ public class CheckoutController : Controller
     // =========================================================
     // HELPER METHODS
     // =========================================================
+
+    private static string Fingerprint(IEnumerable<(int Id, long Quantity, decimal Price)> items) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+            string.Join(";", items.OrderBy(x => x.Id).Select(x => $"{x.Id}:{x.Quantity}:{x.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)}")))));
 
     private async Task<CheckoutViewModel> BuildCheckoutAsync(NguoiDung user)
     {
@@ -671,19 +563,19 @@ public class CheckoutController : Controller
     private async Task<NguoiDung?> GetCurrentUserAsync()
     {
         var idText = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(idText, out var id) ? await _db.NguoiDungs.FindAsync(id) : null;
+        return int.TryParse(idText, out var id) ? await _db.NguoiDungs.FirstOrDefaultAsync(x => x.MaNguoiDung == id && x.TrangThai) : null;
     }
 
     private async Task<KhuyenMai?> FindValidCouponAsync(string? code, decimal subtotal)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
-        var now = DateTime.Now;
-        var coupon = await _db.KhuyenMais.FirstOrDefaultAsync(x => x.MaCode.Trim().ToLower() == code.Trim().ToLower());
-        if (coupon == null || !coupon.TrangThai || coupon.SoLuong <= 0 || coupon.NgayBatDau > now || coupon.NgayKetThuc < now || (coupon.GiaTriDonHangToiThieu) > subtotal)
+        var now = OrderRules.VietnamNow();
+        var coupon = await _db.KhuyenMais.AsNoTracking().FirstOrDefaultAsync(x => x.MaCode.Trim().ToLower() == code.Trim().ToLower());
+        if (coupon == null || !coupon.TrangThai || coupon.GiaTriGiam <= 0 || coupon.SoLuong <= 0 || coupon.NgayBatDau > now || coupon.NgayKetThuc < now || (coupon.GiaTriDonHangToiThieu) > subtotal)
             return null;
         return coupon;
     }
 
     private static decimal CalculateDiscount(KhuyenMai coupon, decimal subtotal) =>
-        ShoppingRules.Discount(coupon, subtotal);
+        OrderRules.Money(Math.Clamp(OrderRules.IsPercent(coupon.LoaiGiamGia) ? subtotal * coupon.GiaTriGiam / 100m : coupon.GiaTriGiam, 0m, subtotal));
 }

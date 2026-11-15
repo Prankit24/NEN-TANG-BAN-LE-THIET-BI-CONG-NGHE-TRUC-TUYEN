@@ -5,7 +5,10 @@ namespace EMua.Areas.Staff.Models;
 
 public class ImportOrderItemViewModel
 {
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn biến thể sản phẩm.")]
     public int MaBienThe { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Mã báo giá không hợp lệ.")]
+    public int? MaBaoGia { get; set; }
     public string? TenSanPham { get; set; }
     public string? MauSac { get; set; }
     public string? PhienBan { get; set; }
@@ -16,19 +19,22 @@ public class ImportOrderItemViewModel
     public int SoLuongNhap { get; set; } = 10;
 
     // Giá nhập trước thuế VAT
+    [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Giá trước VAT phải từ 0 đến 1 tỷ đồng.")]
     public decimal DonGiaChuaThue { get; set; }
 
     // Thuế suất VAT đầu vào (%)
+    [Range(typeof(decimal), "0", "10", ErrorMessage = "Thuế suất VAT không hợp lệ.")]
     public decimal ThueSuatVat { get; set; } = 10.00m;
 
     // Tiền VAT đầu vào trên 1 đơn vị
     public decimal TienThueVat { get; set; }
 
     // Giá nhập sau VAT (dự kiến)
-    [Range(0, 1000000000, ErrorMessage = "Đơn giá nhập không hợp lệ.")]
+    [Range(0, 1100000000, ErrorMessage = "Đơn giá nhập không hợp lệ.")]
     public decimal DonGiaNhapDuKien { get; set; }
 
     // Chiết khấu đơn vị
+    [Range(typeof(decimal), "0", "1100000000", ErrorMessage = "Chiết khấu dòng không hợp lệ.")]
     public decimal ChietKhau { get; set; } = 0.00m;
 
     // Giá bán niêm yết hiện tại
@@ -40,34 +46,41 @@ public class ImportOrderItemViewModel
     // Tỷ suất lợi nhuận dự kiến (%)
     public decimal TySuatLoiNhuan => GiaBanHienTai > 0 ? (LoiNhuanGopDuKien / GiaBanHienTai) * 100 : 0;
 
+    [StringLength(255, ErrorMessage = "Nội dung tối đa 255 ký tự.")]
     public string? GhiChu { get; set; }
 }
 
 public class SupplierQuickCreateModel
 {
     [Required(ErrorMessage = "Vui lòng nhập tên nhà cung cấp.")]
-    [StringLength(200)]
+    [StringLength(200, ErrorMessage = "Tên nhà cung cấp tối đa 200 ký tự.")]
     public string TenNhaCungCap { get; set; } = string.Empty;
 
-    [StringLength(20)]
+    [StringLength(20, ErrorMessage = "Số điện thoại tối đa 20 ký tự.")]
     public string? SoDienThoai { get; set; }
 
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage = "Email tối đa 100 ký tự.")]
     [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
     public string? Email { get; set; }
 
-    [StringLength(255)]
+    [StringLength(255, ErrorMessage = "Nội dung tối đa 255 ký tự.")]
     public string? DiaChi { get; set; }
 
-    [StringLength(50)]
+    [StringLength(50, ErrorMessage = "Mã số thuế tối đa 50 ký tự.")]
     public string? MaSoThue { get; set; }
 
-    [StringLength(500)]
+    [StringLength(500, ErrorMessage = "Ghi chú hoặc diễn giải tối đa 500 ký tự.")]
     public string? GhiChu { get; set; }
 }
 
 public class ImportOrderCreateViewModel
 {
+    [Required(ErrorMessage = "Thiếu mã yêu cầu. Vui lòng mở lại trang lập phiếu.")]
+    [StringLength(45, ErrorMessage = "Mã yêu cầu quá dài.")]
+    [RegularExpression(@"^PNN-\d{8}-[0-9A-Fa-f]{32}$", ErrorMessage = "Mã yêu cầu không hợp lệ. Vui lòng mở lại trang lập phiếu.")]
+    public string MaYeuCau { get; set; } = string.Empty;
+
+    [Range(1, int.MaxValue, ErrorMessage = "Mã nhà cung cấp không hợp lệ.")]
     public int? MaNhaCungCap { get; set; }
 
     [Required(ErrorMessage = "Vui lòng chọn hoặc nhập tên nhà cung cấp.")]
@@ -78,17 +91,20 @@ public class ImportOrderCreateViewModel
     [StringLength(255, ErrorMessage = "Lý do nhập tối đa 255 ký tự.")]
     public string LyDoNhap { get; set; } = "Bổ sung hàng tồn kho đã hết / sắp hết";
 
-    [StringLength(500)]
+    [StringLength(500, ErrorMessage = "Ghi chú hoặc diễn giải tối đa 500 ký tự.")]
     public string? DienGiai { get; set; }
 
-    [StringLength(500)]
+    [StringLength(500, ErrorMessage = "Ghi chú hoặc diễn giải tối đa 500 ký tự.")]
     public string? GhiChu { get; set; }
 
     // Chi phí & Thuế tổng quát của phiếu nhập
     public decimal TienHangChuaThue { get; set; }
     public decimal TienThueVat { get; set; }
+    [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Chi phí phải từ 0 đến 1 tỷ đồng.")]
     public decimal ChiPhiVanChuyen { get; set; }
+    [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Chi phí phải từ 0 đến 1 tỷ đồng.")]
     public decimal ChiPhiKhac { get; set; }
+    [Range(typeof(decimal), "0", "1000000000000", ErrorMessage = "Chiết khấu toàn phiếu không hợp lệ.")]
     public decimal ChietKhauTong { get; set; }
     public decimal TongThanhToanDuKien { get; set; }
 
@@ -125,7 +141,7 @@ public class ImportOrderReceiveViewModel
     public DateTime? NgayDuyet { get; set; }
     public decimal TongTienDuKien { get; set; }
 
-    [StringLength(500)]
+    [StringLength(500, ErrorMessage = "Ghi chú hoặc diễn giải tối đa 500 ký tự.")]
     public string? GhiChuKiemNhan { get; set; }
 
     public List<ImportOrderReceiveItemViewModel> Items { get; set; } = new();
