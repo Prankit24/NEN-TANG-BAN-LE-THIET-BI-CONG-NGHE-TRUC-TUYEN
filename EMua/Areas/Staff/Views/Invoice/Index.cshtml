@@ -202,14 +202,14 @@
             <a asp-action="DailyReport" class="btn btn-outline-primary px-3" title="Báo cáo tổng hợp hóa đơn cuối ngày">
                 <i class="bi bi-calendar-check me-1"></i> Báo cáo cuối ngày
             </a>
-            <a asp-action="ExportReportCsv" 
+            <a asp-action="ExportReportExcel" 
                asp-route-status="@selectedStatus" 
                asp-route-month="@selectedMonth" 
                asp-route-year="@selectedYear" 
                asp-route-fromDate="@fromDate" 
                asp-route-toDate="@toDate" 
-               class="btn btn-outline-success px-3" title="Xuất báo cáo tổng hợp hóa đơn">
-                <i class="bi bi-file-earmark-excel me-1"></i> Xuất CSV
+               class="btn btn-outline-success px-3" title="Xuất báo cáo tổng hợp hóa đơn dạng Excel">
+                <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel (.xlsx)
             </a>
         </div>
     </form>

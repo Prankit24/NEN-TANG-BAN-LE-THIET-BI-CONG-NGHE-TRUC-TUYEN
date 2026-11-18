@@ -1,3 +1,4 @@
+using EMua.Services;
 using EMua.Areas.Staff.Models;
 using EMua.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -125,31 +126,63 @@ public class ReportController : StaffControllerBase
     [HttpGet]
     public async Task<IActionResult> Export(int? month, int? year)
     {
+        return await ExportExcel(month, year);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportExcel(int? month, int? year)
+    {
         var result = await Index(month, year) as ViewResult;
         if (result?.Model is not ReportViewModel report) return BadRequest();
-
-        var rows = new List<string>
-        {
-            "Bao cao;Gia tri",
-            $"Doanh thu;{report.Revenue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}",
-            $"Tong so don;{report.TotalOrders}",
-            $"Don thanh cong;{report.SuccessfulOrders}",
-            $"Ti le thanh cong;{report.SuccessRate.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}%",
-            $"Don huy;{report.CancelledOrders}",
-            $"Don doi tra;{report.ReturnedOrders}",
-            $"Don cho xu ly;{report.PendingOrders}",
-            "",
-            "Mat hang ban chay;So luong;Doanh thu"
-        };
-        rows.AddRange(report.BestSellingProducts.Select(x => $"{EscapeCsv(x.Name)};{x.Quantity};{x.Revenue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}"));
-        rows.Add("\nSan pham yeu thich;Luot yeu thich");
-        rows.AddRange(report.FavoriteProducts.Select(x => $"{EscapeCsv(x.Name)};{x.Quantity}"));
 
         var vnNow = GetVietnamNow();
         var exportYear = year ?? vnNow.Year;
         var exportMonth = month ?? vnNow.Month;
-        return File(System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, rows))).ToArray(), "text/csv", $"bao-cao-{exportYear}-{exportMonth:00}.csv");
-    }
 
-    private static string EscapeCsv(string value) => $"\"{value.Replace("\"", "\"\"")}\"";
+        var columns = new List<ExcelColumn>
+        {
+            new() { Header = "Hạng mục / Sản phẩm", Width = 38, Type = ExcelCellType.Text },
+            new() { Header = "Chỉ số / Số lượng", Width = 20, Type = ExcelCellType.Number },
+            new() { Header = "Doanh thu (VNĐ)", Width = 24, Type = ExcelCellType.Currency },
+            new() { Header = "Ghi chú / Tỷ lệ", Width = 22, Type = ExcelCellType.TextCenter }
+        };
+
+        var rows = new List<object?[]>
+        {
+            // Nhóm tổng quan
+            new object?[] { "DOANH THU THỰC TẾ", null, report.Revenue, $"Kỳ T{exportMonth:00}/{exportYear}" },
+            new object?[] { "Tổng số đơn hàng", report.TotalOrders, null, "100%" },
+            new object?[] { "Đơn hàng thành công", report.SuccessfulOrders, null, $"{report.SuccessRate:0.0}%" },
+            new object?[] { "Đơn hàng bị hủy", report.CancelledOrders, null, null },
+            new object?[] { "Đơn hàng đổi trả", report.ReturnedOrders, null, null },
+            new object?[] { "Đơn hàng chờ xử lý", report.PendingOrders, null, null },
+            new object?[] { "--- TOP SẢN PHẨM BÁN CHẠY ---", null, null, null }
+        };
+
+        foreach (var item in report.BestSellingProducts)
+        {
+            rows.Add(new object?[] { item.Name, item.Quantity, item.Revenue, "Bán chạy" });
+        }
+
+        if (report.FavoriteProducts.Any())
+        {
+            rows.Add(new object?[] { "--- SẢN PHẨM ĐƯỢC YÊU THÍCH NHẤT ---", null, null, null });
+            foreach (var item in report.FavoriteProducts)
+            {
+                rows.Add(new object?[] { item.Name, item.Quantity, null, "Lượt yêu thích" });
+            }
+        }
+
+        var summary = new object?[] { "TỔNG DOANH THU", report.SuccessfulOrders, report.Revenue, "ĐÃ ĐỐI SOÁT" };
+
+        var fileBytes = ExcelExportService.CreateWorkbook(
+            $"BÁO CÁO THỐNG KÊ KINH DOANH THÁNG {exportMonth:00}/{exportYear} - EMUA STORE",
+            $"Thời gian xuất: {DateTime.Now:dd/MM/yyyy HH:mm} | Nhân viên xuất báo cáo: {User.Identity?.Name ?? "Nhân viên"}",
+            columns,
+            rows,
+            summary);
+
+        var fileName = $"BaoCao_KinhDoanh_{exportYear}_{exportMonth:00}.xlsx";
+        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
 }

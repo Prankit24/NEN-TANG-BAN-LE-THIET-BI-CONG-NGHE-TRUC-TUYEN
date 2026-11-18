@@ -434,3 +434,84 @@ body.emua-admin .admin-header {
 .staff-account-avatar {
     border-radius: var(--emua-radius-pill) !important;
 }
+
+/* ==========================================================================
+   CHUẨN HÓA TOÀN BỘ GIAO DIỆN (CUSTOMER, STAFF, ADMIN)
+   Theo đúng quy chuẩn thiết kế EMUA:
+   - Icon mũi tên, chevron, nút quay lại và điều hướng hiển thị sạch, không khung viền thừa.
+   - Loại bỏ viền kép, card lồng card, shadow không cần thiết.
+   - Không bo góc tùy tiện cho các thành phần quản trị.
+   - Giữ border sắc nét cho input, table và form.
+   ========================================================================== */
+
+/* 1. Nút quay lại, mũi tên, chevron: sạch, không viền, không box */
+.btn-back-icon,
+.back-btn,
+.btn-back,
+.store-arrow,
+.gallery-arrow,
+.ec-chevron,
+.action-arrow {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: var(--emua-text) !important;
+    text-decoration: none !important;
+    transition: color 0.15s ease, transform 0.15s ease !important;
+}
+
+.btn-back-icon:hover,
+.back-btn:hover,
+.btn-back:hover,
+.store-arrow:hover,
+.gallery-arrow:hover {
+    background: transparent !important;
+    color: var(--emua-primary) !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* 2. Loại bỏ card lồng card có viền kép */
+.card .card,
+.panel .panel,
+.admin-card .admin-card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* 3. Giữ viền rõ ràng cho input, select, table; loại bỏ shadow thừa */
+.card,
+.admin-card,
+.staff-card,
+.panel {
+    box-shadow: none !important;
+    border: 1px solid var(--emua-border) !important;
+}
+
+/* 4. Breadcrumb sạch */
+.breadcrumb {
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 16px !important;
+    border: none !important;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--emua-muted) !important;
+    content: "›" !important;
+    font-size: 15px !important;
+    padding: 0 8px !important;
+}
+
+/* 5. Responsive tối ưu */
+@media (max-width: 768px) {
+    .admin-header,
+    .staff-header {
+        padding: 0 16px !important;
+    }
+    .table-responsive {
+        border: 1px solid var(--emua-border-light) !important;
+    }
+}

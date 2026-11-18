@@ -223,8 +223,8 @@
         </form>
         <div class="d-flex align-items-center gap-3">
             <span class="text-muted small">Thời gian: <strong>Tháng @currentMonth/@currentYear (Giờ VN)</strong></span>
-            <a asp-action="Export" asp-route-month="@currentMonth" asp-route-year="@currentYear" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-download me-1"></i> Xuất CSV
+            <a asp-action="ExportExcel" asp-route-month="@currentMonth" asp-route-year="@currentYear" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel (.xlsx)
             </a>
         </div>
     </div>

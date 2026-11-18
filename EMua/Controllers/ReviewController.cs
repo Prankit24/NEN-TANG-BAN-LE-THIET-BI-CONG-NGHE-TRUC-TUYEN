@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EMua.Data;
@@ -5,10 +6,12 @@ using EMua.Models.Database;
 using EMua.ViewModels;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EMua.Controllers
 {
+    [Authorize]
     public class ReviewController : Controller
     {
         private readonly EMuaDbContext _context;
@@ -18,18 +21,21 @@ namespace EMua.Controllers
             _context = context;
         }
 
+        private int CurrentUserId() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : 0;
+
         // =========================================================================
         // 1. GET: /Review/Create?productId=...&orderId=...
         // =========================================================================
         [HttpGet]
         public async Task<IActionResult> Create(int productId, int orderId)
         {
+            var userId = CurrentUserId();
             var donHang = await _context.DonHangs
-                .FirstOrDefaultAsync(o => o.MaDonHang == orderId);
+                .FirstOrDefaultAsync(o => o.MaDonHang == orderId && o.MaNguoiDung == userId);
 
             if (donHang == null)
             {
-                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng hoặc bạn không có quyền đánh giá đơn hàng này.";
                 return RedirectToAction("Index", "Order");
             }
 
@@ -63,6 +69,8 @@ namespace EMua.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            var userId = CurrentUserId();
+
             // KIỂM TRA: Đã đánh giá sản phẩm này trong đơn hàng này chưa?
             bool daDanhGia = await _context.DanhGiaSanPhams
                 .AnyAsync(r => r.MaDonHang == model.OrderId && r.MaSanPham == model.ProductId);
@@ -74,11 +82,11 @@ namespace EMua.Controllers
             }
 
             var donHang = await _context.DonHangs
-                .FirstOrDefaultAsync(o => o.MaDonHang == model.OrderId);
+                .FirstOrDefaultAsync(o => o.MaDonHang == model.OrderId && o.MaNguoiDung == userId);
 
             if (donHang == null)
             {
-                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng hoặc bạn không có quyền đánh giá đơn hàng này.";
                 return RedirectToAction("Details", "Order", new { id = model.OrderId });
             }
 
@@ -86,7 +94,7 @@ namespace EMua.Controllers
             {
                 MaSanPham = model.ProductId,
                 MaDonHang = model.OrderId,
-                MaNguoiDung = donHang.MaNguoiDung,
+                MaNguoiDung = userId,
                 SoLuongSao = model.Rating,
                 BinhLuan = model.Comment,
                 NgayDanhGia = DateTime.Now,
@@ -113,6 +121,8 @@ namespace EMua.Controllers
                 return RedirectToAction("Index", "Order");
             }
 
+            var userId = CurrentUserId();
+
             // KIỂM TRA: Đơn hàng này đã có bất kỳ đánh giá nào chưa?
             bool daDanhGiaDonHang = await _context.DanhGiaSanPhams
                 .AnyAsync(r => r.MaDonHang == OrderId);
@@ -132,11 +142,11 @@ namespace EMua.Controllers
             var donHang = await _context.DonHangs
                 .Include(o => o.ChiTietDonHangs)
                     .ThenInclude(ct => ct.MaBienTheNavigation)
-                .FirstOrDefaultAsync(o => o.MaDonHang == OrderId);
+                .FirstOrDefaultAsync(o => o.MaDonHang == OrderId && o.MaNguoiDung == userId);
 
             if (donHang == null)
             {
-                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng hoặc bạn không có quyền đánh giá đơn hàng này.";
                 return RedirectToAction("Index", "Order");
             }
 
@@ -163,7 +173,7 @@ namespace EMua.Controllers
                     {
                         MaSanPham = maSanPham,
                         MaDonHang = OrderId,
-                        MaNguoiDung = donHang.MaNguoiDung,
+                        MaNguoiDung = userId,
                         SoLuongSao = Rating,
                         BinhLuan = Comment,
                         NgayDanhGia = DateTime.Now,

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EMua.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Quản trị viên,QuanTriVien")]
 public class SystemController : Controller
 {
     [HttpGet]

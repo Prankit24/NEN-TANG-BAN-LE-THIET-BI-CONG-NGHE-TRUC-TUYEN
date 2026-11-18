@@ -217,6 +217,107 @@ public class InvoiceController : StaffControllerBase
         return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", fileName);
     }
 
+    // 2.1 XUẤT BÁO CÁO TỔNG HỢP HÓA ĐƠN (EXCEL .XLSX ĐỊNH DẠNG CHUYÊN NGHIỆP)
+    [HttpGet]
+    public async Task<IActionResult> ExportReportExcel(string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
+    {
+        var invoicesQuery = _db.HoaDons
+            .AsNoTracking()
+            .Include(x => x.MaDonHangNavigation)
+            .Include(x => x.ChiTietHoaDons)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
+
+        if (fromDate.HasValue)
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
+        if (toDate.HasValue)
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon <= toDate.Value.Date.AddDays(1).AddTicks(-1));
+        if (month.HasValue && month.Value > 0)
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
+        if (year.HasValue && year.Value > 0)
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
+
+        var list = await invoicesQuery.OrderByDescending(x => x.MaHoaDon).ToListAsync();
+
+        var columns = new List<ExcelColumn>
+        {
+            new() { Header = "Mã Hóa Đơn", Width = 15, Type = ExcelCellType.TextCenter },
+            new() { Header = "Mã Đơn Hàng", Width = 15, Type = ExcelCellType.TextCenter },
+            new() { Header = "Ngày Lập", Width = 18, Type = ExcelCellType.DateTime },
+            new() { Header = "Khách Hàng", Width = 25, Type = ExcelCellType.Text },
+            new() { Header = "Số Điện Thoại", Width = 15, Type = ExcelCellType.TextCenter },
+            new() { Header = "Tiền Trước Thuế", Width = 18, Type = ExcelCellType.Currency },
+            new() { Header = "Thuế VAT", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Phí Giao Hàng", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Giảm Giá", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Tổng Thanh Toán", Width = 20, Type = ExcelCellType.Currency },
+            new() { Header = "Trạng Thái", Width = 16, Type = ExcelCellType.TextCenter },
+            new() { Header = "Người Lập", Width = 20, Type = ExcelCellType.Text }
+        };
+
+        var rows = new List<object?[]>();
+        decimal sumNet = 0, sumVat = 0, sumShip = 0, sumDisc = 0, sumTotal = 0;
+
+        foreach (var inv in list)
+        {
+            var net = inv.TienTruocThue ?? 0m;
+            var vat = inv.TienThueVat ?? 0m;
+            var ship = inv.PhiVanChuyen ?? 0m;
+            var disc = inv.TienGiamGia ?? 0m;
+            var gross = inv.TongTien ?? 0m;
+
+            sumNet += net;
+            sumVat += vat;
+            sumShip += ship;
+            sumDisc += disc;
+            sumTotal += gross;
+
+            rows.Add(new object?[]
+            {
+                $"#HD-{inv.MaHoaDon:D5}",
+                $"#DH-{inv.MaDonHang:D5}",
+                inv.NgayLapHoaDon,
+                inv.HoTenKhachHang ?? "",
+                inv.SoDienThoai ?? "",
+                net,
+                vat,
+                ship,
+                disc,
+                gross,
+                inv.TrangThaiHoaDon ?? "Đã lập",
+                inv.TenNguoiLap ?? "Hệ thống"
+            });
+        }
+
+        var summary = new object?[]
+        {
+            "TỔNG CỘNG",
+            $"{list.Count} hóa đơn",
+            null,
+            null,
+            null,
+            sumNet,
+            sumVat,
+            sumShip,
+            sumDisc,
+            sumTotal,
+            "ĐÃ ĐỐI SOÁT",
+            null
+        };
+
+        var fileBytes = ExcelExportService.CreateWorkbook(
+            "BÁO CÁO TỔNG HỢP HÓA ĐƠN BÁN HÀNG - EMUA TECHNOLOGY STORE",
+            $"Thời gian xuất: {DateTime.Now:dd/MM/yyyy HH:mm} | Bộ lọc: {status ?? "Tất cả"} | Tổng số: {list.Count} chứng từ",
+            columns,
+            rows,
+            summary);
+
+        var fileName = $"BaoCao_HoaDon_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
     // 3. XEM TRƯỚC VÀ LẬP HÓA ĐƠN CHO ĐƠN HÀNG (GET)
     [HttpGet]
     public async Task<IActionResult> Create(int orderId)
@@ -676,5 +777,97 @@ public class InvoiceController : StaffControllerBase
 
         var fileName = $"BaoCao_CuoiNgay_{targetDate:yyyyMMdd}.csv";
         return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", fileName);
+    }
+
+    // XUẤT EXCEL (.XLSX) BÁO CÁO HÓA ĐƠN CUỐI NGÀY
+    [HttpGet]
+    public async Task<IActionResult> ExportDailyReportExcel(DateTime? date)
+    {
+        var targetDate = (date ?? OrderRules.VietnamNow()).Date;
+        var startOfDay = targetDate;
+        var endOfDay = targetDate.AddDays(1).AddTicks(-1);
+
+        var invoicesToday = await _db.HoaDons.AsNoTracking()
+            .Include(h => h.MaDonHangNavigation)
+            .Include(h => h.ChiTietHoaDons)
+            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon <= endOfDay)
+            .OrderByDescending(h => h.MaHoaDon)
+            .ToListAsync();
+
+        var columns = new List<ExcelColumn>
+        {
+            new() { Header = "Mã HĐ", Width = 14, Type = ExcelCellType.TextCenter },
+            new() { Header = "Mã ĐH", Width = 14, Type = ExcelCellType.TextCenter },
+            new() { Header = "Giờ Lập", Width = 14, Type = ExcelCellType.DateTime },
+            new() { Header = "Khách Hàng", Width = 26, Type = ExcelCellType.Text },
+            new() { Header = "SĐT", Width = 15, Type = ExcelCellType.TextCenter },
+            new() { Header = "Tiền Trước Thuế", Width = 18, Type = ExcelCellType.Currency },
+            new() { Header = "Tiền VAT", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Phí Vận Chuyển", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Giảm Giá", Width = 16, Type = ExcelCellType.Currency },
+            new() { Header = "Tổng Thanh Toán", Width = 20, Type = ExcelCellType.Currency },
+            new() { Header = "Trạng Thái", Width = 16, Type = ExcelCellType.TextCenter },
+            new() { Header = "Nhân Viên Lập", Width = 20, Type = ExcelCellType.Text }
+        };
+
+        var rows = new List<object?[]>();
+        decimal sumNet = 0, sumVat = 0, sumShip = 0, sumDisc = 0, sumTotal = 0;
+
+        foreach (var inv in invoicesToday)
+        {
+            var net = inv.TienTruocThue ?? 0m;
+            var vat = inv.TienThueVat ?? 0m;
+            var ship = inv.PhiVanChuyen ?? 0m;
+            var disc = inv.TienGiamGia ?? 0m;
+            var gross = inv.TongTien ?? 0m;
+
+            sumNet += net;
+            sumVat += vat;
+            sumShip += ship;
+            sumDisc += disc;
+            sumTotal += gross;
+
+            rows.Add(new object?[]
+            {
+                $"#HD-{inv.MaHoaDon:D5}",
+                $"#DH-{inv.MaDonHang:D5}",
+                inv.NgayLapHoaDon,
+                inv.HoTenKhachHang ?? "",
+                inv.SoDienThoai ?? "",
+                net,
+                vat,
+                ship,
+                disc,
+                gross,
+                inv.TrangThaiHoaDon ?? "Đã lập",
+                inv.TenNguoiLap ?? "Hệ thống"
+            });
+        }
+
+        var summary = new object?[]
+        {
+            "TỔNG CUỐI NGÀY",
+            $"{invoicesToday.Count} HĐ",
+            null,
+            null,
+            null,
+            sumNet,
+            sumVat,
+            sumShip,
+            sumDisc,
+            sumTotal,
+            "ĐÃ KHÓA SỔ",
+            null
+        };
+
+        var fileBytes = ExcelExportService.CreateWorkbook(
+            $"BÁO CÁO DOANH THU & HÓA ĐƠN BÁN HÀNG NGÀY {targetDate:dd/MM/yyyy} - EMUA STORE",
+            $"Thời gian xuất sổ: {DateTime.Now:dd/MM/yyyy HH:mm} | Nhân viên trực: {User.Identity?.Name ?? "Nhân viên"} | Tổng: {invoicesToday.Count} hóa đơn",
+            columns,
+            rows,
+            summary);
+
+        var fileName = $"BaoCao_CuoiNgay_{targetDate:yyyyMMdd}.xlsx";
+        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 }

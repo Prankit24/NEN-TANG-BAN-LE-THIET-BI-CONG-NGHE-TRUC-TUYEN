@@ -25,10 +25,12 @@
     }
 
     var isAdmin = User.IsInRole("Admin")
-        || User.IsInRole("Quản trị viên");
+        || User.IsInRole("Quản trị viên")
+        || User.IsInRole("QuanTriVien");
 
     var isStaff = User.IsInRole("NhanVien")
-        || User.IsInRole("Nhân viên");
+        || User.IsInRole("Nhân viên")
+        || User.IsInRole("Staff");
 
     var cartUrl = isAuthenticated
         ? Url.Action("Index", "Cart", new { area = "" })
