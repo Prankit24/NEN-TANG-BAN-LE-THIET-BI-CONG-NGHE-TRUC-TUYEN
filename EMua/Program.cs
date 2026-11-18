@@ -7,6 +7,7 @@ using EMua.Models.Database;
 using EMua.Services;
 using EMua.Services.AI;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -422,6 +423,38 @@ builder.Services
         CookieAuthenticationDefaults.AuthenticationScheme,
         options =>
         {
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                var principal = context.Principal;
+                if (principal?.Identity?.IsAuthenticated != true)
+                    return;
+
+                var path = context.Request.Path.Value ?? string.Empty;
+                if (path.StartsWith("/ping") || path.StartsWith("/health") || path.Contains('.'))
+                    return;
+
+                var userIdStr = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdStr, out var userId))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<EMuaDbContext>();
+                var userActive = await db.NguoiDungs
+                    .AsNoTracking()
+                    .Where(u => u.MaNguoiDung == userId)
+                    .Select(u => (bool?)u.TrangThai)
+                    .FirstOrDefaultAsync();
+
+                if (userActive != true)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            };
+
             options.Events.OnRedirectToLogin = context =>
             {
                 if (context.Request.Headers.Accept.ToString()

@@ -834,6 +834,32 @@ public class AuthController : Controller
             new(ClaimTypes.Role, roleName)
         };
 
+        // Gán đầy đủ các role alias để khớp mọi chính sách phân quyền [Authorize(Roles = "...")]
+        if (IsAdmin(user))
+        {
+            foreach (var r in new[] { "Admin", "Quản trị viên", "QuanTriVien" })
+            {
+                if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                    claims.Add(new Claim(ClaimTypes.Role, r));
+            }
+        }
+        else if (IsStaff(user))
+        {
+            foreach (var r in new[] { "Nhân viên", "NhanVien", "Staff" })
+            {
+                if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                    claims.Add(new Claim(ClaimTypes.Role, r));
+            }
+        }
+        else
+        {
+            foreach (var r in new[] { "Khách hàng", "KhachHang", "Customer" })
+            {
+                if (!claims.Any(c => c.Type == ClaimTypes.Role && c.Value.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                    claims.Add(new Claim(ClaimTypes.Role, r));
+            }
+        }
+
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
         await HttpContext.SignInAsync(
@@ -934,7 +960,7 @@ public class AuthController : Controller
     private static bool IsStaff(NguoiDung user)
     {
         var roleName = user.MaQuyenNavigation?.TenQuyen;
-        return user.MaQuyen == 2 || roleName is "NhanVien" or "Nhân viên";
+        return user.MaQuyen == 2 || roleName is "NhanVien" or "Nhân viên" or "Staff";
     }
 
     private sealed class GeeTestValidationResult

@@ -54,24 +54,26 @@
 
 /* Nút Icon Mũi tên quay lại */
 .btn-back-icon {
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid #e2e1f0;
-    background: #ffffff;
-    color: #4e4d95;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #334155;
     font-size: 18px;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: color 0.15s ease;
     flex-shrink: 0;
+    box-shadow: none;
+    border-radius: 0;
 }
 
     .btn-back-icon:hover {
-        background: #4e4d95;
-        color: #ffffff;
-        border-color: #4e4d95;
+        background: transparent;
+        color: #2563eb;
+        border: none;
         transform: translateX(-2px);
     }
 

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EMua.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Quản trị viên,QuanTriVien")]
     public class ReportController : Controller
     {
         private readonly EMuaDbContext _context;
@@ -100,6 +101,77 @@ namespace EMua.Areas.Admin.Controllers
             }
 
             return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string filterType = "month", int? month = null, int? quarter = null, int? year = null)
+        {
+            var result = await Index(filterType, month, quarter, year) as ViewResult;
+            if (result?.Model is not BaoCaoDashboardViewModel vm) return BadRequest();
+
+            var columns = new List<EMua.Services.ExcelColumn>
+            {
+                new() { Header = "Hạng mục đối chiếu / Thời gian", Width = 34, Type = EMua.Services.ExcelCellType.Text },
+                new() { Header = "Kỳ hiện tại (" + vm.Current.Label + ")", Width = 25, Type = EMua.Services.ExcelCellType.Currency },
+                new() { Header = "Kỳ trước (" + vm.Previous.Label + ")", Width = 25, Type = EMua.Services.ExcelCellType.Currency },
+                new() { Header = "Chênh lệch (VNĐ)", Width = 22, Type = EMua.Services.ExcelCellType.Currency },
+                new() { Header = "Tăng trưởng (%)", Width = 18, Type = EMua.Services.ExcelCellType.TextCenter }
+            };
+
+            var cur = vm.Current;
+            var prev = vm.Previous;
+
+            decimal revDiff = cur.Revenue - prev.Revenue;
+            decimal revGrowth = BaoCaoDashboardViewModel.Growth(cur.Revenue, prev.Revenue);
+
+            decimal orderDiff = cur.Orders - prev.Orders;
+            decimal orderGrowth = BaoCaoDashboardViewModel.Growth(cur.Orders, prev.Orders);
+
+            decimal profitDiff = cur.NetProfit - prev.NetProfit;
+            decimal profitGrowth = BaoCaoDashboardViewModel.Growth(cur.NetProfit, prev.NetProfit);
+
+            var rows = new List<object?[]>
+            {
+                new object?[] { "DOANH THU BÁN HÀNG", cur.Revenue, prev.Revenue, revDiff, $"{(revGrowth >= 0 ? "+" : "")}{revGrowth:0.#}%" },
+                new object?[] { "Số lượng đơn hàng hoàn thành", (decimal)cur.Orders, (decimal)prev.Orders, orderDiff, $"{(orderGrowth >= 0 ? "+" : "")}{orderGrowth:0.#}%" },
+                new object?[] { "Thuế GTGT ước tính (~5%)", cur.Tax, prev.Tax, cur.Tax - prev.Tax, null },
+                new object?[] { "Giá vốn & Vận hành (~40%)", cur.Operating, prev.Operating, cur.Operating - prev.Operating, null },
+                new object?[] { "Chi phí lương nhân sự", cur.Salary, prev.Salary, cur.Salary - prev.Salary, null },
+                new object?[] { "LỢI NHUẬN RÒNG ƯỚC TÍNH", cur.NetProfit, prev.NetProfit, profitDiff, $"{(profitGrowth >= 0 ? "+" : "")}{profitGrowth:0.#}%" },
+                new object?[] { "Biên lợi nhuận ròng", null, null, null, $"{cur.Margin:0.#}%" },
+                new object?[] { "--- DIỄN BIẾN DOANH THU 12 THÁNG NĂM " + vm.Year + " ---", null, null, null, null }
+            };
+
+            for (int m = 0; m < vm.TrendLabels.Count; m++)
+            {
+                rows.Add(new object?[]
+                {
+                    $"Tháng {m + 1}/{vm.Year}",
+                    vm.TrendRevenue[m],
+                    null,
+                    vm.TrendProfit[m],
+                    "Lợi nhuận T" + (m + 1)
+                });
+            }
+
+            var summary = new object?[]
+            {
+                "TỔNG KẾT KỲ BÁO CÁO",
+                cur.NetProfit,
+                prev.NetProfit,
+                profitDiff,
+                $"{cur.Margin:0.#}% Biên LN"
+            };
+
+            var fileBytes = EMua.Services.ExcelExportService.CreateWorkbook(
+                $"BÁO CÁO TÀI CHÍNH & HIỆU QUẢ KINH DOANH - EMUA ADMIN",
+                $"Kỳ báo cáo: {cur.Label} (So với: {prev.Label}) | Thời gian xuất: {DateTime.Now:dd/MM/yyyy HH:mm} | Admin: {User.Identity?.Name ?? "Admin"}",
+                columns,
+                rows,
+                summary);
+
+            var fileName = $"BaoCao_TaiChinh_{vm.Year}_{(filterType == "quarter" ? "Q" + vm.Quarter : "T" + vm.Month)}.xlsx";
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
         private async Task<PeriodStats> BuildStats(DateTime start, DateTime end, int months, decimal monthlySalary, string label)

@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace EMua.Areas.Admin.Controllers;
 
 [Area("Admin")]
-[Authorize]
+[Authorize(Roles = "Admin,Quản trị viên,QuanTriVien")]
 public class BrandController : Controller
 {
     private readonly EMuaDbContext _db;

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace EMua.Areas.Staff.Controllers;
 
 [Area("Staff")]
-[Authorize(Roles = "NhanVien, Nhân viên, Quản trị viên, Admin, QuanTriVien")]
+[Authorize(Roles = "NhanVien,Nhân viên,Staff,Admin,Quản trị viên,QuanTriVien")]
 public class DashboardController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;

@@ -5,11 +5,13 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using EMua.Data;
 using EMua.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMua.Controllers;
 
+[Authorize]
 public class FavoriteController : Controller
 {
     private readonly EMuaDbContext _db;

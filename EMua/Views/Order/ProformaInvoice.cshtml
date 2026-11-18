@@ -82,10 +82,19 @@
             padding: 10px 14px;
         }
 
+        @@page {
+            size: A4 portrait;
+            margin: 10mm 12mm;
+        }
+
         @@media print {
-            body {
-                background: #fff;
-                padding: 0;
+            html, body {
+                background: #fff !important;
+                color: #172033 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
             .no-print {
@@ -93,9 +102,28 @@
             }
 
             .proforma-card {
-                border: 0;
-                padding: 0;
-                max-width: 100%;
+                border: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
             }
         }
 

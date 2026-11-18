@@ -70,9 +70,14 @@
             <h2 class="mb-1" style="font-size: 20px; font-weight: 700; color: #172033;">Báo cáo kinh doanh</h2>
             <p class="text-muted small mb-0">Đối chiếu <strong>@cur.Label</strong> và <strong>@prev.Label</strong> · Các khoản ước tính không thay thế báo cáo kế toán hoặc hóa đơn thuế.</p>
         </div>
-        <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 no-print" onclick="window.print()" style="height:38px; font-size:13px;">
-            <i class="bi bi-printer"></i> In báo cáo
-        </button>
+        <div class="d-flex gap-2">
+            <a asp-action="ExportExcel" asp-route-filterType="@Model.FilterType" asp-route-month="@Model.Month" asp-route-quarter="@Model.Quarter" asp-route-year="@Model.Year" class="btn btn-outline-success d-inline-flex align-items-center gap-2 no-print" style="height:38px; font-size:13px;">
+                <i class="bi bi-file-earmark-excel"></i> Xuất Excel (.xlsx)
+            </a>
+            <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 no-print" onclick="window.print()" style="height:38px; font-size:13px;">
+                <i class="bi bi-printer"></i> In báo cáo
+            </button>
+        </div>
     </div>
 
     <!-- BỘ LỌC THỜI GIAN -->

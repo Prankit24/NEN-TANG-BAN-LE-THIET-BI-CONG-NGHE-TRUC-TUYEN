@@ -136,8 +136,8 @@
         </form>
 
         <div class="d-flex align-items-center gap-2">
-            <a asp-action="ExportDailyReportCsv" asp-route-date="@Model.SelectedDate.ToString("yyyy-MM-dd")" class="btn btn-outline-success">
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV đối soát
+            <a asp-action="ExportDailyReportExcel" asp-route-date="@Model.SelectedDate.ToString("yyyy-MM-dd")" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel (.xlsx)
             </a>
             <a asp-action="Index" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> DS hóa đơn

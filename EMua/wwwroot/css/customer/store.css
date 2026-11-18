@@ -543,22 +543,20 @@
     position: absolute;
     right: 13px;
     bottom: 13px;
-    width: 27px;
-    height: 27px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    background: #f8fafc;
+    border: none;
+    background: transparent;
     color: #94a3b8;
-    font-size: 12px;
-    transition: .25s ease;
+    font-size: 14px;
+    transition: color .2s ease;
 }
 
 
 .store-item:hover .store-arrow {
-    background: var(--emua-blue);
-    color: white;
+    background: transparent;
+    color: var(--emua-blue);
 }
 
 
