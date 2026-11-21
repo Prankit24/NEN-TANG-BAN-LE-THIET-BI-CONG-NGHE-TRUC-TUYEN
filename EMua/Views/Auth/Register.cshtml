@@ -181,10 +181,10 @@
 
                 <!-- TERMS -->
                 <label class="check-row register-terms">
-                    <input asp-for="AcceptTerms" type="checkbox" />
-                    <span>Tôi đồng ý với <a href="#">điều khoản sử dụng</a> của EMUA.</span>
+                    <input asp-for="AcceptTerms" type="checkbox" id="acceptTermsCheckbox" />
+                    <span>Tôi đồng ý với <a asp-controller="Home" asp-action="Terms" target="_blank">điều khoản sử dụng</a> của EMUA.</span>
                 </label>
-                <span asp-validation-for="AcceptTerms" class="field-validation-error"></span>
+                <span asp-validation-for="AcceptTerms" id="AcceptTerms-error" class="field-validation-error"></span>
 
                 <!-- CAPTCHA MESSAGE -->
                 <div id="captchaMessage" class="captcha-message" role="status" aria-live="polite"></div>
@@ -296,17 +296,189 @@
 
             initCaptcha();
 
+            function validateRegistrationForm() {
+                let isValid = true;
+                let firstInvalidEl = null;
+
+                function setError(inputEl, errorSpanId, message) {
+                    const span = document.getElementById(errorSpanId);
+                    if (span) {
+                        span.textContent = message;
+                        span.style.display = message ? "block" : "none";
+                    }
+                    if (inputEl) {
+                        if (message) {
+                            inputEl.classList.add("input-validation-error");
+                            inputEl.setAttribute("aria-invalid", "true");
+                            if (!firstInvalidEl) firstInvalidEl = inputEl;
+                        } else {
+                            inputEl.classList.remove("input-validation-error");
+                            inputEl.removeAttribute("aria-invalid");
+                        }
+                    }
+                    if (message) isValid = false;
+                }
+
+                // 1. Họ và tên
+                const fullNameInput = document.querySelector('input[name="FullName"]');
+                const fullNameVal = (fullNameInput?.value || "").trim();
+                if (!fullNameVal) {
+                    setError(fullNameInput, "FullName-error", "Vui lòng nhập họ và tên.");
+                } else if (fullNameVal.length < 2 || fullNameVal.length > 100) {
+                    setError(fullNameInput, "FullName-error", "Họ và tên phải từ 2 đến 100 ký tự.");
+                } else {
+                    setError(fullNameInput, "FullName-error", "");
+                }
+
+                // 2. Email
+                const emailInput = document.querySelector('input[name="Email"]');
+                const emailVal = (emailInput?.value || "").trim();
+                const emailRegex = new RegExp("^[A-Za-z0-9](?:[A-Za-z0-9._%+\\-]*[A-Za-z0-9])?@@[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?)*\\.[A-Za-z]{2,}$");
+                if (!emailVal) {
+                    setError(emailInput, "Email-error", "Vui lòng nhập email.");
+                } else if (!emailRegex.test(emailVal)) {
+                    setError(emailInput, "Email-error", "Email không đúng định dạng hợp lệ.");
+                } else {
+                    setError(emailInput, "Email-error", "");
+                }
+
+                // 3. Số điện thoại (Việt Nam: 10 số, bắt đầu bằng 0 hoặc +84)
+                const phoneInput = document.querySelector('input[name="PhoneNumber"]');
+                const phoneVal = (phoneInput?.value || "").trim().replace(/\s+/g, "");
+                const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+                if (!phoneVal) {
+                    setError(phoneInput, "PhoneNumber-error", "Vui lòng nhập số điện thoại.");
+                } else if (!phoneRegex.test(phoneVal)) {
+                    setError(phoneInput, "PhoneNumber-error", "Số điện thoại Việt Nam không hợp lệ (10 số, bắt đầu bằng 0).");
+                } else {
+                    setError(phoneInput, "PhoneNumber-error", "");
+                }
+
+                // 4. Mật khẩu
+                const passInput = document.getElementById("registerPassword");
+                const passVal = passInput?.value || "";
+                if (!passVal) {
+                    setError(passInput, "Password-error", "Vui lòng nhập mật khẩu.");
+                } else if (passVal.length < 8 || passVal.length > 64) {
+                    setError(passInput, "Password-error", "Mật khẩu phải từ 8 đến 64 ký tự.");
+                } else {
+                    setError(passInput, "Password-error", "");
+                }
+
+                // 5. Xác nhận mật khẩu
+                const confirmPassInput = document.getElementById("registerConfirmPassword");
+                const confirmPassVal = confirmPassInput?.value || "";
+                if (!confirmPassVal) {
+                    setError(confirmPassInput, "ConfirmPassword-error", "Vui lòng xác nhận mật khẩu.");
+                } else if (confirmPassVal !== passVal) {
+                    setError(confirmPassInput, "ConfirmPassword-error", "Xác nhận mật khẩu không trùng khớp.");
+                } else {
+                    setError(confirmPassInput, "ConfirmPassword-error", "");
+                }
+
+                // 6. Điều khoản sử dụng
+                const termsCheckbox = document.getElementById("acceptTermsCheckbox");
+                if (!termsCheckbox || !termsCheckbox.checked) {
+                    setError(termsCheckbox, "AcceptTerms-error", "Bạn cần đồng ý với điều khoản sử dụng của EMUA.");
+                } else {
+                    setError(termsCheckbox, "AcceptTerms-error", "");
+                }
+
+                // Nếu có jQuery Validation thì kết hợp validate
+                if (window.jQuery && window.jQuery.validator && !window.jQuery(form).valid()) {
+                    isValid = false;
+                }
+
+                if (!isValid && firstInvalidEl) {
+                    try {
+                        firstInvalidEl.focus();
+                        firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                    } catch (e) { }
+                }
+
+                return isValid;
+            }
+
+            // Gắn lắng nghe real-time để xóa thông báo lỗi khi người dùng sửa
+            ["FullName", "Email", "PhoneNumber"].forEach(name => {
+                const el = document.querySelector(`input[name="${name}"]`);
+                if (el) {
+                    el.addEventListener("input", function () {
+                        const span = document.getElementById(`${name}-error`);
+                        if (span && el.value.trim()) {
+                            span.textContent = "";
+                            el.classList.remove("input-validation-error");
+                        }
+                    });
+                }
+            });
+
+            const passInput = document.getElementById("registerPassword");
+            const confirmPassInput = document.getElementById("registerConfirmPassword");
+            const termsCheckbox = document.getElementById("acceptTermsCheckbox");
+
+            if (passInput) {
+                passInput.addEventListener("input", () => {
+                    const span = document.getElementById("Password-error");
+                    if (span && passInput.value.length >= 8) {
+                        span.textContent = "";
+                        passInput.classList.remove("input-validation-error");
+                    }
+                });
+            }
+
+            if (confirmPassInput) {
+                confirmPassInput.addEventListener("input", () => {
+                    const span = document.getElementById("ConfirmPassword-error");
+                    if (span && confirmPassInput.value === passInput?.value) {
+                        span.textContent = "";
+                        confirmPassInput.classList.remove("input-validation-error");
+                    }
+                });
+            }
+
+            if (termsCheckbox) {
+                termsCheckbox.addEventListener("change", () => {
+                    const span = document.getElementById("AcceptTerms-error");
+                    if (span && termsCheckbox.checked) {
+                        span.textContent = "";
+                        termsCheckbox.classList.remove("input-validation-error");
+                    }
+                });
+            }
+
+            // Lắng nghe submit và click nút
+            button?.addEventListener("click", function (event) {
+                if (verified) return;
+
+                const isValid = validateRegistrationForm();
+                if (!isValid) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (typeof event.stopImmediatePropagation === "function") {
+                        event.stopImmediatePropagation();
+                    }
+                    return false;
+                }
+            });
+
             form.addEventListener("submit", function (event) {
                 if (verified) return;
 
                 event.preventDefault();
+                event.stopPropagation();
+                if (typeof event.stopImmediatePropagation === "function") {
+                    event.stopImmediatePropagation();
+                }
 
-                if (!form.checkValidity()) {
-                    form.reportValidity();
+                // Chạy kiểm tra toàn diện Client-side validation
+                const isValid = validateRegistrationForm();
+                if (!isValid) {
                     return;
                 }
 
                 if (!captchaObj) {
+                    if (message) message.textContent = "Hệ thống bảo vệ CAPTCHA đang tải. Vui lòng thử lại sau giây lát.";
                     return;
                 }
 

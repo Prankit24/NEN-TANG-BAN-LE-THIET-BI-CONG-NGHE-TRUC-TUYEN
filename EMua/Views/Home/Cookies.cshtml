@@ -1,0 +1,276 @@
+@{
+    ViewData["Title"] = "Chính sách Cookie - EMUA Tech Store";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/customer/legal.css" asp-append-version="true" />
+
+<div class="legal-page">
+    <div class="container emua-container">
+
+        <!-- Hero Header -->
+        <header class="legal-hero">
+            <span class="legal-badge">
+                <i class="bi bi-cookie"></i> Công nghệ lưu trữ web
+            </span>
+            <h1>Chính Sách Cookie</h1>
+            <p>
+                Trang web EMUA Tech Store sử dụng Cookie và các công nghệ lưu trữ tương tự nhằm duy trì phiên đăng nhập, ghi nhớ giỏ hàng công nghệ của bạn và nâng cao trải nghiệm lướt web mượt mà, tối ưu nhất.
+            </p>
+            <div class="legal-meta">
+                <span class="legal-meta-item">
+                    <i class="bi bi-clock-history"></i> Cập nhật: Tháng 11/2026
+                </span>
+                <span class="legal-meta-item">
+                    <i class="bi bi-laptop"></i> Trải nghiệm đa thiết bị
+                </span>
+                <span class="legal-meta-item">
+                    <i class="bi bi-toggle2-on"></i> Quyền quản lý người dùng
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="legal-layout">
+
+            <!-- Sidebar Navigation -->
+            <aside class="legal-sidebar">
+                <div class="legal-toc-title">
+                    <i class="bi bi-list-nested"></i> Nội dung chính sách
+                </div>
+                <ul class="legal-toc-list">
+                    <li><a href="#ck-1" class="legal-toc-link">1. Cookie là gì?</a></li>
+                    <li><a href="#ck-2" class="legal-toc-link">2. Mục đích sử dụng</a></li>
+                    <li><a href="#ck-3" class="legal-toc-link">3. Các loại Cookie sử dụng</a></li>
+                    <li><a href="#ck-4" class="legal-toc-link">4. Bảng chi tiết Cookie</a></li>
+                    <li><a href="#ck-5" class="legal-toc-link">5. Cookie của bên thứ ba</a></li>
+                    <li><a href="#ck-6" class="legal-toc-link">6. Hướng dẫn tắt Cookie</a></li>
+                    <li><a href="#ck-7" class="legal-toc-link">7. Câu hỏi thường gặp</a></li>
+                </ul>
+
+                <div class="legal-quick-switch">
+                    <div class="legal-quick-title">Chính sách liên quan</div>
+                    <div class="legal-quick-nav">
+                        <a href="/dieu-khoan-su-dung">
+                            <span>Điều khoản sử dụng</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        <a href="/chinh-sach-bao-mat">
+                            <span>Chính sách bảo mật</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        <a href="/chinh-sach-cookie" class="current">
+                            <span>Chính sách Cookie</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Cards -->
+            <main class="legal-content">
+
+                <!-- Mục 1 -->
+                <section class="legal-card" id="ck-1">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-info-square"></i></div>
+                        <h2>1. Cookie là gì?</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            <strong>Cookie</strong> là những tệp văn bản nhỏ được lưu trữ trên trình duyệt của máy tính, điện thoại hoặc máy tính bảng của bạn khi bạn truy cập vào website <strong>EMUA Tech Store</strong>.
+                        </p>
+                        <p>
+                            Cookie cho phép máy chủ của chúng tôi nhận diện thiết bị của bạn giữa các lượt tải trang, giúp bạn không cần phải đăng nhập lại mỗi khi chuyển tab hoặc không bị mất các sản phẩm công nghệ đã chọn sẵn trong giỏ hàng.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Mục 2 -->
+                <section class="legal-card" id="ck-2">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-gear-wide-connected"></i></div>
+                        <h2>2. Tại sao EMUA sử dụng Cookie?</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>Chúng tôi sử dụng Cookie cho các chức năng thiết yếu và tiện ích sau:</p>
+                        <ul>
+                            <li><strong>Xác thực tài khoản:</strong> Nhận biết phiên làm việc của bạn sau khi đăng nhập tài khoản Khách hàng, Nhân viên hoặc Quản trị viên.</li>
+                            <li><strong>Giữ giỏ hàng liên tục:</strong> Lưu trữ các mã biến thể laptop, điện thoại, phụ kiện bạn đã thêm vào giỏ hàng ngay cả khi bạn tải lại trang.</li>
+                            <li><strong>Bảo mật chống tấn công giả mạo (Antiforgery):</strong> Tạo mã token bảo vệ mỗi biểu mẫu gửi đi (Form POST) chống lại các cuộc tấn công CSRF độc hại.</li>
+                            <li><strong>Ghi nhớ tùy chọn cá nhân:</strong> Bộ lọc sản phẩm (khoảng giá, thương hiệu Acer, Apple, Asus,...), danh sách yêu thích và lịch sử xem máy gần nhất.</li>
+                            <li><strong>Phiên hội thoại AI Chat:</strong> Lưu mã phiên tạm thời để Trợ lý AI có thể ghi nhớ mạch tư vấn của bạn khi đang tìm hiểu thông số kỹ thuật.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 3 -->
+                <section class="legal-card" id="ck-3">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-pie-chart"></i></div>
+                        <h2>3. Phân loại các nhóm Cookie trên EMUA</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>Hệ thống EMUA phân loại Cookie thành 3 nhóm cơ bản:</p>
+                        <ul>
+                            <li>
+                                <strong>Cookie bắt buộc (Strictly Necessary):</strong> Rất cần thiết để website vận hành ổn định và an toàn. Nếu chặn nhóm này, các tính năng như Đăng nhập, Giỏ hàng hay Thanh toán sẽ không thể hoạt động.
+                            </li>
+                            <li>
+                                <strong>Cookie chức năng & Hiệu năng (Functional & Performance):</strong> Ghi nhớ các tùy chọn cá nhân (ví dụ: chi nhánh Showroom gần nhất ở Đà Nẵng hay Hà Nội) và theo dõi tốc độ tải trang để hệ thống tự động tối ưu hóa tài nguyên.
+                            </li>
+                            <li>
+                                <strong>Cookie phân tích & Thống kê (Analytics):</strong> Thu thập số liệu tổng hợp không định danh về lưu lượng truy cập và các danh mục sản phẩm được quan tâm nhiều nhất, giúp cải tiến dịch vụ.
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 4 -->
+                <section class="legal-card" id="ck-4">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-table"></i></div>
+                        <h2>4. Bảng chi tiết Cookie tiêu biểu của hệ thống</h2>
+                    </div>
+                    <div class="legal-body">
+                        <div class="legal-table-responsive">
+                            <table class="legal-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên Cookie</th>
+                                        <th>Loại</th>
+                                        <th>Thời hạn</th>
+                                        <th>Mục đích sử dụng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>.AspNetCore.Cookies</code></td>
+                                        <td>Bắt buộc</td>
+                                        <td>30 ngày</td>
+                                        <td>Duy trì phiên đăng nhập bảo mật của tài khoản khách hàng / nhân viên.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.AspNetCore.Antiforgery.*</code></td>
+                                        <td>Bắt buộc</td>
+                                        <td>Phiên (Session)</td>
+                                        <td>Mã khóa bảo mật chống tấn công giả mạo yêu cầu chéo trang (CSRF Token).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.AspNetCore.Session</code></td>
+                                        <td>Bắt buộc</td>
+                                        <td>Phiên (Session)</td>
+                                        <td>Lưu trạng thái phiên làm việc, giỏ hàng tạm và mã giảm giá coupon áp dụng.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>emua_fav_guest</code></td>
+                                        <td>Chức năng</td>
+                                        <td>60 ngày</td>
+                                        <td>Ghi nhớ mã sản phẩm công nghệ yêu thích khi bạn chưa đăng nhập.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>emua_ai_session</code></td>
+                                        <td>Chức năng</td>
+                                        <td>24 giờ</td>
+                                        <td>Lưu mã phiên trò chuyện với Trợ lý AI để duy trì mạch tư vấn mua hàng.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mục 5 -->
+                <section class="legal-card" id="ck-5">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-diagram-3"></i></div>
+                        <h2>5. Cookie của bên thứ ba (Third-Party Cookies)</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Khi bạn tương tác với các tính năng tích hợp mở rộng trên website EMUA, một số đối tác dịch vụ có thể tạo Cookie riêng:
+                        </p>
+                        <ul>
+                            <li><strong>Google & Facebook OAuth:</strong> Hỗ trợ tính năng đăng nhập nhanh bằng 1 cú nhấp chuột với tài khoản Google hoặc Facebook của bạn.</li>
+                            <li><strong>Bản đồ Leaflet & OpenStreetMap:</strong> Lưu trữ bộ nhớ đệm bản đồ tương tác hiển thị vị trí các showroom EMUA tại Đà Nẵng và Hà Nội.</li>
+                        </ul>
+                        <div class="legal-callout">
+                            Các bên thứ ba này chịu trách nhiệm quản lý Cookie theo chính sách quyền riêng tư của chính họ.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mục 6 -->
+                <section class="legal-card" id="ck-6">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-sliders2"></i></div>
+                        <h2>6. Cách kiểm soát & Tắt Cookie trên trình duyệt</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Bạn hoàn toàn có quyền chủ động chấp nhận, từ chối hoặc xóa Cookie bất kỳ lúc nào thông qua phần cài đặt của trình duyệt bạn đang sử dụng:
+                        </p>
+                        <ul>
+                            <li><strong>Google Chrome:</strong> Vào <em>Cài đặt</em> &gt; <em>Quyền riêng tư và bảo mật</em> &gt; <em>Cookie của bên thứ ba</em>.</li>
+                            <li><strong>Apple Safari:</strong> Vào <em>Tuỳ chọn (Preferences)</em> &gt; tab <em>Bảo mật (Privacy)</em> &gt; đánh dấu <em>Chặn tất cả cookie</em>.</li>
+                            <li><strong>Microsoft Edge:</strong> Vào <em>Cài đặt</em> &gt; <em>Cookie và quyền trang web</em>.</li>
+                            <li><strong>Mozilla Firefox:</strong> Vào <em>Cài đặt</em> &gt; <em>Riêng tư & Bảo mật</em> &gt; mục <em>Cookie và dữ liệu trang</em>.</li>
+                        </ul>
+                        <div class="legal-callout legal-callout-warning">
+                            <strong>Khuyến cáo:</strong> Nếu bạn tắt hoàn toàn Cookie trên trình duyệt, bạn sẽ không thể đăng nhập tài khoản, không thể lưu giỏ hàng hoặc thực hiện đặt hàng trực tuyến trên hệ thống EMUA.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mục 7 -->
+                <section class="legal-card" id="ck-7">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-question-circle"></i></div>
+                        <h2>7. Câu hỏi thường gặp & Hỗ trợ kỹ thuật</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Nếu bạn có bất kỳ câu hỏi nào liên quan đến cách website EMUA sử dụng Cookie, vui lòng liên hệ đội ngũ kỹ thuật của chúng tôi:
+                        </p>
+                        <div class="legal-contact-grid">
+                            <div class="legal-contact-item">
+                                <i class="bi bi-telephone-fill"></i>
+                                <div>
+                                    <strong>Tổng đài hỗ trợ kỹ thuật</strong>
+                                    <span>1800 2005 (Miễn phí cuộc gọi, 8:00 - 21:30)</span>
+                                </div>
+                            </div>
+                            <div class="legal-contact-item">
+                                <i class="bi bi-envelope-fill"></i>
+                                <div>
+                                    <strong>Hộp thư kỹ thuật số</strong>
+                                    <span>tech@emua.vn / contact@emua.vn</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Switch Footer Card -->
+                <div class="legal-crosslink-card">
+                    <h3>Tìm hiểu thêm các chính sách của EMUA</h3>
+                    <p>Chúng tôi luôn nỗ lực xây dựng môi trường mua sắm công nghệ an toàn, minh bạch và bảo mật hàng đầu.</p>
+                    <div class="legal-crosslink-buttons">
+                        <a href="/dieu-khoan-su-dung" class="legal-crosslink-btn">
+                            <i class="bi bi-file-earmark-text"></i> Điều khoản sử dụng
+                        </a>
+                        <a href="/chinh-sach-bao-mat" class="legal-crosslink-btn">
+                            <i class="bi bi-shield-lock"></i> Chính sách bảo mật
+                        </a>
+                        <a href="/chinh-sach-cookie" class="legal-crosslink-btn active">
+                            <i class="bi bi-cookie"></i> Chính sách Cookie
+                        </a>
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+</div>

@@ -825,30 +825,38 @@
     direction: rtl;
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.35rem;
 }
 
-    .star-rating-input input[type="radio"] {
-        display: none;
+    .star-rating-input input[type="radio"],
+    .star-rating-input input {
+        display: none !important;
     }
 
-    .star-rating-input label {
-        color: #d1d5db;
-        font-size: 1.75rem;
+    .star-rating-input label,
+    .star-rating-input label i {
+        color: #d1d5db !important;
+        font-size: 1.85rem;
         cursor: pointer;
         transition: color 0.2s ease-in-out, transform 0.15s ease-in-out;
         line-height: 1;
+        display: inline-block;
     }
 
         .star-rating-input label:hover {
             transform: scale(1.15);
         }
 
-            .star-rating-input input[type="radio"]:checked ~ label,
-            .star-rating-input label:hover,
-            .star-rating-input label:hover ~ label {
-                color: #ffc107;
-            }
+    .star-rating-input input:checked ~ label,
+    .star-rating-input input:checked ~ label i,
+    .star-rating-input label:hover,
+    .star-rating-input label:hover i,
+    .star-rating-input label:hover ~ label,
+    .star-rating-input label:hover ~ label i,
+    .star-rating-input label.active,
+    .star-rating-input label.active i {
+        color: #f59e0b !important;
+    }
 
 /* Review Form Inputs */
 .review-card-panel .form-label {

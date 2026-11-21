@@ -39,6 +39,21 @@ using Microsoft.EntityFrameworkCore;
 // Cho phép Npgsql xử lý DateTime linh hoạt với các cột timestamp without time zone trong PostgreSQL
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
+// Thiết lập Culture mặc định tiếng Việt (vi-VN) cho toàn bộ ứng dụng
+var viCulture = new System.Globalization.CultureInfo("vi-VN")
+{
+    NumberFormat =
+    {
+        NumberGroupSeparator = ".",
+        NumberDecimalSeparator = ",",
+        CurrencyGroupSeparator = ".",
+        CurrencyDecimalSeparator = ",",
+        CurrencySymbol = "₫"
+    }
+};
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = viCulture;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = viCulture;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================

@@ -1,6 +1,293 @@
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Chính sách bảo mật thông tin - EMUA Tech Store";
+    Layout = "_Layout";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<link rel="stylesheet" href="~/css/customer/legal.css" asp-append-version="true" />
+
+<div class="legal-page">
+    <div class="container emua-container">
+
+        <!-- Hero Header -->
+        <header class="legal-hero">
+            <span class="legal-badge">
+                <i class="bi bi-shield-lock"></i> Quyền riêng tư & Bảo vệ dữ liệu
+            </span>
+            <h1>Chính Sách Bảo Mật</h1>
+            <p>
+                EMUA Tech Store cam kết tôn trọng và bảo vệ tuyệt đối dữ liệu cá nhân của khách hàng. Chính sách này minh bạch cách chúng tôi thu thập, sử dụng, lưu trữ và bảo vệ thông tin cá nhân của bạn theo tiêu chuẩn an toàn cao nhất.
+            </p>
+            <div class="legal-meta">
+                <span class="legal-meta-item">
+                    <i class="bi bi-clock-history"></i> Áp dụng từ: Tháng 11/2026
+                </span>
+                <span class="legal-meta-item">
+                    <i class="bi bi-check2-circle"></i> Tuân thủ Nghị định 13/2023/NĐ-CP
+                </span>
+                <span class="legal-meta-item">
+                    <i class="bi bi-lock-fill"></i> Mã hóa SSL/TLS 256-bit
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="legal-layout">
+
+            <!-- Sidebar Navigation -->
+            <aside class="legal-sidebar">
+                <div class="legal-toc-title">
+                    <i class="bi bi-list-nested"></i> Mục lục chính sách
+                </div>
+                <ul class="legal-toc-list">
+                    <li><a href="#bm-1" class="legal-toc-link">1. Mục đích thu thập</a></li>
+                    <li><a href="#bm-2" class="legal-toc-link">2. Phạm vi thông tin</a></li>
+                    <li><a href="#bm-3" class="legal-toc-link">3. Phạm vi sử dụng</a></li>
+                    <li><a href="#bm-4" class="legal-toc-link">4. Thời gian lưu trữ</a></li>
+                    <li><a href="#bm-5" class="legal-toc-link">5. Chia sẻ với bên thứ ba</a></li>
+                    <li><a href="#bm-6" class="legal-toc-link">6. Biện pháp an toàn kỹ thuật</a></li>
+                    <li><a href="#bm-7" class="legal-toc-link">7. Quyền của khách hàng</a></li>
+                    <li><a href="#bm-8" class="legal-toc-link">8. Dữ liệu hội thoại AI</a></li>
+                    <li><a href="#bm-9" class="legal-toc-link">9. Cập nhật chính sách</a></li>
+                    <li><a href="#bm-10" class="legal-toc-link">10. Đơn vị phụ trách</a></li>
+                </ul>
+
+                <div class="legal-quick-switch">
+                    <div class="legal-quick-title">Chính sách liên quan</div>
+                    <div class="legal-quick-nav">
+                        <a href="/dieu-khoan-su-dung">
+                            <span>Điều khoản sử dụng</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        <a href="/chinh-sach-bao-mat" class="current">
+                            <span>Chính sách bảo mật</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        <a href="/chinh-sach-cookie">
+                            <span>Chính sách Cookie</span>
+                            <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Cards -->
+            <main class="legal-content">
+
+                <!-- Mục 1 -->
+                <section class="legal-card" id="bm-1">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-bullseye"></i></div>
+                        <h2>1. Mục đích thu thập dữ liệu cá nhân</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Việc thu thập thông tin khách hàng trên hệ thống thương mại điện tử EMUA Tech Store được thực hiện nhằm các mục đích chính đáng sau:
+                        </p>
+                        <ul>
+                            <li><strong>Xử lý đơn hàng:</strong> Xác nhận đơn hàng, xuất hóa đơn điện tử VAT, đóng gói niêm phong và điều phối đơn vị vận chuyển giao máy đến tay bạn.</li>
+                            <li><strong>Chăm sóc khách hàng & Bảo hành:</strong> Kích hoạt dịch vụ bảo hành điện tử chính hãng theo số IMEI/Serial, hỗ trợ xử lý đổi trả hàng và bảo dưỡng thiết bị.</li>
+                            <li><strong>Cá nhân hóa trải nghiệm:</strong> Gợi ý các dòng sản phẩm, phụ kiện công nghệ tương thích và ưu đãi giảm giá độc quyền theo sở thích của bạn.</li>
+                            <li><strong>Bảo đảm an toàn giao dịch:</strong> Phòng chống các hành vi gian lận thanh toán, chiếm đoạt tài khoản hoặc tấn công mạng.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 2 -->
+                <section class="legal-card" id="bm-2">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-card-checklist"></i></div>
+                        <h2>2. Phạm vi thông tin thu thập</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>Tùy theo sự tương tác của bạn với hệ thống, chúng tôi thu thập các loại dữ liệu sau:</p>
+                        <ul>
+                            <li><strong>Thông tin định danh cá nhân:</strong> Họ và tên, địa chỉ email, số điện thoại liên lạc, ngày sinh (để tặng voucher sinh nhật).</li>
+                            <li><strong>Thông tin giao hàng:</strong> Địa chỉ nhận hàng chi tiết (số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố), ghi chú giao hàng.</li>
+                            <li><strong>Thông tin thanh toán:</strong> Phương thức thanh toán được chọn (COD / Chuyển khoản QR MB Bank). <em>Lưu ý: EMUA không bao giờ lưu trữ mật khẩu ngân hàng, mã PIN hoặc mã OTP của khách hàng.</em></li>
+                            <li><strong>Dữ liệu kỹ thuật & thiết bị:</strong> Địa chỉ IP, loại trình duyệt, hệ điều hành, nhật ký truy cập và lịch sử tra cứu thiết bị trên website.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 3 -->
+                <section class="legal-card" id="bm-3">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-sliders"></i></div>
+                        <h2>3. Phạm vi sử dụng thông tin</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Thông tin thu thập chỉ được sử dụng trong phạm vi hoạt động của hệ thống EMUA Tech Store cho các mục đích đã được nêu tại Mục 1. Chúng tôi tuyệt đối <strong>không bán, không chuyển nhượng và không cho thuê dữ liệu cá nhân của khách hàng</strong> cho bất kỳ bên thứ ba nào vì mục đích quảng cáo thương mại riêng rẽ.
+                        </p>
+                        <div class="legal-callout">
+                            <strong>Cam kết của EMUA:</strong> Chúng tôi chỉ gửi tin nhắn thông báo (SMS/Email) về mã xác thực đơn hàng, trạng thái vận chuyển hoặc ưu đãi sinh nhật khi nhận được sự đồng thuận từ bạn.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mục 4 -->
+                <section class="legal-card" id="bm-4">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-database-check"></i></div>
+                        <h2>4. Thời gian lưu trữ dữ liệu</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Dữ liệu cá nhân của khách hàng sẽ được lưu trữ an toàn trong suốt thời gian tài khoản của bạn đang hoạt động trên hệ thống EMUA.
+                        </p>
+                        <p>
+                            Đối với hồ sơ đơn hàng và hóa đơn bán lẻ, dữ liệu được lưu trữ theo quy định của Luật Kế toán và chế độ bảo hành sản phẩm (thường từ 12 đến 36 tháng tùy theo chính sách bảo hành của từng hãng như Apple, Asus, Acer,...). Sau khi hết thời hạn bảo hành hoặc khi khách hàng gửi yêu cầu xóa tài khoản, dữ liệu sẽ được hủy bỏ hoặc ẩn danh hóa an toàn.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Mục 5 -->
+                <section class="legal-card" id="bm-5">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-share"></i></div>
+                        <h2>5. Chia sẻ thông tin với các đối tác dịch vụ</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Để vận hành trơn tru chuỗi cung ứng thương mại điện tử, chúng tôi chỉ chia sẻ những thông tin tối thiểu cần thiết cho các đối tác uy tín sau:
+                        </p>
+                        <ul>
+                            <li><strong>Đơn vị giao nhận vận chuyển:</strong> Chia sẻ Tên, Số điện thoại và Địa chỉ giao hàng để nhân viên bưu tá giao thiết bị đến tận tay bạn.</li>
+                            <li><strong>Cổng thanh toán & Ngân hàng đối tác:</strong> Hệ thống ngân hàng liên kết (MB Bank) nhằm đối soát mã giao dịch chuyển khoản VietQR tự động.</li>
+                            <li><strong>Trung tâm bảo hành ủy quyền:</strong> Cung cấp số Serial/IMEI và ngày mua máy khi bạn yêu cầu hỗ trợ sửa chữa/bảo hành từ hãng.</li>
+                            <li><strong>Cơ quan pháp luật có thẩm quyền:</strong> Khi có yêu cầu bằng văn bản chính thức phục vụ điều tra theo luật pháp nước CHXHCN Việt Nam.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 6 -->
+                <section class="legal-card" id="bm-6">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-shield-check"></i></div>
+                        <h2>6. Biện pháp an toàn kỹ thuật & Bảo mật thông tin</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Hạ tầng công nghệ của EMUA Tech Store được xây dựng trên nền tảng đám mây hiện đại với các giải pháp an ninh tối tân:
+                        </p>
+                        <ul>
+                            <li><strong>Mã hóa đường truyền SSL/TLS:</strong> 100% dữ liệu trao đổi giữa trình duyệt của bạn và máy chủ EMUA được mã hóa bằng thuật toán khóa công khai 256-bit chuẩn HTTPS.</li>
+                            <li><strong>Mã hóa mật khẩu:</strong> Mật khẩu người dùng được băm bảo mật bằng thuật toán PBKDF2/BCrypt với Salt ngẫu nhiên, không thể đảo ngược chiều.</li>
+                            <li><strong>Tường lửa & Giám sát 24/7:</strong> Hệ thống được bảo vệ bởi tường lửa chống tấn công từ chối dịch vụ (DDoS) và phân quyền chặt chẽ theo vai trò (Role-based Access Control).</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 7 -->
+                <section class="legal-card" id="bm-7">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-person-gear"></i></div>
+                        <h2>7. Quyền của khách hàng đối với dữ liệu cá nhân</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>Theo pháp luật bảo vệ quyền riêng tư, khách hàng của EMUA có đầy đủ các quyền sau:</p>
+                        <ul>
+                            <li><strong>Quyền truy cập & Chỉnh sửa:</strong> Bạn có thể đăng nhập vào trang <em>Hồ sơ tài khoản</em> bất kỳ lúc nào để xem và cập nhật thông tin cá nhân hoặc thay đổi mật khẩu.</li>
+                            <li><strong>Quyền rút lại sự đồng thuận:</strong> Có thể hủy đăng ký nhận email tin tức khuyến mãi thông qua liên kết hủy nhận tin ở cuối email.</li>
+                            <li><strong>Quyền yêu cầu xóa dữ liệu:</strong> Gửi yêu cầu qua email <code>privacy@emua.vn</code> để yêu cầu khóa tài khoản và xóa thông tin lưu trữ không còn mục đích ràng buộc pháp lý.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 8 -->
+                <section class="legal-card" id="bm-8">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                        <h2>8. Bảo mật dữ liệu hội thoại với Trợ lý AI</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Khi bạn tương tác với Trợ lý AI tư vấn công nghệ trên website:
+                        </p>
+                        <ul>
+                            <li>Nội dung trao đổi được xử lý tự động trong phiên làm việc để hiểu câu hỏi và phản hồi thông tin thiết bị phù hợp.</li>
+                            <li>EMUA không thu thập hay yêu cầu bạn cung cấp thông tin tài chính bí mật, mật khẩu hay giấy tờ tùy thân qua khung chat AI.</li>
+                            <li>Dữ liệu câu hỏi có thể được ẩn danh hóa nhằm mục đích đánh giá chất lượng phản hồi và nâng cấp khả năng tư vấn của AI trong tương lai.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Mục 9 -->
+                <section class="legal-card" id="bm-9">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-clock-history"></i></div>
+                        <h2>9. Thay đổi & Cập nhật chính sách</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            EMUA có thể cập nhật Chính sách bảo mật này theo từng giai đoạn để phản ánh các cải tiến về công nghệ, tính năng mới trên website hoặc những thay đổi trong quy định pháp luật. Mọi cập nhật sẽ được thông báo rõ ràng trên website với ngày hiệu lực mới nhất.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Mục 10 -->
+                <section class="legal-card" id="bm-10">
+                    <div class="legal-card-header">
+                        <div class="legal-card-icon"><i class="bi bi-patch-question"></i></div>
+                        <h2>10. Đơn vị phụ trách bảo vệ dữ liệu cá nhân</h2>
+                    </div>
+                    <div class="legal-body">
+                        <p>
+                            Nếu bạn có thắc mắc hoặc cần khiếu nại về việc xử lý thông tin cá nhân, vui lòng liên hệ Bộ phận An ninh & Bảo mật dữ liệu EMUA:
+                        </p>
+                        <div class="legal-contact-grid">
+                            <div class="legal-contact-item">
+                                <i class="bi bi-shield-lock-fill"></i>
+                                <div>
+                                    <strong>Bộ phận An ninh dữ liệu</strong>
+                                    <span>Ban Công nghệ thông tin - EMUA Tech Store</span>
+                                </div>
+                            </div>
+                            <div class="legal-contact-item">
+                                <i class="bi bi-envelope-check-fill"></i>
+                                <div>
+                                    <strong>Email chuyên trách bảo mật</strong>
+                                    <span>privacy@emua.vn / security@emua.vn</span>
+                                </div>
+                            </div>
+                            <div class="legal-contact-item">
+                                <i class="bi bi-telephone-inbound-fill"></i>
+                                <div>
+                                    <strong>Tổng đài hỗ trợ quyền riêng tư</strong>
+                                    <span>1800 2005 (Phím 3 - Hỗ trợ kỹ thuật & bảo mật)</span>
+                                </div>
+                            </div>
+                            <div class="legal-contact-item">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <div>
+                                    <strong>Trụ sở quản trị hệ thống</strong>
+                                    <span>Trung tâm Điều hành Công nghệ EMUA, TP. Đà Nẵng</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Switch Footer Card -->
+                <div class="legal-crosslink-card">
+                    <h3>Tìm hiểu thêm các chính sách của EMUA</h3>
+                    <p>Chúng tôi luôn nỗ lực xây dựng môi trường mua sắm công nghệ an toàn, minh bạch và bảo mật hàng đầu.</p>
+                    <div class="legal-crosslink-buttons">
+                        <a href="/dieu-khoan-su-dung" class="legal-crosslink-btn">
+                            <i class="bi bi-file-earmark-text"></i> Điều khoản sử dụng
+                        </a>
+                        <a href="/chinh-sach-bao-mat" class="legal-crosslink-btn active">
+                            <i class="bi bi-shield-lock"></i> Chính sách bảo mật
+                        </a>
+                        <a href="/chinh-sach-cookie" class="legal-crosslink-btn">
+                            <i class="bi bi-cookie"></i> Chính sách Cookie
+                        </a>
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+</div>

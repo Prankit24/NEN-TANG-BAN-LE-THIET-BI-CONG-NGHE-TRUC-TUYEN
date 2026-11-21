@@ -189,7 +189,7 @@
             'use strict';
             const widget = document.getElementById('couponWidget');
             let busy = false, loading = false, currentPage = 1, pages = 1;
-            const money = value => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + 'đ';
+            const money = value => Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
 
             // Quantities are recalculated by the server, including coupon eligibility.
             document.querySelectorAll('.cart-row').forEach(row => {
