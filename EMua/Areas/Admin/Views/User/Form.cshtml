@@ -87,8 +87,11 @@
                 <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-size:15px; color:#172033;">3. Phân quyền & Trạng thái</h5>
                 <div class="row g-3 align-items-center">
                     <div class="col-md-6">
-                        <label class="form-label" style="font-size:13px; font-weight:500;">Nhóm quyền <span class="text-danger">*</span></label>
+                        <label class="form-label" style="font-size:13px; font-weight:500;">Nhóm quyền & Khu vực làm việc <span class="text-danger">*</span></label>
                         <select asp-for="MaQuyen" asp-items="ViewBag.DanhSachQuyen" class="form-select" style="height:40px; font-size:14px;" disabled="@isSelf"></select>
+                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                            <i class="bi bi-info-circle me-1"></i>Tài khoản Quản trị sẽ làm việc tại <strong>Khu vực Admin</strong>; Nhân viên sẽ làm việc tại <strong>Khu vực Staff</strong>.
+                        </small>
                         @if (isSelf)
                         {
                             <input type="hidden" asp-for="MaQuyen" />
