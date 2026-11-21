@@ -332,7 +332,7 @@
                 btn.disabled = stock <= 0 || !Number.isFinite(price) || price <= 0;
             });
             const priceEl = document.getElementById('displayPrice');
-            if (priceEl && Number.isFinite(price)) priceEl.textContent = price.toLocaleString('vi-VN') + ' đ';
+            if (priceEl && Number.isFinite(price)) priceEl.textContent = price.toLocaleString('vi-VN') + ' ₫';
             if (option.dataset.image && option.dataset.image !== fallback) {
                 window.changeMainImage(option.dataset.image);
             }

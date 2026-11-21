@@ -355,7 +355,23 @@ namespace EMua.Controllers
             };
         }
 
+        [HttpGet]
+        [Route("chinh-sach-bao-mat")]
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Route("dieu-khoan-su-dung")]
+        public IActionResult Terms()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Route("chinh-sach-cookie")]
+        public IActionResult Cookies()
         {
             return View();
         }

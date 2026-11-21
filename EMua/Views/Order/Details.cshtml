@@ -534,11 +534,11 @@
                 const qty = Number(row.querySelector(".input-qty")?.value || 0);
                 const total = Number(row.getAttribute("data-unit-price")) * qty;
                 const target = row.querySelector(".line-total-val");
-                if (target) target.textContent = total.toLocaleString('vi-VN') + ' đ';
+                if (target) target.textContent = total.toLocaleString('vi-VN') + ' ₫';
             });
             for (const [id, value] of [['orderTotalDisplay', result.orderTotal], ['itemsSubtotal', result.subtotal], ['shippingFeeDisplay', result.shippingFee], ['discountDisplay', result.discount]]) {
                 const target = document.getElementById(id);
-                if (target && value != null) target.textContent = Number(value).toLocaleString('vi-VN') + ' đ';
+                if (target && value != null) target.textContent = Number(value).toLocaleString('vi-VN') + ' ₫';
             }
         }
         let updatingOrder = false;
@@ -732,6 +732,24 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Đảm bảo tương tác chọn sao mượt mà và trực quan
+            const starInputs = document.querySelectorAll('.star-rating-input input[type="radio"]');
+            starInputs.forEach(input => {
+                input.addEventListener('change', function () {
+                    const val = parseInt(this.value, 10);
+                    const container = this.closest('.star-rating-input');
+                    if (!container) return;
+                    container.querySelectorAll('label').forEach(lbl => {
+                        const forId = lbl.getAttribute('for');
+                        const targetRadio = document.getElementById(forId);
+                        if (targetRadio) {
+                            const radioVal = parseInt(targetRadio.value, 10);
+                            lbl.classList.toggle('active', radioVal <= val);
+                        }
+                    });
+                });
+            });
+
             const returnForm = document.querySelector('#tabReturnSection form');
             if (returnForm) returnForm.addEventListener('submit', function (e) { if (!validateReturnItems()) e.preventDefault(); });
             checkCustomerChatStatus();

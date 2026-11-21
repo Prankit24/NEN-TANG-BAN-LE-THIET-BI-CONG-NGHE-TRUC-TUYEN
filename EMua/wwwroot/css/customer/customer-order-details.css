@@ -263,25 +263,40 @@
     .star-rating-input {
         direction: rtl;
         display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
     }
 
-        .star-rating-input input {
-            display: none;
+        .star-rating-input input,
+        .star-rating-input input[type="radio"] {
+            display: none !important;
         }
 
-        .star-rating-input label {
-            color: #d1d5db;
-            font-size: 1.6rem;
+        .star-rating-input label,
+        .star-rating-input label i {
+            color: #d1d5db !important;
+            font-size: 1.85rem;
             padding: 0 3px;
             cursor: pointer;
-            transition: color 0.2s ease;
+            transition: color 0.2s ease, transform 0.15s ease;
+            line-height: 1;
+            display: inline-block;
         }
 
-            .star-rating-input input:checked ~ label,
-            .star-rating-input label:hover,
-            .star-rating-input label:hover ~ label {
-                color: #ffc107;
-            }
+        .star-rating-input label:hover {
+            transform: scale(1.15);
+        }
+
+        .star-rating-input input:checked ~ label,
+        .star-rating-input input:checked ~ label i,
+        .star-rating-input label:hover,
+        .star-rating-input label:hover i,
+        .star-rating-input label:hover ~ label,
+        .star-rating-input label:hover ~ label i,
+        .star-rating-input label.active,
+        .star-rating-input label.active i {
+            color: #f59e0b !important;
+        }
 
     .reviewed-badge {
         font-size: 0.825rem;

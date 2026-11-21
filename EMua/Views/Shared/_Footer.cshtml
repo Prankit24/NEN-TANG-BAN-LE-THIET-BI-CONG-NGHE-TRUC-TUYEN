@@ -193,7 +193,10 @@
                         Nhượng quyền
                     </a>
 
-                    <a href="#">Chính sách bảo mật</a>
+                    <a asp-controller="Home"
+                       asp-action="Privacy">
+                        Chính sách bảo mật
+                    </a>
                 </div>
 
             </div>
@@ -210,9 +213,9 @@
             </span>
 
             <div class="footer-bottom-links">
-                <a href="#">Điều khoản sử dụng</a>
-                <a href="#">Chính sách bảo mật</a>
-                <a href="#">Cookie</a>
+                <a asp-controller="Home" asp-action="Terms">Điều khoản sử dụng</a>
+                <a asp-controller="Home" asp-action="Privacy">Chính sách bảo mật</a>
+                <a asp-controller="Home" asp-action="Cookies">Cookie</a>
             </div>
 
         </div>

@@ -144,14 +144,14 @@
             const expressFee = 25000;
             const standardFee = subtotal >= 500000 ? 0 : 30000;
 
-            const fmt = v => v === 0 ? 'Miễn phí' : v.toLocaleString('vi-VN') + ' đ';
+            const fmt = v => v === 0 ? 'Miễn phí' : v.toLocaleString('vi-VN') + ' ₫';
 
             function updateShippingSummary() {
                 const method = document.querySelector('input[name="ShippingMethod"]:checked')?.value;
                 const fee = method === 'EXPRESS' ? expressFee : standardFee;
                 const total = Math.max(0, subtotal - discount + fee);
                 document.getElementById('summaryShipping').textContent = fmt(fee);
-                document.getElementById('summaryTotal').textContent = total.toLocaleString('vi-VN') + ' đ';
+                document.getElementById('summaryTotal').textContent = total.toLocaleString('vi-VN') + ' ₫';
             }
 
             document.querySelectorAll('input[name="ShippingMethod"]').forEach(r => {
