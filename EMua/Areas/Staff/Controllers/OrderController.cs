@@ -204,7 +204,7 @@ public class OrderController : StaffControllerBase
         }
         catch (ArgumentException ex) { if (path != null) OrderEvidenceStorage.Delete(_webHostEnvironment.WebRootPath, path); TempData["ErrorMessage"] = ex.Message; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        { TempData["ErrorMessage"] = "Không lưu được ảnh giao hàng. Kiểm tra thư mục tải ảnh rồi thử lại."; }
+        { TempData["ErrorMessage"] = $"Không lưu được ảnh giao hàng: {ex.Message}. Kiểm tra thư mục tải ảnh rồi thử lại."; }
         return RedirectToAction(nameof(Details), new { id });
     }
 

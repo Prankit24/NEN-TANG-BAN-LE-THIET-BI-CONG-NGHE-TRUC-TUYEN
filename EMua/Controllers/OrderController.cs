@@ -15,12 +15,14 @@ public class OrderController : Controller
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _env;
     private readonly OrderWorkflowService _workflow;
+    private readonly ILogger<OrderController> _logger;
 
-    public OrderController(EMuaDbContext db, IWebHostEnvironment env, OrderWorkflowService workflow)
+    public OrderController(EMuaDbContext db, IWebHostEnvironment env, OrderWorkflowService workflow, ILogger<OrderController> logger)
     {
         _db = db;
         _env = env;
         _workflow = workflow;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -148,21 +150,31 @@ public class OrderController : Controller
             if (evidenceImages?.Count > 5) throw new ArgumentException("Tối đa 5 ảnh bằng chứng.");
             if (!await _db.DonHangs.AnyAsync(x => x.MaDonHang == orderId && x.MaNguoiDung == CurrentUserId())) return NotFound();
             foreach (var image in evidenceImages ?? new List<IFormFile>())
-                paths.Add(await OrderEvidenceStorage.SaveAsync(_env.WebRootPath, image, "returns"));
+            {
+                if (image != null && image.Length > 0)
+                {
+                    paths.Add(await OrderEvidenceStorage.SaveAsync(_env.WebRootPath, image, "returns"));
+                }
+            }
             var result = await _workflow.RequestReturnAsync(orderId, CurrentUserId(), (selectedVariantIds ?? new()).Distinct().ToArray(),
                 reason ?? "", description ?? "", contactPhone ?? "", paths);
-            if (!result.ProofUsed && !result.Uncertain) foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
+            if (!result.ProofUsed && !result.Uncertain)
+            {
+                foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
+            }
             TempData[result.Success ? "Success" : "Error"] = result.Message;
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning(ex, "Dữ liệu yêu cầu đổi trả không hợp lệ cho đơn #{OrderId}", orderId);
             foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
             TempData["Error"] = ex.Message;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Lỗi lưu ảnh bằng chứng đổi trả cho đơn #{OrderId}", orderId);
             foreach (var path in paths) OrderEvidenceStorage.Delete(_env.WebRootPath, path);
-            TempData["Error"] = "Không lưu được ảnh bằng chứng. Kiểm tra thư mục tải ảnh rồi thử lại.";
+            TempData["Error"] = $"Không lưu được ảnh bằng chứng: {ex.Message}. Vui lòng kiểm tra lại quyền thư mục tải ảnh hoặc liên hệ hotline.";
         }
         return RedirectToAction(nameof(Details), new { id = orderId });
     }
