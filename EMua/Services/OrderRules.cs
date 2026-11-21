@@ -68,6 +68,11 @@ public static class OrderRules
 
     public static string[] DetailTargets(string? state, bool cod, bool paid)
     {
+        var current = Normalize(state);
+        if (current is ReturnRequested or Returning or ReturnReceived or Refunded or ReturnRejected)
+        {
+            return new[] { ReturnRequested, Returning, ReturnReceived, Refunded, ReturnRejected, Completed };
+        }
         return new[] { Pending, Processing, Shipping, Completed, DeliveryFailed, Cancelled };
     }
 
@@ -84,9 +89,10 @@ public static class OrderRules
         if (current == Shipping && target == DeliveryFailed) return true;
         if (current == DeliveryFailed && target == Shipping) return true;
         if (current == DeliveryFailed && target == Cancelled) return true;
-        if (current == Returning && target == ReturnReceived) return returnedReceived;
-        if (current == ReturnReceived && target == Refunded) return true;
-        if (current == ReturnReceived && target == Completed) return true;
+        if (current == Completed && target == ReturnRequested) return true;
+        if (current == ReturnRequested && target is Returning or ReturnRejected or Completed) return true;
+        if (current == Returning && target is ReturnReceived or Refunded or Completed) return true;
+        if (current == ReturnReceived && target is Refunded or Completed) return true;
         return false;
     }
 }

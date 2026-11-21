@@ -29,6 +29,10 @@ public sealed class AccountProfileViewModel
 
     public bool IsStaff { get; init; }
 
+    public bool IsAdmin { get; init; }
+
+    public string WorkArea => IsAdmin ? "Admin" : (IsStaff ? "Staff" : "");
+
     // Tổng tiền tích lũy từ các đơn hàng hoàn thành
     public decimal TotalSpent { get; init; }
 

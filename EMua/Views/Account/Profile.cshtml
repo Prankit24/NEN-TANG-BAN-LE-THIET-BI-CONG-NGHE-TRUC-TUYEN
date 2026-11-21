@@ -63,11 +63,10 @@
                 else
                 {
                     <!-- Menu hiển thị khi đăng nhập bằng tài khoản Nhân viên hoặc Quản trị viên (Admin) -->
-                    <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
-                        <span class="menu-icon"><i class="bi bi-grid-1x2"></i></span>
-                        <span>Khu vực làm việc</span>
+                    <a asp-area="@Model.WorkArea" asp-controller="Dashboard" asp-action="Index">
+                        <span class="menu-icon"><i class="bi @(Model.IsAdmin ? "bi-shield-lock" : "bi-grid-1x2")"></i></span>
+                        <span>@(Model.IsAdmin ? "Khu vực quản trị" : "Khu vực làm việc")</span>
                     </a>
-
 
                     <a asp-controller="Order" asp-action="Index">
                         <span class="menu-icon"><i class="bi bi-receipt"></i></span>

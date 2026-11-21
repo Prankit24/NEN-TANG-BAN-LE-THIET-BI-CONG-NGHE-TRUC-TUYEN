@@ -128,7 +128,8 @@
                             foreach (var item in Model)
                             {
                                 bool isSelf = currentUserId == item.MaNguoiDung;
-                                bool isAdmin = item.MaQuyenNavigation?.TenQuyen == "Admin";
+                                bool isAdmin = item.MaQuyen == 1 || item.MaQuyenNavigation?.TenQuyen is "Admin" or "Quản trị viên" or "QuanTriVien";
+                                bool isStaff = item.MaQuyen == 2 || item.MaQuyenNavigation?.TenQuyen is "NhanVien" or "Nhân viên" or "Staff";
                                 bool isLastAdmin = isAdmin && item.TrangThai && adminCount <= 1;
                                 bool lockDisabled = isSelf || isLastAdmin;
 
@@ -153,9 +154,12 @@
                                     <td><code class="text-dark bg-light px-2 py-1">@item.TenDangNhap</code></td>
                                     <td style="font-size:13px;">@(item.SoDienThoai ?? "—")</td>
                                     <td class="text-center">
-                                        <span class="badge" style="background:@(isAdmin ? "#FEF3C7" : "#F1F5F9"); color:@(isAdmin ? "#B45309" : "#475569"); font-size:12px; font-weight:600; padding:5px 10px;">
-                                            @(item.MaQuyenNavigation?.TenQuyen ?? "Khách hàng")
+                                        <span class="badge" style="background:@(isAdmin ? "#FEF3C7" : (isStaff ? "#EFF6FF" : "#F1F5F9")); color:@(isAdmin ? "#B45309" : (isStaff ? "#1D4ED8" : "#475569")); font-size:12px; font-weight:600; padding:5px 10px;">
+                                            @(item.MaQuyenNavigation?.TenQuyen ?? (isAdmin ? "Quản trị viên" : (isStaff ? "Nhân viên" : "Khách hàng")))
                                         </span>
+                                        <small class="d-block text-muted mt-1" style="font-size:10px;">
+                                            Khu vực: @(isAdmin ? "Quản trị (Admin)" : (isStaff ? "Nhân viên (Staff)" : "Cửa hàng"))
+                                        </small>
                                     </td>
                                     <td class="text-center">
                                         @if (item.TrangThai)

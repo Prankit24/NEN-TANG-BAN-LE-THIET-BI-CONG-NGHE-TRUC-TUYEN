@@ -389,7 +389,10 @@ public class AccountController : Controller
             databaseRoleName is "KhachHang" or "Khách hàng";
 
         var isStaff =
-            databaseRoleName is "NhanVien" or "Nhân viên";
+            user.MaQuyen == 2 || databaseRoleName is "NhanVien" or "Nhân viên" or "Staff";
+
+        var isAdmin =
+            user.MaQuyen == 1 || databaseRoleName is "Admin" or "Quản trị viên" or "QuanTriVien";
 
         return new AccountProfileViewModel
         {
@@ -404,7 +407,8 @@ public class AccountController : Controller
             OrderCount = user.DonHangs.Count,
             FavoriteCount = user.YeuThiches.Count,
             IsCustomer = isCustomer,
-            IsStaff = isStaff
+            IsStaff = isStaff,
+            IsAdmin = isAdmin
         };
     }
 

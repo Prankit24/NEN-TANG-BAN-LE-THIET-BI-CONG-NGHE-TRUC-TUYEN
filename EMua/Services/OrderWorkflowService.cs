@@ -372,24 +372,40 @@ public sealed class OrderWorkflowService
 
 			// Kiểm tra thời hạn đổi trả trong vòng 7 ngày kể từ khi hoàn thành đơn
 			var completedLog = await _db.LichSuVanChuyens
-				.Where(x => x.MaDonHang == id && (x.TrangThai == OrderRules.Completed || x.TrangThai == "Đã giao"))
+				.Where(x => x.MaDonHang == id && (x.TrangThai == OrderRules.Completed || x.TrangThai == "Đã giao" || x.TrangThai == "Hoàn thành" || x.TrangThai == "Giao hàng thành công" || x.TrangThai == "Đã giao hàng"))
 				.OrderByDescending(x => x.ThoiGian)
 				.FirstOrDefaultAsync();
 
-			if (completedLog == null)
+			DateTime completedTime;
+			if (completedLog != null)
 			{
-				return new OrderChangeResult(false, "Không xác minh được thời điểm giao hàng của đơn để áp dụng chính sách đổi trả.");
+				completedTime = completedLog.ThoiGian;
+			}
+			else
+			{
+				// Fallback: Lấy thời gian từ log gần nhất của đơn hoặc NgayDat
+				var latestLog = await _db.LichSuVanChuyens
+					.Where(x => x.MaDonHang == id)
+					.OrderByDescending(x => x.ThoiGian)
+					.FirstOrDefaultAsync();
+
+				completedTime = latestLog?.ThoiGian ?? order.NgayDat ?? OrderRules.VietnamNow();
 			}
 
-			if ((OrderRules.VietnamNow() - completedLog.ThoiGian).TotalDays > 7)
+			if ((OrderRules.VietnamNow() - completedTime).TotalDays > 7)
 			{
-				return new OrderChangeResult(false, "Đơn hàng đã hoàn thành quá 7 ngày, đã hết thời hạn hỗ trợ đổi trả.");
+				return new OrderChangeResult(false, "Đơn hàng đã hoàn thành quá 7 ngày, đã hết thời hạn hỗ trợ đổi trả theo quy định.");
 			}
-			if (variants.Count < 1 || variants.Any(v => !order.ChiTietDonHangs.Any(x => x.MaBienThe == v)))
+
+			var targetVariants = (variants != null && variants.Count > 0)
+				? variants.Where(v => order.ChiTietDonHangs.Any(x => x.MaBienThe == v)).ToList()
+				: order.ChiTietDonHangs.Select(x => x.MaBienThe).ToList();
+
+			if (targetVariants.Count < 1)
 				return new OrderChangeResult(false, "Sản phẩm đổi trả phải thuộc đơn hàng của bạn.");
 			if (string.IsNullOrWhiteSpace(reason) || reason.Length > 100 || string.IsNullOrWhiteSpace(description) || description.Length > 200 || string.IsNullOrWhiteSpace(phone) || phone.Length > 20)
 				return new OrderChangeResult(false, "Lý do tối đa 100 ký tự, mô tả tối đa 200 ký tự và số điện thoại tối đa 20 ký tự.");
-			var text = $"SP: {string.Join(",", variants)}. Lý do: {reason.Trim()}. {description.Trim()}. SĐT: {phone.Trim()}.";
+			var text = $"SP: {string.Join(",", targetVariants)}. Lý do: {reason.Trim()}. {description.Trim()}. SĐT: {phone.Trim()}.";
 			// Ảnh nằm ở trường riêng, không nhồi đường dẫn làm mất mô tả trong cột 500 ký tự.
 			Log(order, OrderRules.ReturnRequested, text, userId, images.FirstOrDefault());
 			foreach (var image in images.Skip(1)) Log(order, "Ảnh yêu cầu đổi trả", "Ảnh bổ sung cho yêu cầu đổi trả.", userId, image);

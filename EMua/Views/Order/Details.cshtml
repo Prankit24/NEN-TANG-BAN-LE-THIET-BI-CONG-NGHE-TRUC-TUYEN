@@ -353,7 +353,7 @@
                                         @foreach (var item in Model.Items)
                                         {
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input return-item-checkbox" type="checkbox" name="SelectedVariantIds" value="@item.VariantId" id="return_item_@item.VariantId" onchange="validateReturnItems()">
+                                                <input class="form-check-input return-item-checkbox" type="checkbox" name="SelectedVariantIds" value="@item.VariantId" id="return_item_@item.VariantId" checked onchange="validateReturnItems()">
                                                 <label class="form-check-label small d-flex align-items-center" for="return_item_@item.VariantId">
                                                     <img src="@FixImageUrl(item.ImageUrl)" style="width: 36px; height: 36px; object-fit: cover;" class="rounded me-2" loading="lazy" decoding="async" />
                                                     <div>

@@ -59,7 +59,7 @@ public class OrderController : StaffControllerBase
         // Thống kê nhanh theo trạng thái trên toàn bộ hoặc tập tìm kiếm
         var totalOrders = await orders.CountAsync();
         var pendingCount = await orders.CountAsync(o => OrderRules.PendingAliases.Contains(o.TrangThaiDonHang!) || string.IsNullOrWhiteSpace(o.TrangThaiDonHang));
-        var returnCount = await orders.CountAsync(o => o.TrangThaiDonHang != null && (o.TrangThaiDonHang.Contains("đổi trả") || o.TrangThaiDonHang.Contains("Đổi trả")));
+        var returnCount = await orders.CountAsync(o => o.TrangThaiDonHang != null && (o.TrangThaiDonHang.Contains("đổi trả") || o.TrangThaiDonHang.Contains("Đổi trả") || o.TrangThaiDonHang == OrderRules.ReturnRequested || o.TrangThaiDonHang == OrderRules.Returning || o.TrangThaiDonHang == OrderRules.ReturnReceived || o.TrangThaiDonHang == OrderRules.Refunded));
         var processingCount = await orders.CountAsync(o => OrderRules.ProcessingAliases.Contains(o.TrangThaiDonHang!));
         var shippingCount = await orders.CountAsync(o => OrderRules.ShippingAliases.Contains(o.TrangThaiDonHang!));
         var failedCount = await orders.CountAsync(o => OrderRules.DeliveryFailedAliases.Contains(o.TrangThaiDonHang!));
@@ -81,7 +81,9 @@ public class OrderController : StaffControllerBase
                 canonical == OrderRules.Shipping ? OrderRules.ShippingAliases :
                 canonical == OrderRules.DeliveryFailed ? OrderRules.DeliveryFailedAliases :
                 canonical == OrderRules.Completed ? OrderRules.CompletedAliases :
-                canonical == OrderRules.Cancelled ? OrderRules.CancelledAliases : new[] { canonical };
+                canonical == OrderRules.Cancelled ? OrderRules.CancelledAliases :
+                canonical is OrderRules.ReturnRequested or "Đổi trả" ? new[] { OrderRules.ReturnRequested, OrderRules.Returning, OrderRules.ReturnReceived, OrderRules.Refunded, OrderRules.ReturnRejected } :
+                new[] { canonical };
             orders = orders.Where(x => aliases.Contains(x.TrangThaiDonHang!) ||
                 (canonical == OrderRules.Pending && string.IsNullOrWhiteSpace(x.TrangThaiDonHang)));
         }

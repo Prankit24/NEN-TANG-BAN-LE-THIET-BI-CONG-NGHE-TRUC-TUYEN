@@ -1,0 +1,284 @@
+@model EMua.Areas.Staff.Models.InvoiceCreateViewModel
+@{
+    ViewData["Title"] = $"Lập hóa đơn bán hàng - Đơn #DH-{Model.MaDonHang:D5}";
+}
+
+<style>
+    .emua-invoice-detail .card,
+    .emua-invoice-detail .btn,
+    .emua-invoice-detail .badge,
+    .emua-invoice-detail .form-control,
+    .emua-invoice-detail .form-select,
+    .emua-invoice-detail .alert {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .emua-invoice-detail .invoice-page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        border: 1px solid #dfe5ed;
+        background: #fff;
+    }
+
+    .emua-invoice-detail .card {
+        border: 1px solid #dfe5ed !important;
+    }
+
+    .emua-invoice-detail .table th {
+        background-color: #f8fafc;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .025em;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    .emua-invoice-detail .table td {
+        font-size: 13px;
+        color: #172033;
+    }
+</style>
+
+<div class="emua-invoice-detail">
+    <!-- CẢNH BÁO MÔ PHỎNG PHÁP LÝ -->
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-shield-exclamation fs-4 text-warning"></i>
+        <div>
+            <strong>BẢN MÔ PHỎNG – KHÔNG CÓ GIÁ TRỊ PHÁP LÝ.</strong> Mã số thuế của EMUA và chứng từ này chỉ phục vụ mục đích kiểm thử và trình diễn đồ án khóa luận tốt nghiệp, không được sử dụng để kê khai hoặc gửi đến Tổng cục Thuế.
+        </div>
+    </div>
+
+    <!-- ACTION TOOLBAR -->
+    <div class="invoice-page-actions justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary px-2 py-1">LẬP HÓA ĐƠN BÁN HÀNG</span>
+            <span class="text-muted small">Căn cứ: <strong>Luật Thuế GTGT 48/2024/QH15 &amp; NQ 204/2025/QH15</strong></span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.MaDonHang" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại đơn hàng
+            </a>
+            <button type="submit" form="createInvoiceForm" class="btn btn-sm btn-primary px-3">
+                <i class="bi bi-check2-circle me-1"></i> Xác nhận &amp; Lập hóa đơn
+            </button>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" id="createInvoiceForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="MaDonHang" />
+        <input type="hidden" asp-for="TongTienHang" />
+        <input type="hidden" asp-for="TongTienTruocThue" />
+        <input type="hidden" asp-for="TongTienThueVat" />
+        <input type="hidden" asp-for="PhiVanChuyen" />
+        <input type="hidden" asp-for="GiamGiaVoucher" />
+        <input type="hidden" asp-for="MaVoucher" />
+        <input type="hidden" asp-for="TongThanhToan" />
+        <input type="hidden" asp-for="PhuongThucThanhToan" />
+        <input type="hidden" asp-for="PhuongThucVanChuyen" />
+
+        <div class="row g-3">
+            <!-- CỘT TRÁI: THÔNG TIN BÊN BÁN & BÊN MUA -->
+            <div class="col-lg-6">
+                <div class="card bg-white p-3 h-100">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary"><i class="bi bi-building me-1"></i> ĐƠN VỊ BÁN HÀNG (EMUA STORE)</h6>
+                    <table class="table table-borderless table-sm small mb-4">
+                        <tr>
+                            <td class="text-muted" style="width: 140px;">Tên đơn vị:</td>
+                            <td class="fw-bold">@Model.TenNguoiBan</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Mã số thuế:</td>
+                            <td><span class="badge bg-light text-danger border font-monospace">@Model.MaSoThueNguoiBan</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Địa chỉ:</td>
+                            <td>@Model.DiaChiNguoiBan</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Nhân viên lập:</td>
+                            <td class="fw-bold"><i class="bi bi-person-badge me-1"></i>@Model.TenNguoiLap</td>
+                        </tr>
+                    </table>
+
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary"><i class="bi bi-person me-1"></i> THÔNG TIN NGƯỜI MUA HÀNG</h6>
+                    <div class="mb-2">
+                        <label asp-for="HoTenKhachHang" class="form-label small fw-semibold">Họ tên người mua <span class="text-danger">*</span></label>
+                        <input asp-for="HoTenKhachHang" class="form-control form-control-sm" />
+                        <span asp-validation-for="HoTenKhachHang" class="text-danger small"></span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label asp-for="SoDienThoai" class="form-label small fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input asp-for="SoDienThoai" class="form-control form-control-sm" />
+                            <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MaSoThueNguoiMua" maxlength="50" class="form-label small fw-semibold">Mã số thuế người mua (nếu có)</label>
+                            <input asp-for="MaSoThueNguoiMua" maxlength="50" class="form-control form-control-sm" placeholder="VD: 0101234567" />
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="DiaChiGiaoHang" class="form-label small fw-semibold">Địa chỉ giao hàng <span class="text-danger">*</span></label>
+                        <input asp-for="DiaChiGiaoHang" class="form-control form-control-sm" />
+                        <span asp-validation-for="DiaChiGiaoHang" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: THÔNG TIN ĐƠN HÀNG & THANH TOÁN -->
+            <div class="col-lg-6">
+                <div class="card bg-white p-3 h-100">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary"><i class="bi bi-receipt me-1"></i> ĐƠN HÀNG GỐC &amp; THANH TOÁN</h6>
+                    <table class="table table-borderless table-sm small mb-3">
+                        <tr>
+                            <td class="text-muted" style="width: 150px;">Mã đơn hàng:</td>
+                            <td class="fw-bold">#DH-@Model.MaDonHang.ToString("D5")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Ngày đặt hàng:</td>
+                            <td>@Model.NgayDatHang.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Trạng thái đơn:</td>
+                            <td><span class="badge bg-light text-dark border">@Model.TrangThaiDonHang</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Phương thức thanh toán:</td>
+                            <td><span class="badge bg-secondary">@Model.PhuongThucThanhToan</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Vận chuyển:</td>
+                            <td>@Model.PhuongThucVanChuyen</td>
+                        </tr>
+                    </table>
+
+                    <div class="mb-3">
+                        <label asp-for="GhiChu" maxlength="350" class="form-label small fw-semibold">Ghi chú trên hóa đơn</label>
+                        <textarea asp-for="GhiChu" maxlength="350" class="form-control form-control-sm" rows="3" placeholder="Ghi chú thêm về điều khoản bảo hành, giao nhận..."></textarea>
+                    </div>
+
+                    <!-- BẢNG TỔNG HỢP THUẾ SUẤT VAT -->
+                    @if (Model.VatSummaries.Any())
+                    {
+                        <div class="border p-2 bg-light">
+                            <div class="fw-bold small text-muted mb-2">TỔNG HỢP THEO MỨC THUẾ SUẤT VAT:</div>
+                            <table class="w-100 small">
+                                <thead>
+                                    <tr class="text-muted border-bottom">
+                                        <th>Thuế suất</th>
+                                        <th class="text-end">Tiền chưa thuế</th>
+                                        <th class="text-end">Tiền thuế VAT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var vs in Model.VatSummaries)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@vs.ThueSuatVat.ToString("G29")%</td>
+                                            <td class="text-end">@vs.TienChuaThue.ToString("N0") ₫</td>
+                                            <td class="text-end text-success fw-semibold">@vs.TienThueVat.ToString("N0") ₫</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- BẢNG DANH SÁCH MẶT HÀNG TÍNH THUẾ -->
+            <div class="col-12">
+                <div class="card bg-white p-3">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="bi bi-box-seam me-1"></i> CHI TIẾT SẢN PHẨM &amp; THUẾ SUẤT THEO QUY ĐỊNH</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 40px;">STT</th>
+                                    <th>Mặt hàng / Biến thể</th>
+                                    <th style="width: 140px;">Ngành hàng</th>
+                                    <th class="text-center" style="width: 50px;">SL</th>
+                                    <th class="text-end" style="width: 130px;">Đơn giá chưa thuế</th>
+                                    <th class="text-center" style="width: 110px;">Thuế suất</th>
+                                    <th class="text-end" style="width: 120px;">Tiền VAT</th>
+                                    <th class="text-end" style="width: 130px;">Đơn giá sau thuế</th>
+                                    <th class="text-end" style="width: 140px;">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int index = 1; }
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td class="text-center text-muted">@(index++)</td>
+                                        <td>
+                                            <div class="fw-bold text-dark">@item.TenSanPham</div>
+                                            @if (!string.IsNullOrEmpty(item.BienThe))
+                                            {
+                                                <small class="text-muted">Phân loại: @item.BienThe</small>
+                                            }
+                                            @if (!string.IsNullOrEmpty(item.CanCuPhapLyThue))
+                                            {
+                                                <div class="small text-primary"><i class="bi bi-info-circle me-1"></i>@item.CanCuPhapLyThue</div>
+                                            }
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">@(string.IsNullOrEmpty(item.DanhMuc) ? "Công nghệ" : item.DanhMuc)</span></td>
+                                        <td class="text-center fw-bold">@item.SoLuong</td>
+                                        <td class="text-end text-muted">@((item.DonGiaChuaThue ?? 0m).ToString("N0")) ₫</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info text-dark">@(item.ThueSuatVat?.ToString("G29") ?? "10")%</span>
+                                        </td>
+                                        <td class="text-end text-success fw-semibold">@((item.TienThueVat ?? 0m).ToString("N0")) ₫</td>
+                                        <td class="text-end">@item.DonGiaSauThue.ToString("N0") ₫</td>
+                                        <td class="text-end fw-bold text-dark">@item.ThanhTien.ToString("N0") ₫</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- TỔNG KẾT TÀI CHÍNH -->
+                    <div class="d-flex justify-content-end mt-3">
+                        <div style="width: 400px;" class="border p-3 bg-light">
+                            <table class="w-100 small">
+                                <tr>
+                                    <td class="py-1 text-muted">Tổng tiền hàng (đã gồm VAT):</td>
+                                    <td class="py-1 text-end fw-semibold">@Model.TongTienHang.ToString("N0") ₫</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 text-muted">Trong đó: Tiền hàng trước thuế:</td>
+                                    <td class="py-1 text-end">@((Model.TongTienTruocThue ?? 0m).ToString("N0")) ₫</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 text-muted">Trong đó: Tiền thuế GTGT (VAT):</td>
+                                    <td class="py-1 text-end text-success fw-bold">@((Model.TongTienThueVat ?? 0m).ToString("N0")) ₫</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 text-muted">Phí vận chuyển:</td>
+                                    <td class="py-1 text-end fw-semibold">@(Model.PhiVanChuyen > 0 ? $"{Model.PhiVanChuyen:N0} ₫" : "0 ₫ (Miễn phí)")</td>
+                                </tr>
+                                @if (Model.GiamGiaVoucher > 0)
+                                {
+                                    <tr>
+                                        <td class="py-1 text-danger">Giảm giá Coupon (@(Model.MaVoucher ?? "Áp dụng")):</td>
+                                        <td class="py-1 text-end text-danger fw-semibold">-@Model.GiamGiaVoucher.ToString("N0") ₫</td>
+                                    </tr>
+                                }
+                                <tr class="border-top">
+                                    <td class="pt-2 fw-bold fs-6">TỔNG THANH TOÁN:</td>
+                                    <td class="pt-2 text-end fw-bold text-primary fs-5">@Model.TongThanhToan.ToString("N0") ₫</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
