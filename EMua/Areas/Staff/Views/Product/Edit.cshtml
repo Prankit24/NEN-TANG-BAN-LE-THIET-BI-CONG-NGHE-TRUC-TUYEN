@@ -5,12 +5,7 @@
 
     string FixImage(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
-        path = path.Trim().Replace("\\", "/");
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("//")) return path;
-        return path.StartsWith("/") ? path : "/" + path;
+        return ImageUrlHelper.FixImageUrl(path, checkPhysicalFile: true);
     }
 }
 

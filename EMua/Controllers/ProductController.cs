@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using EMua.Data;
+using EMua.Helpers;
 using EMua.Models.Database;
 using EMua.Services;
 using EMua.ViewModels;
@@ -298,34 +299,7 @@ namespace EMua.Controllers
 
             var defaultVariant = variants.FirstOrDefault();
 
-            string FixImage(string? url)
-            {
-                if (string.IsNullOrWhiteSpace(url))
-                    return "/images/no-image.png";
-
-                url = url.Trim().Replace("\\", "/");
-
-                if (url.StartsWith(
-                        "http://",
-                        StringComparison.OrdinalIgnoreCase) ||
-                    url.StartsWith(
-                        "https://",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return url;
-                }
-
-                return url.StartsWith("/") ? url : "/" + url;
-            }
-
-            var mainProductImage = product.SanPhamHinhAnhs
-                .OrderByDescending(x => x.LaAnhChinh)
-                .ThenBy(x => x.ThuTu)
-                .FirstOrDefault();
-
-            var rawImageUrl =
-                defaultVariant?.HinhAnh ??
-                mainProductImage?.DuongDanAnh;
+            var resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
 
             var allImages = new List<string>();
 
@@ -333,7 +307,7 @@ namespace EMua.Controllers
                 .OrderByDescending(x => x.LaAnhChinh)
                 .ThenBy(x => x.ThuTu))
             {
-                var url = FixImage(image.DuongDanAnh);
+                var url = ImageUrlHelper.FixImageUrl(image.DuongDanAnh, checkPhysicalFile: true);
 
                 if (url != "/images/no-image.png" &&
                     !allImages.Contains(
@@ -346,7 +320,7 @@ namespace EMua.Controllers
 
             foreach (var variant in variants)
             {
-                var url = FixImage(variant.HinhAnh);
+                var url = ImageUrlHelper.FixImageUrl(variant.HinhAnh, checkPhysicalFile: true);
 
                 if (url != "/images/no-image.png" &&
                     !allImages.Contains(
@@ -359,7 +333,7 @@ namespace EMua.Controllers
 
             if (allImages.Count == 0)
             {
-                allImages.Add(FixImage(rawImageUrl));
+                allImages.Add(resolvedMainImage);
             }
 
             var viewModel = new ProductDetailsViewModel
@@ -379,7 +353,7 @@ namespace EMua.Controllers
                     ? defaultVariant.SoLuong
                     : 0,
 
-                ImageUrl = FixImage(rawImageUrl),
+                ImageUrl = resolvedMainImage,
                 ImageUrls = allImages,
                 DefaultVariantId =
                     defaultVariant?.MaBienThe ?? 0,
@@ -389,7 +363,13 @@ namespace EMua.Controllers
                 Warranty = product.BaoHanh,
 
                 Variants = variants.Select(v =>
-                    new ProductVariantViewModel
+                {
+                    var varImg = ImageUrlHelper.FixImageUrl(v.HinhAnh, checkPhysicalFile: true);
+                    if (varImg == "/images/no-image.png")
+                    {
+                        varImg = resolvedMainImage;
+                    }
+                    return new ProductVariantViewModel
                     {
                         VariantId = v.MaBienThe,
                         Label = string.Join(" / ",
@@ -400,8 +380,9 @@ namespace EMua.Controllers
                         Stock = v.TrangThai == "Còn hàng"
                             ? v.SoLuong
                             : 0,
-                        ImageUrl = FixImage(v.HinhAnh)
-                    }).ToList(),
+                        ImageUrl = varImg
+                    };
+                }).ToList(),
 
                 Reviews = product.DanhGiaSanPhams
                     .Where(r => r.TrangThai == true)

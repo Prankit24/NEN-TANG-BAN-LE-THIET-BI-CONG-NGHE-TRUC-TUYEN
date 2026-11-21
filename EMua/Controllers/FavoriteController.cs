@@ -56,11 +56,7 @@ public class FavoriteController : Controller
 
             var anyVariant = availableVariant ?? p.BienTheSanPhams?.OrderBy(v => v.Gia).FirstOrDefault();
 
-            var rawImg = p.SanPhamHinhAnhs?
-                .OrderByDescending(h => h.LaAnhChinh)
-                .ThenBy(h => h.ThuTu)
-                .FirstOrDefault()?.DuongDanAnh
-                ?? anyVariant?.HinhAnh;
+            var image = EMua.Helpers.ImageUrlHelper.ResolveProductImage(p, anyVariant, checkPhysicalFile: true);
 
             var price = anyVariant?.Gia ?? p.GiaGoc ?? 0;
 
@@ -71,7 +67,7 @@ public class FavoriteController : Controller
                 ProductName = p.TenSanPham ?? "Sản phẩm",
                 CategoryName = p.MaDanhMucNavigation?.TenDanhMuc,
                 BrandName = p.MaThuongHieuNavigation?.TenThuongHieu,
-                ImageUrl = rawImg,
+                ImageUrl = image,
                 Price = price,
                 OriginalPrice = p.GiaGoc,
                 InStock = availableVariant != null && availableVariant.SoLuong > 0,

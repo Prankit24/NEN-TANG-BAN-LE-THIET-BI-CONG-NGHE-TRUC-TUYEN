@@ -1,15 +1,6 @@
 @model IEnumerable<EMua.Models.Database.SanPham>
 @{
     var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
-    string FixImage(string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
-        path = path.Trim().Replace("\\", "/");
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("//")) return path;
-        return path.StartsWith("/") ? path : "/" + path;
-    }
 }
 @if (products.Count == 0)
 {
@@ -30,10 +21,7 @@ else
                 .OrderBy(x => x.Gia).FirstOrDefault();
             variant ??= item.BienTheSanPhams.Where(x => x.SoLuong > 0)
                 .OrderBy(x => x.Gia).FirstOrDefault();
-            var mainImage = item.SanPhamHinhAnhs
-                .OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu)
-                .FirstOrDefault();
-            var image = FixImage(mainImage?.DuongDanAnh ?? variant?.HinhAnh);
+            var image = ImageUrlHelper.ResolveProductImage(item, variant, checkPhysicalFile: true);
             var price = variant?.Gia ?? item.GiaGoc ?? 0;
             <article class="emua-product-card">
                 <a asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham"

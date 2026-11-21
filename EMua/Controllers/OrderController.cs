@@ -48,7 +48,7 @@ public class OrderController : Controller
 
                     ProductImageUrl = !string.IsNullOrEmpty(i.MaBienTheNavigation.HinhAnh)
                         ? i.MaBienTheNavigation.HinhAnh
-                        : i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.Select(a => a.DuongDanAnh).FirstOrDefault() ?? "/images/no-image.png",
+                        : (i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.Select(a => a.DuongDanAnh).FirstOrDefault() ?? "/images/no-image.png"),
 
                     Quantity = i.SoLuong,
                     Price = i.DonGia
@@ -105,7 +105,10 @@ public class OrderController : Controller
                 VariantId = x.MaBienThe,
                 ProductName = x.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham ?? "Sản phẩm",
                 VariantLabel = string.Join(" / ", new[] { x.MaBienTheNavigation.MauSac, x.MaBienTheNavigation.PhienBan }.Where(v => !string.IsNullOrWhiteSpace(v))),
-                ImageUrl = x.MaBienTheNavigation.HinhAnh,
+                ImageUrl = EMua.Helpers.ImageUrlHelper.ResolveProductImage(
+                    x.MaBienTheNavigation.MaSanPhamNavigation,
+                    x.MaBienTheNavigation,
+                    checkPhysicalFile: true),
                 UnitPrice = x.DonGia,
                 Quantity = x.SoLuong
             }).ToList(),
@@ -359,7 +362,7 @@ public class OrderController : Controller
                 VariantId = ct.MaBienThe,
                 ProductName = prodName,
                 VariantLabel = $"{bt?.MauSac ?? ""} {bt?.PhienBan ?? ""}".Trim(),
-                ImageUrl = bt?.HinhAnh,
+                ImageUrl = EMua.Helpers.ImageUrlHelper.ResolveProductImage(sp, bt, checkPhysicalFile: true),
                 Quantity = ct.SoLuong,
                 GrossUnitPrice = ct.DonGia,
                 NetUnitPrice = netUnit,

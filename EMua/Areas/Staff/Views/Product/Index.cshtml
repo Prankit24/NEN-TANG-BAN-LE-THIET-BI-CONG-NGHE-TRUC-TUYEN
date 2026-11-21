@@ -13,16 +13,6 @@
     int? brandId = ViewBag.BrandId as int?;
     int? categoryId = ViewBag.CategoryId as int?;
     string stockFilter = ViewBag.StockFilter as string ?? "all";
-
-    string FixImage(string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return "/images/no-image.png";
-        path = path.Trim().Replace("\\", "/");
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("//")) return path;
-        return path.StartsWith("/") ? path : "/" + path;
-    }
 }
 
 <style>
@@ -256,17 +246,7 @@
                         {
                             var totalStock = product.BienTheSanPhams?.Sum(v => v.SoLuong) ?? 0;
                             var variantCount = product.BienTheSanPhams?.Count ?? 0;
-                            var rawImg = product.SanPhamHinhAnhs?
-                                .OrderByDescending(x => x.LaAnhChinh)
-                                .ThenBy(x => x.ThuTu)
-                                .Select(x => x.DuongDanAnh)
-                                .FirstOrDefault()
-                                ?? product.BienTheSanPhams?
-                                .Where(b => !string.IsNullOrEmpty(b.HinhAnh))
-                                .Select(b => b.HinhAnh)
-                                .FirstOrDefault();
-
-                            var imgSrc = FixImage(rawImg);
+                            var imgSrc = ImageUrlHelper.ResolveProductImage(product, null, checkPhysicalFile: true);
 
                             <tr>
                                 <td>

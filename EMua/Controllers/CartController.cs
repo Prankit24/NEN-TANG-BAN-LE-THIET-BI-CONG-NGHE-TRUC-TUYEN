@@ -53,7 +53,7 @@ public class CartController : Controller
                     VariantId = x.MaBienThe,
                     ProductName = product?.TenSanPham ?? "Sản phẩm",
                     VariantLabel = variantLabel,
-                    ImageUrl = variant?.HinhAnh,
+                    ImageUrl = EMua.Helpers.ImageUrlHelper.ResolveProductImage(product, variant, checkPhysicalFile: true),
                     UnitPrice = variant?.Gia ?? 0m,
                     Quantity = x.SoLuong,
                     Stock = variant?.SoLuong ?? 0

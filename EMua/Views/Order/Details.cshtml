@@ -1,38 +1,13 @@
 @using EMua.Services
 @using EMua.ViewModels
+@using EMua.Helpers
 @model OrderDetailsViewModel
 @{
     ViewData["Title"] = $"Đơn hàng #{Model.OrderId:D5}";
 
     string FixImageUrl(string? url)
     {
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            return "/images/no-image.png";
-        }
-
-        url = url.Trim().Replace("\\", "/");
-
-        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return url;
-        }
-
-        if (url.StartsWith("/"))
-        {
-            if (url.StartsWith("/images/", StringComparison.OrdinalIgnoreCase))
-                return url;
-
-            return "/images" + url;
-        }
-
-        if (url.Contains("/"))
-        {
-            return "/" + url;
-        }
-
-        return "/images/" + url;
+        return ImageUrlHelper.FixImageUrl(url, checkPhysicalFile: true);
     }
 
     bool canEdit = Model.CanEdit;
@@ -218,7 +193,7 @@
 
                     <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                         <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-thumb-box">
-                            <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='/images/default-product.png';" />
+                            <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='/images/no-image.png';" />
                         </a>
 
                         <div class="product-info-wrap">
