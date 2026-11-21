@@ -1,0 +1,58 @@
+@{
+    var successMsg = TempData["Success"]?.ToString() ?? TempData["SuccessMessage"]?.ToString();
+    var errorMsg = TempData["Error"]?.ToString() ?? TempData["ErrorMessage"]?.ToString();
+    var warningMsg = TempData["Warning"]?.ToString() ?? TempData["WarningMessage"]?.ToString();
+    var infoMsg = TempData["Info"]?.ToString() ?? TempData["InfoMessage"]?.ToString();
+}
+
+<!-- Unified CSS -->
+<link rel="stylesheet" href="~/css/shared/emua-toast.css" asp-append-version="true" />
+
+<!-- Toast Container -->
+<div class="emua-toast-container" id="emuaToastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Universal Confirm Modal -->
+<div class="modal fade emua-confirm-modal" id="emuaConfirmModal" tabindex="-1" aria-labelledby="emuaConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="emua-confirm-icon-wrapper emua-confirm-icon-warning" id="emuaConfirmIconWrapper">
+                    <i class="bi bi-question-lg"></i>
+                </div>
+                <h5 class="emua-confirm-title" id="emuaConfirmTitle">Xác nhận thao tác</h5>
+                <p class="emua-confirm-message" id="emuaConfirmMessage">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary px-3" id="emuaConfirmCancelBtn" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger px-3" id="emuaConfirmSubmitBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unified JS -->
+<script src="~/js/shared/emua-notify.js" asp-append-version="true"></script>
+
+@if (!string.IsNullOrEmpty(successMsg) || !string.IsNullOrEmpty(errorMsg) || !string.IsNullOrEmpty(warningMsg) || !string.IsNullOrEmpty(infoMsg))
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <text>EmuaNotify.success(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMsg)));</text>
+            }
+            @if (!string.IsNullOrEmpty(errorMsg))
+            {
+                <text>EmuaNotify.error(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(errorMsg)));</text>
+            }
+            @if (!string.IsNullOrEmpty(warningMsg))
+            {
+                <text>EmuaNotify.warning(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(warningMsg)));</text>
+            }
+            @if (!string.IsNullOrEmpty(infoMsg))
+            {
+                <text>EmuaNotify.info(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(infoMsg)));</text>
+            }
+        });
+    </script>
+}

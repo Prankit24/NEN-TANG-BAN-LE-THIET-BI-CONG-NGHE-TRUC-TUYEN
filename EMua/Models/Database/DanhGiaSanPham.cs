@@ -28,6 +28,22 @@ public partial class DanhGiaSanPham
 
     public bool? TrangThai { get; set; }
 
+    [StringLength(255)]
+    public string? LyDoAn { get; set; }
+
+    [StringLength(500)]
+    public string? GhiChuKiemDuyet { get; set; }
+
+    public int? MaNguoiKiemDuyet { get; set; }
+
+    [StringLength(100)]
+    public string? TenNguoiKiemDuyet { get; set; }
+
+    [Column(TypeName = "timestamp without time zone")]
+    public DateTime? NgayKiemDuyet { get; set; }
+
+    public virtual ICollection<LichSuKiemDuyetDanhGia> LichSuKiemDuyets { get; set; } = new List<LichSuKiemDuyetDanhGia>();
+
     [ForeignKey("MaDonHang")]
     [InverseProperty("DanhGiaSanPhams")]
     public virtual DonHang? MaDonHangNavigation { get; set; }

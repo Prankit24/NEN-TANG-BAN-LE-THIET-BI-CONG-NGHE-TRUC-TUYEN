@@ -1,0 +1,530 @@
+{
+  "thuongHieus": [
+    { "tenThuongHieu": "Apple", "moTa": "Thương hiệu công nghệ hàng đầu thế giới" },
+    { "tenThuongHieu": "Samsung", "moTa": "Tập đoàn điện tử đa quốc gia Hàn Quốc" },
+    { "tenThuongHieu": "Xiaomi", "moTa": "Thương hiệu công nghệ giá tốt từ Trung Quốc" },
+    { "tenThuongHieu": "OPPO", "moTa": "Hãng điện thoại chuyên selfie và thiết kế" },
+    { "tenThuongHieu": "Vivo", "moTa": "Thương hiệu smartphone camera xuất sắc" },
+    { "tenThuongHieu": "ASUS", "moTa": "Thương hiệu laptop và linh kiện máy tính" },
+    { "tenThuongHieu": "Dell", "moTa": "Hãng máy tính cá nhân hàng đầu" },
+    { "tenThuongHieu": "HP", "moTa": "Thương hiệu laptop và máy in nổi tiếng" },
+    { "tenThuongHieu": "Lenovo", "moTa": "Tập đoàn công nghệ đa quốc gia Trung Quốc" },
+    { "tenThuongHieu": "MSI", "moTa": "Thương hiệu gaming laptop cao cấp" },
+    { "tenThuongHieu": "Acer", "moTa": "Hãng laptop đa dạng phân khúc" },
+    { "tenThuongHieu": "Sony", "moTa": "Tập đoàn điện tử và giải trí Nhật Bản" },
+    { "tenThuongHieu": "JBL", "moTa": "Thương hiệu loa và tai nghe chuyên nghiệp" },
+    { "tenThuongHieu": "Logitech", "moTa": "Thương hiệu phụ kiện máy tính hàng đầu" },
+    { "tenThuongHieu": "Royal Kludge", "moTa": "Thương hiệu bàn phím cơ giá tốt" },
+    { "tenThuongHieu": "Anker", "moTa": "Thương hiệu phụ kiện sạc và cáp chất lượng" }
+  ],
+  "danhMucs": [
+    { "tenDanhMuc": "Điện thoại", "moTa": "Smartphone các hãng", "trangThaiDanhMuc": "Active" },
+    { "tenDanhMuc": "Laptop", "moTa": "Laptop văn phòng và gaming", "trangThaiDanhMuc": "Active" },
+    { "tenDanhMuc": "Tai nghe", "moTa": "Tai nghe không dây và có dây", "trangThaiDanhMuc": "Active" },
+    { "tenDanhMuc": "Loa Bluetooth", "moTa": "Loa di động và loa thông minh", "trangThaiDanhMuc": "Active" },
+    { "tenDanhMuc": "Phụ kiện", "moTa": "Cáp sạc, ốp lưng, bàn phím, chuột", "trangThaiDanhMuc": "Active" }
+  ],
+  "sanPhams": [
+    {
+      "tenSanPham": "iPhone 15 Pro Max",
+      "moTa": "iPhone 15 Pro Max chip A17 Pro, camera 48MP, khung Titanium, USB-C",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip A17 Pro, RAM 8GB, Camera 48MP+12MP+12MP, Pin 4422mAh, OLED 6.7 inch",
+      "giaGoc": 29990000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "iphone-15-pro-max",
+      "bienThes": [
+        { "mauSac": "Titan Đen", "phienBan": "256GB", "gia": 29990000, "soLuong": 25, "trangThai": "Active", "hinhAnh": "black-256.jpg" },
+        { "mauSac": "Titan Đen", "phienBan": "512GB", "gia": 34990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "black-512.jpg" },
+        { "mauSac": "Titan Xám", "phienBan": "1TB", "gia": 42990000, "soLuong": 8, "trangThai": "Active", "hinhAnh": "gray-1tb.jpg" },
+        { "mauSac": "Tím", "phienBan": "256GB", "gia": 29990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "purple-256.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "iPhone 15",
+      "moTa": "iPhone 15 chip A16 Bionic, Dynamic Island, camera 48MP, USB-C",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip A16 Bionic, RAM 6GB, Camera 48MP+12MP, Pin 3349mAh, OLED 6.1 inch",
+      "giaGoc": 19990000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "iphone-15",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "128GB", "gia": 19990000, "soLuong": 30, "trangThai": "Active", "hinhAnh": "black-128.jpg" },
+        { "mauSac": "Xanh dương", "phienBan": "128GB", "gia": 19990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "blue-128.jpg" },
+        { "mauSac": "Tím", "phienBan": "256GB", "gia": 23490000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "purple-256.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "iPhone 14",
+      "moTa": "iPhone 14 chip A15 Bionic, camera kép 12MP, pin cả ngày",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip A15 Bionic, RAM 6GB, Camera 12MP kép, Pin 3279mAh, OLED 6.1 inch",
+      "giaGoc": 16490000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "iphone-14",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "128GB", "gia": 16490000, "soLuong": 35, "trangThai": "Active", "hinhAnh": "black-128.jpg" },
+        { "mauSac": "Xanh dương", "phienBan": "128GB", "gia": 16490000, "soLuong": 25, "trangThai": "Active", "hinhAnh": "blue-128.jpg" },
+        { "mauSac": "Trắng", "phienBan": "256GB", "gia": 19990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "white-256.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Samsung Galaxy S24 Ultra",
+      "moTa": "Galaxy S24 Ultra chip Snapdragon 8 Gen 3, S Pen, camera 200MP, khung Titanium",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Snapdragon 8 Gen 3, RAM 12GB, Camera 200MP+50MP+12MP+10MP, Pin 5000mAh, Dynamic AMOLED 6.8 inch",
+      "giaGoc": 29990000,
+      "thuongHieu": "Samsung",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "samsung-s24-ultra",
+      "bienThes": [
+        { "mauSac": "Titan Đen", "phienBan": "256GB", "gia": 29990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "black-256.jpg" },
+        { "mauSac": "Titan Xám", "phienBan": "512GB", "gia": 33990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "gray-512.jpg" },
+        { "mauSac": "Tím", "phienBan": "256GB", "gia": 29990000, "soLuong": 18, "trangThai": "Active", "hinhAnh": "purple-256.jpg" },
+        { "mauSac": "Tím", "phienBan": "512GB", "gia": 33990000, "soLuong": 8, "trangThai": "Active", "hinhAnh": "purple-512.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Samsung Galaxy S24+",
+      "moTa": "Galaxy S24+ chip Exynos 2400, camera AI 50MP, màn hình lớn 6.7 inch",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Exynos 2400, RAM 12GB, Camera 50MP+12MP+10MP, Pin 4900mAh, Dynamic AMOLED 6.7 inch",
+      "giaGoc": 22990000,
+      "thuongHieu": "Samsung",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "samsung-s24-plus",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "256GB", "gia": 22990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "black-256.jpg" },
+        { "mauSac": "Đen", "phienBan": "512GB", "gia": 26990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "black-512.jpg" },
+        { "mauSac": "Xanh lá", "phienBan": "256GB", "gia": 22990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "green-256.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Samsung Galaxy A55",
+      "moTa": "Galaxy A55 5G chip Exynos 1480, camera OIS 50MP, chống nước IP67",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Exynos 1480, RAM 8GB, Camera 50MP+12MP+5MP, Pin 5000mAh, Super AMOLED 6.6 inch",
+      "giaGoc": 9490000,
+      "thuongHieu": "Samsung",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "samsung-a55",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "128GB", "gia": 9490000, "soLuong": 40, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Bạc", "phienBan": "128GB", "gia": 9490000, "soLuong": 30, "trangThai": "Active", "hinhAnh": "silver.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "OPPO Reno 12",
+      "moTa": "OPPO Reno 12 5G chip Dimensity 7300, camera AI 50MP, sạc nhanh 80W",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Dimensity 7300, RAM 12GB, Camera 50MP+8MP+2MP, Pin 5000mAh, AMOLED 6.7 inch",
+      "giaGoc": 10490000,
+      "thuongHieu": "OPPO",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "oppo-reno-12",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "256GB", "gia": 10490000, "soLuong": 25, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Hồng", "phienBan": "512GB", "gia": 12990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "pink-512.jpg" },
+        { "mauSac": "Bạc", "phienBan": "256GB", "gia": 10490000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "silver-256.jpg" },
+        { "mauSac": "Trắng", "phienBan": "256GB", "gia": 10490000, "soLuong": 18, "trangThai": "Active", "hinhAnh": "white.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Vivo V30",
+      "moTa": "Vivo V30 5G camera Zeiss 50MP, Aura Light Portrait, thiết kế cao cấp",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Snapdragon 7 Gen 3, RAM 12GB, Camera Zeiss 50MP+50MP, Pin 5000mAh, AMOLED 6.78 inch",
+      "giaGoc": 10990000,
+      "thuongHieu": "Vivo",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "vivo-v30",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "256GB", "gia": 10990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "black-256.jpg" },
+        { "mauSac": "Đen", "phienBan": "512GB", "gia": 12990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Xanh dương", "phienBan": "256GB", "gia": 10990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "blue-256.jpg" },
+        { "mauSac": "Xanh dương", "phienBan": "512GB", "gia": 12990000, "soLuong": 8, "trangThai": "Active", "hinhAnh": "blue.jpg" },
+        { "mauSac": "Trắng", "phienBan": "512GB", "gia": 12990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "white-512.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Redmi Note 13",
+      "moTa": "Redmi Note 13 camera 108MP, màn AMOLED 120Hz, sạc nhanh 33W",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Snapdragon 685, RAM 8GB, Camera 108MP+8MP+2MP, Pin 5000mAh, AMOLED 6.67 inch 120Hz",
+      "giaGoc": 4990000,
+      "thuongHieu": "Xiaomi",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "redmi-note-13",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "128GB", "gia": 4990000, "soLuong": 50, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Xanh lá", "phienBan": "128GB", "gia": 4990000, "soLuong": 35, "trangThai": "Active", "hinhAnh": "green.jpg" },
+        { "mauSac": "Trắng", "phienBan": "256GB", "gia": 5990000, "soLuong": 25, "trangThai": "Active", "hinhAnh": "white-256.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Xiaomi 13T Pro",
+      "moTa": "Xiaomi 13T Pro camera Leica 50MP, chip Dimensity 9200+, sạc 120W",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Dimensity 9200+, RAM 12GB, Camera Leica 50MP+50MP+12MP, Pin 5000mAh, AMOLED 6.67 inch 144Hz",
+      "giaGoc": 13990000,
+      "thuongHieu": "Xiaomi",
+      "danhMuc": "Điện thoại",
+      "imageFolder": "xiaomi-13t-pro",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "256GB", "gia": 13990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Xanh dương", "phienBan": "256GB", "gia": 13990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "blue.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "MacBook Air M2",
+      "moTa": "MacBook Air M2 mỏng nhẹ, chip Apple M2, màn Liquid Retina 13.6 inch",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip Apple M2, RAM 8GB, SSD 256GB/512GB, Màn Liquid Retina 13.6 inch, Pin 18h",
+      "giaGoc": 25990000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Laptop",
+      "imageFolder": "macbook-air-m2",
+      "bienThes": [
+        { "mauSac": "Xám", "phienBan": "8GB/256GB", "gia": 25990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "gray-256.jpg" },
+        { "mauSac": "Xám", "phienBan": "8GB/512GB", "gia": 29990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "gray-512.jpg" },
+        { "mauSac": "Bạc", "phienBan": "8GB/512GB", "gia": 29990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "silver-512.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "MacBook Pro M3",
+      "moTa": "MacBook Pro M3 hiệu năng cao, màn Liquid Retina XDR 14 inch",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip Apple M3, RAM 8GB/16GB, SSD 512GB/1TB, Liquid Retina XDR 14 inch, Pin 22h",
+      "giaGoc": 39990000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Laptop",
+      "imageFolder": "macbook-pro-m3",
+      "bienThes": [
+        { "mauSac": "Xám", "phienBan": "8GB/512GB", "gia": 39990000, "soLuong": 8, "trangThai": "Active", "hinhAnh": "gray.jpg" },
+        { "mauSac": "Bạc", "phienBan": "8GB/512GB", "gia": 39990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "silver.jpg" },
+        { "mauSac": "Bạc", "phienBan": "16GB/512GB", "gia": 44990000, "soLuong": 5, "trangThai": "Active", "hinhAnh": "silver-8-512.jpg" },
+        { "mauSac": "Đen", "phienBan": "16GB/1TB", "gia": 52990000, "soLuong": 3, "trangThai": "Active", "hinhAnh": "space-black-16-1tb.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Dell XPS 13",
+      "moTa": "Dell XPS 13 ultrabook cao cấp, Intel Core Ultra, màn InfinityEdge",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Intel Core Ultra 7, RAM 16GB, SSD 512GB, Màn 13.4 inch FHD+ IPS, Pin 55Wh",
+      "giaGoc": 32990000,
+      "thuongHieu": "Dell",
+      "danhMuc": "Laptop",
+      "imageFolder": "dell-xps-13",
+      "bienThes": [
+        { "mauSac": "Bạc", "phienBan": "i7/16GB/512GB", "gia": 32990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "1.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "ASUS ROG Strix G16",
+      "moTa": "ASUS ROG Strix G16 gaming laptop, RTX 4060, màn 165Hz",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "Intel Core i7-13650HX, RAM 16GB, SSD 512GB, RTX 4060, Màn 16 inch WQXGA 165Hz",
+      "giaGoc": 32990000,
+      "thuongHieu": "ASUS",
+      "danhMuc": "Laptop",
+      "imageFolder": "asus-rog-strix-g16",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "i7/RTX4060/16GB", "gia": 32990000, "soLuong": 8, "trangThai": "Active", "hinhAnh": "1.jpg" },
+        { "mauSac": "Xám", "phienBan": "R5/RTX3050", "gia": 22990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "gray-r5.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "ASUS Vivobook 15",
+      "moTa": "ASUS Vivobook 15 laptop văn phòng mỏng nhẹ, hiệu năng ổn định",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "Intel Core i5-1335U, RAM 8GB, SSD 512GB, Màn 15.6 inch FHD IPS, Pin 42Wh",
+      "giaGoc": 14990000,
+      "thuongHieu": "ASUS",
+      "danhMuc": "Laptop",
+      "imageFolder": "asus-vivobook-15",
+      "bienThes": [
+        { "mauSac": "Bạc", "phienBan": "i5/8GB/512GB", "gia": 14990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "1.jpg" },
+        { "mauSac": "Xanh", "phienBan": "i5/8GB/512GB", "gia": 14990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "3050.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Lenovo Legion 5",
+      "moTa": "Lenovo Legion 5 gaming laptop, RTX 4060, màn IPS 165Hz",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "AMD Ryzen 7 7735HS, RAM 16GB, SSD 512GB, RTX 4060, Màn 15.6 inch WQHD 165Hz",
+      "giaGoc": 29990000,
+      "thuongHieu": "Lenovo",
+      "danhMuc": "Laptop",
+      "imageFolder": "lenovo-legion-5",
+      "bienThes": [
+        { "mauSac": "Xám", "phienBan": "R7/RTX4060/16GB", "gia": 29990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "r7-4060.jpg" },
+        { "mauSac": "Xám", "phienBan": "R7/RTX4060/32GB", "gia": 34990000, "soLuong": 5, "trangThai": "Active", "hinhAnh": "r7-4060-32gb.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Lenovo IdeaPad Slim 5",
+      "moTa": "Lenovo IdeaPad Slim 5 laptop mỏng nhẹ cho sinh viên và văn phòng",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "Intel Core i5-1340P, RAM 16GB, SSD 512GB, Màn 14 inch 2.2K IPS, Pin 57Wh",
+      "giaGoc": 16990000,
+      "thuongHieu": "Lenovo",
+      "danhMuc": "Laptop",
+      "imageFolder": "lenovo-ideapad-slim-5",
+      "bienThes": [
+        { "mauSac": "Xám", "phienBan": "i5/16GB/512GB", "gia": 16990000, "soLuong": 18, "trangThai": "Active", "hinhAnh": "1.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "HP Victus 15",
+      "moTa": "HP Victus 15 gaming laptop entry-level, RTX 4050, giá tốt",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Intel Core i7-13700H, RAM 16GB, SSD 512GB, RTX 4050, Màn 15.6 inch FHD 144Hz",
+      "giaGoc": 24990000,
+      "thuongHieu": "HP",
+      "danhMuc": "Laptop",
+      "imageFolder": "hp-victus-15",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "i7/RTX4050", "gia": 24990000, "soLuong": 12, "trangThai": "Active", "hinhAnh": "i7-4050.jpg" },
+        { "mauSac": "Đen", "phienBan": "i5/RTX4050", "gia": 21990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "4050.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "MSI Katana 15",
+      "moTa": "MSI Katana 15 gaming laptop, RTX 4060, thiết kế mạnh mẽ",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "Intel Core i7-13620H, RAM 16GB, SSD 512GB, RTX 4060, Màn 15.6 inch FHD 144Hz",
+      "giaGoc": 27990000,
+      "thuongHieu": "MSI",
+      "danhMuc": "Laptop",
+      "imageFolder": "msi-katana-15",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "i7/RTX4060", "gia": 27990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "i7-4060.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Acer Nitro 5",
+      "moTa": "Acer Nitro 5 gaming laptop phổ thông, RTX 3050, tản nhiệt kép",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Intel Core i5-12450H, RAM 8GB, SSD 512GB, RTX 3050, Màn 15.6 inch FHD 144Hz",
+      "giaGoc": 17990000,
+      "thuongHieu": "Acer",
+      "danhMuc": "Laptop",
+      "imageFolder": "acer-nitro-5",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "i5/RTX3050/8GB", "gia": 17990000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "i5-3050.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "AirPods Pro 2",
+      "moTa": "AirPods Pro 2 USB-C, chống ồn chủ động, Adaptive Audio, chip H2",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip H2, ANC, Spatial Audio, Pin 6h (30h với hộp), USB-C, IP54",
+      "giaGoc": 5990000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Tai nghe",
+      "imageFolder": "airpods-pro-2",
+      "bienThes": [
+        { "mauSac": "Trắng", "phienBan": "USB-C", "gia": 5990000, "soLuong": 40, "trangThai": "Active", "hinhAnh": "usbc.jpg" },
+        { "mauSac": "Trắng", "phienBan": "Lightning", "gia": 5490000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "lightning.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "AirPods 4",
+      "moTa": "AirPods 4 thiết kế mở, chip H2, Spatial Audio, sạc USB-C",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Chip H2, Spatial Audio, Pin 5h (30h với hộp), USB-C",
+      "giaGoc": 3290000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Tai nghe",
+      "imageFolder": "airpods-4",
+      "bienThes": [
+        { "mauSac": "Trắng", "phienBan": "Standard", "gia": 3290000, "soLuong": 50, "trangThai": "Active", "hinhAnh": "standard.jpg" },
+        { "mauSac": "Trắng", "phienBan": "ANC", "gia": 4490000, "soLuong": 30, "trangThai": "Active", "hinhAnh": "anc.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Sony WH-1000XM5",
+      "moTa": "Sony WH-1000XM5 tai nghe chụp tai chống ồn tốt nhất, LDAC, 30 giờ pin",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Driver 30mm, ANC, LDAC, Multipoint, Pin 30h, USB-C, 250g",
+      "giaGoc": 7990000,
+      "thuongHieu": "Sony",
+      "danhMuc": "Tai nghe",
+      "imageFolder": "sony-wh1000xm5",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "Standard", "gia": 7990000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Bạc", "phienBan": "Standard", "gia": 7990000, "soLuong": 10, "trangThai": "Active", "hinhAnh": "silver.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "JBL Flip 6",
+      "moTa": "JBL Flip 6 loa Bluetooth di động, chống nước IP67, âm bass mạnh",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "Driver 2 chiều, Bluetooth 5.1, IP67, Pin 12h, PartyBoost, USB-C",
+      "giaGoc": 2690000,
+      "thuongHieu": "JBL",
+      "danhMuc": "Loa Bluetooth",
+      "imageFolder": "jbl-flip-6",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "Standard", "gia": 2690000, "soLuong": 30, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Đỏ Đen", "phienBan": "Standard", "gia": 2690000, "soLuong": 20, "trangThai": "Active", "hinhAnh": "black-red.jpg" },
+        { "mauSac": "Trắng Nâu", "phienBan": "Standard", "gia": 2690000, "soLuong": 15, "trangThai": "Active", "hinhAnh": "white-brown.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Logitech G102",
+      "moTa": "Logitech G102 Lightsync chuột gaming RGB, cảm biến 8000 DPI",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "24 tháng",
+      "thongSoKyThuat": "Cảm biến 8000 DPI, 6 nút, RGB Lightsync, USB, 85g",
+      "giaGoc": 399000,
+      "thuongHieu": "Logitech",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "logitech-g102",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "Standard", "gia": 399000, "soLuong": 60, "trangThai": "Active", "hinhAnh": "black.jpg" },
+        { "mauSac": "Trắng", "phienBan": "Standard", "gia": 399000, "soLuong": 40, "trangThai": "Active", "hinhAnh": "white.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Bàn phím cơ RK84",
+      "moTa": "Royal Kludge RK84 bàn phím cơ 84 phím, kết nối 3 chế độ, RGB",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "84 phím, Switch cơ, Bluetooth 5.1/2.4GHz/USB-C, RGB, Pin 3750mAh, Hot-swap",
+      "giaGoc": 990000,
+      "thuongHieu": "Royal Kludge",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "rk84",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "Red Switch", "gia": 990000, "soLuong": 35, "trangThai": "Active", "hinhAnh": "1.jpg" },
+        { "mauSac": "Trắng", "phienBan": "Brown Switch", "gia": 990000, "soLuong": 25, "trangThai": "Active", "hinhAnh": "2.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Cáp Type-C 1m",
+      "moTa": "Cáp sạc nhanh USB-C to USB-C 1 mét, hỗ trợ PD 60W, bện Nylon",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "6 tháng",
+      "thongSoKyThuat": "USB-C to USB-C, PD 60W, Nylon braided, 1m, USB 2.0",
+      "giaGoc": 149000,
+      "thuongHieu": "Anker",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "cap-type-c-1m",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "1m", "gia": 149000, "soLuong": 100, "trangThai": "Active", "hinhAnh": "usbc.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Sạc nhanh 20W",
+      "moTa": "Củ sạc nhanh 20W USB-C PD, tương thích iPhone/Samsung/Xiaomi",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "USB-C PD 20W, Input 100-240V, Compact design, Nhiều chuẩn bảo vệ",
+      "giaGoc": 199000,
+      "thuongHieu": "Anker",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "sac-nhanh-20w",
+      "bienThes": [
+        { "mauSac": "Trắng", "phienBan": "20W", "gia": 199000, "soLuong": 80, "trangThai": "Active", "hinhAnh": "1.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Sạc dự phòng 20000mAh",
+      "moTa": "Pin sạc dự phòng 20000mAh, sạc nhanh PD 22.5W, 2 cổng USB-C",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "12 tháng",
+      "thongSoKyThuat": "20000mAh, PD 22.5W, 2x USB-C + 1x USB-A, LED hiển thị, 350g",
+      "giaGoc": 490000,
+      "thuongHieu": "Anker",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "Sac-du-phong-20000mAh",
+      "bienThes": [
+        { "mauSac": "Đen", "phienBan": "20000mAh", "gia": 490000, "soLuong": 45, "trangThai": "Active", "hinhAnh": "1.jpg" }
+      ]
+    },
+    {
+      "tenSanPham": "Ốp lưng iPhone 15",
+      "moTa": "Ốp lưng silicon trong suốt iPhone 15, chống sốc, bảo vệ camera",
+      "trangThaiSanPham": "Active",
+      "baoHanh": "3 tháng",
+      "thongSoKyThuat": "Silicon TPU, trong suốt, chống vàng, chống sốc 4 góc, bảo vệ camera",
+      "giaGoc": 99000,
+      "thuongHieu": "Apple",
+      "danhMuc": "Phụ kiện",
+      "imageFolder": "op-lung-iphone-15",
+      "bienThes": [
+        { "mauSac": "Trong suốt", "phienBan": "iPhone 15", "gia": 99000, "soLuong": 100, "trangThai": "Active", "hinhAnh": "clear.jpg" },
+        { "mauSac": "Đen", "phienBan": "iPhone 15", "gia": 129000, "soLuong": 60, "trangThai": "Active", "hinhAnh": "black.jpg" }
+      ]
+    }
+  ],
+  "danhGias": [
+    { "tenSanPham": "iPhone 15 Pro Max", "soSao": 5, "binhLuan": "Sản phẩm rất tốt, camera chụp đẹp, pin trâu. Rất hài lòng!", "ngayOffset": -25 },
+    { "tenSanPham": "iPhone 15 Pro Max", "soSao": 4, "binhLuan": "Máy mượt, thiết kế đẹp. Giá hơi cao nhưng xứng đáng.", "ngayOffset": -20 },
+    { "tenSanPham": "iPhone 15 Pro Max", "soSao": 5, "binhLuan": "Titan đen cầm rất đẹp, nhẹ hơn thế hệ trước nhiều.", "ngayOffset": -15 },
+    { "tenSanPham": "iPhone 15", "soSao": 5, "binhLuan": "iPhone 15 dùng rất ổn, Dynamic Island tiện lợi. Recommend!", "ngayOffset": -18 },
+    { "tenSanPham": "iPhone 15", "soSao": 4, "binhLuan": "Camera 48MP chụp đẹp hơn nhiều so với iPhone 14.", "ngayOffset": -10 },
+    { "tenSanPham": "Samsung Galaxy S24 Ultra", "soSao": 5, "binhLuan": "Camera 200MP thực sự ấn tượng! Galaxy AI rất thông minh.", "ngayOffset": -22 },
+    { "tenSanPham": "Samsung Galaxy S24 Ultra", "soSao": 5, "binhLuan": "S Pen rất tiện, dùng ghi chú hàng ngày. Màn hình sáng đẹp.", "ngayOffset": -14 },
+    { "tenSanPham": "Samsung Galaxy S24 Ultra", "soSao": 4, "binhLuan": "Pin dùng cả ngày thoải mái, sạc nhanh 45W rất tiện.", "ngayOffset": -8 },
+    { "tenSanPham": "Samsung Galaxy A55", "soSao": 4, "binhLuan": "Tầm giá 9 triệu rất đáng mua, camera tốt, pin trâu.", "ngayOffset": -12 },
+    { "tenSanPham": "Samsung Galaxy A55", "soSao": 5, "binhLuan": "Chống nước IP67, dùng đi mưa không lo. Rất thích!", "ngayOffset": -5 },
+    { "tenSanPham": "OPPO Reno 12", "soSao": 4, "binhLuan": "Sạc 80W cực nhanh, 30 phút đầy pin. Camera AI sống ảo đẹp.", "ngayOffset": -16 },
+    { "tenSanPham": "Redmi Note 13", "soSao": 4, "binhLuan": "Giá chưa đến 5 triệu mà camera 108MP, quá xịn!", "ngayOffset": -19 },
+    { "tenSanPham": "Redmi Note 13", "soSao": 5, "binhLuan": "Màn AMOLED 120Hz mượt mà, giá sinh viên. Mua ngay!", "ngayOffset": -7 },
+    { "tenSanPham": "MacBook Air M2", "soSao": 5, "binhLuan": "Mỏng nhẹ, pin dùng cả ngày không cần sạc. Chip M2 nhanh khủng.", "ngayOffset": -21 },
+    { "tenSanPham": "MacBook Air M2", "soSao": 5, "binhLuan": "Dùng code, design đều mượt. Quạt yên lặng hoàn toàn.", "ngayOffset": -13 },
+    { "tenSanPham": "ASUS ROG Strix G16", "soSao": 5, "binhLuan": "Chơi game AAA mượt mà, RTX 4060 cân tất! Màn 165Hz sướng mắt.", "ngayOffset": -17 },
+    { "tenSanPham": "ASUS ROG Strix G16", "soSao": 4, "binhLuan": "Tản nhiệt tốt, không bị nóng khi chơi game lâu.", "ngayOffset": -9 },
+    { "tenSanPham": "Lenovo Legion 5", "soSao": 5, "binhLuan": "Laptop gaming bền bỉ, RTX 4060 chạy full setting mọi game.", "ngayOffset": -11 },
+    { "tenSanPham": "AirPods Pro 2", "soSao": 5, "binhLuan": "Chống ồn ANC quá tốt, nghe nhạc trên tàu xe yên tĩnh tuyệt vời.", "ngayOffset": -23 },
+    { "tenSanPham": "AirPods Pro 2", "soSao": 4, "binhLuan": "Spatial Audio xem phim như rạp chiếu. Đeo thoải mái cả ngày.", "ngayOffset": -6 },
+    { "tenSanPham": "Sony WH-1000XM5", "soSao": 5, "binhLuan": "Chống ồn tốt nhất phân khúc, âm thanh LDAC tuyệt vời.", "ngayOffset": -24 },
+    { "tenSanPham": "Sony WH-1000XM5", "soSao": 5, "binhLuan": "Pin 30 giờ dùng cả tuần không cần sạc. Nhẹ và êm tai.", "ngayOffset": -4 },
+    { "tenSanPham": "JBL Flip 6", "soSao": 4, "binhLuan": "Loa nhỏ gọn mà bass cực mạnh, đi picnic rất hợp.", "ngayOffset": -15 },
+    { "tenSanPham": "JBL Flip 6", "soSao": 5, "binhLuan": "Chống nước IP67, mang đi bể bơi thoải mái. Âm thanh tốt.", "ngayOffset": -3 },
+    { "tenSanPham": "Logitech G102", "soSao": 4, "binhLuan": "Chuột gaming giá rẻ nhưng chất lượng rất tốt, RGB đẹp.", "ngayOffset": -20 },
+    { "tenSanPham": "Bàn phím cơ RK84", "soSao": 5, "binhLuan": "Gõ sướng tay, kết nối Bluetooth tiện lợi, pin dùng 2 tuần.", "ngayOffset": -18 },
+    { "tenSanPham": "Bàn phím cơ RK84", "soSao": 4, "binhLuan": "Hot-swap switch rất tiện, thay switch dễ dàng. RGB đẹp.", "ngayOffset": -2 },
+    { "tenSanPham": "Sạc dự phòng 20000mAh", "soSao": 5, "binhLuan": "Sạc nhanh PD, sạc được laptop. Dung lượng lớn dùng 3 ngày.", "ngayOffset": -14 },
+    { "tenSanPham": "Ốp lưng iPhone 15", "soSao": 4, "binhLuan": "Ốp trong suốt đẹp, chống sốc tốt, giá rẻ bèo.", "ngayOffset": -8 },
+    { "tenSanPham": "Vivo V30", "soSao": 5, "binhLuan": "Camera Zeiss chụp chân dung rất đẹp, Aura Light cực sáng.", "ngayOffset": -10 },
+    { "tenSanPham": "Xiaomi 13T Pro", "soSao": 5, "binhLuan": "Camera Leica chụp đẹp như máy ảnh, sạc 120W đầy 20 phút!", "ngayOffset": -16 }
+  ],
+  "donHangTemplates": {
+    "trangThais": ["DaGiao", "DaGiao", "DaGiao", "DaGiao", "DaGiao", "DaGiao", "DaGiao", "DangGiao", "DangDongGoi", "ChoXacNhan"],
+    "hoTens": ["Nguyễn Văn An", "Trần Thị Bình", "Lê Hoàng Dũng", "Phạm Minh Châu", "Hoàng Thị Mai", "Vũ Đức Thắng", "Đỗ Thanh Hương", "Ngô Quốc Bảo", "Bùi Thị Lan", "Đinh Văn Khôi", "Lý Thị Ngọc", "Trương Minh Tâm", "Dương Thị Hạnh", "Phan Văn Sơn", "Cao Thị Yến"],
+    "soDienThoais": ["0912345678", "0987654321", "0901234567", "0978123456", "0965432109", "0934567890", "0945678901", "0923456789", "0956789012", "0967890123", "0938901234", "0949012345", "0910123456", "0981234567", "0972345678"],
+    "diaChis": ["123 Nguyễn Trãi, Q.1, TP.HCM", "456 Lê Lợi, Q.3, TP.HCM", "789 Trần Hưng Đạo, Q.5, TP.HCM", "12 Hai Bà Trưng, Q.1, TP.HCM", "88 Cách Mạng T8, Q.3, TP.HCM", "55 Võ Văn Tần, Q.3, TP.HCM", "101 Điện Biên Phủ, Bình Thạnh, TP.HCM", "200 Phan Xích Long, Phú Nhuận, TP.HCM", "35 Nguyễn Du, Hai Bà Trưng, Hà Nội", "15 Lý Thường Kiệt, Hoàn Kiếm, Hà Nội", "78 Kim Mã, Ba Đình, Hà Nội", "42 Trần Duy Hưng, Cầu Giấy, Hà Nội", "120 Bạch Mai, Hai Bà Trưng, Hà Nội", "56 Hùng Vương, TP. Đà Nẵng", "33 Trần Phú, Nha Trang, Khánh Hòa"],
+    "soLuongDonHang": 60,
+    "phuongThucVanChuyen": "Giao hàng tiêu chuẩn"
+  }
+}

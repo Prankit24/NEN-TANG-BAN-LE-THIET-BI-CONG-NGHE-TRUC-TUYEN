@@ -92,8 +92,10 @@ namespace EMua.Areas.Admin.Controllers
             DateTime prevEnd = filterStart;
 
             // Base order query (exclude cancelled)
-            var validOrders = _db.DonHangs.Where(o =>
-                o.NgayDat != null && (o.TrangThaiDonHang == null || (o.TrangThaiDonHang != "Đã hủy" && o.TrangThaiDonHang != "Đã huỷ")));
+            var validOrders = _db.DonHangs
+                .AsNoTracking()
+                .Where(o =>
+                    o.NgayDat != null && (o.TrangThaiDonHang == null || (o.TrangThaiDonHang != "Đã hủy" && o.TrangThaiDonHang != "Đã huỷ")));
 
             var thisMonthOrders = validOrders.Where(o => o.NgayDat >= filterStart && o.NgayDat < filterEnd);
             var lastMonthOrders = validOrders.Where(o => o.NgayDat >= prevStart && o.NgayDat < prevEnd);
@@ -104,10 +106,14 @@ namespace EMua.Areas.Admin.Controllers
             var orderCountThisMonth = await thisMonthOrders.CountAsync();
             var orderCountLastMonth = await lastMonthOrders.CountAsync();
 
-            var newCustomersThisMonth = await _db.NguoiDungs.CountAsync(u =>
-                u.MaQuyen == 3 && u.NgayTao >= filterStart && u.NgayTao < filterEnd);
-            var newCustomersLastMonth = await _db.NguoiDungs.CountAsync(u =>
-                u.MaQuyen == 3 && u.NgayTao >= prevStart && u.NgayTao < prevEnd);
+            var newCustomersThisMonth = await _db.NguoiDungs
+                .AsNoTracking()
+                .CountAsync(u =>
+                    u.MaQuyen == 3 && u.NgayTao >= filterStart && u.NgayTao < filterEnd);
+            var newCustomersLastMonth = await _db.NguoiDungs
+                .AsNoTracking()
+                .CountAsync(u =>
+                    u.MaQuyen == 3 && u.NgayTao >= prevStart && u.NgayTao < prevEnd);
 
             // 12‑month revenue for chart
             var rawMonthlyRevenue = await validOrders
@@ -120,11 +126,11 @@ namespace EMua.Areas.Admin.Controllers
                 .ToList();
 
             // Category sales (top 6)
-            var categorySales = await (from detail in _db.ChiTietDonHangs
+            var categorySales = await (from detail in _db.ChiTietDonHangs.AsNoTracking()
                                       join order in validOrders on detail.MaDonHang equals order.MaDonHang
-                                      join variant in _db.BienTheSanPhams on detail.MaBienThe equals variant.MaBienThe
-                                      join product in _db.SanPhams on variant.MaSanPham equals product.MaSanPham
-                                      join cat in _db.DanhMucSanPhams on product.MaDanhMuc equals cat.MaDanhMuc
+                                      join variant in _db.BienTheSanPhams.AsNoTracking() on detail.MaBienThe equals variant.MaBienThe
+                                      join product in _db.SanPhams.AsNoTracking() on variant.MaSanPham equals product.MaSanPham
+                                      join cat in _db.DanhMucSanPhams.AsNoTracking() on product.MaDanhMuc equals cat.MaDanhMuc
                                       group detail by cat.TenDanhMuc into g
                                       select new { Name = g.Key ?? "Chưa phân loại", Total = g.Sum(d => d.ThanhTien) })
                 .OrderByDescending(x => x.Total)
@@ -133,8 +139,8 @@ namespace EMua.Areas.Admin.Controllers
             var maxCategorySales = categorySales.Count == 0 ? 1m : categorySales.Max(x => x.Total);
 
             // Recent orders (8)
-            var recentOrdersRaw = await (from order in _db.DonHangs
-                                        join user in _db.NguoiDungs on order.MaNguoiDung equals user.MaNguoiDung into users
+            var recentOrdersRaw = await (from order in _db.DonHangs.AsNoTracking()
+                                        join user in _db.NguoiDungs.AsNoTracking() on order.MaNguoiDung equals user.MaNguoiDung into users
                                         from user in users.DefaultIfEmpty()
                                         orderby order.NgayDat descending
                                         select new
@@ -150,6 +156,7 @@ namespace EMua.Areas.Admin.Controllers
 
             // Low stock (≤5)
             var lowStock = await _db.BienTheSanPhams
+                .AsNoTracking()
                 .Where(b => b.SoLuong <= 5)
                 .Select(b => new LowStockItem
                 {
@@ -160,12 +167,12 @@ namespace EMua.Areas.Admin.Controllers
                 .ToListAsync();
 
             // Staff stats (MaQuyen != 3)
-            var staffTotal = await _db.NguoiDungs.CountAsync(u => u.MaQuyen != 3);
-            var staffActive = await _db.NguoiDungs.CountAsync(u => u.MaQuyen != 3 && u.TrangThai);
-            var staffLocked = await _db.NguoiDungs.CountAsync(u => u.MaQuyen != 3 && !u.TrangThai);
+            var staffTotal = await _db.NguoiDungs.AsNoTracking().CountAsync(u => u.MaQuyen != 3);
+            var staffActive = await _db.NguoiDungs.AsNoTracking().CountAsync(u => u.MaQuyen != 3 && u.TrangThai);
+            var staffLocked = await _db.NguoiDungs.AsNoTracking().CountAsync(u => u.MaQuyen != 3 && !u.TrangThai);
 
             // Recent staff accounts (latest 5, non‑customer)
-            var recentAccounts = await (from u in _db.NguoiDungs
+            var recentAccounts = await (from u in _db.NguoiDungs.AsNoTracking()
                                         where u.MaQuyen != 3
                                         orderby u.NgayTao descending
                                         select new { u.TenNguoiDung, u.Email, u.NgayTao })
@@ -181,6 +188,7 @@ namespace EMua.Areas.Admin.Controllers
 
             // Pending orders within filter period
             var pendingOrdersCount = await _db.DonHangs
+                .AsNoTracking()
                 .Where(o => o.NgayDat >= filterStart && o.NgayDat < filterEnd &&
                     (o.TrangThaiDonHang == null || o.TrangThaiDonHang == "Chờ xử lý" || o.TrangThaiDonHang == "Chờ xác nhận"))
                 .CountAsync();

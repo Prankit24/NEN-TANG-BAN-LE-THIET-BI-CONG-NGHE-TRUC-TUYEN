@@ -1,9 +1,11 @@
 using EMua.Data;
 using EMua.Models.Database;
+using EMua.Services;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using EMua.Areas.Staff.Models;
 using System;
 using System.Collections.Generic;
@@ -17,11 +19,25 @@ public class ProductController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _environment;
+    private readonly IMemoryCache _cache;
+    private readonly IUndoDeletionManager _undoManager;
 
-    public ProductController(EMuaDbContext db, IWebHostEnvironment environment)
+    public ProductController(
+        EMuaDbContext db, 
+        IWebHostEnvironment environment, 
+        IMemoryCache cache,
+        IUndoDeletionManager undoManager)
     {
         _db = db;
         _environment = environment;
+        _cache = cache;
+        _undoManager = undoManager;
+    }
+
+    private void InvalidateProductCache()
+    {
+        _cache.Remove(AppCacheKeys.Home);
+        _cache.Remove(AppCacheKeys.FeaturedProducts);
     }
 
     public async Task<IActionResult> Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, int page = 1, int pageSize = 12)
@@ -187,6 +203,8 @@ public class ProductController : StaffControllerBase
         _db.SanPhams.Add(product);
         await _db.SaveChangesAsync();
 
+        InvalidateProductCache();
+
         TempData["Success"] = "Đã tạo sản phẩm thành công.";
         return RedirectToAction(nameof(Index));
     }
@@ -211,6 +229,7 @@ public class ProductController : StaffControllerBase
         }
 
         await _db.SaveChangesAsync();
+        InvalidateProductCache();
         return Json(new { success = true, message = "Đã cập nhật ảnh chính thành công." });
     }
 
@@ -229,6 +248,16 @@ public class ProductController : StaffControllerBase
         if (product == null)
             return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
 
+        // Kiểm tra không xóa nếu đây là ảnh duy nhất còn lại của sản phẩm
+        if (product.SanPhamHinhAnhs.Count <= 1)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Không thể xóa hình ảnh duy nhất còn lại của sản phẩm. Mỗi sản phẩm cần có ít nhất một hình ảnh."
+            });
+        }
+
         var normalizedUrl = imageUrl.Trim().Replace("\\", "/");
         var imgEntity = product.SanPhamHinhAnhs.FirstOrDefault(x =>
             x.DuongDanAnh != null && (
@@ -237,12 +266,17 @@ public class ProductController : StaffControllerBase
                 normalizedUrl.EndsWith(x.DuongDanAnh, StringComparison.OrdinalIgnoreCase)
             ));
 
-        bool wasMain = false;
-        if (imgEntity != null)
+        if (imgEntity == null)
         {
-            wasMain = imgEntity.LaAnhChinh;
-            _db.SanPhamHinhAnhs.Remove(imgEntity);
+            return NotFound(new { success = false, message = "Không tìm thấy hình ảnh tương ứng trong sản phẩm." });
         }
+
+        bool wasMain = imgEntity.LaAnhChinh;
+        int imgId = imgEntity.MaAnh;
+        string savedImgUrl = imgEntity.DuongDanAnh!;
+        int oldThuTu = imgEntity.ThuTu;
+
+        _db.SanPhamHinhAnhs.Remove(imgEntity);
 
         foreach (var variant in product.BienTheSanPhams)
         {
@@ -265,26 +299,80 @@ public class ProductController : StaffControllerBase
             remainingImages[0].LaAnhChinh = true;
         }
 
-        try
-        {
-            var relativePath = normalizedUrl.TrimStart('/');
-            var physicalPath = Path.Combine(_environment.WebRootPath, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
-            if (System.IO.File.Exists(physicalPath))
-            {
-                System.IO.File.Delete(physicalPath);
-            }
-        }
-        catch
-        {
-            // Bỏ qua lỗi xóa file vật lý
-        }
-
         await _db.SaveChangesAsync();
+        InvalidateProductCache();
+
+        var undoItem = _undoManager.RegisterPendingDeletion(
+            DeletionTargetType.ProductImage,
+            product.MaSanPham,
+            product.TenSanPham,
+            $"{savedImgUrl}|{wasMain}|{oldThuTu}",
+            User);
+
         return Json(new
         {
             success = true,
-            message = "Đã xóa hình ảnh thành công.",
+            canUndo = true,
+            undoToken = undoItem.Token,
+            undoDurationSeconds = 60,
+            message = "Đã xóa hình ảnh thành công. Bạn có 60 giây để hoàn tác.",
             newMainImageUrl = remainingImages.FirstOrDefault(x => x.LaAnhChinh)?.DuongDanAnh
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UndoDeleteImage([FromForm] string token)
+    {
+        if (!_undoManager.TryClaimUndo(token, User, out var item, out var errorMessage))
+        {
+            return BadRequest(new { success = false, message = errorMessage ?? "Không thể hoàn tác." });
+        }
+
+        var product = await _db.SanPhams
+            .Include(x => x.SanPhamHinhAnhs)
+            .FirstOrDefaultAsync(x => x.MaSanPham == item!.EntityId);
+
+        if (product == null)
+        {
+            return NotFound(new { success = false, message = "Sản phẩm không còn tồn tại." });
+        }
+
+        var parts = item.AdditionalData?.Split('|');
+        if (parts == null || parts.Length < 3)
+        {
+            return BadRequest(new { success = false, message = "Dữ liệu phục hồi hình ảnh không hợp lệ." });
+        }
+
+        string imgUrl = parts[0];
+        bool wasMain = bool.TryParse(parts[1], out var wm) && wm;
+        int thuTu = int.TryParse(parts[2], out var tt) ? tt : 1;
+
+        if (!product.SanPhamHinhAnhs.Any(x => x.DuongDanAnh == imgUrl))
+        {
+            if (wasMain)
+            {
+                foreach (var img in product.SanPhamHinhAnhs) img.LaAnhChinh = false;
+            }
+
+            product.SanPhamHinhAnhs.Add(new SanPhamHinhAnh
+            {
+                MaSanPham = product.MaSanPham,
+                DuongDanAnh = imgUrl,
+                LaAnhChinh = wasMain,
+                ThuTu = thuTu
+            });
+
+            await _db.SaveChangesAsync();
+            InvalidateProductCache();
+        }
+
+        return Json(new
+        {
+            success = true,
+            message = "Đã hoàn tác và khôi phục hình ảnh sản phẩm thành công.",
+            imageUrl = imgUrl,
+            isMain = wasMain
         });
     }
 
@@ -292,6 +380,7 @@ public class ProductController : StaffControllerBase
     public async Task<IActionResult> Edit(int id)
     {
         var product = await _db.SanPhams
+            .AsNoTracking()
             .Include(x => x.BienTheSanPhams)
             .Include(x => x.SanPhamHinhAnhs)
             .FirstOrDefaultAsync(x => x.MaSanPham == id);
@@ -303,6 +392,7 @@ public class ProductController : StaffControllerBase
         // Lấy danh sách biến thể đang có phiếu đề nghị nhập hàng "Chờ duyệt"
         var variantIds = product.BienTheSanPhams.Select(b => b.MaBienThe).ToList();
         var pendingImports = await _db.ChiTietPhieuNhapHangs
+            .AsNoTracking()
             .Include(ct => ct.MaPhieuNhapNavigation)
             .Where(ct => variantIds.Contains(ct.MaBienThe) && ct.MaPhieuNhapNavigation.TrangThai == "Chờ duyệt")
             .Select(ct => new { ct.MaBienThe, ct.MaPhieuNhapNavigation.MaChungTu, ct.SoLuongNhap })
@@ -411,6 +501,7 @@ public class ProductController : StaffControllerBase
         }
 
         await _db.SaveChangesAsync();
+        InvalidateProductCache();
         TempData["Success"] = "Đã cập nhật sản phẩm thành công.";
         return RedirectToAction(nameof(Index));
     }
@@ -424,6 +515,7 @@ public class ProductController : StaffControllerBase
 
         product.TrangThaiSanPham = (product.TrangThaiSanPham == "Ẩn") ? "Còn hàng" : "Ẩn";
         await _db.SaveChangesAsync();
+        InvalidateProductCache();
 
         TempData["Success"] = $"Đã {(product.TrangThaiSanPham == "Ẩn" ? "ẩn" : "hiển thị")} sản phẩm #SP-{id:D4}.";
         return RedirectToAction(nameof(Index));

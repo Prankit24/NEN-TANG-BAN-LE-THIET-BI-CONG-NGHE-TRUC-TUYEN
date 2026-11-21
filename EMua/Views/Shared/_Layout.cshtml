@@ -351,6 +351,8 @@
     <script src="~/js/ai-chat.js"
             asp-append-version="true"></script>
 
+    @await Html.PartialAsync("_NotificationSystem")
+
     <!-- JavaScript riêng của từng view -->
     @await RenderSectionAsync("Scripts", required: false)
 </body>

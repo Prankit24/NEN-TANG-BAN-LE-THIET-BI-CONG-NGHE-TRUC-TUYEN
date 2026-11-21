@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace EMua.Models.Database;
@@ -40,26 +41,33 @@ public partial class NguoiDung
 
     public int MaQuyen { get; set; }
 
+    [ValidateNever]
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<ChiTietGioHang> ChiTietGioHangs { get; set; } = new List<ChiTietGioHang>();
 
+    [ValidateNever]
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<CuocHoiThoaiAi> CuocHoiThoaiAis { get; set; } = new List<CuocHoiThoaiAi>();
 
+    [ValidateNever]
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; } = new List<DanhGiaSanPham>();
 
+    [ValidateNever]
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<DonHang> DonHangs { get; set; } = new List<DonHang>();
 
+    [ValidateNever]
     [ForeignKey("MaQuyen")]
     [InverseProperty("NguoiDungs")]
     public virtual PhanQuyen MaQuyenNavigation { get; set; } = null!;
 
+    [ValidateNever]
     [InverseProperty("MaNguoiDungNavigation")]
     public virtual ICollection<YeuThich> YeuThiches { get; set; } = new List<YeuThich>();
     public string? AnhDaiDien { get; set; }
 
+    [ValidateNever]
     [InverseProperty("MaNguoiLapNavigation")]
     public virtual ICollection<HoaDon> HoaDons { get; set; } = new List<HoaDon>();
 }

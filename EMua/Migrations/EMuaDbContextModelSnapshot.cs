@@ -50,6 +50,83 @@ namespace EMua.Migrations
                     b.ToTable("baocao", "public");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.BaoGiaNhapHang", b =>
+                {
+                    b.Property<int>("MaBaoGia")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("MaBaoGia");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaBaoGia"));
+
+                    b.Property<decimal>("ChiPhiVanChuyenUocTinh")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChiPhiVanChuyenUocTinh");
+
+                    b.Property<decimal>("ChietKhau")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChietKhau");
+
+                    b.Property<decimal>("DonGiaChuaThue")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("DonGiaChuaThue");
+
+                    b.Property<decimal>("DonGiaSauThue")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("DonGiaSauThue");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("GhiChu");
+
+                    b.Property<int>("MaBienThe")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaBienThe");
+
+                    b.Property<int>("MaNhaCungCap")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNhaCungCap");
+
+                    b.Property<DateTime>("NgayCapNhat")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayCapNhat");
+
+                    b.Property<DateTime?>("NgayHetHan")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayHetHan");
+
+                    b.Property<DateTime>("NgayHieuLuc")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayHieuLuc");
+
+                    b.Property<int>("SoLuongToiThieu")
+                        .HasColumnType("integer")
+                        .HasColumnName("SoLuongToiThieu");
+
+                    b.Property<decimal>("ThueSuatVat")
+                        .HasColumnType("decimal(5, 2)")
+                        .HasColumnName("ThueSuatVat");
+
+                    b.Property<decimal>("TienThueVat")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("TienThueVat");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("TrangThai");
+
+                    b.HasKey("MaBaoGia");
+
+                    b.HasIndex("MaBienThe");
+
+                    b.HasIndex("MaNhaCungCap");
+
+                    b.ToTable("BaoGiaNhapHang", "public");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.BienTheSanPham", b =>
                 {
                     b.Property<int>("MaBienThe")
@@ -181,6 +258,132 @@ namespace EMua.Migrations
                     b.ToTable("chitietgiohang", "public");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.ChiTietHoaDon", b =>
+                {
+                    b.Property<int>("MaChiTietHoaDon")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("machitiethoadon");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaChiTietHoaDon"));
+
+                    b.Property<string>("BienThe")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bienthe");
+
+                    b.Property<decimal>("ChietKhau")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("chietkhau");
+
+                    b.Property<decimal>("DonGiaChuaThue")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("dongiachuathue");
+
+                    b.Property<decimal>("DonGiaSauThue")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("dongiasauthue");
+
+                    b.Property<int?>("MaBienThe")
+                        .HasColumnType("integer")
+                        .HasColumnName("mabienthe");
+
+                    b.Property<int>("MaHoaDon")
+                        .HasColumnType("integer")
+                        .HasColumnName("mahoadon");
+
+                    b.Property<int>("SoLuong")
+                        .HasColumnType("integer")
+                        .HasColumnName("soluong");
+
+                    b.Property<string>("TenSanPham")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("tensanpham");
+
+                    b.Property<decimal>("ThanhTien")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("thanhtien");
+
+                    b.Property<decimal>("ThueSuatVat")
+                        .HasColumnType("decimal(5, 2)")
+                        .HasColumnName("thuesuatvat");
+
+                    b.Property<decimal>("TienThueVat")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tienthuevat");
+
+                    b.HasKey("MaChiTietHoaDon");
+
+                    b.HasIndex(new[] { "MaHoaDon" }, "idx_chitiethoadon_mahoadon");
+
+                    b.ToTable("chitiethoadon", "public");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.ChiTietPhieuNhapHang", b =>
+                {
+                    b.Property<int>("MaChiTietPhieuNhap")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("MaChiTietPhieuNhap");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaChiTietPhieuNhap"));
+
+                    b.Property<decimal>("ChietKhau")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChietKhau");
+
+                    b.Property<decimal>("DonGiaChuaThue")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("DonGiaChuaThue");
+
+                    b.Property<decimal>("DonGiaNhapDuKien")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("DonGiaNhapDuKien");
+
+                    b.Property<decimal>("DonGiaSauThue")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("DonGiaSauThue");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("GhiChu");
+
+                    b.Property<int>("MaBienThe")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaBienThe");
+
+                    b.Property<int>("MaPhieuNhap")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaPhieuNhap");
+
+                    b.Property<int>("SoLuongNhap")
+                        .HasColumnType("integer")
+                        .HasColumnName("SoLuongNhap");
+
+                    b.Property<decimal>("ThanhTien")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ThanhTien");
+
+                    b.Property<decimal>("ThueSuatVat")
+                        .HasColumnType("decimal(5, 2)")
+                        .HasColumnName("ThueSuatVat");
+
+                    b.Property<decimal>("TienThueVat")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("TienThueVat");
+
+                    b.HasKey("MaChiTietPhieuNhap");
+
+                    b.HasIndex("MaBienThe");
+
+                    b.HasIndex("MaPhieuNhap");
+
+                    b.ToTable("ChiTietPhieuNhapHang", "public");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.CuocHoiThoaiAi", b =>
                 {
                     b.Property<int>("MaCuocHoiThoai")
@@ -231,6 +434,16 @@ namespace EMua.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("binhluan");
 
+                    b.Property<string>("GhiChuKiemDuyet")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ghichukiemduyet");
+
+                    b.Property<string>("LyDoAn")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("lydoan");
+
                     b.Property<int?>("MaDonHang")
                         .HasColumnType("integer")
                         .HasColumnName("madonhang");
@@ -238,6 +451,10 @@ namespace EMua.Migrations
                     b.Property<int?>("MaNguoiDung")
                         .HasColumnType("integer")
                         .HasColumnName("manguoidung");
+
+                    b.Property<int?>("MaNguoiKiemDuyet")
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoikiemduyet");
 
                     b.Property<int?>("MaSanPham")
                         .HasColumnType("integer")
@@ -249,9 +466,18 @@ namespace EMua.Migrations
                         .HasColumnName("ngaydanhgia")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<DateTime?>("NgayKiemDuyet")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaykiemduyet");
+
                     b.Property<int?>("SoLuongSao")
                         .HasColumnType("integer")
                         .HasColumnName("soluongsao");
+
+                    b.Property<string>("TenNguoiKiemDuyet")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tennguoikiemduyet");
 
                     b.Property<bool?>("TrangThai")
                         .ValueGeneratedOnAdd()
@@ -321,15 +547,28 @@ namespace EMua.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("diachinhanhang");
 
+                    b.Property<decimal?>("DonToiThieuKhuyenMaiDaChot")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("dontoithieukhuyenmaidachot");
+
                     b.Property<string>("GhiChu")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("ghichu");
 
+                    b.Property<decimal?>("GiaTriKhuyenMaiDaChot")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("giatrikhuyenmaidachot");
+
                     b.Property<string>("HoTenNhanHang")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("hotennhanhang");
+
+                    b.Property<string>("LoaiKhuyenMaiDaChot")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("loaikhuyenmaidachot");
 
                     b.Property<int?>("MaKhuyenMai")
                         .HasColumnType("integer")
@@ -347,6 +586,10 @@ namespace EMua.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ngaydukiengiao");
 
+                    b.Property<decimal?>("PhiVanChuyenDaChot")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("phivanchuyendachot");
+
                     b.Property<string>("PhuongThucVanChuyen")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -356,6 +599,10 @@ namespace EMua.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)")
                         .HasColumnName("sodienthoainhanhang");
+
+                    b.Property<decimal?>("TienGiamGiaDaChot")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("tiengiamgiadachot");
 
                     b.Property<decimal?>("TongTien")
                         .HasColumnType("decimal(12, 2)")
@@ -368,12 +615,29 @@ namespace EMua.Migrations
                         .HasDefaultValue("Chờ xử lý")
                         .HasColumnName("trangthaidonhang");
 
+                    b.Property<string>("YeuCauDatHang")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("yeucaudathang");
+
                     b.HasKey("MaDonHang")
                         .HasName("PK__DonHang__129584AD88A83EF4");
 
                     b.HasIndex("MaKhuyenMai");
 
-                    b.HasIndex("MaNguoiDung");
+                    b.HasIndex("MaNguoiDung")
+                        .HasDatabaseName("IX_DonHang_MaNguoiDung");
+
+                    b.HasIndex("NgayDat")
+                        .HasDatabaseName("IX_DonHang_NgayDat");
+
+                    b.HasIndex("TrangThaiDonHang")
+                        .HasDatabaseName("IX_DonHang_TrangThai");
+
+                    b.HasIndex("MaNguoiDung", "YeuCauDatHang")
+                        .IsUnique()
+                        .HasDatabaseName("IX_donhang_checkoutrequest")
+                        .HasFilter("yeucaudathang IS NOT NULL");
 
                     b.ToTable("donhang", "public");
                 });
@@ -387,15 +651,70 @@ namespace EMua.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaHoaDon"));
 
+                    b.Property<string>("DiaChiGiaoHang")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("diachigiaohang");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ghichu");
+
+                    b.Property<string>("HoTenKhachHang")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("hotenkhachhang");
+
                     b.Property<int>("MaDonHang")
                         .HasColumnType("integer")
                         .HasColumnName("madonhang");
+
+                    b.Property<string>("MaKhm")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("makhm");
+
+                    b.Property<int?>("MaNguoiLap")
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoilap");
 
                     b.Property<DateTime?>("NgayLapHoaDon")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("ngaylaphoadon")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal?>("PhiVanChuyen")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("phivanchuyen");
+
+                    b.Property<string>("PhuongThucThanhToan")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phuongthucthanhtoan");
+
+                    b.Property<string>("SoDienThoai")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("sodienthoai");
+
+                    b.Property<string>("TenNguoiLap")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tennguoilap");
+
+                    b.Property<decimal?>("TienGiamGia")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tiengiamgia");
+
+                    b.Property<decimal?>("TienThueVat")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tienthuevat");
+
+                    b.Property<decimal?>("TienTruocThue")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("tientruocthue");
 
                     b.Property<decimal?>("TongTien")
                         .HasColumnType("decimal(12, 2)")
@@ -410,6 +729,14 @@ namespace EMua.Migrations
 
                     b.HasKey("MaHoaDon")
                         .HasName("PK__HoaDon__835ED13BE1E4A10D");
+
+                    b.HasIndex("MaNguoiLap");
+
+                    b.HasIndex("NgayLapHoaDon")
+                        .HasDatabaseName("IX_HoaDon_NgayLap");
+
+                    b.HasIndex("TrangThaiHoaDon")
+                        .HasDatabaseName("IX_HoaDon_TrangThai");
 
                     b.HasIndex(new[] { "MaDonHang" }, "UQ_HoaDon_MaDonHang")
                         .IsUnique();
@@ -482,6 +809,62 @@ namespace EMua.Migrations
                         .IsUnique();
 
                     b.ToTable("khuyenmai", "public");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.LichSuKiemDuyetDanhGia", b =>
+                {
+                    b.Property<int>("MaLichSu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("malichsu");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaLichSu"));
+
+                    b.Property<string>("GhiChuChiTiet")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ghichuchitiet");
+
+                    b.Property<string>("HanhDong")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Ẩn")
+                        .HasColumnName("hanhdong");
+
+                    b.Property<string>("LyDoViPham")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("lydovipham");
+
+                    b.Property<int>("MaDanhGia")
+                        .HasColumnType("integer")
+                        .HasColumnName("madanhgia");
+
+                    b.Property<int?>("MaNguoiKiemDuyet")
+                        .HasColumnType("integer")
+                        .HasColumnName("manguoikiemduyet");
+
+                    b.Property<DateTime>("NgayThucHien")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("ngaythuchien")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("TenNguoiKiemDuyet")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tennguoikiemduyet");
+
+                    b.HasKey("MaLichSu");
+
+                    b.HasIndex("MaDanhGia");
+
+                    b.HasIndex("MaNguoiKiemDuyet");
+
+                    b.ToTable("lichsukiemduyetdanhgia", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.LichSuVanChuyen", b =>
@@ -613,6 +996,66 @@ namespace EMua.Migrations
                     b.ToTable("nguoidung", "public");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.NhaCungCap", b =>
+                {
+                    b.Property<int>("MaNhaCungCap")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNhaCungCap");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaNhaCungCap"));
+
+                    b.Property<string>("DiaChi")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("DiaChi");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("Email");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("GhiChu");
+
+                    b.Property<string>("MaSoThue")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("MaSoThue");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayTao");
+
+                    b.Property<string>("NguoiLienHe")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("NguoiLienHe");
+
+                    b.Property<string>("SoDienThoai")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("SoDienThoai");
+
+                    b.Property<string>("TenNhaCungCap")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("TenNhaCungCap");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("TrangThai");
+
+                    b.HasKey("MaNhaCungCap");
+
+                    b.ToTable("NhaCungCap", "public");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.PhanQuyen", b =>
                 {
                     b.Property<int>("MaQuyen")
@@ -640,6 +1083,122 @@ namespace EMua.Migrations
                         .IsUnique();
 
                     b.ToTable("phanquyen", "public");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.PhieuNhapHang", b =>
+                {
+                    b.Property<int>("MaPhieuNhap")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("MaPhieuNhap");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaPhieuNhap"));
+
+                    b.Property<decimal>("ChiPhiKhac")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChiPhiKhac");
+
+                    b.Property<decimal>("ChiPhiVanChuyen")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChiPhiVanChuyen");
+
+                    b.Property<decimal>("ChietKhau")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ChietKhau");
+
+                    b.Property<string>("DienGiai")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("DienGiai");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("GhiChu");
+
+                    b.Property<string>("LyDoNhap")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("LyDoNhap");
+
+                    b.Property<string>("LyDoTuChoi")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("LyDoTuChoi");
+
+                    b.Property<string>("MaChungTu")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("MaChungTu");
+
+                    b.Property<int?>("MaNguoiDuyet")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNguoiDuyet");
+
+                    b.Property<int?>("MaNguoiNhapKho")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNguoiNhapKho");
+
+                    b.Property<int>("MaNguoiTao")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNguoiTao");
+
+                    b.Property<int?>("MaNhaCungCap")
+                        .HasColumnType("integer")
+                        .HasColumnName("MaNhaCungCap");
+
+                    b.Property<DateTime?>("NgayDuyet")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayDuyet");
+
+                    b.Property<DateTime?>("NgayNhapKho")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayNhapKho");
+
+                    b.Property<DateTime>("NgayTao")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("NgayTao");
+
+                    b.Property<string>("NhaCungCap")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("NhaCungCap");
+
+                    b.Property<decimal>("TienHangChuaThue")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("TienHangChuaThue");
+
+                    b.Property<decimal>("TienThueVat")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("TienThueVat");
+
+                    b.Property<decimal>("TongTienDuKien")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("TongTienDuKien");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("TrangThai");
+
+                    b.HasKey("MaPhieuNhap");
+
+                    b.HasIndex("MaChungTu")
+                        .IsUnique();
+
+                    b.HasIndex("MaNguoiDuyet");
+
+                    b.HasIndex("MaNguoiNhapKho");
+
+                    b.HasIndex("MaNguoiTao");
+
+                    b.HasIndex("MaNhaCungCap");
+
+                    b.ToTable("PhieuNhapHang", "public");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.SanPham", b =>
@@ -692,7 +1251,11 @@ namespace EMua.Migrations
                     b.HasKey("MaSanPham")
                         .HasName("PK__SanPham__FAC7442D8E7CBCF5");
 
-                    b.HasIndex("MaDanhMuc");
+                    b.HasIndex("MaDanhMuc")
+                        .HasDatabaseName("IX_SanPham_MaDanhMuc");
+
+                    b.HasIndex("TrangThaiSanPham")
+                        .HasDatabaseName("IX_SanPham_TrangThai");
 
                     b.HasIndex(new[] { "MaThuongHieu" }, "IX_SanPham_MaThuongHieu");
 
@@ -985,6 +1548,25 @@ namespace EMua.Migrations
                     b.ToTable("EmailVerifications", "public");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.BaoGiaNhapHang", b =>
+                {
+                    b.HasOne("EMua.Models.Database.BienTheSanPham", "MaBienTheNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaBienThe")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EMua.Models.Database.NhaCungCap", "MaNhaCungCapNavigation")
+                        .WithMany("BaoGiaNhapHangs")
+                        .HasForeignKey("MaNhaCungCap")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaBienTheNavigation");
+
+                    b.Navigation("MaNhaCungCapNavigation");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.BienTheSanPham", b =>
                 {
                     b.HasOne("EMua.Models.Database.SanPham", "MaSanPhamNavigation")
@@ -1032,6 +1614,36 @@ namespace EMua.Migrations
                     b.Navigation("MaBienTheNavigation");
 
                     b.Navigation("MaNguoiDungNavigation");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.ChiTietHoaDon", b =>
+                {
+                    b.HasOne("EMua.Models.Database.HoaDon", "MaHoaDonNavigation")
+                        .WithMany("ChiTietHoaDons")
+                        .HasForeignKey("MaHoaDon")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaHoaDonNavigation");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.ChiTietPhieuNhapHang", b =>
+                {
+                    b.HasOne("EMua.Models.Database.BienTheSanPham", "MaBienTheNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaBienThe")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EMua.Models.Database.PhieuNhapHang", "MaPhieuNhapNavigation")
+                        .WithMany("ChiTietPhieuNhapHangs")
+                        .HasForeignKey("MaPhieuNhap")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaBienTheNavigation");
+
+                    b.Navigation("MaPhieuNhapNavigation");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.CuocHoiThoaiAi", b =>
@@ -1094,7 +1706,34 @@ namespace EMua.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_HoaDon_DonHang");
 
+                    b.HasOne("EMua.Models.Database.NguoiDung", "MaNguoiLapNavigation")
+                        .WithMany("HoaDons")
+                        .HasForeignKey("MaNguoiLap")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("MaDonHangNavigation");
+
+                    b.Navigation("MaNguoiLapNavigation");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.LichSuKiemDuyetDanhGia", b =>
+                {
+                    b.HasOne("EMua.Models.Database.DanhGiaSanPham", "DanhGiaNavigation")
+                        .WithMany("LichSuKiemDuyets")
+                        .HasForeignKey("MaDanhGia")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_LichSuKiemDuyet_DanhGia");
+
+                    b.HasOne("EMua.Models.Database.NguoiDung", "NguoiKiemDuyetNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaNguoiKiemDuyet")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_LichSuKiemDuyet_NguoiDung");
+
+                    b.Navigation("DanhGiaNavigation");
+
+                    b.Navigation("NguoiKiemDuyetNavigation");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.LichSuVanChuyen", b =>
@@ -1117,6 +1756,38 @@ namespace EMua.Migrations
                         .HasConstraintName("FK_NguoiDung_PhanQuyen");
 
                     b.Navigation("MaQuyenNavigation");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.PhieuNhapHang", b =>
+                {
+                    b.HasOne("EMua.Models.Database.NguoiDung", "MaNguoiDuyetNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaNguoiDuyet")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EMua.Models.Database.NguoiDung", "MaNguoiNhapKhoNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaNguoiNhapKho")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EMua.Models.Database.NguoiDung", "MaNguoiTaoNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaNguoiTao")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EMua.Models.Database.NhaCungCap", "MaNhaCungCapNavigation")
+                        .WithMany("PhieuNhapHangs")
+                        .HasForeignKey("MaNhaCungCap")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MaNguoiDuyetNavigation");
+
+                    b.Navigation("MaNguoiNhapKhoNavigation");
+
+                    b.Navigation("MaNguoiTaoNavigation");
+
+                    b.Navigation("MaNhaCungCapNavigation");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.SanPham", b =>
@@ -1210,6 +1881,11 @@ namespace EMua.Migrations
                     b.Navigation("TinNhanAis");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.DanhGiaSanPham", b =>
+                {
+                    b.Navigation("LichSuKiemDuyets");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.DanhMucSanPham", b =>
                 {
                     b.Navigation("SanPhams");
@@ -1228,6 +1904,11 @@ namespace EMua.Migrations
                     b.Navigation("ThanhToans");
                 });
 
+            modelBuilder.Entity("EMua.Models.Database.HoaDon", b =>
+                {
+                    b.Navigation("ChiTietHoaDons");
+                });
+
             modelBuilder.Entity("EMua.Models.Database.KhuyenMai", b =>
                 {
                     b.Navigation("DonHangs");
@@ -1243,12 +1924,26 @@ namespace EMua.Migrations
 
                     b.Navigation("DonHangs");
 
+                    b.Navigation("HoaDons");
+
                     b.Navigation("YeuThiches");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.NhaCungCap", b =>
+                {
+                    b.Navigation("BaoGiaNhapHangs");
+
+                    b.Navigation("PhieuNhapHangs");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.PhanQuyen", b =>
                 {
                     b.Navigation("NguoiDungs");
+                });
+
+            modelBuilder.Entity("EMua.Models.Database.PhieuNhapHang", b =>
+                {
+                    b.Navigation("ChiTietPhieuNhapHangs");
                 });
 
             modelBuilder.Entity("EMua.Models.Database.SanPham", b =>

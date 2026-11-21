@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using EMua.Data;
 using EMua.Models.Database;
+using EMua.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ public class RoleController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly ILogger<RoleController> _logger;
+    private readonly IUndoDeletionManager _undoManager;
     private const int MaxRoleNameLength = 50;
 
     // Các tên này đang được sử dụng trong đăng nhập và kiểm tra quyền.
@@ -21,10 +23,14 @@ public class RoleController : Controller
                 "Nhân viên", "KhachHang", "Khách hàng" },
         StringComparer.OrdinalIgnoreCase);
 
-    public RoleController(EMuaDbContext db, ILogger<RoleController> logger)
+    public RoleController(
+        EMuaDbContext db, 
+        ILogger<RoleController> logger,
+        IUndoDeletionManager undoManager)
     {
         _db = db;
         _logger = logger;
+        _undoManager = undoManager;
     }
 
     [HttpGet]
@@ -35,6 +41,9 @@ public class RoleController : Controller
             .Include(r => r.NguoiDungs)
             .OrderBy(r => r.MaQuyen)
             .ToListAsync();
+
+        // Lọc bỏ role đang chờ xóa trong 60s
+        roles = roles.Where(r => !_undoManager.IsEntityPendingDeletion(DeletionTargetType.Role, r.MaQuyen)).ToList();
 
         ViewBag.TotalRoles = roles.Count;
         ViewBag.TotalUsers = roles.Sum(r => r.NguoiDungs.Count);
@@ -108,10 +117,46 @@ public class RoleController : Controller
             return Error("Nhóm quyền đang có tài khoản sử dụng. Hãy chuyển các tài khoản sang nhóm phù hợp trước khi xóa.");
 
         var name = role.TenQuyen;
-        _db.PhanQuyens.Remove(role);
-        if (!await SaveAsync("xóa", maQuyen)) return RedirectToAction(nameof(Index));
+        var undoItem = _undoManager.RegisterPendingDeletion(
+            DeletionTargetType.Role,
+            role.MaQuyen,
+            name,
+            role.MoTa,
+            User);
 
-        TempData["SuccessMessage"] = $"Đã xóa nhóm quyền '{name}'.";
+        TempData["SuccessMessage"] = $"Đã xóa nhóm quyền '{name}'. Bạn có 60 giây để hoàn tác.";
+        TempData["UndoToken"] = undoItem.Token;
+        TempData["UndoAction"] = Url.Action("UndoDelete", "Role", new { area = "Admin" });
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UndoDelete(string token)
+    {
+        if (!_undoManager.TryClaimUndo(token, User, out var item, out var errorMessage))
+        {
+            TempData["ErrorMessage"] = errorMessage ?? "Không thể hoàn tác.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var role = await _db.PhanQuyens.FindAsync(item!.EntityId);
+        if (role != null)
+        {
+            TempData["SuccessMessage"] = $"Đã khôi phục nhóm quyền '{role.TenQuyen}'.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Nếu bản ghi đã bị xóa vật lý, tái tạo lại theo snapshot
+        var newRole = new PhanQuyen
+        {
+            TenQuyen = item.EntityName,
+            MoTa = item.AdditionalData
+        };
+        _db.PhanQuyens.Add(newRole);
+        await _db.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = $"Đã hoàn tác và tạo lại nhóm quyền '{newRole.TenQuyen}'.";
         return RedirectToAction(nameof(Index));
     }
 

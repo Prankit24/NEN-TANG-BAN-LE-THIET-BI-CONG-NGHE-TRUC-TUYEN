@@ -156,12 +156,12 @@
                 if (result.success && result.redirectUrl) {
                     window.location.href = result.redirectUrl;
                 } else {
-                    alert(result.message || 'Đặt hàng thất bại!');
+                    EmuaNotify.error(result.message || 'Đặt hàng thất bại!');
                     btn.disabled = false;
                     btn.innerHTML = 'Đặt hàng <i class="bi bi-check2"></i>';
                 }
             } catch (err) {
-                alert('Lỗi kết nối máy chủ!');
+                EmuaNotify.error('Lỗi kết nối máy chủ!');
                 btn.disabled = false;
                 btn.innerHTML = 'Đặt hàng <i class="bi bi-check2"></i>';
             }

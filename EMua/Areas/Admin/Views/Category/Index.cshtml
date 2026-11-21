@@ -130,19 +130,29 @@
 
                 <div class="category-summary-box"
                      id="categorySummary">
-                    <span class="category-summary-icon">
-                        <i class="bi bi-box-seam"></i>
-                    </span>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="category-summary-icon">
+                            <i class="bi bi-box-seam"></i>
+                        </span>
 
-                    <div>
-                        <strong id="productCountText">
-                            @Model.Editor.ProductCount sản phẩm đang thuộc danh mục này
-                        </strong>
+                        <div>
+                            <strong id="productCountText">
+                                @Model.Editor.ProductCount sản phẩm đang thuộc danh mục này
+                            </strong>
 
-                        <small>
-                            Không thể xóa danh mục khi vẫn còn sản phẩm liên quan.
-                        </small>
+                            <small>
+                                Không thể xóa danh mục khi vẫn còn sản phẩm liên quan.
+                            </small>
+                        </div>
                     </div>
+
+                    <a id="categoryViewProductsBtn"
+                       href="@(Model.Editor.MaDanhMuc > 0 ? Url.Action("Index", "Product", new { area = "Staff", categoryId = Model.Editor.MaDanhMuc }) : "#")"
+                       class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 ms-auto"
+                       title="Xem và lọc sản phẩm thuộc danh mục này">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span>Xem sản phẩm</span>
+                    </a>
                 </div>
 
                 <div class="category-form-group">
@@ -220,6 +230,8 @@
 
         const deleteUrl =
             '@Url.Action("DeleteAjax", "Category", new { area = "Admin" })';
+        const undoUrl =
+            '@Url.Action("UndoDeleteAjax", "Category", new { area = "Admin" })';
 
         function escapeHtml(value) {
             const div = document.createElement("div");
@@ -283,8 +295,8 @@
                     <h3>Xóa danh mục?</h3>
 
                     <p>
-                        Hệ thống sẽ kiểm tra sản phẩm liên quan
-                        trước khi cho phép xóa.
+                        Bạn có chắc chắn muốn xóa danh mục này?
+                        Hệ thống sẽ cho phép hoàn tác trong vòng 60 giây.
                     </p>
 
                     <div class="admin-dialog-actions">
@@ -358,6 +370,11 @@
             if (!isNew) {
                 productCountText.textContent =
                     `${category.productCount} sản phẩm đang thuộc danh mục này`;
+
+                const viewProductsBtn = document.getElementById("categoryViewProductsBtn");
+                if (viewProductsBtn) {
+                    viewProductsBtn.href = `@Url.Action("Index", "Product", new { area = "Staff" })?categoryId=${category.maDanhMuc}`;
+                }
 
                 categoryActiveState.style.display = "inline-flex";
 
@@ -581,11 +598,34 @@
                     productCount: 0
                 });
 
-                showDialog(
-                    "Đã xóa danh mục",
-                    result.message,
-                    "success"
-                );
+                if (result.canUndo && result.undoToken) {
+                    EmuaNotify.toastWithUndo(
+                        result.message,
+                        result.undoDurationSeconds || 60,
+                        async function () {
+                            const undoData = new FormData();
+                            undoData.append("token", result.undoToken);
+                            undoData.append("__RequestVerificationToken", document.querySelector('input[name="__RequestVerificationToken"]').value);
+                            const undoRes = await fetch(undoUrl, { method: "POST", body: undoData });
+                            const undoJson = await undoRes.json();
+                            if (undoRes.ok && undoJson.success) {
+                                EmuaNotify.success(undoJson.message, "Đã khôi phục");
+                                if (undoJson.categories) {
+                                    renderCategoryList(undoJson.categories, 0);
+                                }
+                            } else {
+                                EmuaNotify.error(undoJson.message || "Không thể hoàn tác.", "Lỗi hoàn tác");
+                                throw new Error(undoJson.message);
+                            }
+                        }
+                    );
+                } else {
+                    showDialog(
+                        "Đã xóa danh mục",
+                        result.message,
+                        "success"
+                    );
+                }
             }
             catch {
                 showDialog(

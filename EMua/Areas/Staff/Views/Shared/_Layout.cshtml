@@ -453,11 +453,6 @@
                     <i class="bi bi-file-earmark-text"></i><span>Hóa đơn</span>
                 </a>
 
-                <a class="@(currentController == "Report" ? "active" : "")"
-                   data-tooltip="Báo cáo" asp-area="Staff" asp-controller="Report" asp-action="Index">
-                    <i class="bi bi-bar-chart"></i><span>Báo cáo thống kê</span>
-                </a>
-
                 <span class="admin-nav-label">Tài khoản</span>
 
                 <a class="@(currentController == "Profile" ? "active" : "")"
@@ -569,8 +564,35 @@
                 </div>
             </header>
 
+            @if (Context.Session.GetString("Admin_ViewMode") == "Staff" && (User.IsInRole("Admin") || User.IsInRole("Quản trị viên") || User.IsInRole("QuanTriVien")))
+            {
+                <div class="alert alert-primary border-0 rounded-0 mb-0 py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2" style="background: #1e3a8a; color: #fff; font-size: 13.5px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check fs-5"></i>
+                        <span>Bạn đang xem <strong>Giao diện Nhân viên</strong> dưới quyền Quản trị viên. Các chức năng quản trị Admin được ẩn trong chế độ này.</span>
+                    </div>
+                    <a asp-area="Admin" asp-controller="System" asp-action="SwitchToAdminMode" class="btn btn-sm btn-light text-primary fw-bold px-3 d-inline-flex align-items-center gap-1" style="height: 32px; font-size: 13px;">
+                        <i class="bi bi-arrow-left-circle-fill"></i> Quay lại giao diện Admin
+                    </a>
+                </div>
+            }
+
             <!-- NỘI DUNG TỪNG TRANG -->
             <section class="admin-content staff-content">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success border mb-3 py-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger border mb-3 py-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@TempData["ErrorMessage"]</span>
+                    </div>
+                }
                 @await Html.PartialAsync("_ToastNotification")
                 @await Html.PartialAsync("_StaffDialog")
 
@@ -581,6 +603,7 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/staff/staff-dialog.js" asp-append-version="true"></script>
+    <script src="~/js/shared/emua-notify.js" asp-append-version="true"></script>
 
     <script>
         (function () {

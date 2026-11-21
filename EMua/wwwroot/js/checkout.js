@@ -209,7 +209,11 @@
         type = "danger"
     ) {
         if (!checkoutAlert) {
-            alert(message);
+            if (window.EmuaNotify) {
+                if (type === 'success') EmuaNotify.success(message);
+                else if (type === 'warning') EmuaNotify.warning(message);
+                else EmuaNotify.error(message);
+            }
             return;
         }
 

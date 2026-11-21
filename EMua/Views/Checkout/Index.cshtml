@@ -203,7 +203,7 @@
             reverse(lat,lon);
           }
           openButton.addEventListener('click',()=>{
-            if (!window.L || !window.bootstrap?.Modal) { alert('Không tải được thư viện bản đồ. Hãy kiểm tra Internet và tải lại trang.');return; }
+            if (!window.L || !window.bootstrap?.Modal) { EmuaNotify.error('Không tải được thư viện bản đồ. Hãy kiểm tra Internet và tải lại trang.'); return; }
             modal().show();
           });
           modalElement.addEventListener('shown.bs.modal',()=>{
@@ -244,12 +244,19 @@
             const base=resolved.value.trim(), number=house.value.trim();
             if(!base && !number){setStatus('Hãy chọn vị trí hoặc nhập địa chỉ trước.',true);return;}
             const value=number && base.toLowerCase().startsWith(number.toLowerCase()) ? base : [number,base].filter(Boolean).join(', ');
-            if(addressInput.value.trim() && addressInput.value.trim()!==value && !confirm('Thay địa chỉ giao hàng hiện tại bằng địa chỉ đã chọn?'))return;
-            addressInput.value=value;
-            addressInput.dispatchEvent(new Event('input',{bubbles:true}));
-            addressInput.dispatchEvent(new Event('change',{bubbles:true}));
-            modal().hide();
-            document.getElementById('locationFeedback').textContent='Đã chọn địa chỉ. Vui lòng kiểm tra lại số nhà và thông tin giao hàng.';
+            const applyAddress = () => {
+              addressInput.value = value;
+              addressInput.dispatchEvent(new Event('input', { bubbles: true }));
+              addressInput.dispatchEvent(new Event('change', { bubbles: true }));
+              modal().hide();
+              document.getElementById('locationFeedback').textContent = 'Đã chọn địa chỉ. Vui lòng kiểm tra lại số nhà và thông tin giao hàng.';
+            };
+
+            if (addressInput.value.trim() && addressInput.value.trim() !== value) {
+              EmuaConfirm('Thay địa chỉ giao hàng hiện tại bằng địa chỉ đã chọn?', applyAddress, { title: 'Thay đổi địa chỉ', isDanger: false });
+              return;
+            }
+            applyAddress();
           });
         })();
     </script>

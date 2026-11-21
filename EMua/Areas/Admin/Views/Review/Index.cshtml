@@ -1,0 +1,472 @@
+@model IEnumerable<EMua.Models.Database.DanhGiaSanPham>
+@{
+    ViewData["Title"] = "Quản lý và kiểm duyệt đánh giá sản phẩm";
+    var reviews = Model?.ToList() ?? new List<EMua.Models.Database.DanhGiaSanPham>();
+    var totalReviews = ViewBag.TotalReviews ?? 0;
+    var visibleCount = ViewBag.VisibleCount ?? 0;
+    var hiddenCount = ViewBag.HiddenCount ?? 0;
+    var avgRating = (double)(ViewBag.AvgRating ?? 5.0);
+    var searchString = ViewBag.SearchString as string ?? "";
+    var selectedRating = ViewBag.SelectedRating as int?;
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "all";
+    var fromDate = ViewBag.FromDate as string ?? "";
+    var toDate = ViewBag.ToDate as string ?? "";
+    var pageNum = (int)(ViewBag.Page ?? 1);
+    var totalPages = (int)(ViewBag.TotalPages ?? 1);
+    var successMessage = TempData["SuccessMessage"]?.ToString();
+    var errorMessage = TempData["ErrorMessage"]?.ToString();
+}
+
+<div class="review-page">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="mb-1 fw-bold" style="font-size: 20px; color: #172033;">Quản lý và kiểm duyệt đánh giá</h2>
+            <p class="text-muted small mb-0">Bảo vệ quyền lợi khách hàng, minh bạch đánh giá thực tế và xử lý các nội dung vi phạm tiêu chuẩn cộng đồng</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-1">
+                <i class="bi bi-shield-check text-primary"></i> Chính sách: Không xóa vĩnh viễn đánh giá
+            </span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success border mb-4 py-2 d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>@successMessage</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger border mb-4 py-2 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <!-- STATS CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="bg-white border p-3 d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-light text-primary" style="width:48px; height:48px;">
+                    <i class="bi bi-chat-square-text fs-4"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Tổng đánh giá</div>
+                    <div class="fs-4 fw-bold text-dark">@totalReviews</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white border p-3 d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-light text-success" style="width:48px; height:48px;">
+                    <i class="bi bi-eye fs-4"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Đang hiển thị công khai</div>
+                    <div class="fs-4 fw-bold text-success">@visibleCount</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white border p-3 d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-light text-danger" style="width:48px; height:48px;">
+                    <i class="bi bi-eye-slash fs-4"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Đã ẩn vi phạm</div>
+                    <div class="fs-4 fw-bold text-danger">@hiddenCount</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white border p-3 d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-light text-warning" style="width:48px; height:48px;">
+                    <i class="bi bi-star-fill fs-4"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Điểm TB công khai</div>
+                    <div class="fs-4 fw-bold text-dark">@avgRating.ToString("0.0") / 5.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="bg-white border p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchString" value="@searchString" class="form-control border-start-0" placeholder="Tìm theo nội dung, sản phẩm, khách hàng..." />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="rating" class="form-select form-select-sm">
+                    <option value="">Tất cả số sao</option>
+                    @for (int r = 5; r >= 1; r--)
+                    {
+                        <option value="@r" selected="@(selectedRating == r ? "selected" : null)">@r sao</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="all" selected="@(selectedStatus == "all" ? "selected" : null)">Tất cả trạng thái</option>
+                    <option value="visible" selected="@(selectedStatus == "visible" ? "selected" : null)">Hiển thị công khai</option>
+                    <option value="hidden" selected="@(selectedStatus == "hidden" ? "selected" : null)">Đã ẩn vi phạm</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="fromDate" value="@fromDate" class="form-control form-control-sm" title="Từ ngày" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="toDate" value="@toDate" class="form-control form-control-sm" title="Đến ngày" />
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">Lọc</button>
+                @if (!string.IsNullOrEmpty(searchString) || selectedRating.HasValue || selectedStatus != "all" || !string.IsNullOrEmpty(fromDate) || !string.IsNullOrEmpty(toDate))
+                {
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc"><i class="bi bi-x"></i></a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white border">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 13.5px;">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th style="width: 70px;" class="ps-3">Mã</th>
+                        <th style="width: 180px;">Sản phẩm</th>
+                        <th style="width: 140px;">Khách hàng</th>
+                        <th style="width: 110px;">Đánh giá</th>
+                        <th>Nội dung nhận xét</th>
+                        <th style="width: 130px;">Thời gian</th>
+                        <th style="width: 160px;">Trạng thái & Kiểm duyệt</th>
+                        <th style="width: 120px;" class="text-end pe-3">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!reviews.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-chat-left-dots fs-2 d-block mb-2 text-secondary"></i>
+                                Không tìm thấy đánh giá nào phù hợp với điều kiện tìm kiếm.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in reviews)
+                        {
+                            var isVisible = item.TrangThai ?? true;
+                            <tr class="@(isVisible ? "" : "bg-light text-muted")">
+                                <td class="ps-3 fw-bold text-secondary">#@item.MaDanhGia</td>
+                                <td>
+                                    @if (item.MaSanPhamNavigation != null)
+                                    {
+                                        <a href="/Product/Details/@item.MaSanPham" target="_blank" class="text-dark fw-semibold text-decoration-none text-truncate d-block" style="max-width: 180px;" title="@item.MaSanPhamNavigation.TenSanPham">
+                                            @item.MaSanPhamNavigation.TenSanPham
+                                        </a>
+                                        <span class="text-muted small">SP-@item.MaSanPham</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">SP-@item.MaSanPham</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">
+                                        @(item.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng #" + item.MaNguoiDung)
+                                    </div>
+                                    @if (item.MaDonHang.HasValue)
+                                    {
+                                        <small class="text-muted d-block">Đơn #DH-@item.MaDonHang.Value.ToString("D5")</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="text-warning">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= (item.SoLuongSao ?? 5))
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        }
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="max-width: 320px; white-space: pre-wrap; word-break: break-word;">
+                                        @(string.IsNullOrWhiteSpace(item.BinhLuan) ? "(Không có nhận xét)" : item.BinhLuan)
+                                    </div>
+                                    @if (!isVisible && !string.IsNullOrEmpty(item.LyDoAn))
+                                    {
+                                        <div class="mt-1 small text-danger bg-danger-subtle p-1 px-2 rounded border border-danger-subtle">
+                                            <i class="bi bi-shield-exclamation me-1"></i><strong>Lý do ẩn:</strong> @item.LyDoAn
+                                            @if (!string.IsNullOrEmpty(item.GhiChuKiemDuyet))
+                                            {
+                                                <span> - @item.GhiChuKiemDuyet</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                                <td class="text-muted small">
+                                    @(item.NgayDanhGia?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                                </td>
+                                <td>
+                                    @if (isVisible)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                            <i class="bi bi-check-circle me-1"></i>Hiển thị
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                            <i class="bi bi-eye-slash me-1"></i>Đã ẩn vi phạm
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(item.TenNguoiKiemDuyet))
+                                        {
+                                            <div class="text-muted small mt-1" style="font-size: 11px;">Bởi: @item.TenNguoiKiemDuyet</div>
+                                        }
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-inline-flex gap-1">
+                                        @if (isVisible)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                    title="Ẩn đánh giá vi phạm quy định" 
+                                                    onclick="openHideReviewModal('@item.MaDanhGia', '@(item.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")', '@item.SoLuongSao')">
+                                                <i class="bi bi-eye-slash"></i> Ẩn
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="RestoreReview" asp-route-id="@item.MaDanhGia" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Khôi phục hiển thị công khai">
+                                                    <i class="bi bi-eye"></i> Khôi phục
+                                                </button>
+                                            </form>
+                                        }
+
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" title="Xem lịch sử kiểm duyệt" onclick="viewAuditHistory('@item.MaDanhGia')">
+                                            <i class="bi bi-clock-history"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINATION -->
+        @if (totalPages > 1)
+        {
+            <div class="d-flex align-items-center justify-content-between p-3 border-top">
+                <span class="text-muted small">Trang @pageNum / @totalPages</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        @if (pageNum > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(pageNum - 1)" asp-route-searchString="@searchString" asp-route-rating="@selectedRating" asp-route-status="@selectedStatus" asp-route-fromDate="@fromDate" asp-route-toDate="@toDate">Trước</a>
+                            </li>
+                        }
+                        @for (int p = Math.Max(1, pageNum - 2); p <= Math.Min(totalPages, pageNum + 2); p++)
+                        {
+                            <li class="page-item @(p == pageNum ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-searchString="@searchString" asp-route-rating="@selectedRating" asp-route-status="@selectedStatus" asp-route-fromDate="@fromDate" asp-route-toDate="@toDate">@p</a>
+                            </li>
+                        }
+                        @if (pageNum < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(pageNum + 1)" asp-route-searchString="@searchString" asp-route-rating="@selectedRating" asp-route-status="@selectedStatus" asp-route-fromDate="@fromDate" asp-route-toDate="@toDate">Sau</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- MODAL ẨN ĐÁNH GIÁ VI PHẠM -->
+<div class="modal fade" id="hideReviewModal" tabindex="-1" aria-labelledby="hideReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border">
+            <div class="modal-header bg-light border-bottom py-3">
+                <h5 class="modal-title fs-6 fw-bold d-flex align-items-center gap-2" id="hideReviewModalLabel">
+                    <i class="bi bi-shield-slash text-danger"></i>
+                    Kiểm duyệt và ẩn đánh giá vi phạm
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form asp-action="HideReview" method="post" id="hideReviewForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="hideReviewId" />
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning py-2 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Lưu ý:</strong> Đánh giá 1-2 sao hoặc ý kiến tiêu cực nhưng hợp lệ vẫn phải được hiển thị công khai. Chỉ ẩn đối với các nội dung thực sự vi phạm tiêu chuẩn cộng đồng dưới đây.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 13px;">Lý do vi phạm quy định <span class="text-danger">*</span></label>
+                        <select name="lyDoViPham" id="lyDoViPhamSelect" class="form-select" required onchange="handleViolationReasonChange(this.value)">
+                            <option value="">-- Chọn nhóm vi phạm --</option>
+                            <option value="Ngôn từ xúc phạm, chửi tục">Ngôn từ xúc phạm, thô tục, chửi thề</option>
+                            <option value="Quấy rối, đe dọa, công kích cá nhân">Quấy rối, đe dọa hoặc công kích cá nhân</option>
+                            <option value="Spam hoặc quảng cáo trái phép">Spam, quảng cáo trái phép, dẫn link ngoài</option>
+                            <option value="Nội dung không liên quan đến sản phẩm">Nội dung không liên quan đến sản phẩm</option>
+                            <option value="Tiết lộ thông tin cá nhân nhạy cảm">Tiết lộ thông tin cá nhân nhạy cảm (SĐT, địa chỉ, CCCD)</option>
+                            <option value="Nội dung vi phạm pháp luật hoặc quy định cộng đồng">Vi phạm pháp luật hoặc quy định cộng đồng chung</option>
+                            <option value="Khác">Lý do khác (Bắt buộc ghi rõ mô tả)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="ghiChuWrapper">
+                        <label class="form-label fw-semibold" style="font-size: 13px;" id="ghiChuLabel">Ghi chú kiểm duyệt chi tiết</label>
+                        <textarea name="ghiChuChiTiet" id="ghiChuChiTiet" class="form-control" rows="3" placeholder="Nhập căn cứ hoặc mô tả chi tiết lý do ẩn đánh giá..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2 px-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold">
+                        <i class="bi bi-eye-slash"></i> Xác nhận ẩn đánh giá
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LỊCH SỬ KIỂM DUYỆT -->
+<div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-labelledby="auditHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border">
+            <div class="modal-header bg-light border-bottom py-3">
+                <h5 class="modal-title fs-6 fw-bold d-flex align-items-center gap-2" id="auditHistoryModalLabel">
+                    <i class="bi bi-clock-history text-primary"></i>
+                    Lịch sử kiểm duyệt đánh giá <span id="auditReviewIdTitle" class="badge bg-secondary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="auditHistoryLoading" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2 small text-muted">Đang tải lịch sử kiểm duyệt...</span>
+                </div>
+                <div id="auditHistoryContent" class="table-responsive" style="display: none;">
+                    <table class="table table-sm table-bordered align-middle mb-0" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 140px;">Thời gian</th>
+                                <th style="width: 110px;">Hành động</th>
+                                <th style="width: 150px;">Người duyệt</th>
+                                <th>Lý do & Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditHistoryList"></tbody>
+                    </table>
+                </div>
+                <div id="auditHistoryEmpty" class="text-center py-4 text-muted small" style="display: none;">
+                    Chưa có lịch sử kiểm duyệt nào được ghi nhận cho đánh giá này.
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openHideReviewModal(id, customerName, rating) {
+            document.getElementById('hideReviewId').value = id;
+            document.getElementById('lyDoViPhamSelect').value = '';
+            document.getElementById('ghiChuChiTiet').value = '';
+            document.getElementById('ghiChuChiTiet').required = false;
+            document.getElementById('ghiChuLabel').innerHTML = 'Ghi chú kiểm duyệt chi tiết';
+            
+            const modalEl = document.getElementById('hideReviewModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        function handleViolationReasonChange(val) {
+            const ghiChu = document.getElementById('ghiChuChiTiet');
+            const label = document.getElementById('ghiChuLabel');
+            if (val === 'Khác') {
+                ghiChu.required = true;
+                label.innerHTML = 'Mô tả chi tiết lý do <span class="text-danger">* (Bắt buộc)</span>';
+            } else {
+                ghiChu.required = false;
+                label.innerHTML = 'Ghi chú kiểm duyệt chi tiết (Không bắt buộc)';
+            }
+        }
+
+        async function viewAuditHistory(id) {
+            document.getElementById('auditReviewIdTitle').textContent = '#' + id;
+            const loading = document.getElementById('auditHistoryLoading');
+            const content = document.getElementById('auditHistoryContent');
+            const empty = document.getElementById('auditHistoryEmpty');
+            const tbody = document.getElementById('auditHistoryList');
+
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            empty.style.display = 'none';
+            tbody.innerHTML = '';
+
+            const modalEl = document.getElementById('auditHistoryModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            try {
+                const response = await fetch(`/Admin/Review/GetAuditHistory?id=${id}`);
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (data.success && data.histories && data.histories.length > 0) {
+                    tbody.innerHTML = data.histories.map(h => `
+                        <tr>
+                            <td class="text-muted small">${h.ngayThucHien}</td>
+                            <td>
+                                <span class="badge ${h.hanhDong === 'Ẩn' ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-success-subtle text-success border border-success-subtle'}">
+                                    ${h.hanhDong}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">${h.tenNguoiKiemDuyet || 'Hệ thống'}</td>
+                            <td>
+                                <div class="fw-semibold text-dark">${h.lyDoViPham}</div>
+                                ${h.ghiChuChiTiet ? `<div class="text-muted small mt-1">${h.ghiChuChiTiet}</div>` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                    content.style.display = 'block';
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                empty.textContent = 'Không thể tải lịch sử kiểm duyệt. Vui lòng thử lại sau.';
+                empty.style.display = 'block';
+            }
+        }
+    </script>
+}

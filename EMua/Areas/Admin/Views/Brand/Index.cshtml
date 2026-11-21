@@ -124,16 +124,25 @@
             <div class="brand-summary"
                  id="brandSummary"
                  @(editor.MaThuongHieu == 0 ? "hidden" : "")>
-                <i class="bi bi-box-seam"></i>
-
-                <div>
-                    <strong id="brandSummaryTitle">
-                        @editor.ProductCount sản phẩm
-                    </strong>
-                    <small id="brandSummarySubtitle">
-                        thuộc thương hiệu này
-                    </small>
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-box-seam"></i>
+                    <div>
+                        <strong id="brandSummaryTitle">
+                            @editor.ProductCount sản phẩm
+                        </strong>
+                        <small id="brandSummarySubtitle">
+                            thuộc thương hiệu này
+                        </small>
+                    </div>
                 </div>
+
+                <a id="brandViewProductsBtn"
+                   href="@(editor.MaThuongHieu > 0 ? Url.Action("Index", "Product", new { area = "Staff", brandId = editor.MaThuongHieu }) : "#")"
+                   class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 ms-auto"
+                   title="Xem và lọc sản phẩm thuộc thương hiệu này">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                    <span>Xem sản phẩm</span>
+                </a>
             </div>
 
             <form id="brandForm"
@@ -274,6 +283,7 @@
         const saveUrl = '@Url.Action("SaveAjax", "Brand", new { area = "Admin" })';
         const getUrl = '@Url.Action("GetBrand", "Brand", new { area = "Admin" })';
         const deleteUrl = '@Url.Action("DeleteAjax", "Brand", new { area = "Admin" })';
+        const undoUrl = '@Url.Action("UndoDeleteAjax", "Brand", new { area = "Admin" })';
 
         const form = document.getElementById("brandForm");
         const logoInput = document.getElementById("LogoFile");
@@ -443,6 +453,11 @@
                 document.getElementById("brandSummarySubtitle").textContent =
                     "thuộc thương hiệu này";
 
+                const viewProductsBtn = document.getElementById("brandViewProductsBtn");
+                if (viewProductsBtn) {
+                    viewProductsBtn.href = `@Url.Action("Index", "Product", new { area = "Staff" })?brandId=${id}`;
+                }
+
                 deleteBtn.hidden = false;
                 saveBtn.innerHTML = '<i class="bi bi-save"></i> Lưu thay đổi';
             }
@@ -538,8 +553,8 @@
             showDialog({
                 icon: "warning",
                 title: "Xóa thương hiệu?",
-                message: `Bạn có chắc muốn xóa thương hiệu "${currentDeleteName}" không? Hành động này không thể hoàn tác.`,
-                confirmText: "Xóa",
+                message: `Bạn có chắc muốn xóa thương hiệu "${currentDeleteName}" không? Bạn sẽ có 60 giây để hoàn tác nếu xóa nhầm.`,
+                confirmText: "Xóa thương hiệu",
                 showCancel: true,
                 onConfirm: performDelete
             });
@@ -566,13 +581,39 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    showDialog({
-                        icon: "success",
-                        title: "Đã xóa",
-                        message: result.message || "Xóa thương hiệu thành công."
-                    });
+                    resetBrandForm();
 
-                    setTimeout(() => location.reload(), 900);
+                    // Cập nhật lại danh sách bên trái nếu có
+                    if (result.brands) {
+                        renderBrandList(result.brands);
+                    }
+
+                    if (result.canUndo && result.undoToken) {
+                        EmuaNotify.toastWithUndo(
+                            result.message,
+                            result.undoDurationSeconds || 60,
+                            async function () {
+                                const undoData = new FormData();
+                                undoData.append("token", result.undoToken);
+                                undoData.append("__RequestVerificationToken", token);
+                                const undoRes = await fetch(undoUrl, { method: "POST", body: undoData });
+                                const undoJson = await undoRes.json();
+                                if (undoRes.ok && undoJson.success) {
+                                    EmuaNotify.success(undoJson.message, "Đã khôi phục");
+                                    if (undoJson.brands) {
+                                        renderBrandList(undoJson.brands);
+                                    } else {
+                                        setTimeout(() => location.reload(), 900);
+                                    }
+                                } else {
+                                    EmuaNotify.error(undoJson.message || "Không thể hoàn tác.", "Lỗi hoàn tác");
+                                    throw new Error(undoJson.message);
+                                }
+                            }
+                        );
+                    } else {
+                        EmuaNotify.success(result.message || "Đã xóa thành công.");
+                    }
                     return;
                 }
 
@@ -592,6 +633,36 @@
             finally {
                 deleteBtn.disabled = false;
             }
+        }
+
+        function renderBrandList(brands) {
+            const brandList = document.getElementById("brandList");
+            if (!brandList) return;
+            if (!brands || brands.length === 0) {
+                brandList.innerHTML = '<p class="text-muted brand-empty">Chưa có thương hiệu nào.</p>';
+                return;
+            }
+            brandList.innerHTML = brands.map(b => `
+                <button type="button"
+                        class="brand-item"
+                        aria-label="Chỉnh sửa thương hiệu ${b.tenThuongHieu}"
+                        data-id="${b.maThuongHieu}"
+                        data-count="${b.productCount}"
+                        data-search="${(b.tenThuongHieu || '').toLowerCase()}"
+                        onclick="selectBrand(this)">
+                    <span class="brand-logo">
+                        ${b.logo ? `<img src="${b.logo}" alt="${b.tenThuongHieu}" />` : (b.tenThuongHieu ? b.tenThuongHieu.substring(0, 1).toUpperCase() : '?')}
+                    </span>
+                    <span>
+                        <strong>${b.tenThuongHieu}</strong>
+                        <small>${b.productCount} sản phẩm</small>
+                    </span>
+                    <em class="${b.trangThai ? 'on' : 'off'}">
+                        ${b.trangThai ? 'Hoạt động' : 'Tắt'}
+                    </em>
+                </button>
+            `).join('');
+            filterBrandList();
         }
 
         filterBrandList();
