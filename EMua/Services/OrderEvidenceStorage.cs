@@ -34,7 +34,10 @@ public static class OrderEvidenceStorage
         var fallback = !string.IsNullOrWhiteSpace(webRoot) ? webRoot : cwdWwwroot;
         try
         {
-            Directory.CreateDirectory(fallback);
+            if (!Directory.Exists(fallback))
+            {
+                Directory.CreateDirectory(fallback);
+            }
         }
         catch
         {
@@ -84,7 +87,20 @@ public static class OrderEvidenceStorage
         var name = $"{Guid.NewGuid():N}{ext}";
 
         var directory = Path.Combine(root, "uploads", folder);
-        Directory.CreateDirectory(directory);
+        if (!Directory.Exists(directory))
+        {
+            try
+            {
+                Directory.CreateDirectory(directory);
+            }
+            catch (Exception ex)
+            {
+                if (!Directory.Exists(directory))
+                {
+                    throw new IOException($"Không thể tạo thư mục lưu trữ '{directory}'. Kiểm tra phân quyền thư mục trên container/máy chủ: {ex.Message}", ex);
+                }
+            }
+        }
 
         var fullPath = Path.Combine(directory, name);
         try

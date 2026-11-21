@@ -362,3 +362,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /EMua/appsettings.json
+
+# Cấu trúc thư mục upload trên Docker/Linux - Giữ lại .gitkeep để deploy
+EMua/wwwroot/uploads/returns/*
+!EMua/wwwroot/uploads/returns/.gitkeep
+EMua/wwwroot/uploads/delivery-proof/*
+!EMua/wwwroot/uploads/delivery-proof/.gitkeep
+EMua/wwwroot/images/returns/*
+!EMua/wwwroot/images/returns/.gitkeep
