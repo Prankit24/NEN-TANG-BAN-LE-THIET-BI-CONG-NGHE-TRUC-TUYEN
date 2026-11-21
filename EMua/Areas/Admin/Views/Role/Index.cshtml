@@ -27,7 +27,24 @@
 
     @if (!string.IsNullOrWhiteSpace(successMessage))
     {
-        <div class="alert alert-success border mb-4" role="status">@successMessage</div>
+        var undoToken = TempData["UndoToken"]?.ToString();
+        var undoAction = TempData["UndoAction"]?.ToString();
+        <div class="alert alert-success border mb-4 d-flex align-items-center justify-content-between gap-3" role="status">
+            <div>
+                <i class="bi bi-check-circle-fill me-1"></i>
+                <span>@successMessage</span>
+            </div>
+            @if (!string.IsNullOrEmpty(undoToken) && !string.IsNullOrEmpty(undoAction))
+            {
+                <form action="@undoAction" method="post" class="d-inline mb-0">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="token" value="@undoToken" />
+                    <button type="submit" class="btn btn-sm btn-outline-success fw-bold d-inline-flex align-items-center gap-1" style="height: 30px; font-size: 12px;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Hoàn tác ngay (60s)
+                    </button>
+                </form>
+            }
+        </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))

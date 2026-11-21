@@ -1,10 +1,12 @@
 using EMua.Areas.Admin.Models.ViewModels;
 using EMua.Data;
 using EMua.Models.Database;
+using EMua.Services;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
 namespace EMua.Areas.Admin.Controllers;
@@ -15,13 +17,19 @@ public class BrandController : Controller
 {
     private readonly EMuaDbContext _db;
     private readonly IWebHostEnvironment _environment;
+    private readonly IMemoryCache _cache;
+    private readonly IUndoDeletionManager _undoManager;
 
     public BrandController(
         EMuaDbContext db,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IMemoryCache cache,
+        IUndoDeletionManager undoManager)
     {
         _db = db;
         _environment = environment;
+        _cache = cache;
+        _undoManager = undoManager;
     }
 
     [HttpGet]
@@ -158,6 +166,10 @@ public class BrandController : Controller
 
         await _db.SaveChangesAsync();
 
+        // Xóa cache thương hiệu và trang chủ để cập nhật dữ liệu mới
+        _cache.Remove(AppCacheKeys.Brands);
+        _cache.Remove(AppCacheKeys.Home);
+
         var brands = await GetBrandsAsync();
         var editor = await GetEditorAsync(brand.MaThuongHieu);
 
@@ -198,26 +210,73 @@ public class BrandController : Controller
             return BadRequest(new
             {
                 success = false,
-                message = $"Không thể xóa “{brand.TenThuongHieu}” vì vẫn còn {productCount} sản phẩm."
+                message = $"Không thể xóa “{brand.TenThuongHieu}” vì vẫn còn {productCount} sản phẩm trực thuộc."
             });
         }
 
         var name = brand.TenThuongHieu;
 
-        _db.ThuongHieus.Remove(brand);
+        // Lưu bản ghi vào bộ nhớ chờ hoàn tác và ẩn khỏi danh sách (TrangThai = false)
+        brand.TrangThai = false;
         await _db.SaveChangesAsync();
+
+        var undoItem = _undoManager.RegisterPendingDeletion(
+            DeletionTargetType.Brand,
+            brand.MaThuongHieu,
+            name,
+            brand.Logo,
+            User);
+
+        // Xóa cache để cập nhật dữ liệu mới
+        _cache.Remove(AppCacheKeys.Brands);
+        _cache.Remove(AppCacheKeys.Home);
 
         return Json(new
         {
             success = true,
-            message = $"Đã xóa thương hiệu “{name}”.",
+            canUndo = true,
+            undoToken = undoItem.Token,
+            undoDurationSeconds = 60,
+            message = $"Đã xóa thương hiệu “{name}”. Bạn có 60 giây để hoàn tác.",
             brands = await GetBrandsAsync()
         });
     }
 
-    private Task<List<BrandListItemViewModel>> GetBrandsAsync()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UndoDeleteAjax([FromForm] string token)
     {
-        return _db.ThuongHieus
+        if (!IsFixedAdmin())
+            return Unauthorized();
+
+        if (!_undoManager.TryClaimUndo(token, User, out var item, out var errorMessage))
+        {
+            return BadRequest(new { success = false, message = errorMessage ?? "Không thể hoàn tác." });
+        }
+
+        var brand = await _db.ThuongHieus.FindAsync(item!.EntityId);
+        if (brand == null)
+        {
+            return NotFound(new { success = false, message = "Thương hiệu không còn tồn tại trong hệ thống." });
+        }
+
+        brand.TrangThai = true;
+        await _db.SaveChangesAsync();
+
+        _cache.Remove(AppCacheKeys.Brands);
+        _cache.Remove(AppCacheKeys.Home);
+
+        return Json(new
+        {
+            success = true,
+            message = $"Đã hoàn tác và khôi phục thương hiệu “{brand.TenThuongHieu}” thành công.",
+            brands = await GetBrandsAsync()
+        });
+    }
+
+    private async Task<List<BrandListItemViewModel>> GetBrandsAsync()
+    {
+        var list = await _db.ThuongHieus
             .AsNoTracking()
             .OrderBy(x => x.TenThuongHieu)
             .Select(x => new BrandListItemViewModel
@@ -229,6 +288,9 @@ public class BrandController : Controller
                 TrangThai = x.TrangThai
             })
             .ToListAsync();
+
+        // Lọc bỏ những thương hiệu đang ở trạng thái chờ xóa trong 60 giây
+        return list.Where(b => !_undoManager.IsEntityPendingDeletion(DeletionTargetType.Brand, b.MaThuongHieu)).ToList();
     }
 
     private Task<BrandEditViewModel?> GetEditorAsync(int id)

@@ -6,7 +6,10 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using EMua.Data;
+using EMua.Models.Database;
+using EMua.Services;
 using EMua.ViewModels;
 
 namespace EMua.Controllers
@@ -14,10 +17,15 @@ namespace EMua.Controllers
     public class ProductController : Controller
     {
         private readonly EMuaDbContext _db;
+        private readonly IMemoryCache _cache;
 
-        public ProductController(EMuaDbContext db)
+        public const string CategoriesCacheKey = AppCacheKeys.Categories;
+        public const string BrandsCacheKey = AppCacheKeys.Brands;
+
+        public ProductController(EMuaDbContext db, IMemoryCache cache)
         {
             _db = db;
+            _cache = cache;
         }
 
         // =====================================================
@@ -118,12 +126,21 @@ namespace EMua.Controllers
                         "%" + keyword + "%"));
             }
 
-            // Đọc danh mục một lần, đồng bộ liên kết Header với dropdown.
-            var categories = await _db.DanhMucSanPhams
-                .AsNoTracking()
-                .Where(x => x.TrangThaiDanhMuc == null || x.TrangThaiDanhMuc != "Ẩn")
-                .OrderBy(x => x.TenDanhMuc)
-                .ToListAsync();
+            // Đọc danh mục từ IMemoryCache, đồng bộ liên kết Header với dropdown.
+            if (!_cache.TryGetValue(CategoriesCacheKey, out List<DanhMucSanPham>? categories) || categories == null)
+            {
+                categories = await _db.DanhMucSanPhams
+                    .AsNoTracking()
+                    .Where(x => x.TrangThaiDanhMuc == null || x.TrangThaiDanhMuc != "Ẩn")
+                    .OrderBy(x => x.TenDanhMuc)
+                    .ToListAsync();
+
+                _cache.Set(CategoriesCacheKey, categories, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+            }
 
             if (!categoryId.HasValue && !string.IsNullOrWhiteSpace(category))
             {
@@ -205,11 +222,22 @@ namespace EMua.Controllers
 
             ViewBag.Categories = categories;
 
-            ViewBag.Brands = await _db.ThuongHieus
-                .AsNoTracking()
-                .Where(x => x.TrangThai)
-                .OrderBy(x => x.TenThuongHieu)
-                .ToListAsync();
+            if (!_cache.TryGetValue(BrandsCacheKey, out List<ThuongHieu>? brands) || brands == null)
+            {
+                brands = await _db.ThuongHieus
+                    .AsNoTracking()
+                    .Where(x => x.TrangThai)
+                    .OrderBy(x => x.TenThuongHieu)
+                    .ToListAsync();
+
+                _cache.Set(BrandsCacheKey, brands, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                    SlidingExpiration = TimeSpan.FromMinutes(10)
+                });
+            }
+
+            ViewBag.Brands = brands;
 
             var products = await query
                 .Include(x => x.MaDanhMucNavigation)

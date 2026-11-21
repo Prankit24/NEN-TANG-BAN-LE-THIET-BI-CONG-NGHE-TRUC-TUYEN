@@ -78,6 +78,7 @@
 
                             <div style="cursor: pointer;" onclick="quickSelectMainImage('@imgUrl', this.parentElement, '@productId')">
                                 <img src="@fixedUrl" class="img-fluid rounded mb-1" style="height: 80px; width: 100%; object-fit: contain;"
+                                     loading="lazy" decoding="async"
                                      onerror="this.onerror=null; this.src='/images/no-image.png';" />
 
                                 <!-- Badge Ảnh chính -->
@@ -96,6 +97,7 @@
                 var singleFixedUrl = FixImage(Model.CurrentImageUrl);
                 <div class="p-2 border rounded bg-light d-inline-block">
                     <img src="@singleFixedUrl" class="img-fluid rounded" style="height: 80px; object-fit: contain;"
+                         loading="lazy" decoding="async"
                          onerror="this.onerror=null; this.src='/images/no-image.png';" />
                 </div>
             }
@@ -286,7 +288,7 @@
         async function deleteGalleryImage(imgUrl, productId, btn) {
             const confirmed = await StaffDialog.confirm({
                 title: 'Xóa hình ảnh sản phẩm?',
-                message: 'Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập? Thao tác này không thể hoàn tác.',
+                message: 'Bạn có chắc chắn muốn xóa hình ảnh này khỏi bộ sưu tập? Bạn có 60 giây để hoàn tác sau khi xóa.',
                 confirmText: 'Xóa ảnh',
                 cancelText: 'Hủy',
                 isDanger: true
@@ -312,7 +314,7 @@
                 if (data.success) {
                     const galleryItem = btn.closest('.gallery-item');
                     if (galleryItem) {
-                        galleryItem.remove();
+                        galleryItem.style.display = 'none';
                     }
                     if (data.newMainImageUrl) {
                         document.getElementById('selectedMainImageUrl').value = data.newMainImageUrl;
@@ -325,7 +327,30 @@
                             if (t) t.innerText = 'Ảnh chính';
                         }
                     }
-                    StaffDialog.success('Xóa thành công', data.message || 'Đã xóa hình ảnh khỏi sản phẩm.');
+
+                    if (data.canUndo && data.undoToken) {
+                        EmuaNotify.toastWithUndo(
+                            data.message,
+                            data.undoDurationSeconds || 60,
+                            async function () {
+                                const undoData = new FormData();
+                                undoData.append('token', data.undoToken);
+                                undoData.append('__RequestVerificationToken', token);
+                                const undoRes = await fetch('/Staff/Product/UndoDeleteImage', { method: 'POST', body: undoData });
+                                const undoJson = await undoRes.json();
+                                if (undoRes.ok && undoJson.success) {
+                                    EmuaNotify.success(undoJson.message, 'Đã khôi phục');
+                                    if (galleryItem) galleryItem.style.display = '';
+                                    btn.disabled = false;
+                                } else {
+                                    EmuaNotify.error(undoJson.message || 'Không thể hoàn tác.', 'Lỗi hoàn tác');
+                                    throw new Error(undoJson.message);
+                                }
+                            }
+                        );
+                    } else {
+                        StaffDialog.success('Xóa thành công', data.message || 'Đã xóa hình ảnh khỏi sản phẩm.');
+                    }
                 } else {
                     btn.disabled = false;
                     StaffDialog.error('Không thể xóa ảnh', data.message || 'Không thể xóa hình ảnh lúc này.');

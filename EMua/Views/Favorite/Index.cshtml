@@ -89,7 +89,7 @@
                         <form asp-controller="Favorite" asp-action="Remove" method="post" style="margin: 0;">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@item.ProductId" />
-                            <button type="submit" class="fav-card-remove-btn" title="Xóa khỏi yêu thích" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?');">
+                            <button type="submit" class="fav-card-remove-btn" title="Xóa khỏi yêu thích" onclick="return EmuaConfirmForm(this.form, 'Bạn có chắc muốn xóa sản phẩm này khỏi danh sách yêu thích?', 'Xóa khỏi yêu thích');">
                                 <i class="bi bi-heart-fill"></i>
                             </button>
                         </form>

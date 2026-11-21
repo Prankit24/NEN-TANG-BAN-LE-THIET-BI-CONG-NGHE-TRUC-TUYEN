@@ -144,7 +144,7 @@
                     <span>Thương hiệu</span>
                 </a>
 
-                <a class=""
+                <a class="@(currentController == "Order" ? "active" : "")"
                    asp-area="Staff"
                    asp-controller="Order"
                    asp-action="Index"
@@ -153,6 +153,17 @@
 
                     <i class="bi bi-bag-check"></i>
                     <span>Đơn hàng & Đổi trả</span>
+                </a>
+
+                <a class="@(currentController == "Invoice" ? "active" : "")"
+                   asp-area="Staff"
+                   asp-controller="Invoice"
+                   asp-action="Index"
+                   title="Quản lý hóa đơn"
+                   aria-label="Quản lý hóa đơn">
+
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Hóa đơn</span>
                 </a>
 
                 <a class="@(currentController == "ImportOrder" ? "active" : "")"
@@ -167,6 +178,10 @@
                     <span>Duyệt nhập hàng</span>
                 </a>
 
+                <span class="admin-nav-label">
+                    Quản trị
+                </span>
+
                 <a class="@(currentController == "User" ? "active" : "")"
                    asp-area="Admin"
                    asp-controller="User"
@@ -178,10 +193,6 @@
                     <i class="bi bi-people"></i>
                     <span>Người dùng</span>
                 </a>
-
-                <span class="admin-nav-label">
-                    Quản trị
-                </span>
 
                 <a class="@(currentController == "Role" ? "active" : "")"
                    asp-area="Admin"
@@ -195,6 +206,18 @@
                     <span>Phân quyền</span>
                 </a>
 
+                <a class="@(currentController == "Review" ? "active" : "")"
+                   asp-area="Admin"
+                   asp-controller="Review"
+                   asp-action="Index"
+                   title="Đánh giá sản phẩm"
+                   aria-label="Đánh giá sản phẩm"
+                   aria-current="@(currentController == "Review" ? "page" : null)">
+
+                    <i class="bi bi-star"></i>
+                    <span>Đánh giá</span>
+                </a>
+
                 <a class="@(currentController == "Report" || currentController == "BaoCao" ? "active" : "")"
                    asp-area="Admin"
                    asp-controller="Report"
@@ -205,18 +228,6 @@
 
                     <i class="bi bi-bar-chart"></i>
                     <span>Báo cáo</span>
-                </a>
-
-                <a class="@(currentController == "System" ? "active" : "")"
-                   asp-area="Admin"
-                   asp-controller="System"
-                   asp-action="Index"
-                   title="Hệ thống"
-                   aria-label="Hệ thống"
-                   aria-current="@(currentController == "System" ? "page" : null)">
-
-                    <i class="bi bi-hdd-stack"></i>
-                    <span>Hệ thống</span>
                 </a>
             </nav>
 
@@ -307,6 +318,17 @@
                         <span>Hệ thống</span>
                     </a>
 
+                    <button type="button"
+                            class="admin-header-link"
+                            data-bs-toggle="modal"
+                            data-bs-target="#switchStaffModal"
+                            title="Chuyển sang giao diện Nhân viên"
+                            aria-label="Chuyển sang giao diện Nhân viên"
+                            style="border: 1px dashed rgba(255,255,255,0.4); border-radius: 4px; padding: 4px 10px;">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Giao diện Nhân viên</span>
+                    </button>
+
                     <div class="admin-user"
                          title="@displayName">
 
@@ -331,6 +353,20 @@
             </header>
 
             <section class="admin-content">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success border mb-3 py-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger border mb-3 py-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>@TempData["ErrorMessage"]</span>
+                    </div>
+                }
                 @await Html.PartialAsync("_ToastNotification")
                 @RenderBody()
             </section>
@@ -489,6 +525,40 @@
         })();
     </script>
 
+    <!-- MODAL XÁC THỰC CHUYỂN SANG GIAO DIỆN NHÂN VIÊN -->
+    <div class="modal fade" id="switchStaffModal" tabindex="-1" aria-labelledby="switchStaffModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2" id="switchStaffModalLabel" style="color: #172033;">
+                        <i class="bi bi-shield-lock text-primary"></i>
+                        Xác thực chuyển sang giao diện Nhân viên
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <form asp-area="Admin" asp-controller="System" asp-action="SwitchToStaffMode" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-3">
+                            Để đảm bảo an toàn nghiệp vụ, vui lòng nhập lại mật khẩu Quản trị viên để chuyển sang chế độ làm việc với giao diện Nhân viên.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 13px;">Mật khẩu xác nhận <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu hiện tại của bạn" required autofocus style="height: 40px; font-size: 14px;" />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top py-2 px-3 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal" style="height: 38px; font-size: 13px;">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary px-3 d-flex align-items-center gap-1" style="height: 38px; font-size: 13px; font-weight: 600;">
+                            <i class="bi bi-arrow-repeat"></i> Xác nhận chuyển đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/shared/emua-notify.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

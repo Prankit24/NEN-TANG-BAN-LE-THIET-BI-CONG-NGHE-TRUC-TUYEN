@@ -140,9 +140,17 @@ public class UserController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(NguoiDung model, string passwordPlain)
     {
+        ModelState.Remove(nameof(model.MaQuyenNavigation));
+
         if (string.IsNullOrWhiteSpace(passwordPlain))
         {
             ModelState.AddModelError(nameof(passwordPlain), "Vui lòng nhập mật khẩu cho tài khoản mới.");
+        }
+
+        var roleExists = await _db.PhanQuyens.AnyAsync(r => r.MaQuyen == model.MaQuyen);
+        if (!roleExists)
+        {
+            ModelState.AddModelError(nameof(model.MaQuyen), "Nhóm quyền được chọn không tồn tại.");
         }
 
         if (await _db.NguoiDungs.AnyAsync(u => u.Email == model.Email))
@@ -192,12 +200,29 @@ public class UserController : Controller
     {
         if (id != model.MaNguoiDung) return NotFound();
 
+        ModelState.Remove(nameof(model.MaQuyenNavigation));
+        if (string.IsNullOrWhiteSpace(passwordPlain))
+        {
+            ModelState.Remove(nameof(passwordPlain));
+        }
+
         var user = await _db.NguoiDungs.Include(u => u.MaQuyenNavigation)
             .FirstOrDefaultAsync(u => u.MaNguoiDung == id);
         if (user == null) return NotFound();
 
         bool isSelf = GetCurrentUserId() == id;
         bool wasAdmin = user.MaQuyen == 1 || user.MaQuyenNavigation?.TenQuyen is "Admin" or "Quản trị viên" or "QuanTriVien";
+
+        var targetRole = await _db.PhanQuyens.FindAsync(model.MaQuyen);
+        if (targetRole == null)
+        {
+            ModelState.AddModelError(nameof(model.MaQuyen), "Nhóm quyền được chọn không tồn tại.");
+        }
+
+        if (string.IsNullOrWhiteSpace(model.TenDangNhap))
+        {
+            model.TenDangNhap = user.TenDangNhap ?? (user.Email?.Split('@')[0] ?? $"user_{user.MaNguoiDung}");
+        }
 
         if (await _db.NguoiDungs.AnyAsync(u => u.Email == model.Email && u.MaNguoiDung != id))
         {
@@ -235,6 +260,7 @@ public class UserController : Controller
             user.TenDangNhap = model.TenDangNhap;
             user.SoDienThoai = model.SoDienThoai;
             user.MaQuyen = model.MaQuyen;
+            user.MaQuyenNavigation = targetRole!;
             user.TrangThai = model.TrangThai;
 
             if (!string.IsNullOrWhiteSpace(passwordPlain))

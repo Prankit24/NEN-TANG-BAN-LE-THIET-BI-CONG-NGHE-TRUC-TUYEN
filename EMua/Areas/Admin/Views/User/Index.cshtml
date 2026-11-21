@@ -173,7 +173,7 @@
                                                 <i class="bi bi-pencil-square"></i> Sửa
                                             </a>
                                             <form asp-action="ToggleStatus" asp-route-id="@item.MaNguoiDung" method="post" class="d-inline"
-                                                  onsubmit="return confirm('Xác nhận đổi trạng thái tài khoản #@item.MaNguoiDung ?');">
+                                                  onsubmit="return EmuaConfirmForm(this, 'Xác nhận đổi trạng thái tài khoản #@item.MaNguoiDung?', 'Đổi trạng thái tài khoản');">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit"
                                                         class="btn btn-sm @(item.TrangThai ? "btn-outline-danger" : "btn-outline-success") px-2 py-1"

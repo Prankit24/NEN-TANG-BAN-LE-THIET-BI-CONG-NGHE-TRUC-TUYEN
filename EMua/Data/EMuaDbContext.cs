@@ -24,6 +24,7 @@ public partial class EMuaDbContext : DbContext
     public virtual DbSet<ChiTietGioHang> ChiTietGioHangs { get; set; }
     public virtual DbSet<CuocHoiThoaiAi> CuocHoiThoaiAis { get; set; }
     public virtual DbSet<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+    public virtual DbSet<LichSuKiemDuyetDanhGia> LichSuKiemDuyetDanhGias { get; set; }
     public virtual DbSet<DanhMucSanPham> DanhMucSanPhams { get; set; }
     public virtual DbSet<DonHang> DonHangs { get; set; }
     public virtual DbSet<HoaDon> HoaDons { get; set; }
@@ -502,6 +503,84 @@ public partial class EMuaDbContext : DbContext
                 .HasForeignKey(d => d.MaBienThe)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // ── LichSuKiemDuyetDanhGia ────────────────────────────────────────────
+        modelBuilder.Entity<LichSuKiemDuyetDanhGia>(entity =>
+        {
+            entity.HasKey(e => e.MaLichSu);
+
+            entity.Property(e => e.HanhDong)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasDefaultValue("Ẩn");
+
+            entity.Property(e => e.LyDoViPham)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.Property(e => e.GhiChuChiTiet)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.TenNguoiKiemDuyet)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.NgayThucHien)
+                .HasColumnType("timestamp without time zone")
+                .HasDefaultValueSql("now()");
+
+            entity.HasOne(d => d.DanhGiaNavigation)
+                .WithMany(p => p.LichSuKiemDuyets)
+                .HasForeignKey(d => d.MaDanhGia)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_LichSuKiemDuyet_DanhGia");
+
+            entity.HasOne(d => d.NguoiKiemDuyetNavigation)
+                .WithMany()
+                .HasForeignKey(d => d.MaNguoiKiemDuyet)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_LichSuKiemDuyet_NguoiDung");
+        });
+
+        // ── Các cột kiểm duyệt bổ sung trong DanhGiaSanPham ─────────────────
+        modelBuilder.Entity<DanhGiaSanPham>(entity =>
+        {
+            entity.Property(e => e.LyDoAn).HasMaxLength(255);
+            entity.Property(e => e.GhiChuKiemDuyet).HasMaxLength(500);
+            entity.Property(e => e.TenNguoiKiemDuyet).HasMaxLength(100);
+            entity.Property(e => e.NgayKiemDuyet)
+                .HasColumnType("timestamp without time zone");
+        });
+
+        // ── Performance indexes ───────────────────────────────────────────────
+        // SanPham: lọc theo danh mục và trạng thái (index MaThuongHieu đã có qua [Index] attribute)
+        modelBuilder.Entity<SanPham>(entity =>
+        {
+            entity.HasIndex(e => e.MaDanhMuc)
+                .HasDatabaseName("IX_SanPham_MaDanhMuc");
+            entity.HasIndex(e => e.TrangThaiSanPham)
+                .HasDatabaseName("IX_SanPham_TrangThai");
+        });
+
+        // DonHang: lọc theo trạng thái, ngày đặt, người dùng
+        modelBuilder.Entity<DonHang>(entity =>
+        {
+            entity.HasIndex(e => e.TrangThaiDonHang)
+                .HasDatabaseName("IX_DonHang_TrangThai");
+            entity.HasIndex(e => e.NgayDat)
+                .HasDatabaseName("IX_DonHang_NgayDat");
+            entity.HasIndex(e => e.MaNguoiDung)
+                .HasDatabaseName("IX_DonHang_MaNguoiDung");
+        });
+
+        // HoaDon: lọc theo ngày lập và trạng thái
+        modelBuilder.Entity<HoaDon>(entity =>
+        {
+            entity.HasIndex(e => e.NgayLapHoaDon)
+                .HasDatabaseName("IX_HoaDon_NgayLap");
+            entity.HasIndex(e => e.TrangThaiHoaDon)
+                .HasDatabaseName("IX_HoaDon_TrangThai");
+        });
+        // ─────────────────────────────────────────────────────────────────────
 
         OnModelCreatingPartial(modelBuilder);
 

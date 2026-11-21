@@ -58,7 +58,7 @@
                                 <div class="product-thumb">
                                     @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                                     {
-                                        <img src="@item.ImageUrl" alt="@item.ProductName" />
+                                        <img src="@item.ImageUrl" alt="@item.ProductName" loading="lazy" decoding="async" />
                                     }
                                     else
                                     {

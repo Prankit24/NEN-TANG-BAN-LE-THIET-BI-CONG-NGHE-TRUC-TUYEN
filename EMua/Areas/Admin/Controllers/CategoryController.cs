@@ -1,9 +1,11 @@
 using EMua.Data;
 using EMua.Models.Database;
+using EMua.Services;
 using EMua.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
 namespace EMua.Areas.Admin.Controllers;
@@ -13,10 +15,17 @@ namespace EMua.Areas.Admin.Controllers;
 public class CategoryController : Controller
 {
     private readonly EMuaDbContext _db;
+    private readonly IMemoryCache _cache;
+    private readonly IUndoDeletionManager _undoManager;
 
-    public CategoryController(EMuaDbContext db)
+    public CategoryController(
+        EMuaDbContext db, 
+        IMemoryCache cache,
+        IUndoDeletionManager undoManager)
     {
         _db = db;
+        _cache = cache;
+        _undoManager = undoManager;
     }
 
     [HttpGet]
@@ -150,6 +159,10 @@ public class CategoryController : Controller
             successMessage = $"Đã lưu thay đổi cho “{category.TenDanhMuc}”.";
         }
 
+        // Xóa cache danh mục và trang chủ để cập nhật dữ liệu mới
+        _cache.Remove(AppCacheKeys.Categories);
+        _cache.Remove(AppCacheKeys.Home);
+
         var updatedCategory = await GetEditorAsync(categoryId);
         var categories = await GetCategoriesAsync();
 
@@ -188,28 +201,73 @@ public class CategoryController : Controller
             return BadRequest(new
             {
                 success = false,
-                message = $"Không thể xóa vì danh mục “{category.TenDanhMuc}” vẫn còn {productCount} sản phẩm."
+                message = $"Không thể xóa vì danh mục “{category.TenDanhMuc}” vẫn còn {productCount} sản phẩm trực thuộc."
             });
         }
 
         var categoryName = category.TenDanhMuc;
 
-        _db.DanhMucSanPhams.Remove(category);
+        // Lưu bản ghi vào bộ nhớ chờ hoàn tác và chuyển trạng thái "Ngừng hoạt động"
+        category.TrangThaiDanhMuc = "Ngừng hoạt động";
         await _db.SaveChangesAsync();
 
-        var categories = await GetCategoriesAsync();
+        var undoItem = _undoManager.RegisterPendingDeletion(
+            DeletionTargetType.Category,
+            category.MaDanhMuc,
+            categoryName,
+            category.MoTa,
+            User);
+
+        // Xóa cache danh mục và trang chủ để cập nhật dữ liệu mới
+        _cache.Remove(AppCacheKeys.Categories);
+        _cache.Remove(AppCacheKeys.Home);
 
         return Json(new
         {
             success = true,
-            message = $"Đã xóa danh mục “{categoryName}”.",
-            categories
+            canUndo = true,
+            undoToken = undoItem.Token,
+            undoDurationSeconds = 60,
+            message = $"Đã xóa danh mục “{categoryName}”. Bạn có 60 giây để hoàn tác.",
+            categories = await GetCategoriesAsync()
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UndoDeleteAjax([FromForm] string token)
+    {
+        if (!IsFixedAdmin())
+            return Unauthorized();
+
+        if (!_undoManager.TryClaimUndo(token, User, out var item, out var errorMessage))
+        {
+            return BadRequest(new { success = false, message = errorMessage ?? "Không thể hoàn tác." });
+        }
+
+        var category = await _db.DanhMucSanPhams.FindAsync(item!.EntityId);
+        if (category == null)
+        {
+            return NotFound(new { success = false, message = "Danh mục không còn tồn tại trong hệ thống." });
+        }
+
+        category.TrangThaiDanhMuc = "Đang hoạt động";
+        await _db.SaveChangesAsync();
+
+        _cache.Remove(AppCacheKeys.Categories);
+        _cache.Remove(AppCacheKeys.Home);
+
+        return Json(new
+        {
+            success = true,
+            message = $"Đã hoàn tác và khôi phục danh mục “{category.TenDanhMuc}” thành công.",
+            categories = await GetCategoriesAsync()
         });
     }
 
     private async Task<List<CategoryListItemViewModel>> GetCategoriesAsync()
     {
-        return await _db.DanhMucSanPhams
+        var list = await _db.DanhMucSanPhams
             .AsNoTracking()
             .OrderBy(x => x.TenDanhMuc)
             .Select(x => new CategoryListItemViewModel
@@ -221,6 +279,8 @@ public class CategoryController : Controller
                            x.TrangThaiDanhMuc != "Ngừng hoạt động"
             })
             .ToListAsync();
+
+        return list.Where(c => !_undoManager.IsEntityPendingDeletion(DeletionTargetType.Category, c.MaDanhMuc)).ToList();
     }
 
     private async Task<CategoryEditViewModel?> GetEditorAsync(int id)

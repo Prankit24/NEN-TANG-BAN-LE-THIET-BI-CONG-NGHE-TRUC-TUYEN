@@ -66,6 +66,11 @@ namespace EMua.Services.AI
                 model = model.Substring("models/".Length);
             }
 
+            if (model.Equals("gemini-3.8-flash", StringComparison.OrdinalIgnoreCase))
+            {
+                model = "gemini-1.5-flash";
+            }
+
             var url =
                 "https://generativelanguage.googleapis.com/" +
                 "v1beta/models/" +

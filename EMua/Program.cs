@@ -36,6 +36,9 @@ using Microsoft.EntityFrameworkCore;
 // - Không tự động chạy migration.
 // ============================================================
 
+// Cho phép Npgsql xử lý DateTime linh hoạt với các cột timestamp without time zone trong PostgreSQL
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================
@@ -102,6 +105,7 @@ builder.Services.AddScoped<EmailVerificationService>();
 builder.Services.AddScoped<ISupplierQuotationService, SupplierQuotationService>();
 builder.Services.AddScoped<EMua.Services.ImportOrderReceivingService>();
 builder.Services.AddScoped<OrderWorkflowService>();
+builder.Services.AddScoped<RealDataSeeder>();
 
 // ============================================================
 // 4. SESSION
@@ -177,6 +181,8 @@ builder.Services.AddScoped<AIServiceOrchestrator>();
 
 builder.Services.AddScoped<RecommendationService>();
 
+builder.Services.AddSingleton<IUndoDeletionManager, UndoDeletionManager>();
+
 // Tra cứu tình trạng đơn hàng của khách bằng dữ liệu thật (không để AI đoán).
 builder.Services.AddScoped<OrderTrackingAssistant>();
 
@@ -229,8 +235,15 @@ builder.Services.AddResponseCompression(options =>
 
     options.Providers.Add<GzipCompressionProvider>();
 
-    // Chỉ nén các MIME type mặc định của ASP.NET Core.
-    // Không tự thêm image/jpeg, image/png, image/webp.
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "image/svg+xml",
+        "application/json",
+        "text/json",
+        "application/javascript",
+        "text/css",
+        "text/html"
+    });
 });
 
 builder.Services.Configure<BrotliCompressionProviderOptions>(
@@ -442,13 +455,38 @@ builder.Services
                 }
 
                 var db = context.HttpContext.RequestServices.GetRequiredService<EMuaDbContext>();
-                var userActive = await db.NguoiDungs
+                var userInDb = await db.NguoiDungs
                     .AsNoTracking()
                     .Where(u => u.MaNguoiDung == userId)
-                    .Select(u => (bool?)u.TrangThai)
+                    .Select(u => new
+                    {
+                        u.TrangThai,
+                        u.MaQuyen,
+                        RoleName = u.MaQuyenNavigation != null ? u.MaQuyenNavigation.TenQuyen : null
+                    })
                     .FirstOrDefaultAsync();
 
-                if (userActive != true)
+                if (userInDb == null || !userInDb.TrangThai)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return;
+                }
+
+                // Kiểm tra tính đồng bộ giữa Role Claim trong cookie và Role thực tế trong database
+                bool isAdminClaim = principal.IsInRole("Admin") || principal.IsInRole("Quản trị viên") || principal.IsInRole("QuanTriVien");
+                bool isStaffClaim = principal.IsInRole("Nhân viên") || principal.IsInRole("NhanVien") || principal.IsInRole("Staff");
+                bool isCustomerClaim = principal.IsInRole("Khách hàng") || principal.IsInRole("KhachHang") || principal.IsInRole("Customer");
+
+                bool shouldBeAdmin = userInDb.MaQuyen == 1 || userInDb.RoleName is "Admin" or "Quản trị viên" or "QuanTriVien";
+                bool shouldBeStaff = userInDb.MaQuyen == 2 || userInDb.RoleName is "Nhân viên" or "NhanVien" or "Staff";
+                bool shouldBeCustomer = !shouldBeAdmin && !shouldBeStaff;
+
+                bool roleMismatch = (shouldBeAdmin && !isAdminClaim) ||
+                                     (shouldBeStaff && (!isStaffClaim || isAdminClaim)) ||
+                                     (shouldBeCustomer && (!isCustomerClaim || isAdminClaim || isStaffClaim));
+
+                if (roleMismatch)
                 {
                     context.RejectPrincipal();
                     await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -495,7 +533,7 @@ builder.Services
 
             options.LoginPath = "/Auth/Login";
 
-            options.AccessDeniedPath = "/Auth/Login";
+            options.AccessDeniedPath = "/Auth/AccessDenied";
 
             options.ExpireTimeSpan =
                 TimeSpan.FromMinutes(30);
@@ -869,7 +907,26 @@ app.MapControllerRoute(
         "{controller=Home}/{action=Index}/{id?}");
 
 // ============================================================
-// 32. START APPLICATION
+// 32. SEED REAL DATA (TỰ ĐỘNG NẠP DỮ LIỆU THẬT)
+// ============================================================
+// Nạp dữ liệu mẫu từ seed-products.json và tự map ảnh .webp
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var seeder = services.GetRequiredService<RealDataSeeder>();
+        await seeder.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Đã xảy ra lỗi khi chạy RealDataSeeder.");
+    }
+}
+
+// ============================================================
+// 33. START APPLICATION
 // ============================================================
 
 app.Run();

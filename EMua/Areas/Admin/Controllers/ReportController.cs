@@ -69,6 +69,7 @@ namespace EMua.Areas.Admin.Controllers
 
             var yearStart = new DateTime(targetYear, 1, 1);
             var allYearOrders = await _context.DonHangs
+                .AsNoTracking()
                 .Where(d => d.NgayDat >= yearStart && d.NgayDat < yearStart.AddYears(1))
                 .Select(d => new { d.TrangThaiDonHang, d.NgayDat, d.TongTien })
                 .ToListAsync();
@@ -83,8 +84,9 @@ namespace EMua.Areas.Admin.Controllers
                 Year = targetYear,
                 Current = current,
                 Previous = previous,
-                TotalUsers = await _context.NguoiDungs.CountAsync(),
+                TotalUsers = await _context.NguoiDungs.AsNoTracking().CountAsync(),
                 BaoCaoLuuTru = await _context.BaoCaos
+                    .AsNoTracking()
                     .OrderByDescending(b => b.NgayBaoCao)
                     .Take(10)
                     .ToListAsync()
@@ -177,6 +179,7 @@ namespace EMua.Areas.Admin.Controllers
         private async Task<PeriodStats> BuildStats(DateTime start, DateTime end, int months, decimal monthlySalary, string label)
         {
             var orders = await _context.DonHangs
+                .AsNoTracking()
                 .Where(d => d.NgayDat >= start && d.NgayDat < end)
                 .Select(d => new { d.TrangThaiDonHang, d.TongTien })
                 .ToListAsync();

@@ -1,6 +1,7 @@
 using EMua.Services;
 using EMua.Areas.Staff.Models;
 using EMua.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace EMua.Areas.Staff.Controllers;
 
+[Authorize(Roles = "Admin,Quản trị viên,QuanTriVien")]
 public class ReportController : StaffControllerBase
 {
     private readonly EMuaDbContext _db;

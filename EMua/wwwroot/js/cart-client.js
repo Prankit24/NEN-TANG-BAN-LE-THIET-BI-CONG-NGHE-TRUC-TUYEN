@@ -7,7 +7,7 @@
         quantity = Number(quantity);
         if (!Number.isSafeInteger(variantId) || variantId <= 0 ||
             !Number.isSafeInteger(quantity) || quantity <= 0) {
-            alert('Vui lòng chọn phiên bản và số lượng hợp lệ.');
+            if (window.EmuaNotify) window.EmuaNotify.warning('Vui lòng chọn phiên bản và số lượng hợp lệ.');
             return false;
         }
         if (pending.has(variantId)) return false;
@@ -51,9 +51,12 @@
             notice.hidden = false;
             clearTimeout(window.emuaCartNoticeTimer);
             window.emuaCartNoticeTimer = setTimeout(() => { notice.hidden = true; }, 3000);
+            if (window.EmuaNotify) {
+                window.EmuaNotify.success('Đã thêm sản phẩm vào giỏ hàng.');
+            }
             return true;
         } catch (error) {
-            alert(error.message || 'Không thể kết nối đến giỏ hàng.');
+            if (window.EmuaNotify) window.EmuaNotify.error(error.message || 'Không thể kết nối đến giỏ hàng.');
             return false;
         } finally {
             pending.delete(variantId);

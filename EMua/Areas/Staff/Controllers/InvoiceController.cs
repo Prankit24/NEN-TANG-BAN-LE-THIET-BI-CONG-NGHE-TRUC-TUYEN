@@ -87,8 +87,8 @@ public class InvoiceController : StaffControllerBase
         }
         if (toDate.HasValue)
         {
-            var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon <= endOfDay);
+            var nextDay = toDate.Value.Date.AddDays(1);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < nextDay);
         }
         if (month.HasValue && month.Value > 0)
         {
@@ -184,7 +184,7 @@ public class InvoiceController : StaffControllerBase
         if (fromDate.HasValue)
             invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
         if (toDate.HasValue)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon <= toDate.Value.Date.AddDays(1).AddTicks(-1));
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < toDate.Value.Date.AddDays(1));
         if (month.HasValue && month.Value > 0)
             invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
         if (year.HasValue && year.Value > 0)
@@ -233,7 +233,7 @@ public class InvoiceController : StaffControllerBase
         if (fromDate.HasValue)
             invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
         if (toDate.HasValue)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon <= toDate.Value.Date.AddDays(1).AddTicks(-1));
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < toDate.Value.Date.AddDays(1));
         if (month.HasValue && month.Value > 0)
             invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
         if (year.HasValue && year.Value > 0)
@@ -339,7 +339,7 @@ public class InvoiceController : StaffControllerBase
         }
 
         // Ngăn lập trùng hóa đơn
-        var existingInvoice = await _db.HoaDons.Include(x => x.ChiTietHoaDons).FirstOrDefaultAsync(x => x.MaDonHang == orderId);
+        var existingInvoice = await _db.HoaDons.AsNoTracking().Include(x => x.ChiTietHoaDons).FirstOrDefaultAsync(x => x.MaDonHang == orderId);
         if (existingInvoice != null && (existingInvoice.MaNguoiLap.HasValue || existingInvoice.ChiTietHoaDons.Any()))
         {
             TempData["Warning"] = $"Đơn hàng #DH-{orderId:D5} đã có hóa đơn #HD-{existingInvoice.MaHoaDon:D5}. Không thể lập hóa đơn trùng.";
@@ -638,15 +638,15 @@ public class InvoiceController : StaffControllerBase
     {
         var targetDate = (date ?? OrderRules.VietnamNow()).Date;
         var startOfDay = targetDate;
-        var endOfDay = targetDate.AddDays(1).AddTicks(-1);
+        var nextDay = targetDate.AddDays(1);
 
         // 1. Tổng số đơn hàng phát sinh trong ngày (theo NGÀY ĐẶT HÀNG)
         var totalOrdersCreated = await _db.DonHangs.AsNoTracking()
-            .CountAsync(d => d.NgayDat >= startOfDay && d.NgayDat <= endOfDay);
+            .CountAsync(d => d.NgayDat >= startOfDay && d.NgayDat < nextDay);
 
         // 2. Số đơn đã bàn giao trong ngày (theo NGÀY BÀN GIAO THỰC TẾ từ LichSuVanChuyen hoặc trạng thái hoàn thành)
         var deliveredOrderIds = await _db.LichSuVanChuyens.AsNoTracking()
-            .Where(ls => ls.ThoiGian >= startOfDay && ls.ThoiGian <= endOfDay 
+            .Where(ls => ls.ThoiGian >= startOfDay && ls.ThoiGian < nextDay 
                       && (ls.TrangThai == "Đã hoàn thành" || ls.TrangThai == "Đã giao" || ls.TrangThai == "Giao hàng thành công"))
             .Select(ls => ls.MaDonHang)
             .Distinct()
@@ -661,7 +661,7 @@ public class InvoiceController : StaffControllerBase
                 .ThenInclude(d => d.ThanhToans)
             .Include(h => h.MaNguoiLapNavigation)
             .Include(h => h.ChiTietHoaDons)
-            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon <= endOfDay)
+            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon < nextDay)
             .OrderByDescending(h => h.MaHoaDon)
             .ToListAsync();
 
@@ -676,7 +676,6 @@ public class InvoiceController : StaffControllerBase
             {
                 MaDonHang = d.MaDonHang,
                 NgayDat = d.NgayDat,
-                NgayBanGiao = startOfDay,
                 KhachHang = d.HoTenNhanHang ?? "Khách hàng",
                 SoDienThoai = d.SoDienThoaiNhanHang ?? "",
                 TongTien = d.TongTien ?? 0m,
@@ -685,6 +684,11 @@ public class InvoiceController : StaffControllerBase
                 TrangThaiThanhToan = d.ThanhToans.OrderByDescending(t => t.NgayTao).Select(t => t.TrangThai).FirstOrDefault() ?? "Chưa xác định"
             })
             .ToListAsync();
+
+        foreach (var item in deliveredWithoutInvoiceOrders)
+        {
+            item.NgayBanGiao = startOfDay;
+        }
 
         // 5. Tổng hợp tài chính từ các hóa đơn phát sinh trong ngày
         decimal totalGross = invoicesToday.Sum(h => h.TongTien ?? 0m);
@@ -750,12 +754,12 @@ public class InvoiceController : StaffControllerBase
     {
         var targetDate = (date ?? OrderRules.VietnamNow()).Date;
         var startOfDay = targetDate;
-        var endOfDay = targetDate.AddDays(1).AddTicks(-1);
+        var nextDay = targetDate.AddDays(1);
 
         var invoicesToday = await _db.HoaDons.AsNoTracking()
             .Include(h => h.MaDonHangNavigation)
             .Include(h => h.ChiTietHoaDons)
-            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon <= endOfDay)
+            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon < nextDay)
             .OrderByDescending(h => h.MaHoaDon)
             .ToListAsync();
 
@@ -785,12 +789,12 @@ public class InvoiceController : StaffControllerBase
     {
         var targetDate = (date ?? OrderRules.VietnamNow()).Date;
         var startOfDay = targetDate;
-        var endOfDay = targetDate.AddDays(1).AddTicks(-1);
+        var nextDay = targetDate.AddDays(1);
 
         var invoicesToday = await _db.HoaDons.AsNoTracking()
             .Include(h => h.MaDonHangNavigation)
             .Include(h => h.ChiTietHoaDons)
-            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon <= endOfDay)
+            .Where(h => h.NgayLapHoaDon >= startOfDay && h.NgayLapHoaDon < nextDay)
             .OrderByDescending(h => h.MaHoaDon)
             .ToListAsync();
 
