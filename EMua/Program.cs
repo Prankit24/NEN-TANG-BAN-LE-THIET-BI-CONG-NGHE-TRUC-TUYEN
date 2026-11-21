@@ -786,6 +786,21 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+// Phục vụ các file upload dự phòng từ /tmp/emua-uploads (đặc biệt khi chạy trên Linux container bị khóa quyền ghi wwwroot)
+var fallbackUploadDir = OrderEvidenceStorage.FallbackDirectory;
+if (!Directory.Exists(fallbackUploadDir))
+{
+    try { Directory.CreateDirectory(fallbackUploadDir); } catch { }
+}
+if (Directory.Exists(fallbackUploadDir))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(fallbackUploadDir),
+        RequestPath = "/uploads"
+    });
+}
+
 // ============================================================
 // 23. ROUTING
 // ============================================================
