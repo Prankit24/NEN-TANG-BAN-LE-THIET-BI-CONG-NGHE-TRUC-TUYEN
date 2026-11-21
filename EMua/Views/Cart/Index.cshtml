@@ -56,14 +56,11 @@
                             <!-- Thông tin sản phẩm -->
                             <div class="col-info product-meta">
                                 <div class="product-thumb">
-                                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
-                                    {
-                                        <img src="@item.ImageUrl" alt="@item.ProductName" loading="lazy" decoding="async" />
-                                    }
-                                    else
-                                    {
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-                                    }
+                                    <img src="@ImageUrlHelper.FixImageUrl(item.ImageUrl, checkPhysicalFile: true)"
+                                         alt="@item.ProductName"
+                                         loading="lazy"
+                                         decoding="async"
+                                         onerror="this.onerror=null;this.src='/images/no-image.png';" />
                                 </div>
                                 <div class="product-details">
                                     <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-title">

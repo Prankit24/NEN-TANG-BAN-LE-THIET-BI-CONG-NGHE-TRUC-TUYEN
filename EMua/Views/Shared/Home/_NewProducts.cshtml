@@ -2,16 +2,7 @@
 @using System.Linq
 @using System.Collections.Generic
 @using System
-@functions {
-    private string Asset(string? value) {
-        if (string.IsNullOrWhiteSpace(value)) return "";
-        var path = value.Trim().Replace("\\", "/");
-        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
-        path = path.TrimStart('~', '/');
-        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
-        return Url.Content("~/" + path);
-    }
-}
+@using EMua.Helpers
 @{
     var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
     var viCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
@@ -44,8 +35,7 @@
                 {
                     var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
                     var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
-                    var photo = item.SanPhamHinhAnhs?.Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh)).OrderByDescending(x => x.LaAnhChinh).ThenBy(x => x.ThuTu).FirstOrDefault();
-                    var image = Asset(photo?.DuongDanAnh ?? variant?.HinhAnh);
+                    var image = ImageUrlHelper.ResolveProductImage(item, variant, checkPhysicalFile: true);
                     var price = variant?.Gia ?? item.GiaGoc ?? 0;
                     var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
                     var detail = string.Join(" · ", new[] { variant?.PhienBan, variant?.MauSac }.Where(x => !string.IsNullOrWhiteSpace(x)));
@@ -66,15 +56,7 @@
                                 <span class="ep-chip ep-chip-blue">Mới</span>
                             }
 
-                            @if (!string.IsNullOrWhiteSpace(image))
-                            {
-                                <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
-                                <span class="ep-placeholder" hidden>Ảnh đang cập nhật</span>
-                            }
-                            else
-                            {
-                                <span class="ep-placeholder">Ảnh đang cập nhật</span>
-                            }
+                            <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/images/no-image.png';" />
                         </a>
                         <div class="ep-card-body">
                             <div class="ep-card-meta">

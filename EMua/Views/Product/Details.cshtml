@@ -1,27 +1,6 @@
 @model EMua.ViewModels.ProductDetailsViewModel
 @{
     ViewData["Title"] = Model.Name;
-
-    string FixImageUrl(string? url)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-            return "/images/no-image.png";
-
-        url = url.Trim().Replace("\\", "/");
-
-        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return url;
-        }
-
-        if (!url.StartsWith("/"))
-        {
-            url = "/" + url;
-        }
-
-        return url;
-    }
 }
 
 <link rel="stylesheet" href="~/css/customer/product.css" asp-append-version="true" />
@@ -47,7 +26,7 @@
             {
                 foreach (var path in Model.ImageUrls)
                 {
-                    var url = FixImageUrl(path);
+                    var url = ImageUrlHelper.FixImageUrl(path, checkPhysicalFile: true);
                     if (url != "/images/no-image.png" &&
                     !galleryImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
@@ -56,7 +35,7 @@
                 }
             }
 
-            var mainImageUrl = FixImageUrl(Model.ImageUrl);
+            var mainImageUrl = ImageUrlHelper.FixImageUrl(Model.ImageUrl, checkPhysicalFile: true);
 
             if (mainImageUrl != "/images/no-image.png" &&
             !galleryImages.Contains(mainImageUrl, StringComparer.OrdinalIgnoreCase))
@@ -67,7 +46,7 @@
             // Bao gồm ảnh của các phiên bản để không phải thêm thumbnail bằng JavaScript.
             foreach (var variantImage in Model.Variants)
             {
-                var variantUrl = FixImageUrl(variantImage.ImageUrl);
+                var variantUrl = ImageUrlHelper.FixImageUrl(variantImage.ImageUrl, checkPhysicalFile: true);
                 if (variantUrl != "/images/no-image.png" &&
                 !galleryImages.Contains(variantUrl, StringComparer.OrdinalIgnoreCase))
                 {
@@ -182,7 +161,7 @@
                                     data-price="@variant.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                                     selected="@(variant.VariantId == Model.DefaultVariantId)"
                                     data-stock="@variant.Stock"
-                                    data-image="@FixImageUrl(variant.ImageUrl)"
+                                    data-image="@ImageUrlHelper.FixImageUrl(variant.ImageUrl, checkPhysicalFile: true)"
                                     disabled="@(variant.Stock <= 0 || variant.Price <= 0)">
                                 @variant.Label - @variant.Price.ToString("N0") đ · @(variant.Stock > 0 ? $"còn {variant.Stock}" : "Hết hàng")
                             </option>

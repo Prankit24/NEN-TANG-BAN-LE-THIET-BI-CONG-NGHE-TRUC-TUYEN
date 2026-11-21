@@ -786,6 +786,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+// Khởi tạo ImageUrlHelper với WebRootPath
+EMua.Helpers.ImageUrlHelper.Initialize(app.Environment.WebRootPath);
+
 // Phục vụ các file upload dự phòng từ /tmp/emua-uploads (đặc biệt khi chạy trên Linux container bị khóa quyền ghi wwwroot)
 var fallbackUploadDir = OrderEvidenceStorage.FallbackDirectory;
 if (!Directory.Exists(fallbackUploadDir))
