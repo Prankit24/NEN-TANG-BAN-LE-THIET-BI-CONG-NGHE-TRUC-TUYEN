@@ -79,6 +79,13 @@ namespace EMua.Helpers
                         var fullPhysicalPath = Path.Combine(webRoot, relativePath);
                         if (!File.Exists(fullPhysicalPath))
                         {
+                            // Kiểm tra đối sánh không phân biệt hoa thường nếu chạy trên Linux / Docker
+                            var foundPath = ResolveCaseInsensitivePath(webRoot, relativePath);
+                            if (foundPath != null)
+                            {
+                                return "/" + Path.GetRelativePath(webRoot, foundPath).Replace('\\', '/');
+                            }
+
                             return "/images/no-image.png";
                         }
                     }
@@ -91,6 +98,32 @@ namespace EMua.Helpers
             }
 
             return clean;
+        }
+
+        private static string? ResolveCaseInsensitivePath(string rootDir, string relativePath)
+        {
+            try
+            {
+                var parts = relativePath.Split(new[] { Path.DirectorySeparatorChar, '/' }, StringSplitOptions.RemoveEmptyEntries);
+                var currentDir = rootDir;
+
+                for (int i = 0; i < parts.Length - 1; i++)
+                {
+                    var part = parts[i];
+                    var subDirs = Directory.GetDirectories(currentDir);
+                    var match = subDirs.FirstOrDefault(d => string.Equals(Path.GetFileName(d), part, StringComparison.OrdinalIgnoreCase));
+                    if (match == null) return null;
+                    currentDir = match;
+                }
+
+                var fileName = parts[^1];
+                var files = Directory.GetFiles(currentDir);
+                return files.FirstOrDefault(f => string.Equals(Path.GetFileName(f), fileName, StringComparison.OrdinalIgnoreCase));
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static string ResolveProductImage(SanPham? product, BienTheSanPham? variant = null, bool checkPhysicalFile = true)
