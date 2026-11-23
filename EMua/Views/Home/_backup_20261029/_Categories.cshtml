@@ -1,52 +1,199 @@
 @model IEnumerable<EMua.Models.Database.DanhMucSanPham>
 @using System.Linq
+@using System.Text
+@using System.Globalization
+@using System.Text.RegularExpressions
+
+@functions {
+    public static string ToSlug(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "default";
+        var normalized = text.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+        foreach (var c in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        var clean = sb.ToString().Normalize(NormalizationForm.FormC)
+            .Replace('đ', 'd').Replace('Đ', 'D')
+            .ToLowerInvariant();
+        clean = Regex.Replace(clean, @"[^a-z0-9]+", "-").Trim('-');
+        return string.IsNullOrEmpty(clean) ? "default" : clean;
+    }
+}
 
 <section class="ep ep-section" id="categories" aria-labelledby="cat-heading">
     <div class="ep-container">
         <header class="ep-heading">
             <div>
-                <span class="ep-eyebrow"><i class="bi bi-grid-fill" aria-hidden="true"></i> BẮT ĐẦU TỪ NHU CẦU</span>
-                <h2 id="cat-heading">Danh mục sản phẩm</h2>
-                <p>Khám phá nhanh các dòng thiết bị công nghệ chính hãng.</p>
+                <span class="ep-eyebrow"><i class="bi bi-grid-fill" aria-hidden="true"></i> DANH MỤC SẢN PHẨM</span>
+                <h2 id="cat-heading">Khám phá theo danh mục</h2>
             </div>
             <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
-                <span>Xem tất cả sản phẩm</span>
+                <span>Xem tất cả thiết bị</span>
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
         </header>
 
-        <div class="ep-categories">
-            @if (Model != null && Model.Any())
-            {
-                foreach (var item in Model)
+        <div class="ep-categories-wrapper" style="position: relative;">
+            <button type="button" class="ep-cat-nav ep-cat-prev" onclick="scrollCategories(-1)" aria-label="Danh mục trước">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <div class="ep-categories" id="epCategoryTrack">
+                @if (Model != null && Model.Any())
                 {
-                    var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
-                    var icon = name.Contains("điện thoại") ? "bi-phone"
+                    foreach (var item in Model)
+                    {
+                        var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
+                        var slug = ToSlug(item.TenDanhMuc);
+                        var imgPath = Url.Content($"~/images/categories/{slug}.png");
+
+                        var icon = name.Contains("điện thoại") ? "bi-phone"
                         : name.Contains("laptop") ? "bi-laptop"
-                        : name.Contains("gaming") ? "bi-controller"
+                        : name.Contains("gaming") || name.Contains("chơi game") ? "bi-controller"
                         : name.Contains("tai nghe") || name.Contains("âm thanh") ? "bi-headphones"
                         : name.Contains("tablet") || name.Contains("máy tính bảng") ? "bi-tablet"
                         : name.Contains("màn hình") ? "bi-display"
-                        : name.Contains("thông minh") || name.Contains("đồng hồ") ? "bi-smartwatch"
+                        : name.Contains("thông minh") || name.Contains("đồng hồ") || name.Contains("smartwatch") ? "bi-smartwatch"
+                        : name.Contains("máy ảnh") || name.Contains("flycam") ? "bi-camera"
+                        : name.Contains("mạng") || name.Contains("nas") ? "bi-router"
+                        : name.Contains("lưu trữ") ? "bi-device-ssd"
+                        : name.Contains("linh kiện") ? "bi-cpu"
+                        : name.Contains("loa") ? "bi-speaker"
                         : name.Contains("sạc") || name.Contains("phụ kiện") ? "bi-plug"
-                        : "bi-cpu";
+                        : "bi-grid";
 
-                    <a class="ep-category" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
-                        <div class="ep-category-icon-wrap">
-                            <i class="bi @icon" aria-hidden="true"></i>
-                        </div>
-                        <strong>@item.TenDanhMuc</strong>
-                        @if (!string.IsNullOrWhiteSpace(item.MoTa))
-                        {
-                            <small>@item.MoTa</small>
-                        }
-                    </a>
+                        <a class="ep-category" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
+                            <div class="ep-category-icon-wrap">
+                                <img src="@imgPath"
+                                     alt="@item.TenDanhMuc"
+                                     class="ep-category-img"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';" />
+                                <i class="bi @icon ep-category-fallback-icon" style="display: none;" aria-hidden="true"></i>
+                            </div>
+                            <strong>@item.TenDanhMuc</strong>
+                        </a>
+                    }
                 }
-            }
-            else
-            {
-                <p class="ep-empty">Danh mục đang được cập nhật.</p>
-            }
+            </div>
+
+            <button type="button" class="ep-cat-nav ep-cat-next" onclick="scrollCategories(1)" aria-label="Danh mục tiếp theo">
+                <i class="bi bi-chevron-right"></i>
+            </button>
         </div>
     </div>
 </section>
+
+<style>
+    .ep-categories {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        gap: 20px;
+        padding: 8px 4px 16px;
+        scrollbar-width: none;
+    }
+
+        .ep-categories::-webkit-scrollbar {
+            display: none;
+        }
+
+    .ep-category {
+        flex: 0 0 136px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    .ep-category-icon-wrap {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #F4F5F7;
+        border: 1px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .ep-category:hover .ep-category-icon-wrap {
+        transform: translateY(-4px);
+        background: #FFFFFF;
+        border-color: #2563EB;
+        box-shadow: 0 10px 20px -6px rgba(37, 99, 235, 0.18);
+    }
+
+    .ep-category-img {
+        width: 78px;
+        height: 78px;
+        object-fit: contain;
+        mix-blend-mode: multiply;
+        transition: transform 0.22s ease;
+    }
+
+    .ep-category:hover .ep-category-img {
+        transform: scale(1.08);
+    }
+
+    .ep-category-fallback-icon {
+        font-size: 2.3rem;
+        color: #1E293B;
+    }
+
+    .ep-category strong {
+        margin-top: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #0F172A;
+        line-height: 1.35;
+    }
+
+    .ep-cat-nav {
+        position: absolute;
+        top: 42px;
+        z-index: 10;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #0F172A;
+        transition: all 0.2s ease;
+    }
+
+        .ep-cat-nav:hover {
+            background: #0F172A;
+            color: #FFFFFF;
+        }
+
+    .ep-cat-prev {
+        left: -14px;
+    }
+
+    .ep-cat-next {
+        right: -14px;
+    }
+</style>
+
+<script>
+    function scrollCategories(direction) {
+        const track = document.getElementById('epCategoryTrack');
+        if (track) track.scrollBy({ left: direction * 620, behavior: 'smooth' });
+    }
+</script>

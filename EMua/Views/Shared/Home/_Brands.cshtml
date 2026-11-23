@@ -1,55 +1,30 @@
 @model IEnumerable<EMua.Models.Database.ThuongHieu>
 @using System.Linq
-@using System.Collections.Generic
-@using System
-@functions {
-    private string Asset(string? value) {
-        if (string.IsNullOrWhiteSpace(value)) return "";
-        var path = value.Trim().Replace("\\", "/");
-        if (path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return path;
-        path = path.TrimStart('~', '/');
-        if (path.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase)) path = path.Substring(8);
-        return Url.Content("~/" + path);
-    }
-}
 
-<section class="ep-section" id="brands" aria-labelledby="brand-heading">
+<!-- MONOCHROME MINIMALIST BRAND BAR (Đúng 8 thương hiệu hàng đầu, tông xám trung tính tinh tế) -->
+<section class="ep-section ep-brands-section" aria-label="Thương hiệu đối tác">
     <div class="ep-container">
-        <header class="ep-heading">
-            <div class="ep-heading-left">
-                <span class="ep-eyebrow">
-                    <i class="bi bi-patch-check-fill" aria-hidden="true"></i> ĐỐI TÁC CHIẾN LƯỢC
-                </span>
-                <h2 id="brand-heading">Thương hiệu chính hãng</h2>
-                <p>EMUA tự hào là đại lý phân phối chính thức của các tập đoàn công nghệ hàng đầu thế giới.</p>
-            </div>
-            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
-                <span>Xem tất cả</span>
-                <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            </a>
-        </header>
-
-        <div class="ep-brands">
-            @if (Model != null && Model.Any())
-            {
-                foreach (var item in Model)
+        <div class="ep-brands-monochrome-bar">
+            @{
+                var topBrands = new[]
                 {
-                    <a class="ep-brand-tile" asp-area="" asp-controller="Product" asp-action="Index" asp-route-brandId="@item.MaThuongHieu" title="@item.TenThuongHieu">
-                        @if (!string.IsNullOrWhiteSpace(item.Logo))
-                        {
-                            <img src="@Asset(item.Logo)" alt="@item.TenThuongHieu" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false;" />
-                            <strong hidden>@item.TenThuongHieu</strong>
-                        }
-                        else
-                        {
-                            <strong>@item.TenThuongHieu</strong>
-                        }
-                    </a>
-                }
+                    new { Name = "Apple", Keyword = "Apple", Icon = "bi-apple" },
+                    new { Name = "Samsung", Keyword = "Samsung", Icon = "bi-phone" },
+                    new { Name = "Sony", Keyword = "Sony", Icon = "bi-headphones" },
+                    new { Name = "ASUS", Keyword = "ASUS", Icon = "bi-laptop" },
+                    new { Name = "Lenovo", Keyword = "Lenovo", Icon = "bi-pc-display" },
+                    new { Name = "Dell", Keyword = "Dell", Icon = "bi-display" },
+                    new { Name = "Razer", Keyword = "Razer", Icon = "bi-controller" },
+                    new { Name = "Logitech", Keyword = "Logitech", Icon = "bi-mouse3" }
+                };
             }
-            else
+
+            @foreach (var b in topBrands)
             {
-                <p class="ep-empty">Thương hiệu đang được cập nhật.</p>
+                <a class="ep-brand-mono-item" asp-area="" asp-controller="Product" asp-action="Index" asp-route-keyword="@b.Keyword" title="Khám phá thiết bị @b.Name">
+                    <i class="bi @b.Icon me-2"></i>
+                    <span>@b.Name</span>
+                </a>
             }
         </div>
     </div>

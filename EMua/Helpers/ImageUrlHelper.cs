@@ -10,6 +10,8 @@ namespace EMua.Helpers
     {
         private static string? _webRootPath;
 
+        public const string DefaultPlaceholderSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320' width='320' height='320'><rect width='100%25' height='100%25' fill='%23F8FAFC'/><g transform='translate(110,110)' stroke='%2394A3B8' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='10' width='90' height='60' rx='8'/><path d='M35 85h30'/><circle cx='50' cy='40' r='14'/><path d='M25 70h50'/></g><text x='50%25' y='215' fill='%2394A3B8' font-family='Inter,Segoe UI,sans-serif' font-size='12.5' font-weight='600' text-anchor='middle' letter-spacing='0.5'>EMUA TECH STORE</text></svg>";
+
         public static void Initialize(string? webRootPath)
         {
             _webRootPath = webRootPath;
@@ -17,9 +19,9 @@ namespace EMua.Helpers
 
         public static string FixImageUrl(string? rawUrl, bool checkPhysicalFile = true)
         {
-            if (string.IsNullOrWhiteSpace(rawUrl))
+            if (string.IsNullOrWhiteSpace(rawUrl) || rawUrl == "/images/no-image.png")
             {
-                return "/images/no-image.png";
+                return DefaultPlaceholderSvg;
             }
 
             var clean = rawUrl.Trim().Replace('\\', '/');
@@ -86,14 +88,14 @@ namespace EMua.Helpers
                                 return "/" + Path.GetRelativePath(webRoot, foundPath).Replace('\\', '/');
                             }
 
-                            return "/images/no-image.png";
+                            return DefaultPlaceholderSvg;
                         }
                     }
                 }
                 catch
                 {
                     // Trường hợp đường dẫn không hợp lệ
-                    return "/images/no-image.png";
+                    return DefaultPlaceholderSvg;
                 }
             }
 
@@ -132,7 +134,7 @@ namespace EMua.Helpers
             if (!string.IsNullOrWhiteSpace(variant?.HinhAnh))
             {
                 var variantUrl = FixImageUrl(variant.HinhAnh, checkPhysicalFile);
-                if (variantUrl != "/images/no-image.png")
+                if (variantUrl != DefaultPlaceholderSvg && variantUrl != "/images/no-image.png")
                 {
                     return variantUrl;
                 }
@@ -149,7 +151,7 @@ namespace EMua.Helpers
                 if (mainImg != null)
                 {
                     var mainUrl = FixImageUrl(mainImg.DuongDanAnh, checkPhysicalFile);
-                    if (mainUrl != "/images/no-image.png")
+                    if (mainUrl != DefaultPlaceholderSvg && mainUrl != "/images/no-image.png")
                     {
                         return mainUrl;
                     }
@@ -164,7 +166,7 @@ namespace EMua.Helpers
                 if (firstImg != null)
                 {
                     var firstUrl = FixImageUrl(firstImg.DuongDanAnh, checkPhysicalFile);
-                    if (firstUrl != "/images/no-image.png")
+                    if (firstUrl != DefaultPlaceholderSvg && firstUrl != "/images/no-image.png")
                     {
                         return firstUrl;
                     }
@@ -179,14 +181,14 @@ namespace EMua.Helpers
                 if (!string.IsNullOrWhiteSpace(anyVariantImg))
                 {
                     var anyVarUrl = FixImageUrl(anyVariantImg, checkPhysicalFile);
-                    if (anyVarUrl != "/images/no-image.png")
+                    if (anyVarUrl != DefaultPlaceholderSvg && anyVarUrl != "/images/no-image.png")
                     {
                         return anyVarUrl;
                     }
                 }
             }
 
-            return "/images/no-image.png";
+            return DefaultPlaceholderSvg;
         }
     }
 }

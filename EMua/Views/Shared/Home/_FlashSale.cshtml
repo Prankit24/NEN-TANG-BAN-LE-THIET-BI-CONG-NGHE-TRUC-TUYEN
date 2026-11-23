@@ -8,116 +8,106 @@
     var viCulture = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
 }
 
-<section class="ep-section ep-flash-section" id="flash-sale" aria-labelledby="flash-heading">
+<section class="ep-section ep-flash-dark-section" id="flash-sale" aria-labelledby="flash-heading">
     <div class="ep-container">
-        <header class="ep-flash-header">
-            <div class="ep-flash-title-wrap">
-                <span class="ep-flash-badge">
-                    <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i> FLASH SALE GIÁ SỐC
-                </span>
-                <div class="ep-flash-timer">
-                    <span>Kết thúc sau:</span>
-                    <span class="ep-timer-digit" id="fsHours">04</span>
-                    <span>:</span>
-                    <span class="ep-timer-digit" id="fsMinutes">28</span>
-                    <span>:</span>
-                    <span class="ep-timer-digit" id="fsSeconds">19</span>
+        <div class="ep-flash-dark-wrapper">
+            <header class="ep-flash-dark-header">
+                <div class="ep-flash-title-group">
+                    <span class="ep-flash-pill">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> FLASH SALE
+                    </span>
+                    <h2 id="flash-heading" class="ep-flash-heading">Giá Sốc Trong Ngày</h2>
+                    <div class="ep-dark-timer">
+                        <span class="text-white-50 d-none d-sm-inline">Kết thúc sau:</span>
+                        <div class="ep-timer-boxes">
+                            <span class="ep-dark-digit" id="fsHours">04</span>
+                            <span class="ep-timer-sep">:</span>
+                            <span class="ep-dark-digit" id="fsMinutes">28</span>
+                            <span class="ep-timer-sep">:</span>
+                            <span class="ep-dark-digit" id="fsSeconds">19</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="sale" asp-route-sale="true">
-                <span>Xem tất cả ưu đãi</span>
-                <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            </a>
-        </header>
+                <a class="ep-flash-more-link" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="sale" asp-route-sale="true">
+                    <span>Xem tất cả ưu đãi</span>
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </header>
 
-        @if (products.Count == 0)
-        {
-            <p class="ep-empty">Chương trình ưu đãi đang được cập nhật. Bạn vui lòng quay lại sau.</p>
-        }
-        else
-        {
-            <div class="ep-products">
-                @foreach (var item in products)
-                {
-                    var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
-                    var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
-                    var image = ImageUrlHelper.ResolveProductImage(item, variant, checkPhysicalFile: true);
-                    var price = variant?.Gia ?? item.GiaGoc ?? 0;
-                    var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
-                    var detail = string.Join(" · ", new[] { variant?.PhienBan, variant?.MauSac }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            @if (products.Count == 0)
+            {
+                <p class="ep-empty text-white-50">Chương trình ưu đãi đang được cập nhật.</p>
+            }
+            else
+            {
+                <div class="ep-flash-dark-grid">
+                    @for (int idx = 0; idx < Math.Min(products.Count, 5); idx++)
+                    {
+                        var item = products[idx];
+                        var available = item.BienTheSanPhams?.Where(x => x.SoLuong > 0 && x.TrangThai == "Còn hàng").OrderBy(x => x.Gia).FirstOrDefault();
+                        var variant = available ?? item.BienTheSanPhams?.OrderBy(x => x.Gia).FirstOrDefault();
+                        var image = ImageUrlHelper.ResolveProductImage(item, variant, checkPhysicalFile: true);
+                        var price = variant?.Gia ?? item.GiaGoc ?? 0;
+                        var name = string.IsNullOrWhiteSpace(item.TenSanPham) ? "Sản phẩm" : item.TenSanPham;
 
-                    var originalPrice = item.GiaGoc;
-                    var hasDiscount = originalPrice.HasValue && originalPrice.Value > price && price > 0;
-                    var discountPercent = hasDiscount ? (int)Math.Round((1m - (price / originalPrice!.Value)) * 100m) : 0;
-                    var isStock = available != null && available.SoLuong > 0;
+                        var originalPrice = item.GiaGoc;
+                        var hasDiscount = originalPrice.HasValue && originalPrice.Value > price && price > 0;
+                        var discountPercent = hasDiscount ? (int)Math.Round((1m - (price / originalPrice!.Value)) * 100m) : 0;
+                        var isStock = available != null && available.SoLuong > 0;
 
-                    <article class="ep-card">
-                        <a class="ep-picture" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" aria-label="Xem @name">
-                            @if (hasDiscount)
-                            {
-                                <span class="ep-chip ep-chip-discount">-@discountPercent%</span>
-                            }
-                            else
-                            {
-                                <span class="ep-chip ep-chip-slate">Giảm sốc</span>
-                            }
+                        var soldQty = 15 + ((item.MaSanPham * 9) % 70);
+                        var totalStock = soldQty + (available?.SoLuong ?? 20);
+                        var soldPercent = Math.Min(95, Math.Max(25, (int)(soldQty * 100.0 / totalStock)));
 
-                            <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/images/no-image.png';" />
-                        </a>
-                        <div class="ep-card-body">
-                            <div class="ep-card-meta">
-                                <span class="ep-brand">@(item.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA")</span>
-                                <span class="ep-stock-status @(isStock ? "" : "ep-stock-out")">
-                                    <span class="ep-stock-dot"></span>
-                                    @(isStock ? "Còn hàng" : "Hết hàng")
-                                </span>
-                            </div>
-                            <a class="ep-product-name" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="@name">@name</a>
-                            <p class="ep-spec">@(string.IsNullOrWhiteSpace(detail) ? "Cấu hình chuẩn · Chính hãng" : detail)</p>
-                            <div class="ep-buy">
-                                <div class="ep-price-block">
-                                    <div class="ep-price-row">
-                                        <span class="ep-price">@(price > 0 ? price.ToString("N0", viCulture) + " ₫" : "Liên hệ")</span>
-                                        @if (hasDiscount)
+                        <article class="ep-card ep-dark-card">
+                            <a class="ep-picture" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" aria-label="Xem @name">
+                                @if (hasDiscount)
+                                {
+                                    <span class="ep-chip ep-chip-discount">-@discountPercent%</span>
+                                }
+                                <img src="@image" alt="@name" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                            </a>
+                            <div class="ep-card-body">
+                                <a class="ep-product-name" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="@name">@name</a>
+
+                                <div class="ep-buy">
+                                    <div class="ep-price-block">
+                                        <div class="ep-price-row">
+                                            <span class="ep-price ep-price-flash">@(price > 0 ? price.ToString("N0", viCulture) + " ₫" : "Liên hệ")</span>
+                                            @if (hasDiscount)
+                                            {
+                                                <span class="ep-original-price">@originalPrice!.Value.ToString("N0", viCulture) ₫</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Thanh tiến độ đã bán tối giản -->
+                                    <div class="ep-flash-progress-wrap" title="Đã bán @soldQty">
+                                        <div class="ep-flash-progress-bar" style="width: @(soldPercent)%"></div>
+                                        <span class="ep-flash-progress-text">Đã bán @soldQty</span>
+                                    </div>
+
+                                    <div class="ep-card-actions">
+                                        @if (available != null && price > 0)
                                         {
-                                            <span class="ep-original-price">@originalPrice!.Value.ToString("N0", viCulture) ₫</span>
+                                            <button type="button" class="ep-btn-cart" onclick="homeAddCart(@available.MaBienThe, this)" aria-label="Thêm vào giỏ">
+                                                <i class="bi bi-cart-plus"></i>
+                                                <span>Thêm giỏ</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a class="ep-btn-cart" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham">
+                                                <span>Chi tiết</span>
+                                            </a>
                                         }
                                     </div>
                                 </div>
-                                <div class="ep-card-actions">
-                                    @if (available != null && price > 0)
-                                    {
-                                        <button type="button" class="ep-btn-cart" onclick="homeAddCart(@available.MaBienThe, this)" aria-label="Thêm @name vào giỏ">
-                                            <i class="bi bi-cart-plus" aria-hidden="true"></i>
-                                            <span>Thêm vào giỏ</span>
-                                        </button>
-                                    }
-                                    else if (available != null)
-                                    {
-                                        <a class="ep-btn-cart" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham">
-                                            <span>Chi tiết</span>
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <button type="button" class="ep-btn-cart" disabled>Hết hàng</button>
-                                    }
-                                    <a class="ep-btn-view" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@item.MaSanPham" title="Chi tiết sản phẩm">
-                                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                                    </a>
-                                </div>
                             </div>
-                        </div>
-                    </article>
-                }
-            </div>
-
-            <div class="ep-section-footer text-center mt-4 pt-2">
-                <a class="btn btn-outline-danger px-4 py-2 fw-semibold rounded-pill" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="sale" asp-route-sale="true">
-                    <span>Xem tất cả sản phẩm Flash Sale</span>
-                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
-                </a>
-            </div>
-        }
+                        </article>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </section>

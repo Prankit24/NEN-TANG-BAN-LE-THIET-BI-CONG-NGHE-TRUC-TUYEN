@@ -790,7 +790,10 @@ app.UseResponseCompression();
 // 21. HTTPS REDIRECTION
 // ============================================================
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // ============================================================
 // 22. STATIC FILES

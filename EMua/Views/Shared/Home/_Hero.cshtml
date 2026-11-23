@@ -1,142 +1,119 @@
-<section class="ep-hero-wrap" aria-label="Sản phẩm công nghệ flagship">
-    <!-- SLIDE 1: iPhone 18 Pro (Titanium Navy) -->
-    <div class="ep-hero-slide ep-hero-slide-iphone active" id="heroSlide0">
-        <div class="ep-hero-container">
-            <div class="ep-hero-info">
-                <span class="ep-hero-badge">
-                    <i class="bi bi-stars" aria-hidden="true"></i> TIÊN PHONG CÔNG NGHỆ 2026
-                </span>
-                <h1 class="ep-hero-title">iPhone 18 Pro & Pro Max</h1>
-                <p class="ep-hero-desc">
-                    Tôi luyện từ titan siêu nhẹ. Sức mạnh đột phá cùng Apple Intelligence và hệ thống camera tiềm vọng thế hệ mới.
-                </p>
-                <div class="ep-hero-actions">
-                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-keyword="iPhone" class="ep-btn-hero-primary" aria-label="Khám phá iPhone 18 Pro">
-                        <span>Khám phá ngay</span>
-                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                    </a>
-                    <button type="button" class="ep-btn-hero-secondary" onclick="document.getElementById('aiToggleButton')?.click()" aria-label="Tư vấn mua sắm cùng AI">
-                        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-                        <span>Tư vấn cùng AI</span>
-                    </button>
+<section class="ep-hero-bento-section">
+    <div class="ep-container">
+        <!-- BENTO HERO 12 CỘT TỶ LỆ CHUẨN 8:4 -->
+        <div class="ep-bento-hero-grid">
+            <!-- 8 CỘT TRÁI: MAIN FLAGSHIP BANNER CAO 420PX -->
+            <div class="ep-bento-main-banner">
+                <!-- SLIDE 1: iPhone 18 Pro (Flagship 2026) -->
+                <div class="ep-hero-slide ep-hero-slide-iphone active" id="heroSlide0">
+                    <div class="ep-hero-slide-inner">
+                        <div class="ep-hero-info">
+                            <span class="ep-hero-badge"><i class="bi bi-stars"></i> FLAGSHIP CÔNG NGHỆ 2026</span>
+                            <h1 class="ep-hero-title">iPhone 18 Pro &amp; Pro Max</h1>
+                            <p class="ep-hero-desc">Tôi luyện từ titan siêu nhẹ. Sức mạnh đột phá từ chip 3nm cùng ống kính tiềm vọng thế hệ mới.</p>
+                            <div class="ep-hero-actions">
+                                <a asp-controller="Product" asp-action="Index" asp-route-keyword="iPhone" class="ep-btn-hero-primary">
+                                    <span>Khám phá ngay</span> <i class="bi bi-arrow-right"></i>
+                                </a>
+                                <a asp-controller="Product" asp-action="Index" asp-route-category="DienThoai" class="ep-btn-hero-secondary">
+                                    <span>Tất cả điện thoại</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ep-hero-stage">
+                            <img src="~/images/apple2026/iphone-duo.png" asp-append-version="true" alt="iPhone 18 Pro" class="ep-hero-img" fetchpriority="high" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 2: MacBook Pro M3 Max -->
+                <div class="ep-hero-slide ep-hero-slide-macbook" id="heroSlide1">
+                    <div class="ep-hero-slide-inner">
+                        <div class="ep-hero-info">
+                            <span class="ep-hero-badge"><i class="bi bi-cpu"></i> HIỆU NĂNG SIÊU VIỆT</span>
+                            <h2 class="ep-hero-title">MacBook Pro M3 Max</h2>
+                            <p class="ep-hero-desc">Kiến trúc 3nm thế hệ mới. Màn hình Liquid Retina XDR sống động, khai phóng tiềm năng sáng tạo của chuyên gia.</p>
+                            <div class="ep-hero-actions">
+                                <a asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-btn-hero-primary">
+                                    <span>Xem chi tiết</span> <i class="bi bi-arrow-right"></i>
+                                </a>
+                                <a asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-btn-hero-secondary">
+                                    <span>Dòng máy Laptop</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ep-hero-stage">
+                            <img src="~/images/banners/macbook-pro-transparent.png" asp-append-version="true" alt="MacBook Pro" class="ep-hero-img" loading="lazy" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 3: Sony Audio Studio -->
+                <div class="ep-hero-slide ep-hero-slide-sony" id="heroSlide2">
+                    <div class="ep-hero-slide-inner">
+                        <div class="ep-hero-info">
+                            <span class="ep-hero-badge"><i class="bi bi-headphones"></i> CHUẨN ÂM HI-RES</span>
+                            <h2 class="ep-hero-title">Sony WH-1000XM5</h2>
+                            <p class="ep-hero-desc">Khử tiếng ồn chủ động đỉnh cao thế giới. Tận hưởng không gian âm nhạc thuần khiết từng chi tiết.</p>
+                            <div class="ep-hero-actions">
+                                <a asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-btn-hero-primary">
+                                    <span>Trải nghiệm ngay</span> <i class="bi bi-arrow-right"></i>
+                                </a>
+                                <a asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-btn-hero-secondary">
+                                    <span>Thiết bị âm thanh</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="ep-hero-stage">
+                            <img src="~/images/banners/sony-transparent.png" asp-append-version="true" alt="Sony WH-1000XM5" class="ep-hero-img" loading="lazy" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide Indicators dạng thanh pill sắc nét -->
+                <div class="ep-hero-indicators" role="tablist">
+                    <button type="button" class="ep-hero-dot active" data-slide="0" aria-label="Slide 1"></button>
+                    <button type="button" class="ep-hero-dot" data-slide="1" aria-label="Slide 2"></button>
+                    <button type="button" class="ep-hero-dot" data-slide="2" aria-label="Slide 3"></button>
                 </div>
             </div>
-            <div class="ep-hero-stage">
-                <img src="~/images/apple2026/iphone-duo.png"
-                     asp-append-version="true"
-                     alt="iPhone 18 Pro"
-                     class="ep-hero-img"
-                     fetchpriority="high" />
+
+            <!-- 4 CỘT PHẢI: 2 THẺ PROMO CARD XẾP DỌC (CAO 202PX MỖI THẺ) -->
+            <div class="ep-bento-side-cards">
+                <!-- Thẻ 1: Gaming Zone -->
+                <a asp-controller="Product" asp-action="Index" asp-route-category="Gaming" class="ep-bento-promo-card ep-bento-promo-gaming">
+                    <div class="ep-promo-card-content">
+                        <span class="ep-promo-badge">GAMING ZONE</span>
+                        <h3 class="ep-promo-title">Vũ Khí Chiến Game</h3>
+                        <p class="ep-promo-desc">Tần số quét cao · Trả góp 0%</p>
+                        <span class="ep-promo-action">Khám phá <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                    <div class="ep-promo-card-stage">
+                        <img src="~/images/banners/gaming-transparent.png" asp-append-version="true" alt="Gaming Gear" />
+                    </div>
+                </a>
+
+                <!-- Thẻ 2: Hot Deal / Thu cũ đổi mới -->
+                <a asp-controller="Product" asp-action="Index" asp-route-sort="sale" class="ep-bento-promo-card ep-bento-promo-deal">
+                    <div class="ep-promo-card-content">
+                        <span class="ep-promo-badge bg-warning text-dark">THU CŨ ĐỔI MỚI</span>
+                        <h3 class="ep-promo-title">Lên Đời Flagship</h3>
+                        <p class="ep-promo-desc">Trợ giá thu cũ tới 3.000.000₫</p>
+                        <span class="ep-promo-action">Xem ưu đãi <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                    <div class="ep-promo-card-stage">
+                        <img src="~/images/apple2026/iphone18-pro.png" asp-append-version="true" alt="Thu cũ đổi mới" />
+                    </div>
+                </a>
             </div>
         </div>
-    </div>
-
-    <!-- SLIDE 2: MacBook Pro M3 (Silver Studio) -->
-    <div class="ep-hero-slide ep-hero-slide-macbook" id="heroSlide1">
-        <div class="ep-hero-container">
-            <div class="ep-hero-info">
-                <span class="ep-hero-badge">
-                    <i class="bi bi-cpu" aria-hidden="true"></i> HIỆU NĂNG SIÊU VIỆT
-                </span>
-                <h2 class="ep-hero-title">MacBook Pro M3 Max</h2>
-                <p class="ep-hero-desc">
-                    Kiến trúc vi xử lý 3nm thế hệ mới. Màn hình Liquid Retina XDR sống động, khai phóng tiềm năng sáng tạo của chuyên gia.
-                </p>
-                <div class="ep-hero-actions">
-                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Laptop" class="ep-btn-hero-primary" aria-label="Xem dòng máy MacBook Pro">
-                        <span>Xem chi tiết</span>
-                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                    </a>
-                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Xem tất cả Laptop">
-                        <span>Tất cả Laptop</span>
-                    </a>
-                </div>
-            </div>
-            <div class="ep-hero-stage">
-                <img src="~/images/banners/macbook-pro-transparent.png"
-                     asp-append-version="true"
-                     alt="MacBook Pro M3"
-                     class="ep-hero-img"
-                     loading="lazy" />
-            </div>
-        </div>
-    </div>
-
-    <!-- SLIDE 3: Sony WH-1000XM5 (Midnight Studio) -->
-    <div class="ep-hero-slide ep-hero-slide-sony" id="heroSlide2">
-        <div class="ep-hero-container">
-            <div class="ep-hero-info">
-                <span class="ep-hero-badge">
-                    <i class="bi bi-headphones" aria-hidden="true"></i> CHUẨN ÂM STUDIO
-                </span>
-                <h2 class="ep-hero-title">Sony WH-1000XM5</h2>
-                <p class="ep-hero-desc">
-                    Không gian tĩnh lặng tuyệt đối. Công nghệ khử tiếng ồn đỉnh cao cùng chất âm Hi-Res nguyên bản sống động từng chi tiết.
-                </p>
-                <div class="ep-hero-actions">
-                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="AmThanh" class="ep-btn-hero-primary" aria-label="Khám phá Sony WH-1000XM5">
-                        <span>Khám phá ngay</span>
-                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                    </a>
-                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Xem thêm phụ kiện">
-                        <span>Phụ kiện âm thanh</span>
-                    </a>
-                </div>
-            </div>
-            <div class="ep-hero-stage">
-                <img src="~/images/banners/sony-transparent.png"
-                     asp-append-version="true"
-                     alt="Sony WH-1000XM5"
-                     class="ep-hero-img"
-                     loading="lazy" />
-            </div>
-        </div>
-    </div>
-
-    <!-- SLIDE 4: Gaming Laptop (Stealth Cyber) -->
-    <div class="ep-hero-slide ep-hero-slide-gaming" id="heroSlide3">
-        <div class="ep-hero-container">
-            <div class="ep-hero-info">
-                <span class="ep-hero-badge">
-                    <i class="bi bi-controller" aria-hidden="true"></i> CHIẾN TRƯỜNG ĐỈNH CAO
-                </span>
-                <h2 class="ep-hero-title">Laptop Gaming RTX 40-Series</h2>
-                <p class="ep-hero-desc">
-                    Tần số quét 240Hz siêu mượt mà. Sức mạnh đồ họa Ray Tracing tối tân cùng hệ thống tản nhiệt buồng hơi vượt trội.
-                </p>
-                <div class="ep-hero-actions">
-                    <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="Gaming" class="ep-btn-hero-primary" aria-label="Khám phá Laptop Gaming">
-                        <span>Khám phá ngay</span>
-                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                    </a>
-                    <a asp-area="" asp-controller="Product" asp-action="Index" class="ep-btn-hero-secondary" aria-label="Tất cả thiết bị Gaming">
-                        <span>Thiết bị Gaming</span>
-                    </a>
-                </div>
-            </div>
-            <div class="ep-hero-stage">
-                <img src="~/images/banners/gaming-transparent.png"
-                     asp-append-version="true"
-                     alt="Laptop Gaming"
-                     class="ep-hero-img"
-                     loading="lazy" />
-            </div>
-        </div>
-    </div>
-
-    <!-- Slide Indicators -->
-    <div class="ep-hero-indicators" role="tablist" aria-label="Chuyển slide banner">
-        <button type="button" class="ep-hero-dot active" data-slide="0" aria-label="iPhone 18 Pro" aria-selected="true"></button>
-        <button type="button" class="ep-hero-dot" data-slide="1" aria-label="MacBook Pro" aria-selected="false"></button>
-        <button type="button" class="ep-hero-dot" data-slide="2" aria-label="Sony Audio" aria-selected="false"></button>
-        <button type="button" class="ep-hero-dot" data-slide="3" aria-label="Gaming Gear" aria-selected="false"></button>
     </div>
 </section>
 
 <script>
-    (function initHeroCarousel() {
-        const slides = document.querySelectorAll('.ep-hero-slide');
-        const dots = document.querySelectorAll('.ep-hero-dot');
+    (function initFullBentoHero() {
+        const slides = document.querySelectorAll('.ep-bento-main-banner .ep-hero-slide');
+        const dots = document.querySelectorAll('.ep-bento-main-banner .ep-hero-dot');
         if (!slides.length || !dots.length) return;
 
         let currentIndex = 0;
@@ -145,69 +122,35 @@
         function goToSlide(index) {
             slides[currentIndex].classList.remove('active');
             dots[currentIndex].classList.remove('active');
-            dots[currentIndex].setAttribute('aria-selected', 'false');
 
             currentIndex = (index + slides.length) % slides.length;
 
             slides[currentIndex].classList.add('active');
             dots[currentIndex].classList.add('active');
-            dots[currentIndex].setAttribute('aria-selected', 'true');
         }
 
         function startAutoPlay() {
             stopAutoPlay();
-            timer = setInterval(function () {
-                goToSlide(currentIndex + 1);
-            }, 5500);
+            timer = setInterval(() => goToSlide(currentIndex + 1), 5000);
         }
 
         function stopAutoPlay() {
             if (timer) clearInterval(timer);
         }
 
-        dots.forEach(function (dot, i) {
-            dot.addEventListener('click', function () {
-                goToSlide(i);
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => {
+                goToSlide(idx);
                 startAutoPlay();
             });
         });
 
-        const heroWrap = document.querySelector('.ep-hero-wrap');
-        if (heroWrap) {
-            heroWrap.addEventListener('mouseenter', stopAutoPlay);
-            heroWrap.addEventListener('mouseleave', startAutoPlay);
+        const bannerEl = document.querySelector('.ep-bento-main-banner');
+        if (bannerEl) {
+            bannerEl.addEventListener('mouseenter', stopAutoPlay);
+            bannerEl.addEventListener('mouseleave', startAutoPlay);
         }
 
         startAutoPlay();
-    })();
-
-    /* Scroll Reveal — lightweight IntersectionObserver */
-    (function initScrollReveal() {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        const revealTargets = document.querySelectorAll(
-            '.ep-section, .ep-cat-card, .ep-card, .ep-showcase-card, .ep-brand-tile, .home-advisor'
-        );
-        if (!revealTargets.length) return;
-
-        revealTargets.forEach(function (el) { el.classList.add('ep-reveal'); });
-
-        /* Stagger children inside grids */
-        document.querySelectorAll('.ep-categories-grid .ep-cat-card, .ep-products .ep-card, .ep-brands .ep-brand-tile').forEach(function (el, i) {
-            el.classList.add('ep-reveal-child');
-            el.style.setProperty('--ep-delay', i % 8);
-        });
-
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('ep-visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-
-        revealTargets.forEach(function (el) { observer.observe(el); });
-        document.querySelectorAll('.ep-reveal-child').forEach(function (el) { observer.observe(el); });
     })();
 </script>
