@@ -30,7 +30,7 @@
     var currentIndex = Array.FindIndex(progressStatuses, s => string.Equals(s, isDeliveryFailed ? OrderRules.Shipping : currentStatus, StringComparison.OrdinalIgnoreCase));
     if (currentIndex < 0) currentIndex = 0; // Chờ thanh toán / trạng thái chưa xác định => bước đầu
 
-    var isCompleted = currentStatus.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase);
+    var isCompleted = currentStatus.Equals("Đã hoàn thành", StringComparison.OrdinalIgnoreCase) || OrderRules.Normalize(currentStatus) == OrderRules.Completed;
     var isReturnRequested = currentStatus == "Yêu cầu đổi trả" || currentStatus == "Đang đổi trả" || currentStatus == "Đã nhận đổi trả";
 
     var returnLog = Model.LichSuVanChuyens
@@ -392,7 +392,13 @@
             <div>
                 <label class="form-label"><i class="bi bi-calendar-event me-1"></i>Ngày dự kiến giao</label>
                 <input type="datetime-local" name="ngayDuKienGiao" id="etaInput" class="form-control"
-                       value="@((Model.NgayDuKienGiao?.AddHours(7) ?? OrderRules.VietnamNow()).ToString("yyyy-MM-ddTHH:mm"))" />
+                       value="@((Model.NgayDuKienGiao?.AddHours(7) ?? OrderRules.VietnamNow()).ToString("yyyy-MM-ddTHH:mm"))"
+                       min="@((Model.NgayDat ?? OrderRules.VietnamNow()).ToString("yyyy-MM-ddTHH:mm"))"
+                       @(isCompleted ? "disabled readonly" : "") />
+                @if (isCompleted)
+                {
+                    <small class="text-muted d-block mt-1"><i class="bi bi-lock me-1"></i>Đơn hàng đã giao thành công / hoàn thành, không thể sửa ngày dự kiến giao.</small>
+                }
             </div>
 
             <div>

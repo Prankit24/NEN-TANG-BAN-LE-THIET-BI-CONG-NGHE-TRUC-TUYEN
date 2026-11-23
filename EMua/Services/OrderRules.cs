@@ -73,6 +73,10 @@ public static class OrderRules
         {
             return new[] { ReturnRequested, Returning, ReturnReceived, Refunded, ReturnRejected, Completed };
         }
+        if (current == Completed)
+        {
+            return new[] { Completed, ReturnRequested };
+        }
         return new[] { Pending, Processing, Shipping, Completed, DeliveryFailed, Cancelled };
     }
 
@@ -81,6 +85,10 @@ public static class OrderRules
         var current = Normalize(from); var target = Normalize(to);
         if (!Statuses.Contains(target)) return false;
         if (current == target) return true;
+        if (current == Completed)
+        {
+            return target == ReturnRequested;
+        }
         if (IsPending(current) && target == Cancelled) return true;
         if (IsPending(current) && target == Processing) return cod || paid;
         if (current == Processing && target == Shipping) return true;

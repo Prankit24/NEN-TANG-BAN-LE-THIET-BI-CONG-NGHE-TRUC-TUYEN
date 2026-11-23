@@ -342,26 +342,22 @@ public class AuthController : Controller
         // 1. ADMIN (MaQuyen == 1) -> Vào thẳng Admin Dashboard ngay lập tức
         if (IsAdmin(user))
         {
-            TempData["SuccessMessage"] = "Bạn đã truy cập hệ thống quản trị với quyền Admin.";
             return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
 
         // 2. STAFF (MaQuyen == 2) -> Vào thẳng Staff Dashboard
         if (IsStaff(user))
         {
-            TempData["SuccessMessage"] = "Bạn đã truy cập khu vực làm việc của Nhân viên.";
             return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
         }
 
         // 3. Khách hàng nếu có returnUrl hợp lệ
         if (Url.IsLocalUrl(returnUrl))
         {
-            TempData["SuccessMessage"] = $"Chào mừng {user.TenNguoiDung ?? "Quý khách"} đã đăng nhập thành công.";
             return Redirect(returnUrl!);
         }
 
         // 4. Mặc định là Khách hàng -> Về trang chủ
-        TempData["SuccessMessage"] = $"Chào mừng {user.TenNguoiDung ?? "Quý khách"} đã đăng nhập thành công.";
         return RedirectToAction("Index", "Home");
     }
 
@@ -770,23 +766,19 @@ public class AuthController : Controller
         // ÉP CHUYỂN HƯỚNG TRỰC TIẾP
         if (IsAdmin(user))
         {
-            TempData["SuccessMessage"] = "Bạn đã truy cập hệ thống quản trị với quyền Admin.";
             return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
 
         if (IsStaff(user))
         {
-            TempData["SuccessMessage"] = "Bạn đã truy cập khu vực làm việc của Nhân viên.";
             return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
         }
 
         if (Url.IsLocalUrl(returnUrl))
         {
-            TempData["SuccessMessage"] = $"Chào mừng {user.TenNguoiDung ?? "Quý khách"} đã đăng nhập thành công.";
             return Redirect(returnUrl!);
         }
 
-        TempData["SuccessMessage"] = $"Chào mừng {user.TenNguoiDung ?? "Quý khách"} đã đăng nhập thành công.";
         return RedirectToAction("Index", "Home");
     }
 

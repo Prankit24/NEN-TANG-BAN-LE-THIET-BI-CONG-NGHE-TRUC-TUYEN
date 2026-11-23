@@ -241,24 +241,73 @@ public sealed class OrderWorkflowService
 			var current = OrderRules.Normalize(order.TrangThaiDonHang); var target = OrderRules.Normalize(status);
 			var p = order.ThanhToans.OrderByDescending(x => x.NgayTao).ThenByDescending(x => x.MaThanhToan).FirstOrDefault();
 			if (note?.Length > 200) return new(false, "Ghi chú giao nhận tối đa 200 ký tự.");
+
+			var isCompletedState = current == OrderRules.Completed;
+
 			if (current == target)
 			{
-				if (OrderRules.IsPending(current) || current == OrderRules.Processing || current == OrderRules.Shipping)
+				if (isCompletedState)
 				{
-					var changedEta = etaUtc.HasValue && order.NgayDuKienGiao != etaUtc.Value;
-					if (changedEta) order.NgayDuKienGiao = DateTime.SpecifyKind(etaUtc!.Value, DateTimeKind.Utc);
-					if (changedEta || !string.IsNullOrWhiteSpace(note))
-						Log(order, current, $"Cập nhật giao nhận. Dự kiến: {order.NgayDuKienGiao?.AddHours(7):dd/MM/yyyy HH:mm}. {note?.Trim()}", userId);
-					return new(true, "Đã lưu thông tin giao nhận; trạng thái đơn không thay đổi.", Status: current);
+					// Khóa chỉnh sửa ngày giao hàng khi đơn đã hoàn thành
+					if (etaUtc.HasValue && order.NgayDuKienGiao.HasValue && order.NgayDuKienGiao.Value != etaUtc.Value)
+						return new(false, "Không thể chỉnh sửa ngày dự kiến giao khi đơn hàng đã hoàn thành.");
+
+					if (!string.IsNullOrWhiteSpace(note))
+					{
+						Log(order, current, $"Ghi chú: {note.Trim()}", userId);
+						return new(true, "Đã lưu ghi chú giao nhận.", Status: current);
+					}
+					return new(true, "Trạng thái đơn không thay đổi.", Status: current, ProofUsed: proof != null && proof == order.AnhXacNhanGiao);
+				}
+
+				var changedEta = etaUtc.HasValue && order.NgayDuKienGiao != etaUtc.Value;
+				if (changedEta)
+				{
+					var etaVn = etaUtc!.Value.AddHours(7);
+					if (order.NgayDat.HasValue && etaVn.Date < order.NgayDat.Value.Date)
+						return new(false, "Ngày dự kiến giao không hợp lệ.");
+					order.NgayDuKienGiao = DateTime.SpecifyKind(etaUtc.Value, DateTimeKind.Utc);
+				}
+				var hasNote = !string.IsNullOrWhiteSpace(note);
+				if (changedEta || hasNote)
+				{
+					var etaPart = changedEta ? $" Dự kiến: {order.NgayDuKienGiao?.AddHours(7):dd/MM/yyyy HH:mm}." : "";
+					var notePart = hasNote ? $" Ghi chú: {note!.Trim()}" : "";
+					Log(order, current, $"Cập nhật giao nhận.{etaPart}{notePart}".Trim(), userId);
+					return new(true, "Đã lưu thông tin giao nhận.", Status: current);
 				}
 				return new(true, "Trạng thái đơn không thay đổi.", Status: current, ProofUsed: proof != null && proof == order.AnhXacNhanGiao);
 			}
+
+			// Chặn chuyển lùi trạng thái khi đơn đã hoàn thành (chỉ cho phép rẽ sang Yêu cầu đổi trả)
+			if (isCompletedState && target != OrderRules.ReturnRequested)
+			{
+				return new(false, "Không thể chuyển lùi trạng thái khi đơn hàng đã hoàn thành.");
+			}
+
+			if (isCompletedState && etaUtc.HasValue && order.NgayDuKienGiao.HasValue && order.NgayDuKienGiao.Value != etaUtc.Value)
+			{
+				return new(false, "Không thể chỉnh sửa ngày dự kiến giao khi đơn hàng đã hoàn thành.");
+			}
+
+			if (!isCompletedState && etaUtc.HasValue)
+			{
+				var etaVn = etaUtc.Value.AddHours(7);
+				if (order.NgayDat.HasValue && etaVn.Date < order.NgayDat.Value.Date)
+					return new(false, "Ngày dự kiến giao không hợp lệ.");
+				order.NgayDuKienGiao = DateTime.SpecifyKind(etaUtc.Value, DateTimeKind.Utc);
+			}
+
+			if (!OrderRules.CanTransition(current, target, OrderRules.IsCod(p?.PhuongThuc), OrderRules.IsPaid(p?.TrangThai), !string.IsNullOrWhiteSpace(proof), codCollected, returnedReceived))
+			{
+				return new(false, $"Không thể chuyển trạng thái từ {current} sang {target}.");
+			}
+
 			if (target == OrderRules.Cancelled) return await CancelLockedAsync(order, userId, true);
 			if (target == OrderRules.DeliveryFailed && string.IsNullOrWhiteSpace(note))
 				return new(false, "Nhập lý do giao thất bại vào ô Ghi chú giao nhận để khách và nhân viên nắm được.");
 
 			order.TrangThaiDonHang = target;
-			if (etaUtc.HasValue) order.NgayDuKienGiao = DateTime.SpecifyKind(etaUtc.Value, DateTimeKind.Utc);
 			if (target == OrderRules.Completed)
 			{
 				if (!string.IsNullOrWhiteSpace(proof)) order.AnhXacNhanGiao = proof;
