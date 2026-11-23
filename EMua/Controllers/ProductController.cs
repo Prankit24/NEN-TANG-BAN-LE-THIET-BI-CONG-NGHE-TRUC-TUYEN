@@ -360,170 +360,178 @@ namespace EMua.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var product = await _db.SanPhams
-                .AsNoTracking()
-                .Include(x => x.MaDanhMucNavigation)
-                .Include(x => x.MaThuongHieuNavigation)
-                .Include(x => x.BienTheSanPhams)
-                .Include(x => x.SanPhamHinhAnhs)
-                .Include(x => x.DanhGiaSanPhams)
-                    .ThenInclude(r => r.MaNguoiDungNavigation)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(x => x.MaSanPham == id);
-
-            if (product == null ||
-                product.TrangThaiSanPham == "Ẩn")
+            try
             {
-                return NotFound();
-            }
+                var product = await _db.SanPhams
+                    .AsNoTracking()
+                    .Include(x => x.MaDanhMucNavigation)
+                    .Include(x => x.MaThuongHieuNavigation)
+                    .Include(x => x.BienTheSanPhams)
+                    .Include(x => x.SanPhamHinhAnhs)
+                    .Include(x => x.DanhGiaSanPhams)
+                        .ThenInclude(r => r.MaNguoiDungNavigation)
+                    .AsSplitQuery()
+                    .FirstOrDefaultAsync(x => x.MaSanPham == id);
 
-            var variants = product.BienTheSanPhams
-                .OrderByDescending(v =>
-                    v.SoLuong > 0 &&
-                    v.Gia > 0 &&
-                    v.TrangThai == "Còn hàng")
-                .ThenBy(v => v.Gia)
-                .ThenBy(v => v.MaBienThe)
-                .ToList();
-
-            var defaultVariant = variants.FirstOrDefault();
-
-            var resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
-
-            var allImages = new List<string>();
-
-            foreach (var image in product.SanPhamHinhAnhs
-                .OrderByDescending(x => x.LaAnhChinh)
-                .ThenBy(x => x.ThuTu))
-            {
-                var url = ImageUrlHelper.FixImageUrl(image.DuongDanAnh, checkPhysicalFile: true);
-
-                if (url != "/images/no-image.png" &&
-                    !allImages.Contains(
-                        url,
-                        StringComparer.OrdinalIgnoreCase))
+                if (product == null ||
+                    string.Equals(product.TrangThaiSanPham, "Ẩn", StringComparison.OrdinalIgnoreCase))
                 {
-                    allImages.Add(url);
+                    return NotFound();
                 }
-            }
 
-            foreach (var variant in variants)
-            {
-                var url = ImageUrlHelper.FixImageUrl(variant.HinhAnh, checkPhysicalFile: true);
+                var productVariants = product.BienTheSanPhams ?? new List<BienTheSanPham>();
 
-                if (url != "/images/no-image.png" &&
-                    !allImages.Contains(
-                        url,
-                        StringComparer.OrdinalIgnoreCase))
+                var variants = productVariants
+                    .OrderByDescending(v =>
+                        v.SoLuong > 0 &&
+                        v.Gia > 0 &&
+                        (string.IsNullOrWhiteSpace(v.TrangThai) ||
+                         string.Equals(v.TrangThai, "Còn hàng", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(v.TrangThai, "Active", StringComparison.OrdinalIgnoreCase)))
+                    .ThenBy(v => v.Gia)
+                    .ThenBy(v => v.MaBienThe)
+                    .ToList();
+
+                var defaultVariant = variants.FirstOrDefault() ?? productVariants.FirstOrDefault();
+
+                var resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
+
+                var allImages = new List<string>();
+
+                var productImages = product.SanPhamHinhAnhs ?? new List<SanPhamHinhAnh>();
+                foreach (var image in productImages
+                    .OrderByDescending(x => x.LaAnhChinh == true)
+                    .ThenBy(x => x.ThuTu))
                 {
-                    allImages.Add(url);
-                }
-            }
+                    if (string.IsNullOrWhiteSpace(image?.DuongDanAnh)) continue;
+                    var url = ImageUrlHelper.FixImageUrl(image.DuongDanAnh, checkPhysicalFile: true);
 
-            if (allImages.Count == 0)
-            {
-                allImages.Add(resolvedMainImage);
-            }
-
-            var viewModel = new ProductDetailsViewModel
-            {
-                ProductId = product.MaSanPham,
-                Name = product.TenSanPham ?? string.Empty,
-                Category =
-                    product.MaDanhMucNavigation?.TenDanhMuc,
-                Brand =
-                    product.MaThuongHieuNavigation?.TenThuongHieu,
-
-                Price = defaultVariant?.Gia
-                    ?? product.GiaGoc
-                    ?? 0,
-
-                Stock = defaultVariant?.TrangThai == "Còn hàng"
-                    ? defaultVariant.SoLuong
-                    : 0,
-
-                ImageUrl = resolvedMainImage,
-                ImageUrls = allImages,
-                DefaultVariantId =
-                    defaultVariant?.MaBienThe ?? 0,
-
-                Description = product.MoTa,
-                Specifications = product.ThongSoKyThuat,
-                Warranty = product.BaoHanh,
-
-                Variants = variants.Select(v =>
-                {
-                    var varImg = ImageUrlHelper.FixImageUrl(v.HinhAnh, checkPhysicalFile: true);
-                    if (varImg == "/images/no-image.png")
+                    if (!string.Equals(url, "/images/no-image.png", StringComparison.OrdinalIgnoreCase) &&
+                        !allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
-                        varImg = resolvedMainImage;
+                        allImages.Add(url);
                     }
-                    return new ProductVariantViewModel
-                    {
-                        VariantId = v.MaBienThe,
-                        Label = string.Join(" / ",
-                            new[] { v.MauSac, v.PhienBan }
-                            .Where(s =>
-                                !string.IsNullOrWhiteSpace(s))),
-                        Price = v.Gia,
-                        Stock = v.TrangThai == "Còn hàng"
-                            ? v.SoLuong
-                            : 0,
-                        ImageUrl = varImg
-                    };
-                }).ToList(),
+                }
 
-                Reviews = product.DanhGiaSanPhams
-                    .Where(r => r.TrangThai == true)
-                    .Select(r => new ProductReviewViewModel
-                    {
-                        CustomerName =
-                            r.MaNguoiDungNavigation != null
-                                ? r.MaNguoiDungNavigation
-                                    .TenNguoiDung
-                                    ?? r.MaNguoiDungNavigation
-                                        .Email
-                                    ?? "Khách hàng"
-                                : "Khách hàng",
+                foreach (var variant in variants)
+                {
+                    if (string.IsNullOrWhiteSpace(variant?.HinhAnh)) continue;
+                    var url = ImageUrlHelper.FixImageUrl(variant.HinhAnh, checkPhysicalFile: true);
 
-                        Rating =
-                            r.SoLuongSao.GetValueOrDefault(5),
+                    if (!string.Equals(url, "/images/no-image.png", StringComparison.OrdinalIgnoreCase) &&
+                        !allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
+                    {
+                        allImages.Add(url);
+                    }
+                }
+
+                if (allImages.Count == 0)
+                {
+                    allImages.Add(resolvedMainImage);
+                }
+
+                var productReviews = (product.DanhGiaSanPhams ?? new List<DanhGiaSanPham>())
+                    .Where(r => r != null && r.TrangThai == true)
+                    .ToList();
+
+                decimal averageRating = 0m;
+                var ratedReviews = productReviews.Where(r => r.SoLuongSao.HasValue && r.SoLuongSao.Value > 0).ToList();
+                if (ratedReviews.Any())
+                {
+                    averageRating = (decimal)ratedReviews.Average(r => Math.Clamp(r.SoLuongSao!.Value, 1, 5));
+                }
+
+                var viewModel = new ProductDetailsViewModel
+                {
+                    ProductId = product.MaSanPham,
+                    Name = product.TenSanPham ?? "Sản phẩm",
+                    Category = product.MaDanhMucNavigation?.TenDanhMuc ?? "Công nghệ",
+                    Brand = product.MaThuongHieuNavigation?.TenThuongHieu ?? "EMUA",
+
+                    Price = defaultVariant?.Gia
+                        ?? product.GiaGoc
+                        ?? 0,
+
+                    Stock = (defaultVariant != null &&
+                            (string.IsNullOrWhiteSpace(defaultVariant.TrangThai) ||
+                             string.Equals(defaultVariant.TrangThai, "Còn hàng", StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(defaultVariant.TrangThai, "Active", StringComparison.OrdinalIgnoreCase)))
+                        ? Math.Max(0, defaultVariant.SoLuong)
+                        : 0,
+
+                    ImageUrl = resolvedMainImage,
+                    ImageUrls = allImages,
+                    DefaultVariantId = defaultVariant?.MaBienThe ?? 0,
+
+                    Description = product.MoTa,
+                    Specifications = product.ThongSoKyThuat,
+                    Warranty = product.BaoHanh,
+
+                    Variants = variants.Select(v =>
+                    {
+                        var varImg = ImageUrlHelper.FixImageUrl(v.HinhAnh, checkPhysicalFile: true);
+                        if (string.Equals(varImg, "/images/no-image.png", StringComparison.OrdinalIgnoreCase))
+                        {
+                            varImg = resolvedMainImage;
+                        }
+                        var labelParts = new[] { v.MauSac, v.PhienBan }
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                            .ToList();
+                        return new ProductVariantViewModel
+                        {
+                            VariantId = v.MaBienThe,
+                            Label = labelParts.Count > 0 ? string.Join(" / ", labelParts) : "Mặc định",
+                            Price = v.Gia,
+                            Stock = (string.IsNullOrWhiteSpace(v.TrangThai) ||
+                                     string.Equals(v.TrangThai, "Còn hàng", StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(v.TrangThai, "Active", StringComparison.OrdinalIgnoreCase))
+                                ? Math.Max(0, v.SoLuong)
+                                : 0,
+                            ImageUrl = varImg
+                        };
+                    }).ToList(),
+
+                    Reviews = productReviews.Select(r => new ProductReviewViewModel
+                    {
+                        CustomerName = r.MaNguoiDungNavigation != null
+                            ? (r.MaNguoiDungNavigation.TenNguoiDung ?? r.MaNguoiDungNavigation.Email ?? "Khách hàng")
+                            : "Khách hàng",
+                        Rating = Math.Clamp(r.SoLuongSao.GetValueOrDefault(5), 1, 5),
                         Comment = r.BinhLuan,
                         CreatedAt = r.NgayDanhGia
                     }).ToList(),
 
-                AverageRating =
-                    product.DanhGiaSanPhams.Any(r =>
-                        r.TrangThai == true &&
-                        r.SoLuongSao.HasValue)
-                    ? (decimal)product.DanhGiaSanPhams
-                        .Where(r =>
-                            r.TrangThai == true &&
-                            r.SoLuongSao.HasValue)
-                        .Average(r => r.SoLuongSao!.Value)
-                    : 0m
-            };
+                    AverageRating = averageRating
+                };
 
-            ViewBag.IsFavorited = false;
+                ViewBag.IsFavorited = false;
 
-            if (User.Identity?.IsAuthenticated == true &&
-                int.TryParse(
-                    User.FindFirstValue(
-                        ClaimTypes.NameIdentifier),
-                    out var currentUserId))
-            {
-                ViewBag.IsFavorited = await _db.Database
-                    .SqlQuery<int>($@"
-                        SELECT COUNT(*)::int AS ""Value""
-                        FROM public.yeuthich
-                        WHERE manguoidung = {currentUserId}
-                          AND masanpham = {id}")
-                    .FirstOrDefaultAsync() > 0;
+                if (User.Identity?.IsAuthenticated == true &&
+                    int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId))
+                {
+                    try
+                    {
+                        ViewBag.IsFavorited = await _db.Database
+                            .SqlQuery<int>($@"
+                                SELECT COUNT(*)::int AS ""Value""
+                                FROM public.yeuthich
+                                WHERE manguoidung = {currentUserId}
+                                  AND masanpham = {id}")
+                            .FirstOrDefaultAsync() > 0;
+                    }
+                    catch
+                    {
+                        ViewBag.IsFavorited = false;
+                    }
+                }
+
+                return View("~/Views/Product/Details.cshtml", viewModel);
             }
-
-            return View(
-                "~/Views/Product/Details.cshtml",
-                viewModel);
+            catch (Exception ex)
+            {
+                // Ghi log dự phòng nếu có lỗi phát sinh để không làm trắng trang
+                return StatusCode(500, $"Đã xảy ra lỗi khi tải chi tiết sản phẩm #{id}: {ex.Message}");
+            }
         }
 
         // =====================================================
