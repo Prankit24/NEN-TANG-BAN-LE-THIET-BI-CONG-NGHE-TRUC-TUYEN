@@ -109,6 +109,79 @@
     max-width: 120px;
 }
 
+.staff-tracker-step .step-time-sub {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 2px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.staff-tracker-step.active .step-time-sub {
+    color: #315efb;
+    font-weight: 600;
+}
+
+.staff-tracker-step.completed-success .step-time-sub {
+    color: #059669;
+    font-weight: 600;
+}
+
+.staff-tracker-step {
+    cursor: pointer;
+}
+
+.staff-tracker-step .staff-step-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: #0f172a;
+    color: #ffffff;
+    padding: 6px 12px;
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 20;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.staff-tracker-step .staff-step-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #0f172a transparent transparent transparent;
+}
+
+.staff-tracker-step .staff-step-tooltip .tooltip-title {
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.staff-tracker-step .staff-step-tooltip .tooltip-time {
+    font-size: 10.5px;
+    color: #cbd5e1;
+}
+
+.staff-tracker-step:hover .staff-step-tooltip,
+.staff-tracker-step:focus .staff-step-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
 .staff-tracker-step.done .icon-circle {
     background: #315efb;
     border-color: #315efb;

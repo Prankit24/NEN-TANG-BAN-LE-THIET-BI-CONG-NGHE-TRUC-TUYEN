@@ -113,32 +113,79 @@
                 }
                 @for (int i = 0; i < progressSteps.Length; i++)
                 {
-                    var cls = i < currentStepIndex ? "done" : (i == currentStepIndex ? "active" : "");
+                    var isDone = i < currentStepIndex;
+                    var isActive = i == currentStepIndex;
+                    var cls = isDone ? "done" : (isActive ? "active" : "");
                     var stepName = progressSteps[i];
+
+                    // Tìm log trong lịch sử vận chuyển
                     var stepLog = Model.StatusHistory?.LastOrDefault(h =>
                         string.Equals(OrderRules.Normalize(h.Status), OrderRules.Normalize(stepName), StringComparison.OrdinalIgnoreCase) ||
-                        (stepName == "Đã hoàn thành" && (h.Status.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase) || h.Status.Contains("giao", StringComparison.OrdinalIgnoreCase))));
+                        (stepName == "Đang xử lý" && (h.Status.Contains("chuẩn bị", StringComparison.OrdinalIgnoreCase) || h.Status.Contains("xử lý", StringComparison.OrdinalIgnoreCase))) ||
+                        (stepName == "Đang giao hàng" && (h.Status.Contains("giao hàng", StringComparison.OrdinalIgnoreCase) || h.Status.Contains("vận chuyển", StringComparison.OrdinalIgnoreCase))) ||
+                        (stepName == "Đã hoàn thành" && (h.Status.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase) || h.Status.Contains("đã giao", StringComparison.OrdinalIgnoreCase))));
 
-                    string? stepTooltip = null;
+                    DateTime? stepTime = null;
+                    string timeDisplay = "";
+                    string tooltipTitle = "";
+
                     if (stepLog != null)
                     {
-                        if (OrderRules.Normalize(stepName) == OrderRules.Completed)
-                        {
-                            stepTooltip = $"Ngày giờ giao hàng thực tế: {stepLog.Time:dd/MM/yyyy HH:mm}";
-                        }
-                        else
-                        {
-                            stepTooltip = $"{stepLabels[i]}: {stepLog.Time:dd/MM/yyyy HH:mm}";
-                        }
+                        stepTime = stepLog.Time;
+                        timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                        tooltipTitle = $"{stepLabels[i]}: {timeDisplay}";
                     }
                     else if (i == 0 && Model.OrderedAt.HasValue)
                     {
-                        stepTooltip = $"{stepLabels[i]}: {Model.OrderedAt.Value:dd/MM/yyyy HH:mm}";
+                        stepTime = Model.OrderedAt.Value;
+                        timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                        tooltipTitle = $"{stepLabels[i]}: {timeDisplay}";
+                    }
+                    else if (isActive)
+                    {
+                        // Mốc hiện tại nếu chưa có log riêng, lấy thời gian từ log mới nhất hoặc ngày đặt
+                        var latestLog = Model.StatusHistory?.LastOrDefault();
+                        stepTime = latestLog?.Time ?? Model.OrderedAt;
+                        if (stepTime.HasValue)
+                        {
+                            timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                            tooltipTitle = $"{stepLabels[i]}: {timeDisplay} (Đang thực hiện)";
+                        }
+                        else
+                        {
+                            tooltipTitle = $"{stepLabels[i]}: Đang thực hiện";
+                        }
+                    }
+                    else if (isDone)
+                    {
+                        // Mốc đã đi qua trong quá khứ nhưng chưa có log riêng
+                        var fallbackTime = Model.StatusHistory?.Where(h => h.Time >= (Model.OrderedAt ?? DateTime.MinValue)).OrderBy(h => h.Time).FirstOrDefault()?.Time ?? Model.OrderedAt;
+                        if (fallbackTime.HasValue)
+                        {
+                            timeDisplay = fallbackTime.Value.ToString("dd/MM/yyyy HH:mm");
+                            tooltipTitle = $"{stepLabels[i]}: {timeDisplay} (Đã hoàn tất bước này)";
+                        }
+                        else
+                        {
+                            tooltipTitle = $"{stepLabels[i]}: Đã hoàn tất bước này";
+                        }
+                    }
+                    else
+                    {
+                        tooltipTitle = $"{stepLabels[i]}: Chưa thực hiện";
                     }
 
-                    <div class="delivery-progress-step @cls" title="@stepTooltip">
-                        <div class="dot" title="@stepTooltip"><i class="bi @stepIcons[i]"></i></div>
-                        <div class="step-text" title="@stepTooltip">@stepLabels[i]</div>
+                    <div class="delivery-progress-step @cls" title="@tooltipTitle">
+                        <div class="custom-step-tooltip">
+                            <span class="tooltip-step-name">@stepLabels[i]</span>
+                            <span class="tooltip-step-time">@(string.IsNullOrEmpty(timeDisplay) ? (isDone || isActive ? "Đã hoàn tất" : "Chưa thực hiện") : timeDisplay)</span>
+                        </div>
+                        <div class="dot" title="@tooltipTitle"><i class="bi @stepIcons[i]"></i></div>
+                        <div class="step-text" title="@tooltipTitle">@stepLabels[i]</div>
+                        @if (!string.IsNullOrEmpty(timeDisplay))
+                        {
+                            <div class="step-sub-time" title="@tooltipTitle">@timeDisplay</div>
+                        }
                     </div>
                 }
             </div>
