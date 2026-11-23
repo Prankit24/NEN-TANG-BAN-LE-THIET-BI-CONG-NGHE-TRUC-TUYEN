@@ -11,7 +11,10 @@
     var selectedYear = ViewBag.SelectedYear as int?;
     var fromDate = ViewBag.FromDate as string ?? "";
     var toDate = ViewBag.ToDate as string ?? "";
+    var timeRange = ViewBag.TimeRange as string ?? "all";
+    var sort = ViewBag.Sort as string ?? "newest";
     var hasFilter = !string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(selectedStatus) 
+                    || (timeRange != "all" && !string.IsNullOrWhiteSpace(timeRange))
                     || selectedMonth.HasValue || selectedYear.HasValue || !string.IsNullOrWhiteSpace(fromDate) || !string.IsNullOrWhiteSpace(toDate);
 
     int totalInvoicesCount = ViewBag.TotalInvoicesCount ?? invoices.Count;
@@ -161,12 +164,28 @@
         </div>
     </div>
 
-    <!-- THANH BỘ LỌC ĐA NĂNG (NGÀY / THÁNG / NĂM / TRẠNG THÁI / TÌM KIẾM) -->
+    <!-- THANH BỘ LỌC ĐA NĂNG (NGÀY / THÁNG / NĂM / TRẠNG THÁI / TÌM KIẾM / SẮP XẾP) -->
     <form method="get" asp-area="Admin" asp-controller="Invoice" asp-action="Index" class="invoice-toolbar">
-        <div style="flex: 1 1 260px; min-width: 180px;">
+        <div style="flex: 1 1 240px; min-width: 180px;">
             <input type="search" name="q" value="@search" class="form-control" placeholder="Mã #HD, mã #DH, tên khách, SĐT, nhân viên..." />
         </div>
-        <div style="width: 130px;">
+        <div style="width: 150px;">
+            <select name="timeRange" class="form-select">
+                <option value="all" selected="@(timeRange == "all")">Toàn thời gian</option>
+                <option value="today" selected="@(timeRange == "today")">Hôm nay</option>
+                <option value="7days" selected="@(timeRange == "7days")">7 ngày gần đây</option>
+                <option value="30days" selected="@(timeRange == "30days")">30 ngày gần đây</option>
+            </select>
+        </div>
+        <div style="width: 150px;">
+            <select name="sort" class="form-select">
+                <option value="newest" selected="@(sort == "newest")">Mới nhất (Ngày lập)</option>
+                <option value="oldest" selected="@(sort == "oldest")">Cũ nhất (Ngày lập)</option>
+                <option value="total-desc" selected="@(sort == "total-desc")">Tổng tiền cao nhất</option>
+                <option value="total-asc" selected="@(sort == "total-asc")">Tổng tiền thấp nhất</option>
+            </select>
+        </div>
+        <div style="width: 120px;">
             <select name="month" class="form-select">
                 <option value="">Tất cả tháng</option>
                 @for (int m = 1; m <= 12; m++)
@@ -184,7 +203,7 @@
                 }
             </select>
         </div>
-        <div style="width: 160px;">
+        <div style="width: 150px;">
             <select name="status" class="form-select">
                 <option value="">Tất cả trạng thái</option>
                 @foreach (var st in statusList)
@@ -209,6 +228,7 @@
                asp-route-year="@selectedYear" 
                asp-route-fromDate="@fromDate" 
                asp-route-toDate="@toDate" 
+               asp-route-timeRange="@timeRange"
                class="btn btn-outline-info px-3" title="Xuất báo cáo tổng hợp hóa đơn dạng CSV">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
             </a>
@@ -320,16 +340,16 @@
                 <span class="small text-muted">Trang @currentPage / @totalPages (Tổng @totalInvoicesCount hóa đơn)</span>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Trước</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-timeRange="@timeRange" asp-route-sort="@sort" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Trước</a>
                     </li>
                     @for (int p = 1; p <= totalPages; p++)
                     {
                         <li class="page-item @(p == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">@p</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-timeRange="@timeRange" asp-route-sort="@sort" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">@p</a>
                         </li>
                     }
                     <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Sau</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selectedStatus" asp-route-timeRange="@timeRange" asp-route-sort="@sort" asp-route-month="@selectedMonth" asp-route-year="@selectedYear">Sau</a>
                     </li>
                 </ul>
             </div>

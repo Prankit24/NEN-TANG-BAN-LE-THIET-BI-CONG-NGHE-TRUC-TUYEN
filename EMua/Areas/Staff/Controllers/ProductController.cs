@@ -43,7 +43,7 @@ public class ProductController : StaffControllerBase
         _cache.Remove(AppCacheKeys.FeaturedProducts);
     }
 
-    public async Task<IActionResult> Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, int page = 1, int pageSize = 12)
+    public async Task<IActionResult> Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, string? sort = "newest", int page = 1, int pageSize = 12)
     {
         var query = _db.SanPhams.AsNoTracking()
             .Include(x => x.MaDanhMucNavigation)
@@ -92,7 +92,31 @@ public class ProductController : StaffControllerBase
             query = query.Where(x => x.MaDanhMuc == categoryId.Value);
         }
 
-        var allProducts = await query.OrderByDescending(x => x.MaSanPham).ToListAsync();
+        sort = string.IsNullOrWhiteSpace(sort) ? "newest" : sort.Trim();
+        switch (sort)
+        {
+            case "oldest":
+                query = query.OrderBy(x => x.MaSanPham);
+                break;
+            case "name-asc":
+                query = query.OrderBy(x => x.TenSanPham);
+                break;
+            case "name-desc":
+                query = query.OrderByDescending(x => x.TenSanPham);
+                break;
+            case "price-asc":
+                query = query.OrderBy(x => x.BienTheSanPhams.Min(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0);
+                break;
+            case "price-desc":
+                query = query.OrderByDescending(x => x.BienTheSanPhams.Max(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0);
+                break;
+            case "newest":
+            default:
+                query = query.OrderByDescending(x => x.MaSanPham);
+                break;
+        }
+
+        var allProducts = await query.ToListAsync();
 
         // Lọc tồn kho ở cấp độ sản phẩm
         if (!string.IsNullOrWhiteSpace(stockFilter) && stockFilter != "all")
@@ -128,6 +152,7 @@ public class ProductController : StaffControllerBase
         ViewBag.BrandId = brandId;
         ViewBag.CategoryId = categoryId;
         ViewBag.StockFilter = stockFilter ?? "all";
+        ViewBag.Sort = sort;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = totalItems;

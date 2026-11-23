@@ -18,9 +18,9 @@ public class ProductController : Controller
     }
 
     [HttpGet]
-    public IActionResult Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, int page = 1)
+    public IActionResult Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, string? sort = "newest", int page = 1)
     {
-        return RedirectToAction("Index", "Product", new { area = "Staff", q, status, brandId, categoryId, stockFilter, page });
+        return RedirectToAction("Index", "Product", new { area = "Staff", q, status, brandId, categoryId, stockFilter, sort, page });
     }
 
     [HttpGet]
