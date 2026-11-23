@@ -13,31 +13,22 @@
 @Html.AntiForgeryToken()
 
 <div class="emua-home">
-    @* 1. HERO BANNER CÔNG NGHỆ CAO CẤP (Carousel 4 Slide Flagship) *@
-    <partial name="Home/_Hero" />
+    @* KHỐI 1: HERO BANNER & THANH DANH MỤC NHANH (Bố cục 2 cột hiện đại Bento) *@
+    <partial name="Home/_Hero" model="Model.DanhMucs" />
 
-    @* 2. DANH MỤC THIẾT BỊ DẠNG GRID HIỆN ĐẠI *@
-    <partial name="Home/_Categories" model="Model.DanhMucs" />
-
-    @* 3. FLASH SALE GIÁ SỐC (Nếu có dữ liệu) *@
+    @* KHỐI 2: FLASH SALE GIÁ SỐC (Tối đa 5 sản phẩm kèm thanh tiến độ Đã bán) *@
     @if (Model.FlashSale != null && Model.FlashSale.Any())
     {
         <partial name="Home/_FlashSale" model="Model.FlashSale" />
     }
 
-    @* 4. SẢN PHẨM NỔI BẬT (BÁN CHẠY NHẤT) *@
+    @* KHỐI 3: DANH MỤC NỔI BẬT (Category Bento Cards có icon, bấm lọc ngay) *@
+    <partial name="Home/_Categories" model="Model.DanhMucs" />
+
+    @* KHỐI 4: SẢN PHẨM NỔI BẬT (Tabbed Grid: Tất cả, Điện thoại, Laptop, Âm thanh, Gaming - Tối đa 8 SP) *@
     <partial name="Home/_FeaturedProducts" model="Model.SanPhamNoiBat" />
 
-    @* 5. PRODUCT SHOWCASE (Bố cục bất đối xứng: Laptop, Smartphone, Âm thanh, Gaming) *@
-    <partial name="Home/_Showcase" />
-
-    @* 6. LỰA CHỌN ĐÁNG CÂN NHẮC (EMUA SELECTION) *@
-    @if (Model.BestChoice != null && Model.BestChoice.Any())
-    {
-        <partial name="Home/_BestChoice" model="Model.BestChoice" />
-    }
-
-    @* 7. KHU VỰC TRỢ LÝ AI EMUA (Tư vấn công nghệ cao cấp) *@
+    @* KHỐI 5: TRỢ LÝ TƯ VẤN AI EMUA *@
     <section class="home-advisor" aria-labelledby="advisor-title">
         <div class="ep-container">
             <div class="home-advisor-inner">
@@ -56,11 +47,58 @@
         </div>
     </section>
 
-    @* 8. SẢN PHẨM MỚI TẠI EMUA *@
-    <partial name="Home/_NewProducts" model="Model.SanPhamMoi" />
+    @* KHỐI 6: CAM KẾT DỊCH VỤ TIN CẬY (4 Cột Tinh Gọn) *@
+    <section class="ep-commitments-section" aria-label="Cam kết dịch vụ">
+        <div class="ep-container">
+            <div class="ep-commitments-grid">
+                <div class="ep-commitment-card">
+                    <div class="ep-commitment-icon bg-blue-subtle text-primary">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <div class="ep-commitment-info">
+                        <strong>Miễn phí vận chuyển</strong>
+                        <span>Giao nhanh toàn quốc, miễn phí đơn từ 500K</span>
+                    </div>
+                </div>
 
-    @* 9. THƯƠNG HIỆU ĐỐI TÁC CHIẾN LƯỢC *@
-    <partial name="Home/_Brands" model="Model.ThuongHieus" />
+                <div class="ep-commitment-card">
+                    <div class="ep-commitment-icon bg-success-subtle text-success">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div class="ep-commitment-info">
+                        <strong>100% Chính hãng</strong>
+                        <span>Bảo hành 12–24 tháng tại trung tâm ủy quyền</span>
+                    </div>
+                </div>
+
+                <div class="ep-commitment-card">
+                    <div class="ep-commitment-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </div>
+                    <div class="ep-commitment-info">
+                        <strong>Đổi trả 30 ngày</strong>
+                        <span>Lỗi 1 đổi 1 nhanh chóng nếu có lỗi từ nhà sản xuất</span>
+                    </div>
+                </div>
+
+                <div class="ep-commitment-card">
+                    <div class="ep-commitment-icon bg-info-subtle text-info">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <div class="ep-commitment-info">
+                        <strong>Hỗ trợ kỹ thuật 24/7</strong>
+                        <span>Đội ngũ chuyên viên tư vấn tận tâm, chu đáo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @* KHỐI 7: THƯƠNG HIỆU ĐỐI TÁC CHIẾN LƯỢC *@
+    @if (Model.ThuongHieus != null && Model.ThuongHieus.Any())
+    {
+        <partial name="Home/_Brands" model="Model.ThuongHieus" />
+    }
 </div>
 
 <script>
@@ -88,5 +126,4 @@
         updateTimer();
         setInterval(updateTimer, 1000);
     })();
-
 </script>

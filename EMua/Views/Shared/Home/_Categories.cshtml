@@ -1,50 +1,168 @@
 @model IEnumerable<EMua.Models.Database.DanhMucSanPham>
 @using System.Linq
+@using System.Text
+@using System.Text.RegularExpressions
+@using System.Globalization
 
-<section class="ep-section" id="categories" aria-labelledby="cat-heading">
+<section class="ep-section ep-circular-cat-section" id="categories" aria-labelledby="cat-heading">
     <div class="ep-container">
         <header class="ep-heading">
             <div class="ep-heading-left">
-                <span class="ep-eyebrow">
-                    <i class="bi bi-grid-fill" aria-hidden="true"></i> DANH MỤC THIẾT BỊ
-                </span>
-                <h2 id="cat-heading">Khám phá theo ngành hàng</h2>
-                <p>Thiết bị công nghệ chính hãng cho học tập, làm việc và giải trí.</p>
+                <span class="ep-eyebrow">DANH MỤC SẢN PHẨM</span>
+                <h2 id="cat-heading" class="ep-section-title">Khám phá theo danh mục</h2>
             </div>
             <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
-                <span>Xem tất cả sản phẩm</span>
+                <span>Xem tất cả thiết bị</span>
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
         </header>
 
-        <div class="ep-categories-grid">
-            @if (Model != null && Model.Any())
-            {
-                foreach (var item in Model)
-                {
-                    var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
-                    var icon = name.Contains("điện thoại") ? "bi-phone"
-                        : name.Contains("laptop") ? "bi-laptop"
-                        : name.Contains("gaming") ? "bi-controller"
-                        : name.Contains("tai nghe") || name.Contains("âm thanh") ? "bi-headphones"
-                        : name.Contains("tablet") || name.Contains("máy tính bảng") ? "bi-tablet"
-                        : name.Contains("màn hình") ? "bi-display"
-                        : name.Contains("thông minh") || name.Contains("đồng hồ") ? "bi-smartwatch"
-                        : name.Contains("sạc") || name.Contains("phụ kiện") ? "bi-plug"
-                        : "bi-cpu";
+        <!-- HORIZONTAL CIRCULAR CATEGORY CAROUSEL (CHUẨN BEST BUY "Shop deals by category") -->
+        <div class="ep-cat-carousel-wrapper">
+            <!-- Nút điều hướng trượt trái -->
+            <button type="button" class="ep-cat-nav-btn prev" id="catScrollPrev" aria-label="Cuộn danh mục sang trái">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            </button>
 
-                    <a class="ep-cat-card" asp-area="" asp-controller="Product" asp-action="Index" asp-route-category="@item.TenDanhMuc">
-                        <div class="ep-cat-icon">
-                            <i class="bi @icon" aria-hidden="true"></i>
+            <!-- Dải danh mục 1 hàng ngang duy nhất -->
+            <div class="ep-cat-carousel-track" id="catCarouselTrack">
+                @{
+                    var dbCats = Model?.Where(c => c.TrangThaiDanhMuc == null || c.TrangThaiDanhMuc == "Active" || c.TrangThaiDanhMuc == "Còn hàng").ToList()
+                                 ?? new List<EMua.Models.Database.DanhMucSanPham>();
+
+                    // Hàm chuyển đổi chuỗi tiếng Việt có dấu sang slug không dấu chuẩn mực
+                    string ConvertToSlug(string? text)
+                    {
+                        if (string.IsNullOrWhiteSpace(text)) return "danh-muc";
+                        var normalized = text.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+                        var sb = new StringBuilder();
+                        foreach (var ch in normalized)
+                        {
+                            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(ch);
+                            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                            {
+                                sb.Append(ch);
+                            }
+                        }
+                        var clean = sb.ToString().Normalize(NormalizationForm.FormC);
+                        clean = clean.Replace('đ', 'd').Replace('Đ', 'd');
+                        clean = Regex.Replace(clean, @"[^a-z0-9\s-]", "");
+                        clean = Regex.Replace(clean, @"\s+", "-").Trim('-');
+                        return clean;
+                    }
+
+                    // Mapping chuẩn cho icon Bootstrap nét mảnh tương ứng từng loại thiết bị
+                    string GetCategoryIcon(string? name)
+                    {
+                        var n = (name ?? "").ToLower();
+                        if (n.Contains("thoại") || n.Contains("phone")) return "bi-phone";
+                        if (n.Contains("laptop") || n.Contains("macbook")) return "bi-laptop";
+                        if (n.Contains("tai nghe") || n.Contains("headphone")) return "bi-headphones";
+                        if (n.Contains("âm thanh") || n.Contains("loa")) return "bi-speaker";
+                        if (n.Contains("máy tính bảng") || n.Contains("tablet") || n.Contains("ipad")) return "bi-tablet";
+                        if (n.Contains("gaming") || n.Contains("game")) return "bi-controller";
+                        if (n.Contains("màn hình") || n.Contains("display")) return "bi-display";
+                        if (n.Contains("phụ kiện") || n.Contains("sạc") || n.Contains("pin")) return "bi-plug";
+                        if (n.Contains("linh kiện") || n.Contains("pc")) return "bi-cpu";
+                        if (n.Contains("đồng hồ") || n.Contains("watch")) return "bi-smartwatch";
+                        if (n.Contains("máy ảnh") || n.Contains("camera") || n.Contains("flycam")) return "bi-camera";
+                        return "bi-grid-fill";
+                    }
+
+                    // Danh sách hiển thị
+                    var displayList = new List<(int? Id, string Name, string Slug, string Icon)>();
+                    if (dbCats.Any())
+                    {
+                        foreach (var c in dbCats)
+                        {
+                            var catName = c.TenDanhMuc ?? "";
+                            displayList.Add((c.MaDanhMuc, catName, ConvertToSlug(catName), GetCategoryIcon(catName)));
+                        }
+                    }
+
+                    // Danh sách bổ sung nếu DB ít hơn danh sách các danh mục công nghệ chính
+                    var fallbackCategories = new[]
+                    {
+                        ("Điện thoại", "dien-thoai", "bi-phone"),
+                        ("Laptop", "laptop", "bi-laptop"),
+                        ("Máy tính bảng", "may-tinh-bang", "bi-tablet"),
+                        ("Tai nghe", "tai-nghe", "bi-headphones"),
+                        ("Âm thanh", "am-thanh", "bi-speaker"),
+                        ("Gaming Gear", "gaming-gear", "bi-controller"),
+                        ("Màn hình", "man-hinh", "bi-display"),
+                        ("Linh kiện PC", "linh-kien-pc", "bi-cpu"),
+                        ("Máy chơi game", "may-choi-game", "bi-controller"),
+                        ("Máy ảnh Flycam", "may-anh-flycam", "bi-camera")
+                    };
+
+                    foreach (var fb in fallbackCategories)
+                    {
+                        if (!displayList.Any(d => d.Slug == fb.Item2 || d.Name.Equals(fb.Item1, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            displayList.Add((null, fb.Item1, fb.Item2, fb.Item3));
+                        }
+                    }
+                }
+
+                @foreach (var item in displayList)
+                {
+                    var linkUrl = item.Id.HasValue
+                        ? Url.Action("Index", "Product", new { categoryId = item.Id })
+                        : Url.Action("Index", "Product", new { keyword = item.Name });
+
+                    var imagePath = Url.Content($"~/images/categories/{item.Slug}.png");
+
+                    <a class="ep-cat-circular-card" href="@linkUrl" title="@item.Name">
+                        <div class="ep-cat-circle">
+                            <!-- Ảnh danh mục tự động load từ ~/images/categories/{slug}.png, blend nền tự nhiên -->
+                            <img src="@imagePath" alt="@item.Name" loading="lazy" class="ep-cat-img"
+                                 onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                 onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                            
+                            <!-- Icon công nghệ nét mảnh fallback sắc nét nếu chưa có file ảnh -->
+                            <div class="ep-cat-icon-container" style="display: none;">
+                                <i class="bi @item.Icon"></i>
+                            </div>
                         </div>
-                        <span class="ep-cat-title">@item.TenDanhMuc</span>
+                        <span class="ep-cat-circle-title">@item.Name</span>
                     </a>
                 }
-            }
-            else
-            {
-                <p class="ep-empty">Danh mục đang được cập nhật.</p>
-            }
+            </div>
+
+            <!-- Nút điều hướng trượt phải -->
+            <button type="button" class="ep-cat-nav-btn next" id="catScrollNext" aria-label="Cuộn danh mục sang phải">
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
         </div>
     </div>
 </section>
+
+<script>
+    (function initCategoryCarousel() {
+        const track = document.getElementById('catCarouselTrack');
+        const prevBtn = document.getElementById('catScrollPrev');
+        const nextBtn = document.getElementById('catScrollNext');
+        if (!track || !prevBtn || !nextBtn) return;
+
+        function updateNavState() {
+            const scrollLeft = track.scrollLeft;
+            const maxScroll = track.scrollWidth - track.clientWidth - 5;
+            prevBtn.style.opacity = scrollLeft > 15 ? '1' : '0';
+            prevBtn.style.pointerEvents = scrollLeft > 15 ? 'auto' : 'none';
+            nextBtn.style.opacity = scrollLeft < maxScroll ? '1' : '0';
+            nextBtn.style.pointerEvents = scrollLeft < maxScroll ? 'auto' : 'none';
+        }
+
+        prevBtn.addEventListener('click', () => {
+            track.scrollBy({ left: -440, behavior: 'smooth' });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            track.scrollBy({ left: 440, behavior: 'smooth' });
+        });
+
+        track.addEventListener('scroll', updateNavState, { passive: true });
+        window.addEventListener('resize', updateNavState);
+        setTimeout(updateNavState, 200);
+    })();
+</script>

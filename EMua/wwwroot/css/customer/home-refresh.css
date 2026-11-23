@@ -1144,6 +1144,113 @@ body.emua-home-page .main-content {
 /* ==========================================================================
    11. RESPONSIVE
    ========================================================================== */
+/* ==========================================================================
+   CAM KẾT DỊCH VỤ (Service Commitments - 4 Cột Cân Đối Theo Prototype)
+   ========================================================================== */
+.ep-commitments-section {
+    padding: 32px 0;
+    background: transparent;
+}
+
+.ep-commitments-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.ep-commitment-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    background: #ffffff;
+    border: 1px solid var(--ep-border);
+    border-radius: var(--ep-radius);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: transform 0.25s var(--ep-ease-out), box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.ep-commitment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    border-color: rgba(37, 99, 235, 0.25);
+}
+
+.ep-commitment-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.ep-commitment-icon.bg-blue-subtle {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.ep-commitment-icon.bg-success-subtle {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.ep-commitment-icon.bg-warning-subtle {
+    background: #fefce8;
+    color: #ca8a04;
+}
+
+.ep-commitment-icon.bg-info-subtle {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.ep-commitment-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.ep-commitment-info strong {
+    font-size: 14.5px;
+    font-weight: 750;
+    color: var(--ep-text);
+    margin-bottom: 3px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ep-commitment-info span {
+    font-size: 12px;
+    color: var(--ep-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+    .ep-commitments-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .ep-commitments-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 1100px) {
     .ep-categories-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1280,6 +1387,743 @@ body.emua-home-page .main-content {
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   SENIOR REFACTOR: FULL-WIDTH BENTO HERO 8:4, DARK SLATE FLASH SALE, 
+   MONOCHROME BRANDS & REFINED PRODUCT CARDS
+   ========================================================================== */
+
+/* 1. Full-width Bento Hero Grid (8:4) */
+.ep-hero-bento-section {
+    padding: 24px 0 36px;
+}
+
+.ep-bento-hero-grid {
+    display: grid;
+    grid-template-columns: 8fr 4fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.ep-bento-main-banner {
+    position: relative;
+    height: 420px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -12px rgba(15, 23, 42, 0.25);
+}
+
+.ep-bento-main-banner .ep-hero-slide-inner {
+    width: 100%;
+    height: 100%;
+    padding: 36px 48px;
+    display: grid;
+    grid-template-columns: 55% 45%;
+    align-items: center;
+    gap: 24px;
+}
+
+.ep-bento-main-banner .ep-hero-title {
+    font-size: clamp(26px, 2.5rem, 36px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    margin: 0 0 14px;
+}
+
+.ep-bento-main-banner .ep-hero-desc {
+    font-size: 14.5px;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.55;
+    margin-bottom: 24px;
+    max-width: 440px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.ep-bento-side-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 420px;
+}
+
+.ep-bento-promo-card {
+    flex: 1;
+    min-height: 202px;
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s var(--ep-ease-out), box-shadow 0.25s ease;
+}
+
+.ep-bento-promo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.16);
+}
+
+.ep-bento-promo-gaming {
+    background: linear-gradient(135deg, #0d1322 0%, #1a233a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.ep-bento-promo-gaming .ep-promo-title {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ep-bento-promo-gaming .ep-promo-desc {
+    color: #cbd5e1;
+    opacity: 1;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.ep-bento-promo-gaming .ep-promo-action {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+.ep-bento-promo-gaming .ep-promo-badge {
+    background: rgba(56, 189, 248, 0.18);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.ep-bento-promo-deal {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    color: var(--ep-text);
+}
+
+.ep-bento-promo-deal .ep-promo-title {
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.ep-bento-promo-deal .ep-promo-desc {
+    color: #64748b;
+    opacity: 1;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.ep-promo-card-content {
+    z-index: 2;
+    flex: 1;
+    max-width: 60%;
+}
+
+.ep-promo-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 8px;
+    background: rgba(37, 99, 235, 0.15);
+    color: #60a5fa;
+}
+
+.ep-bento-promo-deal .ep-promo-badge {
+    background: #fef08a;
+    color: #854d0e;
+    border: 1px solid rgba(202, 138, 4, 0.25);
+}
+
+.ep-promo-title {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 0 0 6px;
+}
+
+.ep-promo-desc {
+    font-size: 12px;
+    opacity: 0.75;
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+.ep-promo-action {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #38bdf8;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ep-bento-promo-deal .ep-promo-action {
+    color: #2563eb;
+}
+
+.ep-promo-card-stage {
+    width: 40%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.ep-promo-card-stage img {
+    max-width: 130px;
+    max-height: 130px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.ep-bento-promo-card:hover .ep-promo-card-stage img {
+    transform: scale(1.08) rotate(-2deg);
+}
+
+/* 2. Khối 8 Danh mục trụ cột trên 1 hàng ngang (Clean Strip) */
+/* ==========================================================================
+   HORIZONTAL CIRCULAR CATEGORY CAROUSEL (CHUẨN BEST BUY "Shop deals by category")
+   ========================================================================== */
+.ep-circular-cat-section {
+    padding: 36px 0 20px;
+    background: transparent;
+}
+
+.ep-cat-carousel-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.ep-cat-carousel-track {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 20px;
+    padding: 10px 4px 18px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 100%;
+}
+
+.ep-cat-carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+.ep-cat-circular-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 136px;
+    flex: 0 0 136px;
+    text-align: center;
+    text-decoration: none !important;
+    color: #0f172a;
+    transition: transform 0.25s var(--ep-ease-out);
+    user-select: none;
+}
+
+.ep-cat-circular-card:hover {
+    transform: translateY(-4px);
+    color: #2563eb;
+}
+
+.ep-cat-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #f4f5f7;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: all 0.25s ease;
+}
+
+.ep-cat-circular-card:hover .ep-cat-circle {
+    background: #ffffff;
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
+}
+
+.ep-cat-circular-card.active .ep-cat-circle {
+    background: #eff6ff;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.ep-cat-circle img,
+.ep-cat-circle .ep-cat-img {
+    width: 78px;
+    height: 78px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+    transition: transform 0.3s ease;
+}
+
+.ep-cat-circular-card:hover .ep-cat-circle img,
+.ep-cat-circular-card:hover .ep-cat-circle .ep-cat-img {
+    transform: scale(1.08);
+}
+
+.ep-cat-icon-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #0f172a;
+    transition: all 0.25s ease;
+}
+
+.ep-cat-icon-container i {
+    font-size: 46px;
+    line-height: 1;
+    color: #1e293b;
+    transition: color 0.22s ease, transform 0.22s ease;
+}
+
+.ep-cat-circular-card:hover .ep-cat-icon-container i {
+    color: #2563eb;
+    transform: scale(1.08);
+}
+
+.ep-cat-circle-title {
+    margin-top: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+    max-width: 135px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s ease;
+}
+
+.ep-cat-circular-card:hover .ep-cat-circle-title {
+    color: #2563eb;
+}
+
+.ep-cat-circular-card.active .ep-cat-circle-title {
+    color: #2563eb;
+    font-weight: 750;
+}
+
+/* Floating Navigation Buttons (< và >) */
+.ep-cat-nav-btn {
+    position: absolute;
+    top: 50px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f172a;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.22s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ep-cat-nav-btn.prev {
+    left: -16px;
+}
+
+.ep-cat-nav-btn.next {
+    right: -16px;
+}
+
+.ep-cat-nav-btn:hover {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    transform: scale(1.08);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+}
+
+@media (max-width: 768px) {
+    .ep-cat-circle {
+        width: 96px;
+        height: 96px;
+    }
+    .ep-cat-circular-card {
+        width: 105px;
+        flex: 0 0 105px;
+    }
+    .ep-cat-icon-container i {
+        font-size: 36px;
+    }
+    .ep-cat-circle-title {
+        font-size: 12px;
+        margin-top: 8px;
+    }
+    .ep-cat-nav-btn {
+        display: none !important;
+    }
+}
+
+.ep-cat-tile {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--ep-text);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.22s var(--ep-ease-out);
+}
+
+.ep-cat-tile:hover {
+    background: #f8fafc;
+    border-color: rgba(37, 99, 235, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -6px rgba(15, 23, 42, 0.08);
+    color: var(--ep-blue);
+}
+
+.ep-cat-tile-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.ep-cat-tile:hover .ep-cat-tile-icon {
+    background: #eff6ff;
+    color: #2563eb;
+    transform: scale(1.08);
+}
+
+.ep-cat-tile-label {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+/* 3. Dark Slate Flash Sale Container */
+.ep-flash-dark-section {
+    padding: 24px 0 40px;
+}
+
+.ep-flash-dark-wrapper {
+    background: #0f172a;
+    border-radius: 20px;
+    padding: 32px 32px 36px;
+    box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.4);
+    color: #ffffff;
+}
+
+.ep-flash-dark-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 18px;
+}
+
+.ep-flash-title-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.ep-flash-pill {
+    background: linear-gradient(135deg, #ea580c, #dc2626);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 5px 14px;
+    border-radius: 9999px;
+}
+
+.ep-flash-heading {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.ep-dark-timer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.ep-timer-boxes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ep-dark-digit {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.ep-timer-sep {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+}
+
+.ep-flash-more-link {
+    color: #94a3b8;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.ep-flash-more-link:hover {
+    color: #ffffff;
+}
+
+.ep-flash-dark-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ep-dark-card {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 14px !important;
+}
+
+.ep-price-flash {
+    color: #ea580c !important;
+    font-weight: 800;
+}
+
+/* 4. Tabbed Segmented Control */
+.ep-segmented-control {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 9999px;
+    gap: 2px;
+}
+
+.ep-segment-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 18px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #64748b;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ep-segment-btn.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 5. Minimalist Flagship Product Card */
+.ep-flagship-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.22s var(--ep-ease-out), box-shadow 0.22s ease;
+}
+
+.ep-flagship-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.09);
+    border-color: rgba(37, 99, 235, 0.15);
+}
+
+.ep-card-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.ep-stars-simple {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ep-score {
+    font-weight: 750;
+    color: #0f172a;
+}
+
+.ep-rev-count {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.ep-quick-cart-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ep-quick-cart-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    transform: scale(1.06);
+}
+
+/* 6. Monochrome Brand Bar (Tối giản 8 thương hiệu) */
+.ep-brands-section {
+    padding: 32px 0 48px;
+}
+
+.ep-brands-monochrome-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 16px 28px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+}
+
+.ep-brand-mono-item {
+    display: inline-flex;
+    align-items: center;
+    color: #64748b;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.ep-brand-mono-item i {
+    font-size: 18px;
+}
+
+.ep-brand-mono-item:hover {
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+
+/* Responsive Rules for Senior Layout */
+@media (max-width: 1100px) {
+    .ep-bento-hero-grid {
+        grid-template-columns: 1fr;
+    }
+    .ep-bento-side-cards {
+        height: auto;
+        flex-direction: row;
+    }
+    .ep-bento-promo-card {
+        min-height: 160px;
+    }
+    .ep-categories-strip {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .ep-flash-dark-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .ep-bento-side-cards {
+        flex-direction: column;
+    }
+    .ep-bento-main-banner {
+        height: 360px;
+    }
+    .ep-bento-main-banner .ep-hero-slide-inner {
+        grid-template-columns: 1fr;
+        padding: 24px;
+    }
+    .ep-bento-main-banner .ep-hero-stage {
+        display: none;
+    }
+    .ep-categories-strip {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        scroll-snap-type: x mandatory;
+    }
+    .ep-cat-tile {
+        min-width: 105px;
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+    .ep-flash-dark-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .ep-brands-monochrome-bar {
+        justify-content: center;
+        gap: 16px 24px;
+    }
+}
+
+
 
 /* ==========================================================================
    12. REDUCED MOTION & SECTION FOOTER

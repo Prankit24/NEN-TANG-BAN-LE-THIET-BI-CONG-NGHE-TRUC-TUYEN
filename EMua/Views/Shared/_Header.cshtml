@@ -48,12 +48,12 @@
 
     var categories = new[]
     {
-        new { Key = "Laptop", Name = "Laptop", Icon = "bi-laptop" },
         new { Key = "DienThoai", Name = "Điện thoại", Icon = "bi-phone" },
-        new { Key = "Gaming", Name = "Gaming Gear", Icon = "bi-controller" },
+        new { Key = "Laptop", Name = "Laptop", Icon = "bi-laptop" },
+        new { Key = "Tablet", Name = "Máy tính bảng", Icon = "bi-tablet" },
         new { Key = "AmThanh", Name = "Âm thanh", Icon = "bi-headphones" },
-        new { Key = "ThietBiThongMinh", Name = "Thiết bị thông minh", Icon = "bi-smartwatch" },
-        new { Key = "PhuKien", Name = "Phụ kiện", Icon = "bi-box-seam" }
+        new { Key = "Gaming", Name = "Gaming Gear", Icon = "bi-controller" },
+        new { Key = "PhuKien", Name = "Phụ kiện", Icon = "bi-plug" }
     };
 
     var stores = new[]
@@ -463,10 +463,79 @@
         </div>
     </div>
 
-    <!-- 3. CATEGORY NAVIGATION BAR -->
+    <!-- 3. CATEGORY NAVIGATION BAR VỚI MEGA MENU CHUẨN SENIOR (Hick's Law 6 danh mục chính + Mega Menu 3 cột) -->
     <nav class="emua-category-nav" aria-label="Danh mục sản phẩm">
         <div class="container-fluid emua-container">
             <div class="category-list">
+                <!-- NÚT MEGA MENU TẤT CẢ DANH MỤC -->
+                <div class="dropdown emua-mega-dropdown d-inline-block">
+                    <button class="category-nav-item emua-mega-btn dropdown-toggle border-0" type="button" id="megaMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-grid-3x3-gap-fill text-primary" aria-hidden="true"></i>
+                        <span class="fw-bold">Tất cả danh mục</span>
+                        <i class="bi bi-chevron-down ms-1" style="font-size: 11px;"></i>
+                    </button>
+                    <div class="dropdown-menu shadow-lg border-0 emua-mega-menu-panel p-4" aria-labelledby="megaMenuBtn">
+                        <div class="emua-mega-menu-grid">
+                            <div class="emua-mega-col">
+                                <h6 class="emua-mega-col-title">Thiết bị di động</h6>
+                                <div class="emua-mega-link-list">
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="DienThoai">
+                                        <i class="bi bi-phone"></i>
+                                        <span>Điện thoại thông minh</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="Tablet">
+                                        <i class="bi bi-tablet"></i>
+                                        <span>Máy tính bảng (iPad/Tab)</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="ThietBiThongMinh">
+                                        <i class="bi bi-smartwatch"></i>
+                                        <span>Đồng hồ thông minh</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="emua-mega-col">
+                                <h6 class="emua-mega-col-title">Máy tính &amp; Màn hình</h6>
+                                <div class="emua-mega-link-list">
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="Laptop">
+                                        <i class="bi bi-laptop"></i>
+                                        <span>Laptop cao cấp &amp; Gaming</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="ManHinh">
+                                        <i class="bi bi-display"></i>
+                                        <span>Màn hình máy tính</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="LinhKien">
+                                        <i class="bi bi-cpu"></i>
+                                        <span>Linh kiện PC &amp; Mainboard</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="emua-mega-col">
+                                <h6 class="emua-mega-col-title">Âm thanh &amp; Phụ kiện</h6>
+                                <div class="emua-mega-link-list">
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="AmThanh">
+                                        <i class="bi bi-headphones"></i>
+                                        <span>Tai nghe &amp; Loa Bluetooth</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="Gaming">
+                                        <i class="bi bi-controller"></i>
+                                        <span>Gaming Gear &amp; Bàn phím</span>
+                                    </a>
+                                    <a class="emua-mega-link" asp-controller="Product" asp-action="Index" asp-route-category="PhuKien">
+                                        <i class="bi bi-plug"></i>
+                                        <span>Củ sạc, Cáp &amp; Pin sạc</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="emua-mega-footer">
+                            <span class="small text-muted"><i class="bi bi-shield-check text-success me-1"></i>Tất cả thiết bị đều là hàng chính hãng 100%</span>
+                            <a asp-controller="Product" asp-action="Index" class="btn btn-sm btn-primary px-3 rounded-pill">Xem tất cả sản phẩm <i class="bi bi-arrow-right ms-1"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6 DANH MỤC TRỤ CỘT TRỰC QUAN -->
                 @foreach (var category in categories)
                 {
                     <a asp-area=""
