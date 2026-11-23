@@ -22,7 +22,7 @@ public class OrderController : StaffControllerBase
         _webHostEnvironment = webHostEnvironment;
     }
 
-    public async Task<IActionResult> Index(string? q, string? status, int page = 1, int pageSize = 12)
+    public async Task<IActionResult> Index(string? q, string? status, string? timeRange = "all", string? sort = "priority", int page = 1, int pageSize = 12)
     {
         pageSize = Math.Clamp(pageSize, 1, 100);
         var orders = _db.DonHangs.AsNoTracking()
@@ -54,6 +54,26 @@ public class OrderController : StaffControllerBase
                 || (x.SoDienThoaiNhanHang != null && EF.Functions.ILike(x.SoDienThoaiNhanHang, pattern))
                 || (x.MaNguoiDungNavigation != null && x.MaNguoiDungNavigation.TenNguoiDung != null && EF.Functions.ILike(x.MaNguoiDungNavigation.TenNguoiDung, pattern))
                 || (x.MaNguoiDungNavigation != null && x.MaNguoiDungNavigation.Email != null && EF.Functions.ILike(x.MaNguoiDungNavigation.Email, pattern)));
+        }
+
+        // Lọc nhanh theo mốc thời gian
+        timeRange = string.IsNullOrWhiteSpace(timeRange) ? "all" : timeRange.Trim().ToLowerInvariant();
+        var now = DateTime.Now;
+        switch (timeRange)
+        {
+            case "today":
+                var todayStart = now.Date;
+                var todayEnd = todayStart.AddDays(1);
+                orders = orders.Where(x => x.NgayDat >= todayStart && x.NgayDat < todayEnd);
+                break;
+            case "7days":
+                var sevenDaysAgo = now.Date.AddDays(-7);
+                orders = orders.Where(x => x.NgayDat >= sevenDaysAgo);
+                break;
+            case "30days":
+                var thirtyDaysAgo = now.Date.AddDays(-30);
+                orders = orders.Where(x => x.NgayDat >= thirtyDaysAgo);
+                break;
         }
 
         // Thống kê nhanh theo trạng thái trên toàn bộ hoặc tập tìm kiếm
@@ -95,24 +115,46 @@ public class OrderController : StaffControllerBase
         ViewBag.Search = q;
         ViewBag.Status = status ?? "all";
         ViewBag.Statuses = Statuses;
+        ViewBag.TimeRange = timeRange;
+        ViewBag.Sort = sort;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = filteredTotal;
         ViewBag.PageSize = pageSize;
 
-        // Sắp xếp ưu tiên:
-        // 1: Yêu cầu đổi trả (nổi bật xử lý riêng)
-        // 2: Chờ xác nhận, Chờ xử lý, Giao thất bại
-        // 3: Đang xử lý, Đang giao
-        // 4: Đã hoàn thành, Đã hủy xuống dưới cùng
-        var resultList = await orders
-            .OrderBy(x => 
-                x.TrangThaiDonHang != null && x.TrangThaiDonHang.Contains("đổi trả") ? 1 :
-                (OrderRules.PendingAliases.Contains(x.TrangThaiDonHang!) || OrderRules.DeliveryFailedAliases.Contains(x.TrangThaiDonHang!) || string.IsNullOrWhiteSpace(x.TrangThaiDonHang)) ? 2 :
-                (OrderRules.ProcessingAliases.Contains(x.TrangThaiDonHang!) || OrderRules.ShippingAliases.Contains(x.TrangThaiDonHang!)) ? 3 :
-                4
-            )
-            .ThenByDescending(x => x.NgayDat).ThenByDescending(x => x.MaDonHang)
+        sort = string.IsNullOrWhiteSpace(sort) ? "priority" : sort.Trim();
+        IQueryable<DonHang> orderedQuery;
+
+        if (sort == "newest")
+        {
+            orderedQuery = orders.OrderByDescending(x => x.NgayDat).ThenByDescending(x => x.MaDonHang);
+        }
+        else if (sort == "oldest")
+        {
+            orderedQuery = orders.OrderBy(x => x.NgayDat).ThenBy(x => x.MaDonHang);
+        }
+        else if (sort == "total-desc")
+        {
+            orderedQuery = orders.OrderByDescending(x => x.TongTien ?? 0).ThenByDescending(x => x.NgayDat);
+        }
+        else if (sort == "total-asc")
+        {
+            orderedQuery = orders.OrderBy(x => x.TongTien ?? 0).ThenByDescending(x => x.NgayDat);
+        }
+        else
+        {
+            // Mặc định: Phân luồng ưu tiên xử lý nghiệp vụ, trong mỗi luồng xếp Mới nhất lên đầu
+            orderedQuery = orders
+                .OrderBy(x => 
+                    x.TrangThaiDonHang != null && x.TrangThaiDonHang.Contains("đổi trả") ? 1 :
+                    (OrderRules.PendingAliases.Contains(x.TrangThaiDonHang!) || OrderRules.DeliveryFailedAliases.Contains(x.TrangThaiDonHang!) || string.IsNullOrWhiteSpace(x.TrangThaiDonHang)) ? 2 :
+                    (OrderRules.ProcessingAliases.Contains(x.TrangThaiDonHang!) || OrderRules.ShippingAliases.Contains(x.TrangThaiDonHang!)) ? 3 :
+                    4
+                )
+                .ThenByDescending(x => x.NgayDat).ThenByDescending(x => x.MaDonHang);
+        }
+
+        var resultList = await orderedQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

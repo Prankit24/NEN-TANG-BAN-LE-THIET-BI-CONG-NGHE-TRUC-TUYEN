@@ -26,8 +26,10 @@
     int processingCount = ViewBag.ProcessingCount ?? 0;
     int failedCount = ViewBag.FailedCount ?? 0;
     int completedCount = ViewBag.CompletedCount ?? 0;
+    string timeRange = ViewBag.TimeRange as string ?? "all";
+    string sort = ViewBag.Sort as string ?? "priority";
 
-    bool hasFilter = !string.IsNullOrWhiteSpace(search) || (selected != "all" && !string.IsNullOrWhiteSpace(selected));
+    bool hasFilter = !string.IsNullOrWhiteSpace(search) || (selected != "all" && !string.IsNullOrWhiteSpace(selected)) || timeRange != "all" || sort != "priority";
 }
 
 <style>
@@ -439,6 +441,23 @@
                 }
             </select>
         </div>
+        <div class="order-filter-timerange" style="width: 160px;">
+            <select name="timeRange" class="form-select" aria-label="Khoảng thời gian">
+                <option value="all" selected="@(timeRange == "all" || string.IsNullOrEmpty(timeRange))">Toàn thời gian</option>
+                <option value="today" selected="@(timeRange == "today")">Hôm nay</option>
+                <option value="7days" selected="@(timeRange == "7days")">7 ngày gần đây</option>
+                <option value="30days" selected="@(timeRange == "30days")">30 ngày gần đây</option>
+            </select>
+        </div>
+        <div class="order-filter-sort" style="width: 175px;">
+            <select name="sort" class="form-select" aria-label="Sắp xếp">
+                <option value="priority" selected="@(sort == "priority" || string.IsNullOrEmpty(sort))">Ưu tiên xử lý</option>
+                <option value="newest" selected="@(sort == "newest")">Mới nhất (Ngày đặt)</option>
+                <option value="oldest" selected="@(sort == "oldest")">Cũ nhất</option>
+                <option value="total-desc" selected="@(sort == "total-desc")">Tổng tiền cao → thấp</option>
+                <option value="total-asc" selected="@(sort == "total-asc")">Tổng tiền thấp → cao</option>
+            </select>
+        </div>
         <div class="order-filter-actions">
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-search"></i> Tìm kiếm
@@ -580,14 +599,14 @@
             <span class="text-muted small">Hiển thị @Model.Count() / @totalItems đơn hàng (Trang @currentPage / @totalPages)</span>
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selected">Trước</a>
+                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-q="@search" asp-route-status="@selected" asp-route-timeRange="@timeRange" asp-route-sort="@sort">Trước</a>
                 </li>
                 @for (int i = 1; i <= totalPages; i++)
                 {
                     if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selected">@i</a>
+                            <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-q="@search" asp-route-status="@selected" asp-route-timeRange="@timeRange" asp-route-sort="@sort">@i</a>
                         </li>
                     }
                     else if (i == currentPage - 3 || i == currentPage + 3)
@@ -596,7 +615,7 @@
                     }
                 }
                 <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selected">Sau</a>
+                    <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-q="@search" asp-route-status="@selected" asp-route-timeRange="@timeRange" asp-route-sort="@sort">Sau</a>
                 </li>
             </ul>
         </div>

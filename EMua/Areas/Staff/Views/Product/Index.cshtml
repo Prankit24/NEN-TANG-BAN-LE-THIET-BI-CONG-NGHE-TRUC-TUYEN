@@ -13,6 +13,7 @@
     int? brandId = ViewBag.BrandId as int?;
     int? categoryId = ViewBag.CategoryId as int?;
     string stockFilter = ViewBag.StockFilter as string ?? "all";
+    string sort = ViewBag.Sort as string ?? "newest";
 }
 
 <style>
@@ -211,11 +212,23 @@
                 </select>
             </div>
 
+            <!-- Sắp xếp -->
+            <div style="width: 150px;">
+                <select name="sort" class="form-select form-select-sm">
+                    <option value="newest" selected="@(sort == "newest" || string.IsNullOrEmpty(sort))">Mới nhất (Mặc định)</option>
+                    <option value="oldest" selected="@(sort == "oldest")">Cũ nhất</option>
+                    <option value="name-asc" selected="@(sort == "name-asc")">Tên A → Z</option>
+                    <option value="name-desc" selected="@(sort == "name-desc")">Tên Z → A</option>
+                    <option value="price-asc" selected="@(sort == "price-asc")">Giá thấp → cao</option>
+                    <option value="price-desc" selected="@(sort == "price-desc")">Giá cao → thấp</option>
+                </select>
+            </div>
+
             <button type="submit" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
                 <i class="bi bi-funnel"></i> Lọc
             </button>
 
-            @if (!string.IsNullOrWhiteSpace(search) || status != "all" || brandId.HasValue || categoryId.HasValue || stockFilter != "all")
+            @if (!string.IsNullOrWhiteSpace(search) || status != "all" || brandId.HasValue || categoryId.HasValue || stockFilter != "all" || sort != "newest")
             {
                 <a asp-action="Index" class="btn btn-sm btn-outline-secondary" title="Đặt lại bộ lọc">
                     <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
@@ -356,7 +369,8 @@
                                asp-route-status="@status"
                                asp-route-brandId="@brandId"
                                asp-route-categoryId="@categoryId"
-                               asp-route-stockFilter="@stockFilter">
+                               asp-route-stockFilter="@stockFilter"
+                               asp-route-sort="@sort">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -372,7 +386,8 @@
                                        asp-route-status="@status"
                                        asp-route-brandId="@brandId"
                                        asp-route-categoryId="@categoryId"
-                                       asp-route-stockFilter="@stockFilter">@p</a>
+                                       asp-route-stockFilter="@stockFilter"
+                                       asp-route-sort="@sort">@p</a>
                                 </li>
                             }
                             else if (p == currentPage - 3 || p == currentPage + 3)
@@ -388,7 +403,8 @@
                                asp-route-status="@status"
                                asp-route-brandId="@brandId"
                                asp-route-categoryId="@categoryId"
-                               asp-route-stockFilter="@stockFilter">
+                               asp-route-stockFilter="@stockFilter"
+                               asp-route-sort="@sort">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>

@@ -26,7 +26,9 @@ public class InvoiceController : StaffControllerBase
         int? month, 
         int? year, 
         DateTime? fromDate, 
-        DateTime? toDate, 
+        DateTime? toDate,
+        string? timeRange,
+        string? sort = "newest",
         int page = 1, 
         int pageSize = 10)
     {
@@ -80,23 +82,45 @@ public class InvoiceController : StaffControllerBase
             invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
         }
 
-        // 1.3 Lọc theo tháng / năm / khoảng ngày
-        if (fromDate.HasValue)
+        // 1.3 Lọc nhanh theo mốc thời gian gần đây
+        timeRange = string.IsNullOrWhiteSpace(timeRange) ? "all" : timeRange.Trim().ToLowerInvariant();
+        var now = DateTime.Now;
+        if (timeRange == "today")
         {
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
+            var todayStart = now.Date;
+            var todayEnd = todayStart.AddDays(1);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= todayStart && x.NgayLapHoaDon < todayEnd);
         }
-        if (toDate.HasValue)
+        else if (timeRange == "7days")
         {
-            var nextDay = toDate.Value.Date.AddDays(1);
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < nextDay);
+            var sevenDaysAgo = now.Date.AddDays(-7);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= sevenDaysAgo);
         }
-        if (month.HasValue && month.Value > 0)
+        else if (timeRange == "30days")
         {
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
+            var thirtyDaysAgo = now.Date.AddDays(-30);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= thirtyDaysAgo);
         }
-        if (year.HasValue && year.Value > 0)
+        else
         {
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
+            // Lọc theo tháng / năm / khoảng ngày cụ thể
+            if (fromDate.HasValue)
+            {
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
+            }
+            if (toDate.HasValue)
+            {
+                var nextDay = toDate.Value.Date.AddDays(1);
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < nextDay);
+            }
+            if (month.HasValue && month.Value > 0)
+            {
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
+            }
+            if (year.HasValue && year.Value > 0)
+            {
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
+            }
         }
 
         // 1.4 Danh sách trạng thái thực tế từ CSDL để hiển thị vào dropdown
@@ -143,13 +167,21 @@ public class InvoiceController : StaffControllerBase
         ViewBag.TotalDiscount = totalDiscount;
         ViewBag.VatByRateDict = vatByRateDict;
 
-        // Phân trang
+        // Phân trang & Sắp xếp
         int totalItems = totalInvoicesCount;
         int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
         page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
 
+        sort = string.IsNullOrWhiteSpace(sort) ? "newest" : sort.Trim().ToLowerInvariant();
+        invoicesQuery = sort switch
+        {
+            "oldest" => invoicesQuery.OrderBy(x => x.NgayLapHoaDon).ThenBy(x => x.MaHoaDon),
+            "total-desc" => invoicesQuery.OrderByDescending(x => x.TongTien ?? 0m).ThenByDescending(x => x.MaHoaDon),
+            "total-asc" => invoicesQuery.OrderBy(x => x.TongTien ?? 0m).ThenBy(x => x.MaHoaDon),
+            _ => invoicesQuery.OrderByDescending(x => x.NgayLapHoaDon).ThenByDescending(x => x.MaHoaDon)
+        };
+
         var items = await invoicesQuery
-            .OrderByDescending(x => x.MaHoaDon)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -160,6 +192,8 @@ public class InvoiceController : StaffControllerBase
         ViewBag.SelectedYear = year;
         ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
         ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+        ViewBag.TimeRange = timeRange;
+        ViewBag.Sort = sort;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = totalItems;
@@ -170,7 +204,7 @@ public class InvoiceController : StaffControllerBase
 
     // 2. XUẤT BÁO CÁO TỔNG HỢP HÓA ĐƠN (CSV)
     [HttpGet]
-    public async Task<IActionResult> ExportReportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
+    public async Task<IActionResult> ExportReportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate, string? timeRange = "all")
     {
         var invoicesQuery = _db.HoaDons
             .AsNoTracking()
@@ -219,21 +253,43 @@ public class InvoiceController : StaffControllerBase
         if (!string.IsNullOrWhiteSpace(status) && status != "all")
             invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
 
-        if (fromDate.HasValue)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
-        if (toDate.HasValue)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < toDate.Value.Date.AddDays(1));
-        if (month.HasValue && month.Value > 0)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
-        if (year.HasValue && year.Value > 0)
-            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
+        // Lọc theo mốc thời gian
+        timeRange = string.IsNullOrWhiteSpace(timeRange) ? "all" : timeRange.Trim().ToLowerInvariant();
+        var now = DateTime.Now;
+        if (timeRange == "today")
+        {
+            var todayStart = now.Date;
+            var todayEnd = todayStart.AddDays(1);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= todayStart && x.NgayLapHoaDon < todayEnd);
+        }
+        else if (timeRange == "7days")
+        {
+            var sevenDaysAgo = now.Date.AddDays(-7);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= sevenDaysAgo);
+        }
+        else if (timeRange == "30days")
+        {
+            var thirtyDaysAgo = now.Date.AddDays(-30);
+            invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= thirtyDaysAgo);
+        }
+        else
+        {
+            if (fromDate.HasValue)
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon >= fromDate.Value.Date);
+            if (toDate.HasValue)
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon < toDate.Value.Date.AddDays(1));
+            if (month.HasValue && month.Value > 0)
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Month == month.Value);
+            if (year.HasValue && year.Value > 0)
+                invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
+        }
 
-        var list = await invoicesQuery.OrderByDescending(x => x.MaHoaDon).ToListAsync();
+        var list = await invoicesQuery.OrderByDescending(x => x.NgayLapHoaDon).ThenByDescending(x => x.MaHoaDon).ToListAsync();
 
         if (list.Count == 0)
         {
             TempData["ErrorMessage"] = "Không tìm thấy hóa đơn nào phù hợp với điều kiện lọc để xuất báo cáo.";
-            return RedirectToAction(nameof(Index), new { q, status, month, year, fromDate, toDate });
+            return RedirectToAction(nameof(Index), new { q, status, month, year, fromDate, toDate, timeRange });
         }
 
         var sb = new StringBuilder();
@@ -267,8 +323,8 @@ public class InvoiceController : StaffControllerBase
     }
 
     [HttpGet]
-    public Task<IActionResult> ExportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
-        => ExportReportCsv(q, status, month, year, fromDate, toDate);
+    public Task<IActionResult> ExportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate, string? timeRange = "all")
+        => ExportReportCsv(q, status, month, year, fromDate, toDate, timeRange);
 
     // 2.1 XUẤT BÁO CÁO TỔNG HỢP HÓA ĐƠN (EXCEL .XLSX ĐỊNH DẠNG CHUYÊN NGHIỆP)
     [HttpGet]

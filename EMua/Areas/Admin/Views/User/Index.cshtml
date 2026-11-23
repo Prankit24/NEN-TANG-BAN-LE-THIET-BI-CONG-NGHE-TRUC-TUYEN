@@ -77,15 +77,22 @@
     <!-- BỘ LỌC TÌM KIẾM -->
     <div class="filter-bar bg-white border mb-3">
         <form method="get" asp-action="Index" class="row g-2 align-items-center" onsubmit="return false;">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <div class="input-group users-search-group">
                     <span class="input-group-text bg-light border-end-0 ps-3"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" id="searchString" name="searchString" value="@ViewBag.SearchString" class="form-control bg-light border-start-0" placeholder="Tìm tên, email, SĐT, tên đăng nhập...">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <select id="sort" name="sort" class="form-select bg-light">
+                    <option value="newest" selected="@(ViewBag.Sort == "newest" || string.IsNullOrEmpty(ViewBag.Sort))">Mới nhất</option>
+                    <option value="oldest" selected="@(ViewBag.Sort == "oldest")">Cũ nhất</option>
+                    <option value="name-asc" selected="@(ViewBag.Sort == "name-asc")">Tên (A-Z)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
                 <select id="maQuyen" name="maQuyen" class="form-select bg-light">
-                    <option value="">Tất cả phân quyền</option>
+                    <option value="">Tất cả quyền</option>
                     @foreach (var r in roles)
                     {
                         <option value="@r.MaQuyen" selected="@(ViewBag.SelectedRole == r.MaQuyen)">@r.TenQuyen</option>
@@ -259,6 +266,7 @@
             }
 
             const searchInput = document.getElementById("searchString");
+            const sortSelect = document.getElementById("sort");
             const roleSelect = document.getElementById("maQuyen");
             const statusSelect = document.getElementById("trangThai");
             const btnResetFilter = document.getElementById("btnResetFilter");
@@ -269,10 +277,11 @@
             function fetchFilteredData(page = 1) {
                 currentPage = page;
                 const search = searchInput.value;
+                const sort = sortSelect ? sortSelect.value : "newest";
                 const maQuyen = roleSelect.value;
                 const trangThai = statusSelect.value;
 
-                const url = `@Url.Action("Index")?searchString=${encodeURIComponent(search)}&maQuyen=${maQuyen}&trangThai=${trangThai}&page=${page}&isAjax=true`;
+                const url = `@Url.Action("Index")?searchString=${encodeURIComponent(search)}&sort=${sort}&maQuyen=${maQuyen}&trangThai=${trangThai}&page=${page}&isAjax=true`;
 
                 fetch(url)
                     .then(response => response.text())
@@ -305,11 +314,13 @@
                 debounceTimer = setTimeout(() => fetchFilteredData(1), 300);
             });
 
+            if (sortSelect) sortSelect.addEventListener("change", () => fetchFilteredData(1));
             roleSelect.addEventListener("change", () => fetchFilteredData(1));
             statusSelect.addEventListener("change", () => fetchFilteredData(1));
 
             btnResetFilter.addEventListener("click", function () {
                 searchInput.value = "";
+                if (sortSelect) sortSelect.value = "newest";
                 roleSelect.value = "";
                 statusSelect.value = "";
                 fetchFilteredData(1);

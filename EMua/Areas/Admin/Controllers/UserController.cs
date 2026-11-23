@@ -60,7 +60,7 @@ public class UserController : Controller
     // ================== 1. Danh sách người dùng ==================
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? searchString, int? maQuyen, bool? trangThai, int page = 1)
+    public async Task<IActionResult> Index(string? searchString, int? maQuyen, bool? trangThai, string? sort = "newest", int page = 1)
     {
         const int pageSize = 12;
 
@@ -100,24 +100,45 @@ public class UserController : Controller
         int totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize));
         page = Math.Clamp(page, 1, totalPages);
 
-        // Lấy toàn bộ danh sách để sắp xếp theo Tên (từ cuối chuỗi họ tên) giống danh sách lớp học
-        var allUsers = await query.ToListAsync();
+        sort = string.IsNullOrWhiteSpace(sort) ? "newest" : sort.Trim().ToLowerInvariant();
 
-        var users = allUsers
-            .OrderBy(u =>
-            {
-                if (string.IsNullOrWhiteSpace(u.TenNguoiDung)) return string.Empty;
-                var parts = u.TenNguoiDung.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                // Lấy từ cuối cùng (tên) để sắp xếp A-Z
-                return parts.Length > 0 ? parts[^1] : u.TenNguoiDung;
-            })
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+        List<NguoiDung> users;
+        if (sort == "name-asc")
+        {
+            var allUsers = await query.ToListAsync();
+            users = allUsers
+                .OrderBy(u =>
+                {
+                    if (string.IsNullOrWhiteSpace(u.TenNguoiDung)) return string.Empty;
+                    var parts = u.TenNguoiDung.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    return parts.Length > 0 ? parts[^1] : u.TenNguoiDung;
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+        else if (sort == "oldest")
+        {
+            users = await query
+                .OrderBy(u => u.MaNguoiDung)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+        else
+        {
+            // Mặc định "newest": Sắp xếp theo MaNguoiDung giảm dần (Tài khoản mới nhất lên đầu)
+            users = await query
+                .OrderByDescending(u => u.MaNguoiDung)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
 
         ViewBag.SearchString = searchString;
         ViewBag.SelectedRole = maQuyen;
         ViewBag.SelectedStatus = trangThai;
+        ViewBag.Sort = sort;
         ViewBag.Page = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.DanhSachQuyen = await _db.PhanQuyens.OrderBy(r => r.MaQuyen).ToListAsync();
