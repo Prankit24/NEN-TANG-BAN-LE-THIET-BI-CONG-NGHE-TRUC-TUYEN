@@ -1,13 +1,19 @@
 @model IEnumerable<EMua.Models.Database.SanPham>
 @{
     var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    int currentPage = ViewBag.CurrentPage is int cp ? cp : 1;
+    int totalPages = ViewBag.TotalPages is int tp ? tp : 1;
+    int totalItems = ViewBag.TotalItems is int ti ? ti : products.Count;
 }
+<input type="hidden" id="emuaTotalCount" value="@totalItems" />
+<input type="hidden" id="emuaCurrentPage" value="@currentPage" />
+
 @if (products.Count == 0)
 {
     <div class="emua-empty-product">
         <div class="emua-empty-icon"><i class="bi bi-box-seam"></i></div>
         <h3>Không tìm thấy sản phẩm</h3>
-        <p>Hãy thử từ khóa, danh mục hoặc thương hiệu khác.</p>
+        <p>Hãy thử từ khóa, khoảng giá, danh mục hoặc thương hiệu khác.</p>
     </div>
 }
 else
@@ -71,4 +77,65 @@ else
             </article>
         }
     </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="emua-pagination" aria-label="Phân trang sản phẩm">
+            @if (currentPage > 1)
+            {
+                <button type="button" class="emua-page-btn emua-page-nav prev" data-page="@(currentPage - 1)" aria-label="Trang trước">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i> <span>Trước</span>
+                </button>
+            }
+            else
+            {
+                <button type="button" class="emua-page-btn emua-page-nav prev disabled" disabled aria-label="Trang trước">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i> <span>Trước</span>
+                </button>
+            }
+
+            <div class="emua-page-numbers">
+                @{
+                    int startPage = Math.Max(1, currentPage - 2);
+                    int endPage = Math.Min(totalPages, currentPage + 2);
+
+                    if (startPage > 1)
+                    {
+                        <button type="button" class="emua-page-btn @(currentPage == 1 ? "active" : "")" data-page="1">1</button>
+                        if (startPage > 2)
+                        {
+                            <span class="emua-page-ellipsis">…</span>
+                        }
+                    }
+
+                    for (int p = startPage; p <= endPage; p++)
+                    {
+                        <button type="button" class="emua-page-btn @(p == currentPage ? "active" : "")" data-page="@p">@p</button>
+                    }
+
+                    if (endPage < totalPages)
+                    {
+                        if (endPage < totalPages - 1)
+                        {
+                            <span class="emua-page-ellipsis">…</span>
+                        }
+                        <button type="button" class="emua-page-btn @(currentPage == totalPages ? "active" : "")" data-page="@totalPages">@totalPages</button>
+                    }
+                }
+            </div>
+
+            @if (currentPage < totalPages)
+            {
+                <button type="button" class="emua-page-btn emua-page-nav next" data-page="@(currentPage + 1)" aria-label="Trang sau">
+                    <span>Sau</span> <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            }
+            else
+            {
+                <button type="button" class="emua-page-btn emua-page-nav next disabled" disabled aria-label="Trang sau">
+                    <span>Sau</span> <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            }
+        </nav>
+    }
 }

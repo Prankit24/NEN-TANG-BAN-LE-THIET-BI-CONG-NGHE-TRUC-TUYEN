@@ -104,11 +104,21 @@ namespace EMua.Controllers
             int? brandId,
             string? keyword,
             string? sort,
-            int? categoryId)
+            int? categoryId,
+            string? priceRange,
+            decimal? minPrice,
+            decimal? maxPrice,
+            bool? sale = null,
+            int page = 1,
+            int pageSize = 20)
         {
             category = category?.Trim();
             keyword = keyword?.Trim();
             sort = sort?.Trim();
+            priceRange = priceRange?.Trim();
+
+            page = Math.Max(1, page);
+            pageSize = pageSize <= 0 ? 20 : Math.Clamp(pageSize, 8, 100);
 
             var query = _db.SanPhams
                 .AsNoTracking()
@@ -116,6 +126,13 @@ namespace EMua.Controllers
                     x.TrangThaiSanPham == null ||
                     x.TrangThaiSanPham != "Ẩn")
                 .AsQueryable();
+
+            if (sale == true || sort == "sale")
+            {
+                query = query.Where(x =>
+                    x.GiaGoc.HasValue && x.GiaGoc.Value > 0 &&
+                    x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia < x.GiaGoc.Value));
+            }
 
             // Tìm kiếm không phân biệt chữ hoa/thường.
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -177,6 +194,49 @@ namespace EMua.Controllers
                     x.MaThuongHieu == brandId.Value);
             }
 
+            // Lọc theo khoảng giá linh hoạt
+            if (!string.IsNullOrWhiteSpace(priceRange))
+            {
+                switch (priceRange.ToLowerInvariant())
+                {
+                    case "under-5m":
+                        query = query.Where(x =>
+                            x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia < 5000000) ||
+                            (x.GiaGoc.HasValue && x.GiaGoc.Value < 5000000));
+                        break;
+                    case "5m-15m":
+                        query = query.Where(x =>
+                            x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia >= 5000000 && v.Gia <= 15000000) ||
+                            (x.GiaGoc.HasValue && x.GiaGoc.Value >= 5000000 && x.GiaGoc.Value <= 15000000));
+                        break;
+                    case "15m-30m":
+                        query = query.Where(x =>
+                            x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia > 15000000 && v.Gia <= 30000000) ||
+                            (x.GiaGoc.HasValue && x.GiaGoc.Value > 15000000 && x.GiaGoc.Value <= 30000000));
+                        break;
+                    case "over-30m":
+                        query = query.Where(x =>
+                            x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia > 30000000) ||
+                            (x.GiaGoc.HasValue && x.GiaGoc.Value > 30000000));
+                        break;
+                }
+            }
+            else
+            {
+                if (minPrice.HasValue && minPrice.Value > 0)
+                {
+                    query = query.Where(x =>
+                        x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia >= minPrice.Value) ||
+                        (x.GiaGoc.HasValue && x.GiaGoc.Value >= minPrice.Value));
+                }
+                if (maxPrice.HasValue && maxPrice.Value > 0)
+                {
+                    query = query.Where(x =>
+                        x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.Gia <= maxPrice.Value) ||
+                        (x.GiaGoc.HasValue && x.GiaGoc.Value <= maxPrice.Value));
+                }
+            }
+
             // Sắp xếp theo giá của biến thể còn hàng.
             switch (sort)
             {
@@ -209,17 +269,44 @@ namespace EMua.Controllers
                         x => x.TenSanPham);
                     break;
 
+                case "sale":
+                    query = query.OrderByDescending(x =>
+                        x.GiaGoc.HasValue
+                            ? (x.GiaGoc.Value - x.BienTheSanPhams.Where(v => v.SoLuong > 0).Min(v => v.Gia))
+                            : 0);
+                    break;
+
+                case "popular":
+                case "featured":
+                    query = query.OrderByDescending(x =>
+                        x.BienTheSanPhams.SelectMany(v => v.ChiTietDonHangs).Count() * 5 +
+                        x.DanhGiaSanPhams.Count(r => r.TrangThai == true) * 3 +
+                        x.BienTheSanPhams.Sum(v => v.SoLuong))
+                        .ThenByDescending(x => x.MaSanPham);
+                    break;
+
+                case "newest":
                 default:
                     query = query.OrderByDescending(
                         x => x.MaSanPham);
                     break;
             }
 
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
             ViewBag.Category = category;
             ViewBag.CategoryId = categoryId;
             ViewBag.BrandId = brandId;
             ViewBag.Keyword = keyword;
             ViewBag.Sort = sort;
+            ViewBag.Sale = sale;
+            ViewBag.PriceRange = priceRange;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
 
             ViewBag.Categories = categories;
 
@@ -241,6 +328,8 @@ namespace EMua.Controllers
             ViewBag.Brands = brands;
 
             var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Include(x => x.MaDanhMucNavigation)
                 .Include(x => x.MaThuongHieuNavigation)
                 .Include(x => x.BienTheSanPhams)

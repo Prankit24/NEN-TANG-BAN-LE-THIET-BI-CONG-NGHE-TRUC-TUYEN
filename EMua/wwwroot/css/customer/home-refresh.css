@@ -1282,8 +1282,26 @@ body.emua-home-page .main-content {
 }
 
 /* ==========================================================================
-   12. REDUCED MOTION
+   12. REDUCED MOTION & SECTION FOOTER
    ========================================================================== */
+.ep-section-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+    padding-top: 8px;
+}
+.ep-section-footer .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    transition: all 0.2s ease;
+}
+.ep-section-footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .emua-home *,
     .ep * {

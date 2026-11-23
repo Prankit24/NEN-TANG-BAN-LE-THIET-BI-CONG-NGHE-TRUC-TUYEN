@@ -144,10 +144,12 @@ namespace EMua.Controllers
 
                 var sanPhamNoiBatIds = await availableQuery
                     .OrderByDescending(x =>
+                        x.BienTheSanPhams.SelectMany(v => v.ChiTietDonHangs).Count() * 5 +
+                        x.DanhGiaSanPhams.Count(r => r.TrangThai == true) * 3 +
                         x.BienTheSanPhams.Sum(v => v.SoLuong))
-                    .ThenBy(x => x.MaSanPham)
+                    .ThenByDescending(x => x.MaSanPham)
                     .Select(x => x.MaSanPham)
-                    .Take(8)
+                    .Take(12)
                     .ToListAsync();
 
                 featuredProducts = await LoadProductsByIdsAsync(sanPhamNoiBatIds);
@@ -242,10 +244,6 @@ namespace EMua.Controllers
             var totalTimer = Stopwatch.StartNew();
             var stepTimer = Stopwatch.StartNew();
 
-            // 1. Lấy Sản phẩm nổi bật từ IMemoryCache (chạy tuần tự trên _db nếu cache miss)
-            var sanPhamNoiBat = await GetCachedFeaturedProductsAsync();
-            var tFeatured = stepTimer.ElapsedMilliseconds;
-
             var baseQuery = _db.SanPhams
                 .AsNoTracking()
                 .Where(x =>
@@ -258,61 +256,126 @@ namespace EMua.Controllers
                         v.SoLuong > 0 &&
                         v.TrangThai == "Còn hàng"));
 
-            // 2. Sản phẩm mới nhất.
-            stepTimer.Restart();
-            var sanPhamMoiIds = await baseQuery
-                .OrderByDescending(x => x.MaSanPham)
-                .Select(x => x.MaSanPham)
-                .Take(8)
-                .ToListAsync();
-            var tNew = stepTimer.ElapsedMilliseconds;
-
-            // 3. Flash Sale theo giá thấp nhất.
+            // 1. Flash Sale: Lấy 10–12 sản phẩm đang giảm giá sâu nhất (GiaGoc > GiaBan), ưu tiên sản phẩm mới cập nhật.
             stepTimer.Restart();
             var flashSaleIds = await availableQuery
-                .OrderBy(x =>
-                    x.BienTheSanPhams
-                        .Where(v =>
-                            v.TrangThai == "Còn hàng")
-                        .Min(v => v.Gia))
-                .ThenBy(x => x.MaSanPham)
+                .Where(x => x.GiaGoc.HasValue && x.GiaGoc.Value > 0 &&
+                            x.BienTheSanPhams.Any(v => v.SoLuong > 0 && v.TrangThai == "Còn hàng" && v.Gia < x.GiaGoc.Value))
+                .OrderByDescending(x => (x.GiaGoc!.Value - x.BienTheSanPhams.Where(v => v.SoLuong > 0 && v.TrangThai == "Còn hàng").Min(v => v.Gia)) / x.GiaGoc!.Value)
+                .ThenByDescending(x => x.MaSanPham)
                 .Select(x => x.MaSanPham)
-                .Take(8)
+                .Take(12)
                 .ToListAsync();
+
+            if (flashSaleIds.Count < 4)
+            {
+                var extraFlash = await availableQuery
+                    .Where(x => !flashSaleIds.Contains(x.MaSanPham))
+                    .OrderBy(x => x.BienTheSanPhams.Where(v => v.SoLuong > 0 && v.TrangThai == "Còn hàng").Min(v => v.Gia))
+                    .Select(x => x.MaSanPham)
+                    .Take(12 - flashSaleIds.Count)
+                    .ToListAsync();
+                flashSaleIds.AddRange(extraFlash);
+            }
             var tFlashSale = stepTimer.ElapsedMilliseconds;
 
-            // 4. Best Choice theo sản phẩm mới còn hàng.
+            // 2. Sản phẩm nổi bật: 12 sản phẩm có đánh giá cao / tồn kho dồi dào, loại trừ các ID đã xuất hiện ở Flash Sale.
             stepTimer.Restart();
-            var bestChoiceIds = await availableQuery
-                .OrderByDescending(x => x.MaSanPham)
+            var featuredQuery = availableQuery.Where(x => !flashSaleIds.Contains(x.MaSanPham));
+
+            var sanPhamNoiBatIds = await featuredQuery
+                .OrderByDescending(x =>
+                    x.BienTheSanPhams.SelectMany(v => v.ChiTietDonHangs).Count() * 5 +
+                    x.DanhGiaSanPhams.Count(r => r.TrangThai == true) * 3 +
+                    x.BienTheSanPhams.Sum(v => v.SoLuong))
+                .ThenByDescending(x => x.MaSanPham)
                 .Select(x => x.MaSanPham)
-                .Take(8)
+                .Take(12)
                 .ToListAsync();
+
+            if (sanPhamNoiBatIds.Count < 12)
+            {
+                var extraFeatured = await availableQuery
+                    .Where(x => !sanPhamNoiBatIds.Contains(x.MaSanPham) && !flashSaleIds.Contains(x.MaSanPham))
+                    .OrderByDescending(x => x.BienTheSanPhams.Sum(v => v.SoLuong))
+                    .ThenByDescending(x => x.MaSanPham)
+                    .Select(x => x.MaSanPham)
+                    .Take(12 - sanPhamNoiBatIds.Count)
+                    .ToListAsync();
+                sanPhamNoiBatIds.AddRange(extraFeatured);
+            }
+            var tFeatured = stepTimer.ElapsedMilliseconds;
+
+            // 3. Best Choice (Lựa chọn đáng cân nhắc): Loại trừ Flash Sale và Nổi bật.
+            stepTimer.Restart();
+            var excludeForBestChoice = flashSaleIds.Concat(sanPhamNoiBatIds).Distinct().ToList();
+            var bestChoiceQuery = availableQuery.Where(x => !excludeForBestChoice.Contains(x.MaSanPham));
+
+            var bestChoiceIds = await bestChoiceQuery
+                .OrderByDescending(x => x.DanhGiaSanPhams.Count(r => r.TrangThai == true))
+                .ThenByDescending(x => x.BienTheSanPhams.Sum(v => v.SoLuong))
+                .ThenByDescending(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(10)
+                .ToListAsync();
+
+            if (bestChoiceIds.Count < 10)
+            {
+                var extraBestChoice = await availableQuery
+                    .Where(x => !bestChoiceIds.Contains(x.MaSanPham) && !excludeForBestChoice.Contains(x.MaSanPham))
+                    .OrderByDescending(x => x.MaSanPham)
+                    .Select(x => x.MaSanPham)
+                    .Take(10 - bestChoiceIds.Count)
+                    .ToListAsync();
+                bestChoiceIds.AddRange(extraBestChoice);
+            }
             var tBestChoice = stepTimer.ElapsedMilliseconds;
 
-            // 5. Tải dữ liệu các sản phẩm còn lại
-            var remainingIds = sanPhamMoiIds
-                .Concat(flashSaleIds)
+            // 4. Sản phẩm mới về / Gợi ý hôm nay: Lấy 16–20 sản phẩm mới nhất (mới nhất lên đầu), loại trừ các ID đã hiển thị ở các mục trên.
+            stepTimer.Restart();
+            var alreadyShownIds = flashSaleIds
+                .Concat(sanPhamNoiBatIds)
                 .Concat(bestChoiceIds)
                 .Distinct()
                 .ToList();
 
-            stepTimer.Restart();
-            var remainingProducts = await LoadProductsByIdsAsync(remainingIds);
-            var productDictionary = remainingProducts.ToDictionary(x => x.MaSanPham);
-            foreach (var fp in sanPhamNoiBat)
-            {
-                if (!productDictionary.ContainsKey(fp.MaSanPham))
-                    productDictionary[fp.MaSanPham] = fp;
-            }
-            var tProducts = stepTimer.ElapsedMilliseconds;
+            var sanPhamMoiIds = await availableQuery
+                .Where(x => !alreadyShownIds.Contains(x.MaSanPham))
+                .OrderByDescending(x => x.MaSanPham)
+                .Select(x => x.MaSanPham)
+                .Take(20)
+                .ToListAsync();
 
-            var sanPhamMoi = sanPhamMoiIds
+            if (sanPhamMoiIds.Count < 16)
+            {
+                var extraNew = await availableQuery
+                    .Where(x => !sanPhamMoiIds.Contains(x.MaSanPham) && !flashSaleIds.Contains(x.MaSanPham) && !sanPhamNoiBatIds.Contains(x.MaSanPham))
+                    .OrderByDescending(x => x.MaSanPham)
+                    .Select(x => x.MaSanPham)
+                    .Take(20 - sanPhamMoiIds.Count)
+                    .ToListAsync();
+                sanPhamMoiIds.AddRange(extraNew);
+            }
+            var tNew = stepTimer.ElapsedMilliseconds;
+
+            // 5. Tải dữ liệu các sản phẩm
+            stepTimer.Restart();
+            var allProductIds = flashSaleIds
+                .Concat(sanPhamNoiBatIds)
+                .Concat(bestChoiceIds)
+                .Concat(sanPhamMoiIds)
+                .Distinct()
+                .ToList();
+
+            var allProducts = await LoadProductsByIdsAsync(allProductIds);
+            var productDictionary = allProducts.ToDictionary(x => x.MaSanPham);
+
+            var flashSale = flashSaleIds
                 .Where(id => productDictionary.ContainsKey(id))
                 .Select(id => productDictionary[id])
                 .ToList();
 
-            var flashSale = flashSaleIds
+            var sanPhamNoiBat = sanPhamNoiBatIds
                 .Where(id => productDictionary.ContainsKey(id))
                 .Select(id => productDictionary[id])
                 .ToList();
@@ -321,6 +384,13 @@ namespace EMua.Controllers
                 .Where(id => productDictionary.ContainsKey(id))
                 .Select(id => productDictionary[id])
                 .ToList();
+
+            var sanPhamMoi = sanPhamMoiIds
+                .Where(id => productDictionary.ContainsKey(id))
+                .Select(id => productDictionary[id])
+                .ToList();
+
+            var tProducts = stepTimer.ElapsedMilliseconds;
 
             // 6. Danh mục (từ IMemoryCache, tuần tự trên _db nếu cache miss) và thương hiệu
             stepTimer.Restart();

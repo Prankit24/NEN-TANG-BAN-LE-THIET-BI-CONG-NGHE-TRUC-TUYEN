@@ -18,7 +18,7 @@
                 <h2 id="new-heading">Mới tại EMUA</h2>
                 <p>Khám phá các thiết bị công nghệ thế hệ mới nhất vừa lên kệ tại hệ thống.</p>
             </div>
-            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="newest">
                 <span>Xem tất cả</span>
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -104,6 +104,13 @@
                         </div>
                     </article>
                 }
+            </div>
+
+            <div class="ep-section-footer text-center mt-4 pt-2">
+                <a class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="newest">
+                    <span>Xem tất cả sản phẩm mới</span>
+                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
             </div>
         }
     </div>

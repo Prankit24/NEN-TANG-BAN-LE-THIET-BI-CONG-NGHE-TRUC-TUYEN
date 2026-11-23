@@ -429,3 +429,81 @@
     padding: 14px;
     gap: 5px;
 }
+
+/* ===================================================================
+   EMUA Phân trang sản phẩm (Pagination)
+   =================================================================== */
+.emua-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+}
+
+.emua-page-numbers {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.emua-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all .18s ease;
+    user-select: none;
+}
+
+.emua-page-btn:hover:not(.disabled):not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.emua-page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(91, 79, 224, 0.25);
+}
+
+.emua-page-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #f1f3f7;
+    border-color: var(--line);
+}
+
+.emua-page-nav {
+    gap: 6px;
+    padding: 0 16px;
+    font-weight: 500;
+}
+
+.emua-page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 40px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    user-select: none;
+}
