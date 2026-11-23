@@ -24,7 +24,7 @@
                     <span class="ep-timer-digit" id="fsSeconds">19</span>
                 </div>
             </div>
-            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="sale" asp-route-sale="true">
                 <span>Xem tất cả ưu đãi</span>
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -110,6 +110,13 @@
                         </div>
                     </article>
                 }
+            </div>
+
+            <div class="ep-section-footer text-center mt-4 pt-2">
+                <a class="btn btn-outline-danger px-4 py-2 fw-semibold rounded-pill" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="sale" asp-route-sale="true">
+                    <span>Xem tất cả sản phẩm Flash Sale</span>
+                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
             </div>
         }
     </div>

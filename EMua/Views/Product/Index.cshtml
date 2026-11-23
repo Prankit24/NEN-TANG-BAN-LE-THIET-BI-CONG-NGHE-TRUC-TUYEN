@@ -9,7 +9,9 @@
     int? brandId = ViewBag.BrandId is int b ? b : null;
     string keyword = ViewBag.Keyword as string ?? "";
     string sort = ViewBag.Sort as string ?? "";
+    string priceRange = ViewBag.PriceRange as string ?? "";
     var products = Model?.ToList() ?? new List<EMua.Models.Database.SanPham>();
+    int totalItems = ViewBag.TotalItems is int ti ? ti : products.Count;
 }
 <link rel="stylesheet" href="~/css/customer/product-index.css" asp-append-version="true" />
 <section class="emua-product-page">
@@ -17,6 +19,7 @@
         <div class="emua-product-toolbar">
             <form id="emuaProductFilter" asp-controller="Product" asp-action="Index" method="get"
                   class="emua-filter-form" role="search">
+                <input type="hidden" name="page" id="productPage" value="@(ViewBag.CurrentPage ?? 1)" />
                 <div class="emua-search-input">
                     <i class="bi bi-search" aria-hidden="true"></i>
                     <input type="search" name="keyword" id="productKeyword" value="@keyword"
@@ -36,8 +39,17 @@
                         <option value="@item.MaThuongHieu" selected="@(brandId == item.MaThuongHieu)">@item.TenThuongHieu</option>
                     }
                 </select>
+                <select id="productPrice" name="priceRange" aria-label="Mức giá">
+                    <option value="" selected="@(string.IsNullOrEmpty(priceRange))">Tất cả mức giá</option>
+                    <option value="under-5m" selected="@(priceRange == "under-5m")">Dưới 5 triệu</option>
+                    <option value="5m-15m" selected="@(priceRange == "5m-15m")">5 – 15 triệu</option>
+                    <option value="15m-30m" selected="@(priceRange == "15m-30m")">15 – 30 triệu</option>
+                    <option value="over-30m" selected="@(priceRange == "over-30m")">Trên 30 triệu</option>
+                </select>
                 <select id="productSort" name="sort" aria-label="Sắp xếp">
-                    <option value="" selected="@(sort == "")">Mới nhất</option>
+                    <option value="" selected="@(sort == "" || sort == "newest")">Mới nhất</option>
+                    <option value="popular" selected="@(sort == "popular" || sort == "featured")">Bán chạy nhất</option>
+                    <option value="sale" selected="@(sort == "sale")">Khuyến mãi / Giảm giá</option>
                     <option value="price-asc" selected="@(sort == "price-asc")">Giá thấp → cao</option>
                     <option value="price-desc" selected="@(sort == "price-desc")">Giá cao → thấp</option>
                     <option value="name-asc" selected="@(sort == "name-asc")">Tên A → Z</option>
@@ -46,7 +58,7 @@
             </form>
             <div class="emua-product-count">
                 <i class="bi bi-box-seam" aria-hidden="true"></i>
-                <strong id="emuaProductCount">@products.Count</strong><span>sản phẩm</span>
+                <strong id="emuaProductCount">@totalItems</strong><span>sản phẩm</span>
             </div>
         </div>
         <div id="emuaFilterStatus" class="emua-filter-status" role="status" aria-live="polite"></div>

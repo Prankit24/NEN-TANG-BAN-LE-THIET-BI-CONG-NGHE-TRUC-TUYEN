@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using EMua.Models.Database;
+using EMua.Services;
 
 namespace EMua.Helpers
 {
@@ -14,7 +15,7 @@ namespace EMua.Helpers
             _webRootPath = webRootPath;
         }
 
-        public static string FixImageUrl(string? rawUrl, bool checkPhysicalFile = false)
+        public static string FixImageUrl(string? rawUrl, bool checkPhysicalFile = true)
         {
             if (string.IsNullOrWhiteSpace(rawUrl))
             {
@@ -23,7 +24,7 @@ namespace EMua.Helpers
 
             var clean = rawUrl.Trim().Replace('\\', '/');
 
-            // Hỗ trợ link ngoài (http, https, //) hoặc base64 data URI
+            // 1. Hỗ trợ link tuyệt đối (http, https, //) hoặc base64 data URI: giữ nguyên, tuyệt đối không kiểm tra đĩa local
             if (clean.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 clean.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
                 clean.StartsWith("//", StringComparison.OrdinalIgnoreCase) ||
@@ -63,16 +64,23 @@ namespace EMua.Helpers
                 }
             }
 
-            // Tùy chọn kiểm tra file vật lý trên đĩa (nếu đã cấu hình webRootPath)
-            if (checkPhysicalFile && !string.IsNullOrWhiteSpace(_webRootPath))
+            // 2. Kiểm tra file vật lý trên đĩa cho đường dẫn nội bộ (hỗ trợ Linux/Docker/Windows)
+            if (checkPhysicalFile)
             {
                 try
                 {
-                    var relativePath = clean.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-                    var fullPhysicalPath = Path.Combine(_webRootPath, relativePath);
-                    if (!File.Exists(fullPhysicalPath))
+                    var webRoot = !string.IsNullOrWhiteSpace(_webRootPath) && Directory.Exists(_webRootPath)
+                        ? _webRootPath
+                        : OrderEvidenceStorage.ResolveWebRoot(_webRootPath);
+
+                    if (!string.IsNullOrWhiteSpace(webRoot))
                     {
-                        return "/images/no-image.png";
+                        var relativePath = clean.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                        var fullPhysicalPath = Path.Combine(webRoot, relativePath);
+                        if (!File.Exists(fullPhysicalPath))
+                        {
+                            return "/images/no-image.png";
+                        }
                     }
                 }
                 catch
@@ -85,7 +93,7 @@ namespace EMua.Helpers
             return clean;
         }
 
-        public static string ResolveProductImage(SanPham? product, BienTheSanPham? variant = null, bool checkPhysicalFile = false)
+        public static string ResolveProductImage(SanPham? product, BienTheSanPham? variant = null, bool checkPhysicalFile = true)
         {
             // 1. Ảnh biến thể nếu có
             if (!string.IsNullOrWhiteSpace(variant?.HinhAnh))

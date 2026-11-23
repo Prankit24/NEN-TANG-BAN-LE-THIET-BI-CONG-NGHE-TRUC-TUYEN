@@ -21,17 +21,20 @@ public class ProductController : StaffControllerBase
     private readonly IWebHostEnvironment _environment;
     private readonly IMemoryCache _cache;
     private readonly IUndoDeletionManager _undoManager;
+    private readonly IProductImageStorageService _storageService;
 
     public ProductController(
         EMuaDbContext db, 
         IWebHostEnvironment environment, 
         IMemoryCache cache,
-        IUndoDeletionManager undoManager)
+        IUndoDeletionManager undoManager,
+        IProductImageStorageService storageService)
     {
         _db = db;
         _environment = environment;
         _cache = cache;
         _undoManager = undoManager;
+        _storageService = storageService;
     }
 
     private void InvalidateProductCache()
@@ -629,11 +632,6 @@ public class ProductController : StaffControllerBase
 
     private async Task<string> SaveImageAsync(IFormFile image)
     {
-        var folder = Path.Combine(_environment.WebRootPath, "images", "products");
-        Directory.CreateDirectory(folder);
-        var fileName = $"{Guid.NewGuid():N}{Path.GetExtension(image.FileName).ToLowerInvariant()}";
-        await using var stream = System.IO.File.Create(Path.Combine(folder, fileName));
-        await image.CopyToAsync(stream);
-        return $"/images/products/{fileName}";
+        return await _storageService.SaveProductImageAsync(image);
     }
 }

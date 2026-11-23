@@ -18,7 +18,7 @@
                 <h2 id="feat-heading">Sản phẩm nổi bật</h2>
                 <p>Những thiết bị dẫn đầu doanh số và được khách hàng đánh giá cao nhất.</p>
             </div>
-            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index">
+            <a class="ep-text-link" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="popular">
                 <span>Xem tất cả</span>
                 <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>
@@ -104,6 +104,13 @@
                         </div>
                     </article>
                 }
+            </div>
+
+            <div class="ep-section-footer text-center mt-4 pt-2">
+                <a class="btn btn-outline-primary px-4 py-2 fw-semibold rounded-pill" asp-area="" asp-controller="Product" asp-action="Index" asp-route-sort="popular">
+                    <span>Xem tất cả sản phẩm nổi bật</span>
+                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
             </div>
         }
     </div>

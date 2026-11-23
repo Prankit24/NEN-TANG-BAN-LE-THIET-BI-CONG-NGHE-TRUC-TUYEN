@@ -201,6 +201,9 @@ builder.Services.AddSingleton<IUndoDeletionManager, UndoDeletionManager>();
 // Tra cứu tình trạng đơn hàng của khách bằng dữ liệu thật (không để AI đoán).
 builder.Services.AddScoped<OrderTrackingAssistant>();
 
+// Dịch vụ lưu trữ hình ảnh sản phẩm (Supabase Storage + Fallback nội bộ)
+builder.Services.AddScoped<IProductImageStorageService, ProductImageStorageService>();
+
 // ============================================================
 // 6. MVC VÀ HTTP CLIENT
 // ============================================================
