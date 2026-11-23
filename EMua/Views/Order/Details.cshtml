@@ -114,9 +114,31 @@
                 @for (int i = 0; i < progressSteps.Length; i++)
                 {
                     var cls = i < currentStepIndex ? "done" : (i == currentStepIndex ? "active" : "");
-                    <div class="delivery-progress-step @cls">
-                        <div class="dot"><i class="bi @stepIcons[i]"></i></div>
-                        <div class="step-text">@stepLabels[i]</div>
+                    var stepName = progressSteps[i];
+                    var stepLog = Model.StatusHistory?.LastOrDefault(h =>
+                        string.Equals(OrderRules.Normalize(h.Status), OrderRules.Normalize(stepName), StringComparison.OrdinalIgnoreCase) ||
+                        (stepName == "Đã hoàn thành" && (h.Status.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase) || h.Status.Contains("giao", StringComparison.OrdinalIgnoreCase))));
+
+                    string? stepTooltip = null;
+                    if (stepLog != null)
+                    {
+                        if (OrderRules.Normalize(stepName) == OrderRules.Completed)
+                        {
+                            stepTooltip = $"Ngày giờ giao hàng thực tế: {stepLog.Time:dd/MM/yyyy HH:mm}";
+                        }
+                        else
+                        {
+                            stepTooltip = $"{stepLabels[i]}: {stepLog.Time:dd/MM/yyyy HH:mm}";
+                        }
+                    }
+                    else if (i == 0 && Model.OrderedAt.HasValue)
+                    {
+                        stepTooltip = $"{stepLabels[i]}: {Model.OrderedAt.Value:dd/MM/yyyy HH:mm}";
+                    }
+
+                    <div class="delivery-progress-step @cls" title="@stepTooltip">
+                        <div class="dot" title="@stepTooltip"><i class="bi @stepIcons[i]"></i></div>
+                        <div class="step-text" title="@stepTooltip">@stepLabels[i]</div>
                     </div>
                 }
             </div>

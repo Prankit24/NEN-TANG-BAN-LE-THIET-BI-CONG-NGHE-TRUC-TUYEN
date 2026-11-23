@@ -177,13 +177,51 @@ public class InvoiceController : Controller
 
     // 2. XUẤT BÁO CÁO TỔNG HỢP HÓA ĐƠN (CSV)
     [HttpGet]
-    public async Task<IActionResult> ExportReportCsv(string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
+    public async Task<IActionResult> ExportReportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
     {
         var invoicesQuery = _db.HoaDons
             .AsNoTracking()
             .Include(x => x.MaDonHangNavigation)
+            .Include(x => x.MaNguoiLapNavigation)
             .Include(x => x.ChiTietHoaDons)
             .AsQueryable();
+
+        // 1.1 Tìm kiếm theo mã hóa đơn, mã đơn hàng, khách hàng, SĐT, hoặc nhân viên lập
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var search = q.Trim();
+            var searchUpper = search.ToUpperInvariant();
+
+            int? exactInvoiceId = null;
+            int? exactOrderId = null;
+
+            if (searchUpper.StartsWith("#HD-") || searchUpper.StartsWith("HD-"))
+            {
+                var numPart = searchUpper.Replace("#HD-", "").Replace("HD-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactInvoiceId = parsed;
+            }
+            else if (searchUpper.StartsWith("#DH-") || searchUpper.StartsWith("DH-"))
+            {
+                var numPart = searchUpper.Replace("#DH-", "").Replace("DH-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactOrderId = parsed;
+            }
+            else if (int.TryParse(search, out var parsedNum))
+            {
+                exactInvoiceId = parsedNum;
+                exactOrderId = parsedNum;
+            }
+
+            var pattern = $"%{search}%";
+
+            invoicesQuery = invoicesQuery.Where(x =>
+                (exactInvoiceId.HasValue && x.MaHoaDon == exactInvoiceId.Value) ||
+                (exactOrderId.HasValue && x.MaDonHang == exactOrderId.Value) ||
+                (x.HoTenKhachHang != null && EF.Functions.ILike(x.HoTenKhachHang, pattern)) ||
+                (x.SoDienThoai != null && EF.Functions.ILike(x.SoDienThoai, pattern)) ||
+                (x.TenNguoiLap != null && EF.Functions.ILike(x.TenNguoiLap, pattern)) ||
+                (x.MaNguoiLapNavigation != null && x.MaNguoiLapNavigation.TenNguoiDung != null && EF.Functions.ILike(x.MaNguoiLapNavigation.TenNguoiDung, pattern)) ||
+                (x.MaDonHangNavigation != null && x.MaDonHangNavigation.HoTenNhanHang != null && EF.Functions.ILike(x.MaDonHangNavigation.HoTenNhanHang, pattern)));
+        }
 
         if (!string.IsNullOrWhiteSpace(status) && status != "all")
             invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
@@ -199,39 +237,91 @@ public class InvoiceController : Controller
 
         var list = await invoicesQuery.OrderByDescending(x => x.MaHoaDon).ToListAsync();
 
+        if (list.Count == 0)
+        {
+            TempData["ErrorMessage"] = "Không tìm thấy hóa đơn nào phù hợp với điều kiện lọc để xuất báo cáo.";
+            return RedirectToAction(nameof(Index), new { q, status, month, year, fromDate, toDate });
+        }
+
         var sb = new StringBuilder();
-        sb.Append('\uFEFF');
         sb.AppendLine("Mã HĐ,Mã Đơn Hàng,Ngày Lập,Người Mua,SĐT,Tiền Trước Thuế,Tiền VAT,Phí Vận Chuyển,Giảm Giá,Tổng Thanh Toán,Trạng Thái,Người Lập");
 
+        var invCulture = System.Globalization.CultureInfo.InvariantCulture;
         foreach (var inv in list)
         {
             var dateStr = inv.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "";
-            var customer = (inv.HoTenKhachHang ?? "").Replace(",", " - ");
-            var phone = inv.SoDienThoai ?? "";
-            var net = inv.TienTruocThue ?? 0m;
-            var vat = inv.TienThueVat ?? 0m;
-            var ship = inv.PhiVanChuyen ?? 0m;
-            var disc = inv.TienGiamGia ?? 0m;
-            var gross = inv.TongTien ?? 0m;
-            var st = inv.TrangThaiHoaDon ?? "Đã lập";
-            var staff = (inv.TenNguoiLap ?? "").Replace(",", " - ");
+            var customer = (inv.HoTenKhachHang ?? "").Replace("\"", "\"\"");
+            var phone = (inv.SoDienThoai ?? "").Replace("\"", "\"\"");
+            var net = (inv.TienTruocThue ?? 0m).ToString("0.##", invCulture);
+            var vat = (inv.TienThueVat ?? 0m).ToString("0.##", invCulture);
+            var ship = (inv.PhiVanChuyen ?? 0m).ToString("0.##", invCulture);
+            var disc = (inv.TienGiamGia ?? 0m).ToString("0.##", invCulture);
+            var gross = (inv.TongTien ?? 0m).ToString("0.##", invCulture);
+            var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
+            var staff = (inv.TenNguoiLap ?? inv.MaNguoiLapNavigation?.TenNguoiDung ?? "").Replace("\"", "\"\"");
 
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{customer}\",{phone},{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{customer}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
+        var preamble = Encoding.UTF8.GetPreamble();
+        var contentBytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var fileBytes = new byte[preamble.Length + contentBytes.Length];
+        Buffer.BlockCopy(preamble, 0, fileBytes, 0, preamble.Length);
+        Buffer.BlockCopy(contentBytes, 0, fileBytes, preamble.Length, contentBytes.Length);
+
         var fileName = $"BaoCao_HoaDon_{DateTime.Now:yyyyMMdd_HHmm}.csv";
-        return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", fileName);
+        return File(fileBytes, "text/csv; charset=utf-8", fileName);
     }
+
+    [HttpGet]
+    public Task<IActionResult> ExportCsv(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
+        => ExportReportCsv(q, status, month, year, fromDate, toDate);
 
     // 2.1 XUẤT BÁO CÁO TỔNG HỢP HÓA ĐƠN (EXCEL .XLSX)
     [HttpGet]
-    public async Task<IActionResult> ExportReportExcel(string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
+    public async Task<IActionResult> ExportReportExcel(string? q, string? status, int? month, int? year, DateTime? fromDate, DateTime? toDate)
     {
         var invoicesQuery = _db.HoaDons
             .AsNoTracking()
             .Include(x => x.MaDonHangNavigation)
             .Include(x => x.ChiTietHoaDons)
             .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var search = q.Trim();
+            var searchUpper = search.ToUpperInvariant();
+
+            int? exactInvoiceId = null;
+            int? exactOrderId = null;
+
+            if (searchUpper.StartsWith("#HD-") || searchUpper.StartsWith("HD-"))
+            {
+                var numPart = searchUpper.Replace("#HD-", "").Replace("HD-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactInvoiceId = parsed;
+            }
+            else if (searchUpper.StartsWith("#DH-") || searchUpper.StartsWith("DH-"))
+            {
+                var numPart = searchUpper.Replace("#DH-", "").Replace("DH-", "").Trim();
+                if (int.TryParse(numPart, out var parsed)) exactOrderId = parsed;
+            }
+            else if (int.TryParse(search, out var parsedNum))
+            {
+                exactInvoiceId = parsedNum;
+                exactOrderId = parsedNum;
+            }
+
+            var pattern = $"%{search}%";
+
+            invoicesQuery = invoicesQuery.Where(x =>
+                (exactInvoiceId.HasValue && x.MaHoaDon == exactInvoiceId.Value) ||
+                (exactOrderId.HasValue && x.MaDonHang == exactOrderId.Value) ||
+                (x.HoTenKhachHang != null && EF.Functions.ILike(x.HoTenKhachHang, pattern)) ||
+                (x.SoDienThoai != null && EF.Functions.ILike(x.SoDienThoai, pattern)) ||
+                (x.TenNguoiLap != null && EF.Functions.ILike(x.TenNguoiLap, pattern)) ||
+                (x.MaNguoiLapNavigation != null && x.MaNguoiLapNavigation.TenNguoiDung != null && EF.Functions.ILike(x.MaNguoiLapNavigation.TenNguoiDung, pattern)) ||
+                (x.MaDonHangNavigation != null && x.MaDonHangNavigation.HoTenNhanHang != null && EF.Functions.ILike(x.MaDonHangNavigation.HoTenNhanHang, pattern)));
+        }
 
         if (!string.IsNullOrWhiteSpace(status) && status != "all")
             invoicesQuery = invoicesQuery.Where(x => x.TrangThaiHoaDon == status);
@@ -246,6 +336,12 @@ public class InvoiceController : Controller
             invoicesQuery = invoicesQuery.Where(x => x.NgayLapHoaDon != null && x.NgayLapHoaDon.Value.Year == year.Value);
 
         var list = await invoicesQuery.OrderByDescending(x => x.MaHoaDon).ToListAsync();
+
+        if (list.Count == 0)
+        {
+            TempData["ErrorMessage"] = "Không tìm thấy hóa đơn nào phù hợp với điều kiện lọc để xuất báo cáo.";
+            return RedirectToAction(nameof(Index), new { q, status, month, year, fromDate, toDate });
+        }
 
         var columns = new List<ExcelColumn>
         {
@@ -520,23 +616,36 @@ public class InvoiceController : Controller
             .ToListAsync();
 
         var sb = new StringBuilder();
-        sb.Append('\uFEFF');
         sb.AppendLine($"BÁO CÁO TỔNG HỢP HÓA ĐƠN BÁN HÀNG NGÀY {targetDate:dd/MM/yyyy}");
         sb.AppendLine($"Thời gian xuất báo cáo,{DateTime.Now:dd/MM/yyyy HH:mm}");
         sb.AppendLine("Ghi chú: Bản báo cáo tổng hợp nội bộ đối soát - Không phải hóa đơn GTGT tổng");
         sb.AppendLine();
         sb.AppendLine("Mã HĐ,Mã ĐH,Ngày Lập,Khách Hàng,SĐT,Tiền Trước Thuế,Tiền VAT,Phí Ship,Giảm Giá,Tổng Thanh Toán,Trạng Thái HĐ,Người Lập");
 
+        var invCulture = System.Globalization.CultureInfo.InvariantCulture;
         foreach (var inv in invoicesToday)
         {
             var dateStr = inv.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "";
-            var cust = (inv.HoTenKhachHang ?? "").Replace(",", " - ");
-            var staff = (inv.TenNguoiLap ?? "").Replace(",", " - ");
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{cust}\",{inv.SoDienThoai},{inv.TienTruocThue ?? 0},{inv.TienThueVat ?? 0},{inv.PhiVanChuyen ?? 0},{inv.TienGiamGia ?? 0},{inv.TongTien ?? 0},\"{inv.TrangThaiHoaDon}\",\"{staff}\"");
+            var cust = (inv.HoTenKhachHang ?? "").Replace("\"", "\"\"");
+            var phone = (inv.SoDienThoai ?? "").Replace("\"", "\"\"");
+            var staff = (inv.TenNguoiLap ?? "").Replace("\"", "\"\"");
+            var net = (inv.TienTruocThue ?? 0m).ToString("0.##", invCulture);
+            var vat = (inv.TienThueVat ?? 0m).ToString("0.##", invCulture);
+            var ship = (inv.PhiVanChuyen ?? 0m).ToString("0.##", invCulture);
+            var disc = (inv.TienGiamGia ?? 0m).ToString("0.##", invCulture);
+            var gross = (inv.TongTien ?? 0m).ToString("0.##", invCulture);
+            var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{cust}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
+        var preamble = Encoding.UTF8.GetPreamble();
+        var contentBytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var fileBytes = new byte[preamble.Length + contentBytes.Length];
+        Buffer.BlockCopy(preamble, 0, fileBytes, 0, preamble.Length);
+        Buffer.BlockCopy(contentBytes, 0, fileBytes, preamble.Length, contentBytes.Length);
+
         var fileName = $"BaoCao_CuoiNgay_{targetDate:yyyyMMdd}.csv";
-        return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", fileName);
+        return File(fileBytes, "text/csv; charset=utf-8", fileName);
     }
 
     // 7. XUẤT EXCEL (.XLSX) BÁO CÁO HÓA ĐƠN CUỐI NGÀY
