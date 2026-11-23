@@ -239,6 +239,61 @@
 
                 var cls = isFinalCompleted ? "completed-success" : (isStepDone ? "done" : (isStepActive ? "active" : ""));
 
+                // Lấy thời gian mốc từ lịch sử vận chuyển
+                var stepLog = Model.LichSuVanChuyens?.LastOrDefault(h =>
+                    string.Equals(OrderRules.Normalize(h.TrangThai), OrderRules.Normalize(stepName), StringComparison.OrdinalIgnoreCase) ||
+                    (stepName == "Đang xử lý" && (h.TrangThai.Contains("chuẩn bị", StringComparison.OrdinalIgnoreCase) || h.TrangThai.Contains("xử lý", StringComparison.OrdinalIgnoreCase))) ||
+                    (stepName == "Đang giao hàng" && (h.TrangThai.Contains("giao hàng", StringComparison.OrdinalIgnoreCase) || h.TrangThai.Contains("vận chuyển", StringComparison.OrdinalIgnoreCase))) ||
+                    (stepName == "Đã hoàn thành" && (h.TrangThai.Contains("hoàn thành", StringComparison.OrdinalIgnoreCase) || h.TrangThai.Contains("đã giao", StringComparison.OrdinalIgnoreCase))));
+
+                DateTime? stepTime = null;
+                string timeDisplay = "";
+                string tooltipTitle = "";
+
+                if (stepLog != null)
+                {
+                    stepTime = stepLog.ThoiGian;
+                    timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                    tooltipTitle = $"{stepName}: {timeDisplay}";
+                }
+                else if (i == 0 && Model.NgayDat.HasValue)
+                {
+                    stepTime = Model.NgayDat.Value;
+                    timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                    tooltipTitle = $"{stepName}: {timeDisplay}";
+                }
+                else if (isStepActive)
+                {
+                    var latestLog = Model.LichSuVanChuyens?.OrderByDescending(h => h.ThoiGian).FirstOrDefault();
+                    stepTime = latestLog?.ThoiGian ?? Model.NgayDat;
+                    if (stepTime.HasValue)
+                    {
+                        timeDisplay = stepTime.Value.ToString("dd/MM/yyyy HH:mm");
+                        tooltipTitle = $"{stepName}: {timeDisplay} (Đang xử lý)";
+                    }
+                    else
+                    {
+                        tooltipTitle = $"{stepName}: Đang xử lý";
+                    }
+                }
+                else if (isStepDone)
+                {
+                    var fallbackTime = Model.LichSuVanChuyens?.Where(h => h.ThoiGian >= (Model.NgayDat ?? DateTime.MinValue)).OrderBy(h => h.ThoiGian).FirstOrDefault()?.ThoiGian ?? Model.NgayDat;
+                    if (fallbackTime.HasValue)
+                    {
+                        timeDisplay = fallbackTime.Value.ToString("dd/MM/yyyy HH:mm");
+                        tooltipTitle = $"{stepName}: {timeDisplay} (Đã hoàn tất bước này)";
+                    }
+                    else
+                    {
+                        tooltipTitle = $"{stepName}: Đã hoàn tất bước này";
+                    }
+                }
+                else
+                {
+                    tooltipTitle = $"{stepName}: Chưa thực hiện";
+                }
+
                 string iconClass = isFinalCompleted ? "bi-check-lg" : stepName switch
                 {
                     "Chờ xử lý" => "bi-hourglass-split",
@@ -252,11 +307,19 @@
                     _ => "bi-circle"
                 };
 
-                <div class="staff-tracker-step @cls">
-                    <div class="icon-circle">
+                <div class="staff-tracker-step @cls" title="@tooltipTitle">
+                    <div class="staff-step-tooltip">
+                        <span class="tooltip-title">@stepName</span>
+                        <span class="tooltip-time">@(string.IsNullOrEmpty(timeDisplay) ? (isStepDone || isStepActive ? "Đã hoàn tất" : "Chưa thực hiện") : timeDisplay)</span>
+                    </div>
+                    <div class="icon-circle" title="@tooltipTitle">
                         <i class="bi @iconClass"></i>
                     </div>
-                    <div class="step-label">@stepName</div>
+                    <div class="step-label" title="@tooltipTitle">@stepName</div>
+                    @if (!string.IsNullOrEmpty(timeDisplay))
+                    {
+                        <div class="step-time-sub" title="@tooltipTitle">@timeDisplay</div>
+                    }
                 </div>
             }
         </div>

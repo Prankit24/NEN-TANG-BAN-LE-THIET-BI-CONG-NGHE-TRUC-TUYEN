@@ -97,6 +97,76 @@
         color: #212529;
     }
 
+    .delivery-progress-step .step-sub-time {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 2px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .delivery-progress-step.active .step-sub-time {
+        color: #ee4d2d;
+        font-weight: 600;
+    }
+
+    /* Khung Tooltip tùy biến nổi bật khi Hover */
+    .delivery-progress-step {
+        cursor: pointer;
+    }
+
+    .delivery-progress-step .custom-step-tooltip {
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%) translateY(6px);
+        background: #111827;
+        color: #ffffff;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        line-height: 1.35;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 20;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .delivery-progress-step .custom-step-tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 5px;
+        border-style: solid;
+        border-color: #111827 transparent transparent transparent;
+    }
+
+    .delivery-progress-step .custom-step-tooltip .tooltip-step-name {
+        font-weight: 700;
+        color: #f9fafb;
+    }
+
+    .delivery-progress-step .custom-step-tooltip .tooltip-step-time {
+        font-size: 10.5px;
+        color: #e5e7eb;
+    }
+
+    .delivery-progress-step:hover .custom-step-tooltip,
+    .delivery-progress-step:focus .custom-step-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }
+
     .delivery-truck-icon {
         position: absolute;
         top: -4px;
