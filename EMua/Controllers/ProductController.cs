@@ -394,39 +394,59 @@ namespace EMua.Controllers
 
                 var defaultVariant = variants.FirstOrDefault() ?? productVariants.FirstOrDefault();
 
-                var resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
-
+                // Lọc danh sách ảnh thật của sản phẩm, đưa ảnh chính (LaChinh == true) lên đầu
                 var allImages = new List<string>();
 
-                var productImages = product.SanPhamHinhAnhs ?? new List<SanPhamHinhAnh>();
-                foreach (var image in productImages
+                var productImages = (product.SanPhamHinhAnhs ?? new List<SanPhamHinhAnh>())
                     .OrderByDescending(x => x.LaAnhChinh == true)
-                    .ThenBy(x => x.ThuTu))
+                    .ThenBy(x => x.ThuTu)
+                    .ToList();
+
+                foreach (var image in productImages)
                 {
                     if (string.IsNullOrWhiteSpace(image?.DuongDanAnh)) continue;
-                    var url = ImageUrlHelper.FixImageUrl(image.DuongDanAnh, checkPhysicalFile: true);
+                    var raw = image.DuongDanAnh.Trim();
+                    if (raw.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
 
-                    if (!string.Equals(url, "/images/no-image.png", StringComparison.OrdinalIgnoreCase) &&
-                        !allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
+                    var url = ImageUrlHelper.FixImageUrl(raw, checkPhysicalFile: true);
+                    if (string.IsNullOrWhiteSpace(url) || url.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    if (!allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
                         allImages.Add(url);
                     }
                 }
 
+                // Bổ sung ảnh từ các biến thể (nếu có ảnh riêng và chưa có trong danh sách)
                 foreach (var variant in variants)
                 {
                     if (string.IsNullOrWhiteSpace(variant?.HinhAnh)) continue;
-                    var url = ImageUrlHelper.FixImageUrl(variant.HinhAnh, checkPhysicalFile: true);
+                    var raw = variant.HinhAnh.Trim();
+                    if (raw.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
 
-                    if (!string.Equals(url, "/images/no-image.png", StringComparison.OrdinalIgnoreCase) &&
-                        !allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
+                    var url = ImageUrlHelper.FixImageUrl(raw, checkPhysicalFile: true);
+                    if (string.IsNullOrWhiteSpace(url) || url.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    if (!allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
                         allImages.Add(url);
                     }
                 }
 
-                if (allImages.Count == 0)
+                // Xác định ảnh chính: Nếu có ảnh thật, lấy luôn ảnh thật đầu tiên.
+                // Nếu hoàn toàn không có ảnh thật nào, mới dùng fallback resolveImage hoặc /images/no-image.png
+                string resolvedMainImage;
+                if (allImages.Count > 0)
                 {
+                    resolvedMainImage = allImages[0];
+                }
+                else
+                {
+                    resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
+                    if (string.IsNullOrWhiteSpace(resolvedMainImage) || resolvedMainImage.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolvedMainImage = "/images/no-image.png";
+                    }
                     allImages.Add(resolvedMainImage);
                 }
 
