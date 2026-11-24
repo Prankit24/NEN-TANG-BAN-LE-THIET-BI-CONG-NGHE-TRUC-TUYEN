@@ -12,7 +12,7 @@ CÁCH CHẠY:
       python Tools/convert-images-to-webp.py --source wwwroot/images/products --quality 80 --max-width 900
 3. Script sẽ:
    - Quét tất cả subfolder trong --source
-   - Với mỗi ảnh .jpg/.jpeg/.png, tạo file .webp cùng thư mục
+   - Với mỗi ảnh .jpg/.jpeg/.webp, tạo file .webp cùng thư mục
    - Giữ nguyên ảnh gốc (không xóa)
    - Bỏ qua nếu file .webp đã tồn tại VÀ mới hơn ảnh gốc
 """
@@ -81,7 +81,7 @@ def main():
         print(f"❌ Thư mục không tồn tại: {source_dir}")
         sys.exit(1)
 
-    extensions = {'.jpg', '.jpeg', '.png'}
+    extensions = {'.jpg', '.jpeg', '.webp'}
     total = 0
     converted = 0
     skipped = 0

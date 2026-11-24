@@ -597,7 +597,7 @@ public class ProductController : StaffControllerBase
             return;
         }
 
-        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var allowed = new[] { ".jpg", ".jpeg", ".webp", ".webp" };
         foreach (var img in files)
         {
             var ext = Path.GetExtension(img.FileName).ToLowerInvariant();

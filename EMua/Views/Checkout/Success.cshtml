@@ -8,7 +8,7 @@
     string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
 
     string transferContent = Model.TransferContent ?? $"EMUA{Model.OrderId:D6}";
-    string bankQrUrl = Model.BankQrUrl ?? $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
+    string bankQrUrl = Model.BankQrUrl ?? $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.webp?amount={(long)Model.TotalAmount}&addInfo={transferContent}&accountName={mbAccountName}";
     string web3WalletAddress = ViewBag.Web3WalletAddress as string ?? "";
 
     bool isPaid = OrderRules.IsPaid(Model.PaymentStatus);

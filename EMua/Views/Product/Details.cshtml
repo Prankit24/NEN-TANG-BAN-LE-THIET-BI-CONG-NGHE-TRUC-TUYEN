@@ -79,7 +79,7 @@
             // 4. CHỈ hiển thị placeholder nếu sản phẩm HOÀN TOÀN không có bất kỳ ảnh thật nào
             if (galleryImages.Count == 0)
             {
-                galleryImages.Add("/images/no-image.png");
+                galleryImages.Add("/images/no-image.webp");
             }
         }
 
@@ -94,7 +94,7 @@
                      fetchpriority="high"
                      decoding="async"
                      width="600" height="600"
-                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                     onerror="this.onerror=null;this.src='/images/no-image.webp';" />
 
                 @if (galleryImages.Count > 1)
                 {
@@ -133,7 +133,7 @@
                             <img src="@galleryImages[i]"
                                  alt="@(Model?.Name ?? "Sản phẩm") - ảnh @(i + 1)"
                                  loading="lazy"
-                                 onerror="this.onerror=null;this.src='/images/no-image.png';" />
+                                 onerror="this.onerror=null;this.src='/images/no-image.webp';" />
                         </button>
                     }
                 </div>
@@ -315,7 +315,7 @@
         const main = document.getElementById('mainProductImg');
         const thumbs = document.getElementById('galleryThumbnails');
         const current = document.getElementById('galleryCurrent');
-        const fallback = '/images/no-image.png';
+        const fallback = '/images/no-image.webp';
         let selected = 0;
         let sequence = 0;
         const cache = new Map();

@@ -48,7 +48,7 @@ public class OrderController : Controller
 
                     ProductImageUrl = !string.IsNullOrEmpty(i.MaBienTheNavigation.HinhAnh)
                         ? i.MaBienTheNavigation.HinhAnh
-                        : (i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.Select(a => a.DuongDanAnh).FirstOrDefault() ?? "/images/no-image.png"),
+                        : (i.MaBienTheNavigation.MaSanPhamNavigation.SanPhamHinhAnhs.Select(a => a.DuongDanAnh).FirstOrDefault() ?? "/images/no-image.webp"),
 
                     Quantity = i.SoLuong,
                     Price = i.DonGia

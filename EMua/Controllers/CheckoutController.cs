@@ -375,7 +375,7 @@ public class CheckoutController : Controller
 
         string mbAccountNo = "0963453170";
         string mbAccountName = Uri.EscapeDataString("PHAN DANG PHUONG ANH");
-        var bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.png?amount={(long)orderTotal}&addInfo={transferContent}&accountName={mbAccountName}";
+        var bankQrUrl = $"https://img.vietqr.io/image/MB-{mbAccountNo}-compact2.webp?amount={(long)orderTotal}&addInfo={transferContent}&accountName={mbAccountName}";
         string web3WalletAddress = _configuration["Payments:Web3WalletAddress"] ?? "";
         ViewBag.Web3Network = _configuration["Payments:Web3Network"] ?? "";
 

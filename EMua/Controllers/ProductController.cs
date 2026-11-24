@@ -434,7 +434,7 @@ namespace EMua.Controllers
                 }
 
                 // Xác định ảnh chính: Nếu có ảnh thật, lấy luôn ảnh thật đầu tiên.
-                // Nếu hoàn toàn không có ảnh thật nào, mới dùng fallback resolveImage hoặc /images/no-image.png
+                // Nếu hoàn toàn không có ảnh thật nào, mới dùng fallback resolveImage hoặc /images/no-image.webp
                 string resolvedMainImage;
                 if (allImages.Count > 0)
                 {
@@ -445,7 +445,7 @@ namespace EMua.Controllers
                     resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
                     if (string.IsNullOrWhiteSpace(resolvedMainImage) || resolvedMainImage.Contains("no-image", StringComparison.OrdinalIgnoreCase))
                     {
-                        resolvedMainImage = "/images/no-image.png";
+                        resolvedMainImage = "/images/no-image.webp";
                     }
                     allImages.Add(resolvedMainImage);
                 }
@@ -490,7 +490,7 @@ namespace EMua.Controllers
                     Variants = variants.Select(v =>
                     {
                         var varImg = ImageUrlHelper.FixImageUrl(v.HinhAnh, checkPhysicalFile: true);
-                        if (string.Equals(varImg, "/images/no-image.png", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(varImg, "/images/no-image.webp", StringComparison.OrdinalIgnoreCase))
                         {
                             varImg = resolvedMainImage;
                         }
