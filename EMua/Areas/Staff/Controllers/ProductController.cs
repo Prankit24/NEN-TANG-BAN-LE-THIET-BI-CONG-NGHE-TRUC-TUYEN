@@ -405,7 +405,7 @@ public class ProductController : StaffControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
         var product = await _db.SanPhams
             .AsNoTracking()
@@ -431,7 +431,9 @@ public class ProductController : StaffControllerBase
             group => string.Join("; ", group.Select(x => $"Phiếu {x.MaChungTu} (+{x.SoLuongNhap})"))
         );
 
-        return View(ToEditModel(product));
+        var editModel = ToEditModel(product);
+        editModel.ReturnUrl = returnUrl;
+        return View(editModel);
     }
 
     [HttpPost]
@@ -469,6 +471,15 @@ public class ProductController : StaffControllerBase
         string? newUploadedMainPath = null;
         if (allFiles.Count > 0)
         {
+            // Nếu sản phẩm trước đó đang chứa ảnh rác no-image, hãy dọn dẹp các bản ghi này
+            var placeholderImages = product.SanPhamHinhAnhs
+                .Where(x => string.IsNullOrWhiteSpace(x.DuongDanAnh) || x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (placeholderImages.Any())
+            {
+                _db.SanPhamHinhAnhs.RemoveRange(placeholderImages);
+            }
+
             int currentMaxOrder = product.SanPhamHinhAnhs.Any() ? product.SanPhamHinhAnhs.Max(x => x.ThuTu) : 0;
             for (int i = 0; i < allFiles.Count; i++)
             {
@@ -487,11 +498,23 @@ public class ProductController : StaffControllerBase
 
         // 3. Cập nhật cờ LaAnhChinh theo ảnh mà người dùng đã chọn
         string? activeMainImg = model.SelectedMainImageUrl ?? newUploadedMainPath;
-        if (!string.IsNullOrEmpty(activeMainImg))
+        if (!string.IsNullOrEmpty(activeMainImg) && !activeMainImg.Contains("no-image", StringComparison.OrdinalIgnoreCase))
         {
             foreach (var img in product.SanPhamHinhAnhs)
             {
                 img.LaAnhChinh = (img.DuongDanAnh != null && img.DuongDanAnh.Equals(activeMainImg, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        else
+        {
+            // Đảm bảo luôn có 1 ảnh thật làm ảnh chính nếu có ảnh
+            var realImages = product.SanPhamHinhAnhs
+                .Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh) && !x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x.ThuTu)
+                .ToList();
+            if (realImages.Any() && !realImages.Any(x => x.LaAnhChinh))
+            {
+                realImages[0].LaAnhChinh = true;
             }
         }
 
@@ -499,6 +522,13 @@ public class ProductController : StaffControllerBase
         var incomingIds = model.BienThe.Where(b => b.MaBienThe > 0).Select(b => b.MaBienThe).ToList();
         var toRemove = product.BienTheSanPhams.Where(b => !incomingIds.Contains(b.MaBienThe)).ToList();
         _db.BienTheSanPhams.RemoveRange(toRemove);
+
+        // Ảnh chính thật đại diện cho biến thể mới (hoặc biến thể bị dính no-image)
+        var fallbackVariantImg = CurrentImage(product);
+        if (fallbackVariantImg != null && fallbackVariantImg.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+        {
+            fallbackVariantImg = null;
+        }
 
         foreach (var vm in model.BienThe)
         {
@@ -510,6 +540,11 @@ public class ProductController : StaffControllerBase
                     existing.MauSac = vm.MauSac?.Trim();
                     existing.PhienBan = vm.PhienBan?.Trim();
                     existing.Gia = vm.Gia;
+                    // Nếu biến thể cũ đang dính chuỗi no-image mà sản phẩm đã có ảnh thật, dọn dẹp hoặc gán ảnh thật
+                    if (!string.IsNullOrEmpty(existing.HinhAnh) && existing.HinhAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                    {
+                        existing.HinhAnh = activeMainImg ?? fallbackVariantImg;
+                    }
                     // Không cho Staff sửa trực tiếp tồn kho của biến thể đã có để đảm bảo quy trình nhập hàng
                     existing.TrangThai = string.IsNullOrEmpty(vm.TrangThai) ? (existing.SoLuong > 0 ? "Còn hàng" : "Hết hàng") : vm.TrangThai;
                 }
@@ -523,7 +558,7 @@ public class ProductController : StaffControllerBase
                     Gia = vm.Gia,
                     SoLuong = vm.SoLuong,
                     TrangThai = string.IsNullOrEmpty(vm.TrangThai) ? (vm.SoLuong > 0 ? "Còn hàng" : "Hết hàng") : vm.TrangThai,
-                    HinhAnh = activeMainImg ?? CurrentImage(product)
+                    HinhAnh = activeMainImg ?? fallbackVariantImg
                 });
             }
         }
@@ -531,6 +566,12 @@ public class ProductController : StaffControllerBase
         await _db.SaveChangesAsync();
         InvalidateProductCache();
         TempData["Success"] = "Đã cập nhật sản phẩm thành công.";
+
+        if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+        {
+            return Redirect(model.ReturnUrl);
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -615,6 +656,12 @@ public class ProductController : StaffControllerBase
     private ProductCreateViewModel ToEditModel(SanPham product)
     {
         var mainImg = CurrentImage(product);
+        var validImages = product.SanPhamHinhAnhs
+            .Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh) && !x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => x.ThuTu)
+            .Select(x => x.DuongDanAnh!)
+            .ToList();
+
         return new ProductCreateViewModel
         {
             TenSanPham = product.TenSanPham ?? string.Empty,
@@ -626,7 +673,7 @@ public class ProductController : StaffControllerBase
             ThongSoKyThuat = product.ThongSoKyThuat,
             CurrentImageUrl = mainImg,
             SelectedMainImageUrl = mainImg,
-            CurrentImageUrls = product.SanPhamHinhAnhs.OrderBy(x => x.ThuTu).Select(x => x.DuongDanAnh!).ToList(),
+            CurrentImageUrls = validImages,
             BienThe = product.BienTheSanPhams.Select(x => new ProductVariantQuantityViewModel
             {
                 MaBienThe = x.MaBienThe,
@@ -640,12 +687,13 @@ public class ProductController : StaffControllerBase
     }
 
     private static string? CurrentImage(SanPham product) => product.SanPhamHinhAnhs
+        .Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh) && !x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
         .OrderByDescending(x => x.LaAnhChinh)
         .ThenBy(x => x.ThuTu)
         .Select(x => x.DuongDanAnh)
         .FirstOrDefault()
         ?? product.BienTheSanPhams
-        .Where(x => !string.IsNullOrEmpty(x.HinhAnh))
+        .Where(x => !string.IsNullOrEmpty(x.HinhAnh) && !x.HinhAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
         .Select(x => x.HinhAnh)
         .FirstOrDefault();
 

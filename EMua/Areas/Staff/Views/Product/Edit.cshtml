@@ -14,6 +14,7 @@
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+        <input type="hidden" asp-for="ReturnUrl" />
         <input type="hidden" asp-for="SelectedMainImageUrl" id="selectedMainImageUrl" value="@Model.CurrentImageUrl" />
 
         <div class="col-md-6">
@@ -227,7 +228,7 @@
 
         <div class="col-12 d-flex gap-2">
             <button type="submit" class="btn btn-primary">Lưu toàn bộ thay đổi</button>
-            <a asp-action="Index" class="btn btn-light">Hủy</a>
+            <a href="@(!string.IsNullOrWhiteSpace(Model.ReturnUrl) ? Model.ReturnUrl : Url.Action("Index", "Product", new { area = "Staff" }))" class="btn btn-light">Hủy</a>
         </div>
     </form>
 </section>

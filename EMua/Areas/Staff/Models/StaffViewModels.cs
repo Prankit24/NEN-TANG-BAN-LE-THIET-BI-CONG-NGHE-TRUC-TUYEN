@@ -124,6 +124,9 @@ public class ProductCreateViewModel
     // THUỘC TÍNH MỚI BỔ SUNG: Đường dẫn ảnh chính được chọn từ giao diện Edit
     public string? SelectedMainImageUrl { get; set; }
 
+    // Lưu URL trang trước đó (kèm số trang, bộ lọc) để redirect lại sau khi lưu
+    public string? ReturnUrl { get; set; }
+
     // Danh sách đường dẫn tất cả ảnh hiện có (khi Edit)
     public List<string> CurrentImageUrls { get; set; } = [];
 

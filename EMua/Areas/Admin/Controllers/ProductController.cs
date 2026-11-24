@@ -30,9 +30,9 @@ public class ProductController : Controller
     }
 
     [HttpGet]
-    public IActionResult Edit(int id)
+    public IActionResult Edit(int id, string? returnUrl = null)
     {
-        return RedirectToAction("Edit", "Product", new { area = "Staff", id });
+        return RedirectToAction("Edit", "Product", new { area = "Staff", id, returnUrl });
     }
 
     [HttpPost]
