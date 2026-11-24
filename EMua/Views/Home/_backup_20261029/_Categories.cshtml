@@ -48,7 +48,7 @@
                     {
                         var name = item.TenDanhMuc?.ToLowerInvariant() ?? "";
                         var slug = ToSlug(item.TenDanhMuc);
-                        var imgPath = Url.Content($"~/images/categories/{slug}.png");
+                        var imgPath = Url.Content($"~/images/categories/{slug}.webp");
 
                         var icon = name.Contains("điện thoại") ? "bi-phone"
                         : name.Contains("laptop") ? "bi-laptop"

@@ -262,7 +262,7 @@
 
                     <div class="order-product-item" id="product-row-@item.VariantId" data-unit-price="@unitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                         <a asp-controller="Product" asp-action="Details" asp-route-id="@item.ProductId" class="product-thumb-box">
-                            <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='/images/no-image.png';" />
+                            <img src="@FixImageUrl(item.ImageUrl)" alt="@item.ProductName" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='/images/no-image.webp';" />
                         </a>
 
                         <div class="product-info-wrap">

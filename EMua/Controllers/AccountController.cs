@@ -101,7 +101,7 @@ public class AccountController : Controller
             {
                 ".jpg",
                 ".jpeg",
-                ".png",
+                ".webp",
                 ".webp"
             };
 

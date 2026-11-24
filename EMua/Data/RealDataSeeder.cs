@@ -7,7 +7,7 @@ namespace EMua.Data;
 
 /// <summary>
 /// Nạp dữ liệu thật từ seed-products.json vào database.
-/// Tự động map ảnh .webp/.jpg/.png từ wwwroot/images/products/.
+/// Tự động map ảnh .webp/.jpg/.webp từ wwwroot/images/products/.
 /// Có kiểm tra trùng lặp – chạy lại an toàn (idempotent).
 /// </summary>
 public class RealDataSeeder
@@ -230,9 +230,9 @@ public class RealDataSeeder
         if (existingCount > 0) return;
 
         var allowedExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { ".webp", ".jpg", ".jpeg", ".png" };
+            { ".webp", ".jpg", ".jpeg", ".webp" };
 
-        // Ưu tiên .webp > .jpg > .png
+        // Ưu tiên .webp > .jpg > .webp
         var files = Directory.GetFiles(imgDir)
             .Where(f => allowedExt.Contains(Path.GetExtension(f)))
             .OrderBy(f => Path.GetExtension(f).ToLower() switch

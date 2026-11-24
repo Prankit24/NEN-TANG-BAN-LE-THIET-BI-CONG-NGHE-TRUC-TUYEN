@@ -135,12 +135,12 @@ public static class OrderEvidenceStorage
         var isWebp = count >= 12 && Encoding.ASCII.GetString(header, 0, 4) == "RIFF" && Encoding.ASCII.GetString(header, 8, 4) == "WEBP";
 
         var rawExt = Path.GetExtension(file.FileName).ToLowerInvariant();
-        var isAllowedExt = rawExt is ".jpg" or ".jpeg" or ".png" or ".webp";
+        var isAllowedExt = rawExt is ".jpg" or ".jpeg" or ".webp" or ".webp";
 
         if (!isPng && !isJpg && !isWebp && !isAllowedExt)
             throw new ArgumentException("Chỉ nhận ảnh JPG, JPEG, PNG hoặc WebP có định dạng hợp lệ.");
 
-        var ext = isPng ? ".png" : (isJpg ? ".jpg" : (isWebp ? ".webp" : rawExt));
+        var ext = isPng ? ".webp" : (isJpg ? ".jpg" : (isWebp ? ".webp" : rawExt));
         var name = $"{Guid.NewGuid():N}{ext}";
 
         // Tự động kiểm tra quyền ghi trên chính thư mục đích (ví dụ /app/wwwroot/uploads/returns)

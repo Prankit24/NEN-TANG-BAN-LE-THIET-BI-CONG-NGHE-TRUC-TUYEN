@@ -619,7 +619,7 @@ else {
 </label >
 
 <input asp-for="AvatarFile"
-accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+accept=".jpg,.jpeg,.webp,.webp,image/jpeg,image/png,image/webp"
 class="editor-file-input" / >
 </div >
 

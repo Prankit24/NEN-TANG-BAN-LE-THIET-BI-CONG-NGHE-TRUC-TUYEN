@@ -19,7 +19,7 @@ namespace EMua.Helpers
 
         public static string FixImageUrl(string? rawUrl, bool checkPhysicalFile = true)
         {
-            if (string.IsNullOrWhiteSpace(rawUrl) || rawUrl == "/images/no-image.png")
+            if (string.IsNullOrWhiteSpace(rawUrl) || rawUrl == "/images/no-image.webp")
             {
                 return DefaultPlaceholderSvg;
             }
@@ -134,7 +134,7 @@ namespace EMua.Helpers
             if (!string.IsNullOrWhiteSpace(variant?.HinhAnh))
             {
                 var variantUrl = FixImageUrl(variant.HinhAnh, checkPhysicalFile);
-                if (variantUrl != DefaultPlaceholderSvg && variantUrl != "/images/no-image.png")
+                if (variantUrl != DefaultPlaceholderSvg && variantUrl != "/images/no-image.webp")
                 {
                     return variantUrl;
                 }
@@ -151,7 +151,7 @@ namespace EMua.Helpers
                 if (mainImg != null)
                 {
                     var mainUrl = FixImageUrl(mainImg.DuongDanAnh, checkPhysicalFile);
-                    if (mainUrl != DefaultPlaceholderSvg && mainUrl != "/images/no-image.png")
+                    if (mainUrl != DefaultPlaceholderSvg && mainUrl != "/images/no-image.webp")
                     {
                         return mainUrl;
                     }
@@ -166,7 +166,7 @@ namespace EMua.Helpers
                 if (firstImg != null)
                 {
                     var firstUrl = FixImageUrl(firstImg.DuongDanAnh, checkPhysicalFile);
-                    if (firstUrl != DefaultPlaceholderSvg && firstUrl != "/images/no-image.png")
+                    if (firstUrl != DefaultPlaceholderSvg && firstUrl != "/images/no-image.webp")
                     {
                         return firstUrl;
                     }
@@ -181,7 +181,7 @@ namespace EMua.Helpers
                 if (!string.IsNullOrWhiteSpace(anyVariantImg))
                 {
                     var anyVarUrl = FixImageUrl(anyVariantImg, checkPhysicalFile);
-                    if (anyVarUrl != DefaultPlaceholderSvg && anyVarUrl != "/images/no-image.png")
+                    if (anyVarUrl != DefaultPlaceholderSvg && anyVarUrl != "/images/no-image.webp")
                     {
                         return anyVarUrl;
                     }

@@ -99,7 +99,7 @@ public class BrandController : Controller
             var extension = Path.GetExtension(
                 model.LogoFile.FileName).ToLowerInvariant();
 
-            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var allowed = new[] { ".jpg", ".jpeg", ".webp", ".webp" };
 
             if (!allowed.Contains(extension))
             {

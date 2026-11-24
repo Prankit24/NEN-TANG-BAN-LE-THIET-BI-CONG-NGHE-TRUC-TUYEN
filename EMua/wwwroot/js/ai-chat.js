@@ -315,10 +315,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const img = document.createElement("img");
             img.classList.add("ai-product-img");
-            img.src = product.image || "/images/sanpham/default.png";
+            img.src = product.image || "/images/sanpham/default.webp";
             img.alt = product.name || "Sản phẩm";
             img.onerror = function () {
-                this.src = "/images/AI/CarrtoonAI.png";
+                this.src = "/images/AI/CarrtoonAI.webp";
             };
 
             const info = document.createElement("div");
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
             avatar.classList.add("ai-msg-avatar");
 
             const image = document.createElement("img");
-            image.src = "/images/AI/CarrtoonAI.png";
+            image.src = "/images/AI/CarrtoonAI.webp";
             image.alt = "EMUA AI";
             image.draggable = false;
 
@@ -448,7 +448,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const avatar = document.createElement("div");
         avatar.classList.add("ai-msg-avatar");
         const image = document.createElement("img");
-        image.src = "/images/AI/CarrtoonAI.png";
+        image.src = "/images/AI/CarrtoonAI.webp";
         image.alt = "EMUA AI";
         avatar.appendChild(image);
 

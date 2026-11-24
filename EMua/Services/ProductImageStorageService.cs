@@ -39,7 +39,7 @@ public class ProductImageStorageService : IProductImageStorageService
     {
         if (file == null || file.Length == 0)
         {
-            return "/images/no-image.png";
+            return "/images/no-image.webp";
         }
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -123,7 +123,7 @@ public class ProductImageStorageService : IProductImageStorageService
 
     public async Task<bool> DeleteProductImageAsync(string? imageUrl)
     {
-        if (string.IsNullOrWhiteSpace(imageUrl) || imageUrl == "/images/no-image.png")
+        if (string.IsNullOrWhiteSpace(imageUrl) || imageUrl == "/images/no-image.webp")
         {
             return false;
         }

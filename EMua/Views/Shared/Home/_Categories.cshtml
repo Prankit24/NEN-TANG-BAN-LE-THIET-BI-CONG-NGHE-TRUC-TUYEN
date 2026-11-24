@@ -110,11 +110,11 @@
                         ? Url.Action("Index", "Product", new { categoryId = item.Id })
                         : Url.Action("Index", "Product", new { keyword = item.Name });
 
-                    var imagePath = Url.Content($"~/images/categories/{item.Slug}.png");
+                    var imagePath = Url.Content($"~/images/categories/{item.Slug}.webp");
 
                     <a class="ep-cat-circular-card" href="@linkUrl" title="@item.Name">
                         <div class="ep-cat-circle">
-                            <!-- Ảnh danh mục tự động load từ ~/images/categories/{slug}.png, blend nền tự nhiên -->
+                            <!-- Ảnh danh mục tự động load từ ~/images/categories/{slug}.webp, blend nền tự nhiên -->
                             <img src="@imagePath" alt="@item.Name" loading="lazy" class="ep-cat-img"
                                  onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
                                  onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
