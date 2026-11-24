@@ -14,7 +14,8 @@
    01. CHECKOUT PAGE
    ========================================================= */
 .customer-page {
-    max-width: 1180px;
+    max-width: 1280px;
+    width: 95%;
     margin: 0 auto;
 }
 
@@ -124,8 +125,8 @@
 
 .checkout-review-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 25px;
+    grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 28px;
     align-items: start;
 }
 
@@ -322,7 +323,7 @@ textarea.form-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     color: #111827;
     font-size: 15px;
     font-weight: 600;
@@ -330,8 +331,10 @@ textarea.form-control {
 
     .summary-total strong {
         color: #dc2626;
-        font-size: 21px;
+        font-size: 20px;
         font-weight: 750;
+        white-space: nowrap;
+        text-align: right;
     }
 
 

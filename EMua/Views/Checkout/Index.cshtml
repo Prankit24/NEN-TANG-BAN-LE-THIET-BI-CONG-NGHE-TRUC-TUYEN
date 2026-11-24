@@ -116,20 +116,60 @@
 
 <div class="modal fade" id="addressMapModal" tabindex="-1" aria-labelledby="addressMapTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="addressMapTitle">Chọn địa chỉ giao hàng</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
-            <div class="modal-body">
-                <button type="button" id="mapUseMyLocation" class="btn btn-outline-primary btn-sm mb-3"><i class="bi bi-crosshair me-1"></i>Dùng vị trí hiện tại</button>
-                <div class="input-group mb-2"><input id="mapSearchText" class="form-control" placeholder="Tìm tên đường, địa điểm, phường/xã..." aria-label="Tìm địa chỉ" /><button type="button" id="mapSearchButton" class="btn btn-outline-primary">Tìm kiếm</button></div>
-                <div id="checkoutAddressMap" style="height:350px;min-height:300px;border-radius:10px" aria-label="Bản đồ chọn địa chỉ"></div>
-                <small class="text-muted d-block mt-2">Nhấn vào bản đồ hoặc kéo ghim để chọn điểm giao hàng. Vị trí có thể có sai số.</small>
-                <div id="mapAddressStatus" class="form-text" role="status" aria-live="polite"></div>
-                <label for="mapHouseNumber" class="form-label mt-2">Số nhà / địa chỉ chi tiết (vui lòng xác nhận)</label>
-                <input id="mapHouseNumber" class="form-control" placeholder="Ví dụ: 45, kiệt 12, tầng 2..." />
-                <label for="mapResolvedAddress" class="form-label mt-2">Địa chỉ bản đồ tìm được</label>
-                <textarea id="mapResolvedAddress" class="form-control" rows="2" placeholder="Chọn điểm trên bản đồ hoặc tìm kiếm"></textarea>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header py-3 px-4 bg-light border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-geo-alt-fill text-primary fs-5"></i>
+                    <h5 class="modal-title fw-bold text-dark m-0" id="addressMapTitle">Chọn địa chỉ giao hàng</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" id="mapConfirmAddress" class="btn btn-primary">Sử dụng địa chỉ này</button></div>
+            <div class="modal-body p-4">
+                <!-- Thanh công cụ tìm kiếm và định vị vị trí -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" id="mapUseMyLocation" class="btn btn-outline-primary btn-sm px-3 rounded-pill">
+                        <i class="bi bi-crosshair me-1"></i> Dùng vị trí hiện tại
+                    </button>
+                    <div class="position-relative flex-grow-1">
+                        <div class="input-group input-group-sm">
+                            <input id="mapSearchText" class="form-control rounded-start-pill ps-3" placeholder="Tìm tên đường, địa điểm, phường/xã, quận/huyện..." aria-label="Tìm địa chỉ" autocomplete="off" />
+                            <button type="button" id="mapSearchButton" class="btn btn-primary rounded-end-pill px-3">
+                                <i class="bi bi-search me-1"></i> Tìm kiếm
+                            </button>
+                        </div>
+                        <!-- Dropdown gợi ý kết quả tìm kiếm -->
+                        <div id="mapSearchResults" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" style="z-index: 1050; max-height: 220px; overflow-y: auto; border-radius: 10px;"></div>
+                    </div>
+                </div>
+
+                <!-- Khung bản đồ 300px chuẩn đẹp, không bị tràn màn hình -->
+                <div class="position-relative border rounded-3 overflow-hidden shadow-sm" style="height: 300px; min-height: 300px; background: #e2e8f0;">
+                    <div id="checkoutAddressMap" style="width: 100%; height: 100%;" aria-label="Bản đồ chọn địa chỉ"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Nhấn vào bản đồ hoặc kéo ghim để chọn vị trí giao hàng.</small>
+                    <div id="mapAddressStatus" class="form-text m-0 fw-semibold" role="status" aria-live="polite"></div>
+                </div>
+
+                <!-- Ô nhập địa chỉ chi tiết -->
+                <div class="row g-2 mt-2">
+                    <div class="col-md-5">
+                        <label for="mapHouseNumber" class="form-label small fw-bold text-secondary mb-1">Số nhà / Số ngõ / Tòa nhà</label>
+                        <input id="mapHouseNumber" class="form-control form-control-sm rounded-2" placeholder="Ví dụ: 120/4, Tầng 3..." />
+                    </div>
+                    <div class="col-md-7">
+                        <label for="mapResolvedAddress" class="form-label small fw-bold text-secondary mb-1">Địa chỉ bản đồ xác định</label>
+                        <input id="mapResolvedAddress" class="form-control form-control-sm rounded-2" placeholder="Chưa chọn điểm trên bản đồ" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer py-2 px-4 bg-light border-top">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" id="mapConfirmAddress" class="btn btn-sm btn-primary px-4 rounded-pill fw-bold">
+                    <i class="bi bi-check2-circle me-1"></i> Sử dụng địa chỉ này
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -167,96 +207,212 @@
           const addressInput = document.getElementById('shippingAddressInput');
           const modalElement = document.getElementById('addressMapModal');
           if (!openButton || !modalElement || !addressInput) return;
+
           const status = document.getElementById('mapAddressStatus');
           const resolved = document.getElementById('mapResolvedAddress');
           const house = document.getElementById('mapHouseNumber');
           const search = document.getElementById('mapSearchText');
+          const searchResults = document.getElementById('mapSearchResults');
           const gpsButton = document.getElementById('mapUseMyLocation');
-          const setStatus = (message, error = false) => { status.textContent = message; status.classList.toggle('text-danger', error); };
-          let map, marker, lastRequest = 0;
-          const modal = () => bootstrap.Modal.getOrCreateInstance(modalElement);
-          const fmt = a => {
-            const street = [a.house_number, a.road || a.pedestrian || a.residential].filter(Boolean).join(' ');
-            return [...new Set([street, a.suburb || a.quarter || a.neighbourhood || a.village, a.city_district || a.county, a.city || a.town || a.state].filter(Boolean))].join(', ');
+          const setStatus = (message, error = false) => {
+            status.textContent = message;
+            status.className = 'form-text m-0 fw-semibold ' + (error ? 'text-danger' : 'text-primary');
           };
-          async function request(url) {
-            const wait = Math.max(0, 1100 - (Date.now() - lastRequest));
-            if (wait) await new Promise(r => setTimeout(r, wait));
-            lastRequest = Date.now();
-            const response = await fetch(url, {headers:{Accept:'application/json'}});
-            if (!response.ok) throw new Error('Dịch vụ bản đồ trả về HTTP ' + response.status);
-            return await response.json();
-          }
-          async function reverse(lat, lon) {
-            setStatus('Đang tìm địa chỉ gần ghim...');
+
+          let map, marker, currentCoords = { lat: 16.0544, lon: 108.2022 };
+          const modal = () => bootstrap.Modal.getOrCreateInstance(modalElement);
+
+          // Ẩn dropdown gợi ý khi click bên ngoài
+          document.addEventListener('click', e => {
+            if (searchResults && !searchResults.contains(e.target) && e.target !== search) {
+              searchResults.classList.add('d-none');
+            }
+          });
+
+          // Gọi qua proxy server-side /api/location để lấy địa chỉ tiếng Việt thật và tự động fallback Photon Komoot
+          async function reverseGeocode(lat, lon) {
+            currentCoords = { lat, lon };
+            setStatus('Đang lấy tên đường...');
             try {
-              const params = new URLSearchParams({format:'jsonv2',lat:String(lat),lon:String(lon),zoom:'18',addressdetails:'1','accept-language':'vi'});
-              const data = await request('https://nominatim.openstreetmap.org/reverse?' + params);
-              resolved.value = fmt(data.address || {}) || data.display_name || '';
-              setStatus('Hãy kiểm tra số nhà và địa chỉ trước khi xác nhận.');
-            } catch(e) { console.error('Nominatim reverse:',e); setStatus('Không tra cứu được địa chỉ (' + e.message + '). Hãy nhập địa chỉ vào ô bên dưới hoặc thử lại.',true); }
+              const res = await fetch(`/api/location/reverse?lat=${lat}&lon=${lon}`);
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              const data = await res.json();
+              const addr = data.display_name || '';
+              resolved.value = addr || `Vị trí đã ghim (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+              setStatus('Đã xác định vị trí.', false);
+            } catch (e) {
+              console.warn('Reverse geocode error fallback:', e);
+              resolved.value = `Vị trí đã ghim (${lat.toFixed(4)}, ${lon.toFixed(4)}) - Đà Nẵng`;
+              setStatus('Đã ghim vị trí. Bạn có thể bổ sung số nhà/tên đường nếu cần.', false);
+            }
           }
-          function setPoint(lat,lon,zoom) {
-            if (!marker) { marker = L.marker([lat,lon],{draggable:true}).addTo(map); marker.on('dragend',()=>{const p=marker.getLatLng();reverse(p.lat,p.lng);}); }
-            else marker.setLatLng([lat,lon]);
-            map.setView([lat,lon],zoom || Math.max(map.getZoom(),16));
-            reverse(lat,lon);
+
+          function setPoint(lat, lon, zoom) {
+            currentCoords = { lat, lon };
+            if (!marker) {
+              marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+              marker.on('dragend', () => {
+                const p = marker.getLatLng();
+                reverseGeocode(p.lat, p.lng);
+              });
+            } else {
+              marker.setLatLng([lat, lon]);
+            }
+            map.setView([lat, lon], zoom || Math.max(map.getZoom(), 16));
+            reverseGeocode(lat, lon);
           }
-          openButton.addEventListener('click',()=>{
-            if (!window.L || !window.bootstrap?.Modal) { EmuaNotify.error('Không tải được thư viện bản đồ. Hãy kiểm tra Internet và tải lại trang.'); return; }
+
+          openButton.addEventListener('click', () => {
+            if (!window.L || !window.bootstrap?.Modal) {
+              EmuaNotify.error('Không tải được thư viện bản đồ. Hãy kiểm tra kết nối mạng.');
+              return;
+            }
             modal().show();
           });
-          modalElement.addEventListener('shown.bs.modal',()=>{
+
+          modalElement.addEventListener('shown.bs.modal', () => {
             if (!map) {
-              map = L.map('checkoutAddressMap').setView([16.0544,108.2022],12);
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-              map.on('click',e=>setPoint(e.latlng.lat,e.latlng.lng));
-              setStatus('Tìm địa chỉ, nhấn vào bản đồ hoặc dùng vị trí hiện tại.');
+              map = L.map('checkoutAddressMap', {
+                zoomControl: true,
+                attributionControl: false
+              }).setView([16.0544, 108.2022], 14);
+
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                subdomains: ['a', 'b', 'c']
+              }).addTo(map);
+
+              map.on('click', e => setPoint(e.latlng.lat, e.latlng.lng));
+              setPoint(16.0544, 108.2022, 14);
             }
-            setTimeout(()=>map.invalidateSize(),100);
+
+            setTimeout(() => {
+              if (map) {
+                map.invalidateSize(true);
+              }
+            }, 250);
           });
+
+          // Định vị GPS hiện tại
           gpsButton.addEventListener('click', () => {
-            if (!navigator.geolocation || !window.isSecureContext) {setStatus('Trình duyệt không hỗ trợ định vị hoặc trang chưa dùng HTTPS.',true);return;}
+            if (!navigator.geolocation) {
+              setStatus('Trình duyệt không hỗ trợ định vị GPS.', true);
+              return;
+            }
+
             gpsButton.disabled = true;
-            setStatus('Đang lấy vị trí từ thiết bị...');
+            setStatus('Đang lấy vị trí GPS từ thiết bị...');
+
             navigator.geolocation.getCurrentPosition(p => {
               gpsButton.disabled = false;
-              if (!map) {setStatus('Hãy mở bản đồ trước.',true);return;}
-              setPoint(p.coords.latitude,p.coords.longitude,18);
-              if (p.coords.accuracy > 50) setStatus('Vị trí có sai số khoảng ' + Math.round(p.coords.accuracy) + ' m. Hãy kéo ghim đến đúng nơi giao hàng và xác nhận số nhà.');
-            }, e => {
+              if (!map) return;
+              setPoint(p.coords.latitude, p.coords.longitude, 16);
+            }, err => {
               gpsButton.disabled = false;
-              setStatus(e.code===1?'Bạn chưa cấp quyền vị trí cho trình duyệt.':e.code===3?'Định vị quá thời gian. Hãy thử lại hoặc chọn thủ công.':'Không lấy được tọa độ. Hãy chọn trên bản đồ hoặc nhập thủ công.',true);
-            },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+              console.warn('Geolocation error:', err);
+              setStatus('Không thể lấy GPS (chưa cấp quyền hoặc trên PC). Đã đưa về vị trí mặc định.', true);
+              if (map) setPoint(16.0544, 108.2022, 14);
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
           });
-          document.getElementById('mapSearchButton').addEventListener('click',async()=>{
-            const q=search.value.trim(); if(q.length<3){setStatus('Nhập ít nhất 3 ký tự để tìm kiếm.',true);return;}
-            setStatus('Đang tìm kiếm...');
+
+          // Tìm kiếm địa điểm với autocomplete / danh sách gợi ý thả xuống
+          const doSearch = async () => {
+            const q = search.value.trim();
+            if (q.length < 2) {
+              setStatus('Vui lòng nhập ít nhất 2 ký tự để tìm kiếm.', true);
+              if (searchResults) searchResults.classList.add('d-none');
+              return;
+            }
+            setStatus('Đang tìm kiếm địa điểm...');
             try {
-              const params=new URLSearchParams({q,format:'jsonv2',limit:'1',addressdetails:'1','accept-language':'vi'});
-              const results=await request('https://nominatim.openstreetmap.org/search?'+params);
-              if(!results.length){setStatus('Không tìm thấy địa điểm. Hãy thử tên đường và thành phố.',true);return;}
-              setPoint(Number(results[0].lat),Number(results[0].lon),17);
-            }catch(e){setStatus('Không thể tìm địa chỉ: '+e.message,true);}
+              const res = await fetch(`/api/location/search?q=${encodeURIComponent(q)}`);
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              const list = await res.json();
+              if (!list || !list.length) {
+                setStatus('Không tìm thấy địa điểm. Vui lòng thử từ khóa khác.', true);
+                if (searchResults) {
+                  searchResults.innerHTML = '<div class="list-group-item text-muted small p-2">Không tìm thấy địa điểm phù hợp</div>';
+                  searchResults.classList.remove('d-none');
+                }
+                return;
+              }
+
+              // Hiển thị dropdown kết quả gợi ý
+              if (searchResults) {
+                searchResults.innerHTML = list.map(item => `
+                  <button type="button" class="list-group-item list-group-item-action text-start p-2 border-bottom d-flex align-items-center gap-2" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${encodeURIComponent(item.display_name)}">
+                    <i class="bi bi-geo-alt text-primary flex-shrink-0"></i>
+                    <span class="small text-truncate">${item.display_name}</span>
+                  </button>
+                `).join('');
+                searchResults.classList.remove('d-none');
+
+                searchResults.querySelectorAll('button').forEach(btn => {
+                  btn.addEventListener('click', () => {
+                    const lat = parseFloat(btn.dataset.lat);
+                    const lon = parseFloat(btn.dataset.lon);
+                    const name = decodeURIComponent(btn.dataset.name);
+                    search.value = name;
+                    searchResults.classList.add('d-none');
+                    setPoint(lat, lon, 16);
+                  });
+                });
+              }
+
+              const item = list[0];
+              setPoint(parseFloat(item.lat), parseFloat(item.lon), 16);
+            } catch (e) {
+              console.warn('Search error:', e);
+              setStatus('Không thể tìm kiếm tự động. Bạn hãy bấm chọn trực tiếp trên bản đồ.', true);
+              if (searchResults) searchResults.classList.add('d-none');
+            }
+          };
+
+          document.getElementById('mapSearchButton').addEventListener('click', doSearch);
+          search.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              doSearch();
+            }
           });
-          search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('mapSearchButton').click();}});
-          document.getElementById('mapConfirmAddress').addEventListener('click',()=>{
-            const base=resolved.value.trim(), number=house.value.trim();
-            if(!base && !number){setStatus('Hãy chọn vị trí hoặc nhập địa chỉ trước.',true);return;}
-            const value=number && base.toLowerCase().startsWith(number.toLowerCase()) ? base : [number,base].filter(Boolean).join(', ');
-            const applyAddress = () => {
-              addressInput.value = value;
+
+          // Nút "Sử dụng địa chỉ này"
+          document.getElementById('mapConfirmAddress').addEventListener('click', () => {
+            const base = resolved.value.trim();
+            const number = house.value.trim();
+            const searchText = search.value.trim();
+
+            let finalAddress = '';
+            if (number && base) {
+              finalAddress = base.toLowerCase().startsWith(number.toLowerCase()) ? base : `${number}, ${base}`;
+            } else {
+              finalAddress = number || base || searchText || `Vị trí đã ghim (${currentCoords.lat.toFixed(4)}, ${currentCoords.lon.toFixed(4)})`;
+            }
+
+            if (!finalAddress) {
+              setStatus('Vui lòng chọn vị trí trên bản đồ hoặc nhập địa chỉ.', true);
+              return;
+            }
+
+            const apply = () => {
+              addressInput.value = finalAddress;
               addressInput.dispatchEvent(new Event('input', { bubbles: true }));
               addressInput.dispatchEvent(new Event('change', { bubbles: true }));
               modal().hide();
-              document.getElementById('locationFeedback').textContent = 'Đã chọn địa chỉ. Vui lòng kiểm tra lại số nhà và thông tin giao hàng.';
+              const feedback = document.getElementById('locationFeedback');
+              if (feedback) {
+                feedback.textContent = 'Đã chọn địa chỉ từ bản đồ. Vui lòng xác nhận lại thông tin giao hàng.';
+              }
             };
 
-            if (addressInput.value.trim() && addressInput.value.trim() !== value) {
-              EmuaConfirm('Thay địa chỉ giao hàng hiện tại bằng địa chỉ đã chọn?', applyAddress, { title: 'Thay đổi địa chỉ', isDanger: false });
+            if (addressInput.value.trim() && addressInput.value.trim() !== finalAddress) {
+              EmuaConfirm('Cập nhật địa chỉ nhận hàng bằng vị trí bản đồ đã chọn?', apply, {
+                title: 'Thay đổi địa chỉ',
+                isDanger: false
+              });
               return;
             }
-            applyAddress();
+            apply();
           });
         })();
     </script>
