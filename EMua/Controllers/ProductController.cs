@@ -402,14 +402,24 @@ namespace EMua.Controllers
                     .ThenBy(x => x.ThuTu)
                     .ToList();
 
+                bool IsPlaceholder(string? s)
+                {
+                    if (string.IsNullOrWhiteSpace(s)) return true;
+                    if (s == ImageUrlHelper.DefaultPlaceholderSvg) return true;
+                    if (s.Contains("no-image", StringComparison.OrdinalIgnoreCase)) return true;
+                    if (s.Contains("EMUA%20TECH%20STORE", StringComparison.OrdinalIgnoreCase)) return true;
+                    if (s.Contains("EMUA TECH STORE", StringComparison.OrdinalIgnoreCase)) return true;
+                    return false;
+                }
+
                 foreach (var image in productImages)
                 {
                     if (string.IsNullOrWhiteSpace(image?.DuongDanAnh)) continue;
                     var raw = image.DuongDanAnh.Trim();
-                    if (raw.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholder(raw)) continue;
 
                     var url = ImageUrlHelper.FixImageUrl(raw, checkPhysicalFile: true);
-                    if (string.IsNullOrWhiteSpace(url) || url.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholder(url)) continue;
 
                     if (!allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
@@ -422,10 +432,10 @@ namespace EMua.Controllers
                 {
                     if (string.IsNullOrWhiteSpace(variant?.HinhAnh)) continue;
                     var raw = variant.HinhAnh.Trim();
-                    if (raw.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholder(raw)) continue;
 
                     var url = ImageUrlHelper.FixImageUrl(raw, checkPhysicalFile: true);
-                    if (string.IsNullOrWhiteSpace(url) || url.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholder(url)) continue;
 
                     if (!allImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
@@ -443,7 +453,7 @@ namespace EMua.Controllers
                 else
                 {
                     resolvedMainImage = ImageUrlHelper.ResolveProductImage(product, defaultVariant, checkPhysicalFile: true);
-                    if (string.IsNullOrWhiteSpace(resolvedMainImage) || resolvedMainImage.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                    if (IsPlaceholder(resolvedMainImage))
                     {
                         resolvedMainImage = "/images/no-image.webp";
                     }
@@ -490,7 +500,7 @@ namespace EMua.Controllers
                     Variants = variants.Select(v =>
                     {
                         var varImg = ImageUrlHelper.FixImageUrl(v.HinhAnh, checkPhysicalFile: true);
-                        if (string.Equals(varImg, "/images/no-image.webp", StringComparison.OrdinalIgnoreCase))
+                        if (IsPlaceholder(varImg))
                         {
                             varImg = resolvedMainImage;
                         }

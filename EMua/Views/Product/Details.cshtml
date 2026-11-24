@@ -22,6 +22,16 @@
     <div class="product-detail">
 
         @{
+            bool IsPlaceholderUrl(string? s)
+            {
+                if (string.IsNullOrWhiteSpace(s)) return true;
+                if (s == ImageUrlHelper.DefaultPlaceholderSvg) return true;
+                if (s.Contains("no-image", StringComparison.OrdinalIgnoreCase)) return true;
+                if (s.Contains("EMUA%20TECH%20STORE", StringComparison.OrdinalIgnoreCase)) return true;
+                if (s.Contains("EMUA TECH STORE", StringComparison.OrdinalIgnoreCase)) return true;
+                return false;
+            }
+
             var galleryImages = new List<string>();
 
             // 1. Thêm ảnh từ Model.ImageUrls (đã được lọc và sắp xếp ảnh chính lên đầu từ controller)
@@ -29,11 +39,10 @@
             {
                 foreach (var path in Model.ImageUrls)
                 {
-                    if (string.IsNullOrWhiteSpace(path)) continue;
-                    if (path.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholderUrl(path)) continue;
 
                     var url = ImageUrlHelper.FixImageUrl(path, checkPhysicalFile: true);
-                    if (string.IsNullOrWhiteSpace(url) || url.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (IsPlaceholderUrl(url)) continue;
 
                     if (!galleryImages.Contains(url, StringComparer.OrdinalIgnoreCase))
                     {
@@ -43,10 +52,10 @@
             }
 
             // 2. Kiểm tra ảnh chính nếu chưa có trong gallery
-            if (!string.IsNullOrWhiteSpace(Model?.ImageUrl) && !Model.ImageUrl.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+            if (!IsPlaceholderUrl(Model?.ImageUrl))
             {
-                var mainImageUrl = ImageUrlHelper.FixImageUrl(Model.ImageUrl, checkPhysicalFile: true);
-                if (!string.IsNullOrWhiteSpace(mainImageUrl) && !mainImageUrl.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                var mainImageUrl = ImageUrlHelper.FixImageUrl(Model!.ImageUrl, checkPhysicalFile: true);
+                if (!IsPlaceholderUrl(mainImageUrl))
                 {
                     if (!galleryImages.Contains(mainImageUrl, StringComparer.OrdinalIgnoreCase))
                     {
@@ -64,11 +73,10 @@
             // 3. Bao gồm ảnh của các phiên bản (nếu có ảnh thật riêng)
             foreach (var variantItem in variants)
             {
-                if (string.IsNullOrWhiteSpace(variantItem?.ImageUrl)) continue;
-                if (variantItem.ImageUrl.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                if (variantItem == null || IsPlaceholderUrl(variantItem.ImageUrl)) continue;
 
                 var variantUrl = ImageUrlHelper.FixImageUrl(variantItem.ImageUrl, checkPhysicalFile: true);
-                if (string.IsNullOrWhiteSpace(variantUrl) || variantUrl.Contains("no-image", StringComparison.OrdinalIgnoreCase)) continue;
+                if (IsPlaceholderUrl(variantUrl)) continue;
 
                 if (!galleryImages.Contains(variantUrl, StringComparer.OrdinalIgnoreCase))
                 {
@@ -183,7 +191,7 @@
                             @foreach (var variant in variants)
                             {
                                 var optImg = ImageUrlHelper.FixImageUrl(variant.ImageUrl, checkPhysicalFile: true);
-                                if (!string.IsNullOrWhiteSpace(optImg) && optImg.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                                if (IsPlaceholderUrl(optImg))
                                 {
                                     optImg = "";
                                 }
@@ -382,8 +390,14 @@
 
         window.showGalleryImage = choose;
         window.moveGallery = step => choose(selected + step);
+        function isPlaceholder(src) {
+            if (!src) return true;
+            const lower = src.toLowerCase();
+            return lower === fallback || lower.includes('no-image') || lower.includes('emua%20tech%20store') || lower.includes('emua tech store');
+        }
+
         window.changeMainImage = src => {
-            if (!src || src === fallback || src.toLowerCase().includes('no-image')) return;
+            if (isPlaceholder(src)) return;
             const index = images.findIndex(x => x.toLowerCase() === src.toLowerCase());
             if (index !== -1) choose(index);
         };
@@ -405,7 +419,7 @@
             if (priceEl && Number.isFinite(price)) priceEl.textContent = price.toLocaleString('vi-VN') + ' ₫';
             
             // Chỉ đổi ảnh khi người dùng chủ động click chọn biến thể và ảnh đó không phải placeholder
-            if (isUserAction && option.dataset.image && option.dataset.image !== fallback && !option.dataset.image.toLowerCase().includes('no-image')) {
+            if (isUserAction && option.dataset.image && !isPlaceholder(option.dataset.image)) {
                 window.changeMainImage(option.dataset.image);
             }
         };

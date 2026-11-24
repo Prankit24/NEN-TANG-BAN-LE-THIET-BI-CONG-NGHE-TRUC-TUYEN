@@ -271,7 +271,7 @@
                                              loading="lazy" decoding="async"
                                              onerror="this.onerror=null; this.src='/images/no-image.webp';" />
                                         <div>
-                                            <a asp-action="Edit" asp-route-id="@product.MaSanPham" class="fw-bold text-dark text-decoration-none d-block mb-1">
+                                            <a asp-action="Edit" asp-route-id="@product.MaSanPham" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="fw-bold text-dark text-decoration-none d-block mb-1">
                                                 @product.TenSanPham
                                             </a>
                                             <div class="text-muted small">
@@ -323,7 +323,7 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="d-inline-flex align-items-center gap-1">
-                                        <a asp-action="Edit" asp-route-id="@product.MaSanPham" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" title="Chỉnh sửa thông tin &amp; biến thể">
+                                        <a asp-action="Edit" asp-route-id="@product.MaSanPham" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" title="Chỉnh sửa thông tin &amp; biến thể">
                                             <i class="bi bi-pencil"></i>
                                             <span>Sửa</span>
                                         </a>
