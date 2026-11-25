@@ -24,8 +24,8 @@ public class ProductController : StaffControllerBase
     private readonly IProductImageStorageService _storageService;
 
     public ProductController(
-        EMuaDbContext db, 
-        IWebHostEnvironment environment, 
+        EMuaDbContext db,
+        IWebHostEnvironment environment,
         IMemoryCache cache,
         IUndoDeletionManager undoManager,
         IProductImageStorageService storageService)
@@ -43,7 +43,16 @@ public class ProductController : StaffControllerBase
         _cache.Remove(AppCacheKeys.FeaturedProducts);
     }
 
-    public async Task<IActionResult> Index(string? q, string? status, int? brandId, int? categoryId, string? stockFilter, string? sort = "newest", int page = 1, int pageSize = 12)
+    public async Task<IActionResult> Index(
+        string? q,
+        string? status,
+        int? brandId,
+        int? categoryId,
+        string? stockFilter,
+        string? sort = "missing-first",
+        int page = 1,
+        int pageSize = 12,
+        string? imageFilter = null)
     {
         var query = _db.SanPhams.AsNoTracking()
             .Include(x => x.MaDanhMucNavigation)
@@ -92,31 +101,50 @@ public class ProductController : StaffControllerBase
             query = query.Where(x => x.MaDanhMuc == categoryId.Value);
         }
 
-        sort = string.IsNullOrWhiteSpace(sort) ? "newest" : sort.Trim();
+        var allProducts = await query.ToListAsync();
+
+        int missingImageCount = allProducts.Count(x => CountValidImages(x) == 0);
+
+        // Lọc theo trạng thái hình ảnh (truy cập ?imageFilter=missing để xem toàn bộ SP chưa có ảnh)
+        if (string.Equals(imageFilter, "missing", StringComparison.OrdinalIgnoreCase))
+        {
+            allProducts = allProducts.Where(x => CountValidImages(x) == 0).ToList();
+        }
+        else if (string.Equals(imageFilter, "has-image", StringComparison.OrdinalIgnoreCase))
+        {
+            allProducts = allProducts.Where(x => CountValidImages(x) > 0).ToList();
+        }
+
+        // Mặc định (missing-first): đẩy toàn bộ SP chưa có ảnh lên trên cùng, sắp xếp cố định theo Mã SP tăng dần (#SP-0001 -> hết)
+        sort = string.IsNullOrWhiteSpace(sort) ? "missing-first" : sort.Trim();
         switch (sort)
         {
             case "oldest":
-                query = query.OrderBy(x => x.MaSanPham);
-                break;
-            case "name-asc":
-                query = query.OrderBy(x => x.TenSanPham);
-                break;
-            case "name-desc":
-                query = query.OrderByDescending(x => x.TenSanPham);
-                break;
-            case "price-asc":
-                query = query.OrderBy(x => x.BienTheSanPhams.Min(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0);
-                break;
-            case "price-desc":
-                query = query.OrderByDescending(x => x.BienTheSanPhams.Max(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0);
+                allProducts = allProducts.OrderBy(x => x.MaSanPham).ToList();
                 break;
             case "newest":
+                allProducts = allProducts.OrderByDescending(x => x.MaSanPham).ToList();
+                break;
+            case "name-asc":
+                allProducts = allProducts.OrderBy(x => x.TenSanPham).ThenBy(x => x.MaSanPham).ToList();
+                break;
+            case "name-desc":
+                allProducts = allProducts.OrderByDescending(x => x.TenSanPham).ThenBy(x => x.MaSanPham).ToList();
+                break;
+            case "price-asc":
+                allProducts = allProducts.OrderBy(x => x.BienTheSanPhams.Min(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0).ThenBy(x => x.MaSanPham).ToList();
+                break;
+            case "price-desc":
+                allProducts = allProducts.OrderByDescending(x => x.BienTheSanPhams.Max(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0).ThenBy(x => x.MaSanPham).ToList();
+                break;
+            case "missing-first":
             default:
-                query = query.OrderByDescending(x => x.MaSanPham);
+                allProducts = allProducts
+                    .OrderBy(x => CountValidImages(x) == 0 ? 0 : 1)
+                    .ThenBy(x => x.MaSanPham)
+                    .ToList();
                 break;
         }
-
-        var allProducts = await query.ToListAsync();
 
         // Lọc tồn kho ở cấp độ sản phẩm
         if (!string.IsNullOrWhiteSpace(stockFilter) && stockFilter != "all")
@@ -152,6 +180,8 @@ public class ProductController : StaffControllerBase
         ViewBag.BrandId = brandId;
         ViewBag.CategoryId = categoryId;
         ViewBag.StockFilter = stockFilter ?? "all";
+        ViewBag.ImageFilter = imageFilter ?? "all";
+        ViewBag.MissingImageCount = missingImageCount;
         ViewBag.Sort = sort;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
@@ -638,7 +668,7 @@ public class ProductController : StaffControllerBase
             return;
         }
 
-        var allowed = new[] { ".jpg", ".jpeg", ".webp", ".webp" };
+        var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
         foreach (var img in files)
         {
             var ext = Path.GetExtension(img.FileName).ToLowerInvariant();
@@ -684,6 +714,37 @@ public class ProductController : StaffControllerBase
                 TrangThai = string.IsNullOrEmpty(x.TrangThai) ? "Còn hàng" : x.TrangThai
             }).ToList()
         };
+    }
+
+    private static int CountValidImages(SanPham product)
+    {
+        var urls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (product.SanPhamHinhAnhs != null)
+        {
+            foreach (var img in product.SanPhamHinhAnhs)
+            {
+                if (!string.IsNullOrWhiteSpace(img.DuongDanAnh) &&
+                    !img.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                {
+                    urls.Add(img.DuongDanAnh.Trim());
+                }
+            }
+        }
+
+        if (product.BienTheSanPhams != null)
+        {
+            foreach (var variant in product.BienTheSanPhams)
+            {
+                if (!string.IsNullOrWhiteSpace(variant.HinhAnh) &&
+                    !variant.HinhAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
+                {
+                    urls.Add(variant.HinhAnh.Trim());
+                }
+            }
+        }
+
+        return urls.Count;
     }
 
     private static string? CurrentImage(SanPham product) => product.SanPhamHinhAnhs
