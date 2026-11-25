@@ -355,6 +355,61 @@ namespace EMua.Controllers
         }
 
         // =====================================================
+        // GỢI Ý TÌM KIẾM NHANH (LIVE SEARCH SUGGESTIONS)
+        // =====================================================
+        [HttpGet]
+        public async Task<IActionResult> SearchSuggestions(string? term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+            {
+                return Json(Array.Empty<object>());
+            }
+
+            var cleanTerm = term.Trim();
+            var pattern = $"%{cleanTerm}%";
+
+            // Lấy top 8 sản phẩm đang kinh doanh khớp với từ khóa
+            var matchedProducts = await _db.SanPhams
+                .AsNoTracking()
+                .Where(x => (x.TrangThaiSanPham == null || x.TrangThaiSanPham != "Ẩn")
+                            && x.TenSanPham != null
+                            && EF.Functions.ILike(x.TenSanPham, pattern))
+                .Include(x => x.BienTheSanPhams)
+                .Include(x => x.SanPhamHinhAnhs)
+                .OrderByDescending(x => x.BienTheSanPhams.Sum(v => v.SoLuong))
+                .ThenByDescending(x => x.MaSanPham)
+                .Take(8)
+                .ToListAsync();
+
+            var results = matchedProducts.Select(p =>
+            {
+                var availableVariants = p.BienTheSanPhams
+                    .Where(v => v.SoLuong > 0 && v.Gia > 0)
+                    .OrderBy(v => v.Gia)
+                    .ToList();
+
+                var defaultVariant = availableVariants.FirstOrDefault() ?? p.BienTheSanPhams.FirstOrDefault();
+                var price = defaultVariant?.Gia ?? p.GiaGoc ?? 0;
+                var rawImage = ImageUrlHelper.ResolveProductImage(p, defaultVariant, checkPhysicalFile: true);
+                var imageUrl = (string.IsNullOrWhiteSpace(rawImage) || rawImage.Contains("no-image", StringComparison.OrdinalIgnoreCase) || rawImage == ImageUrlHelper.DefaultPlaceholderSvg)
+                    ? "/images/no-image.png"
+                    : rawImage;
+
+                return new
+                {
+                    id = p.MaSanPham,
+                    tenSanPham = p.TenSanPham ?? "Sản phẩm",
+                    gia = price,
+                    giaFormat = price > 0 ? $"{price:N0} đ" : "Liên hệ",
+                    hinhAnh = imageUrl,
+                    url = Url.Action("Details", "Product", new { id = p.MaSanPham })
+                };
+            });
+
+            return Json(results);
+        }
+
+        // =====================================================
         // CHI TIẾT SẢN PHẨM
         // =====================================================
         [HttpGet]
