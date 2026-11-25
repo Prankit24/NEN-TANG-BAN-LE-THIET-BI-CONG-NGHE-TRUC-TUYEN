@@ -49,7 +49,7 @@ public class ProductController : StaffControllerBase
         int? brandId,
         int? categoryId,
         string? stockFilter,
-        string? sort = "missing-first",
+        string? sort = "id-asc",
         int page = 1,
         int pageSize = 12,
         string? imageFilter = null)
@@ -105,7 +105,7 @@ public class ProductController : StaffControllerBase
 
         int missingImageCount = allProducts.Count(x => CountValidImages(x) == 0);
 
-        // Lọc theo trạng thái hình ảnh (truy cập ?imageFilter=missing để xem toàn bộ SP chưa có ảnh)
+        // Lọc theo trạng thái hình ảnh (11h tối truy cập ?imageFilter=missing để xem các SP còn sót)
         if (string.Equals(imageFilter, "missing", StringComparison.OrdinalIgnoreCase))
         {
             allProducts = allProducts.Where(x => CountValidImages(x) == 0).ToList();
@@ -115,13 +115,10 @@ public class ProductController : StaffControllerBase
             allProducts = allProducts.Where(x => CountValidImages(x) > 0).ToList();
         }
 
-        // Mặc định (missing-first): đẩy toàn bộ SP chưa có ảnh lên trên cùng, sắp xếp cố định theo Mã SP tăng dần (#SP-0001 -> hết)
-        sort = string.IsNullOrWhiteSpace(sort) ? "missing-first" : sort.Trim();
+        // Mặc định (id-asc): FIX CỨNG thứ tự theo Mã SP tăng dần (#SP-0001 -> hết), thêm ảnh xong vẫn đứng yên tại chỗ
+        sort = string.IsNullOrWhiteSpace(sort) ? "id-asc" : sort.Trim();
         switch (sort)
         {
-            case "oldest":
-                allProducts = allProducts.OrderBy(x => x.MaSanPham).ToList();
-                break;
             case "newest":
                 allProducts = allProducts.OrderByDescending(x => x.MaSanPham).ToList();
                 break;
@@ -137,12 +134,10 @@ public class ProductController : StaffControllerBase
             case "price-desc":
                 allProducts = allProducts.OrderByDescending(x => x.BienTheSanPhams.Max(b => (decimal?)b.Gia) ?? x.GiaGoc ?? 0).ThenBy(x => x.MaSanPham).ToList();
                 break;
-            case "missing-first":
+            case "oldest":
+            case "id-asc":
             default:
-                allProducts = allProducts
-                    .OrderBy(x => CountValidImages(x) == 0 ? 0 : 1)
-                    .ThenBy(x => x.MaSanPham)
-                    .ToList();
+                allProducts = allProducts.OrderBy(x => x.MaSanPham).ToList();
                 break;
         }
 
@@ -306,7 +301,6 @@ public class ProductController : StaffControllerBase
         if (product == null)
             return Json(new { success = false, message = "Không tìm thấy sản phẩm." });
 
-        // Kiểm tra không xóa nếu đây là ảnh duy nhất còn lại của sản phẩm
         if (product.SanPhamHinhAnhs.Count <= 1)
         {
             return BadRequest(new
@@ -447,7 +441,6 @@ public class ProductController : StaffControllerBase
 
         await LoadSelectionsAsync();
 
-        // Lấy danh sách biến thể đang có phiếu đề nghị nhập hàng "Chờ duyệt"
         var variantIds = product.BienTheSanPhams.Select(b => b.MaBienThe).ToList();
         var pendingImports = await _db.ChiTietPhieuNhapHangs
             .AsNoTracking()
@@ -501,7 +494,6 @@ public class ProductController : StaffControllerBase
         string? newUploadedMainPath = null;
         if (allFiles.Count > 0)
         {
-            // Nếu sản phẩm trước đó đang chứa ảnh rác no-image, hãy dọn dẹp các bản ghi này
             var placeholderImages = product.SanPhamHinhAnhs
                 .Where(x => string.IsNullOrWhiteSpace(x.DuongDanAnh) || x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
                 .ToList();
@@ -537,7 +529,6 @@ public class ProductController : StaffControllerBase
         }
         else
         {
-            // Đảm bảo luôn có 1 ảnh thật làm ảnh chính nếu có ảnh
             var realImages = product.SanPhamHinhAnhs
                 .Where(x => !string.IsNullOrWhiteSpace(x.DuongDanAnh) && !x.DuongDanAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(x => x.ThuTu)
@@ -553,7 +544,6 @@ public class ProductController : StaffControllerBase
         var toRemove = product.BienTheSanPhams.Where(b => !incomingIds.Contains(b.MaBienThe)).ToList();
         _db.BienTheSanPhams.RemoveRange(toRemove);
 
-        // Ảnh chính thật đại diện cho biến thể mới (hoặc biến thể bị dính no-image)
         var fallbackVariantImg = CurrentImage(product);
         if (fallbackVariantImg != null && fallbackVariantImg.Contains("no-image", StringComparison.OrdinalIgnoreCase))
         {
@@ -570,12 +560,10 @@ public class ProductController : StaffControllerBase
                     existing.MauSac = vm.MauSac?.Trim();
                     existing.PhienBan = vm.PhienBan?.Trim();
                     existing.Gia = vm.Gia;
-                    // Nếu biến thể cũ đang dính chuỗi no-image mà sản phẩm đã có ảnh thật, dọn dẹp hoặc gán ảnh thật
                     if (!string.IsNullOrEmpty(existing.HinhAnh) && existing.HinhAnh.Contains("no-image", StringComparison.OrdinalIgnoreCase))
                     {
                         existing.HinhAnh = activeMainImg ?? fallbackVariantImg;
                     }
-                    // Không cho Staff sửa trực tiếp tồn kho của biến thể đã có để đảm bảo quy trình nhập hàng
                     existing.TrangThai = string.IsNullOrEmpty(vm.TrangThai) ? (existing.SoLuong > 0 ? "Còn hàng" : "Hết hàng") : vm.TrangThai;
                 }
             }
