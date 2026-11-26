@@ -95,6 +95,8 @@ public class CheckoutViewModel
 
 public class CheckoutItemViewModel
 {
+    public int CartItemId { get; set; }
+
     public int VariantId { get; set; }
 
     public string ProductName { get; set; } = string.Empty;

@@ -203,6 +203,7 @@ builder.Services.AddScoped<OrderTrackingAssistant>();
 
 // Dịch vụ lưu trữ hình ảnh sản phẩm (Supabase Storage + Fallback nội bộ)
 builder.Services.AddScoped<IProductImageStorageService, ProductImageStorageService>();
+builder.Services.AddScoped<TelegramNotificationService>();
 
 // ============================================================
 // 6. MVC VÀ HTTP CLIENT
