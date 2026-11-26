@@ -167,6 +167,7 @@ namespace EMua.Controllers
                 {
                     "laptop" => new[] { "laptop" },
                     "dienthoai" => new[] { "điện thoại", "smartphone", "phone" },
+                    "tablet" => new[] { "máy tính bảng", "tablet", "ipad" },
                     "gaming" => new[] { "gaming", "game" },
                     "phukien" => new[] { "phụ kiện", "accessory" },
                     "amthanh" => new[] { "âm thanh", "tai nghe", "loa", "audio" },

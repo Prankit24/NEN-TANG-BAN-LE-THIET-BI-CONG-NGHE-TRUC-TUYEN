@@ -21,7 +21,13 @@ public class CheckoutController : Controller
     private readonly EMuaDbContext _db;
 
     private readonly IConfiguration _configuration;
-    public CheckoutController(EMuaDbContext db, IConfiguration configuration) { _db = db; _configuration = configuration; }
+    private readonly TelegramNotificationService _telegramService;
+    public CheckoutController(EMuaDbContext db, IConfiguration configuration, TelegramNotificationService telegramService)
+    {
+        _db = db;
+        _configuration = configuration;
+        _telegramService = telegramService;
+    }
 
     // Các phương thức thanh toán hợp lệ
     private static readonly string[] AllowedPaymentMethods = { "COD", "BANK_TRANSFER", "WEB3" };
@@ -106,11 +112,24 @@ public class CheckoutController : Controller
             return View(model);
         }
 
-        TempData["Checkout_FullName"] = model.FullName.Trim();
-        TempData["Checkout_PhoneNumber"] = model.PhoneNumber.Trim();
-        TempData["Checkout_Address"] = model.Address.Trim();
-        TempData["Checkout_Note"] = model.Note?.Trim();
-        TempData["Checkout_ShippingMethod"] = model.ShippingMethod == "EXPRESS" ? "EXPRESS" : "STANDARD";
+        var fullName = model.FullName.Trim();
+        var phone = model.PhoneNumber.Trim();
+        var address = model.Address.Trim();
+        var note = model.Note?.Trim() ?? string.Empty;
+        var shipping = model.ShippingMethod == "EXPRESS" ? "EXPRESS" : "STANDARD";
+
+        TempData["Checkout_FullName"] = fullName;
+        TempData["Checkout_PhoneNumber"] = phone;
+        TempData["Checkout_Address"] = address;
+        TempData["Checkout_Note"] = note;
+        TempData["Checkout_ShippingMethod"] = shipping;
+
+        // Lưu đồng thời vào Session để chống mất dữ liệu khi F5 hoặc cookie TempData hết hạn
+        HttpContext.Session.SetString("Checkout_FullName", fullName);
+        HttpContext.Session.SetString("Checkout_PhoneNumber", phone);
+        HttpContext.Session.SetString("Checkout_Address", address);
+        HttpContext.Session.SetString("Checkout_Note", note);
+        HttpContext.Session.SetString("Checkout_ShippingMethod", shipping);
 
         return RedirectToAction(nameof(Payment));
     }
@@ -122,11 +141,15 @@ public class CheckoutController : Controller
     [HttpGet]
     public async Task<IActionResult> Payment()
     {
-        if (TempData["Checkout_FullName"] == null)
-            return RedirectToAction(nameof(Index));
-
         var user = await GetCurrentUserAsync();
         if (user == null) return RedirectToAction("Login", "Auth");
+
+        var fullName = TempData["Checkout_FullName"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_FullName") 
+            ?? user.TenNguoiDung;
+
+        if (string.IsNullOrWhiteSpace(fullName))
+            return RedirectToAction(nameof(Index));
 
         if (IsExpectedBuyNowLost(user.MaNguoiDung))
         {
@@ -137,13 +160,23 @@ public class CheckoutController : Controller
         var model = await BuildCheckoutAsync(user);
         if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
 
-        model.FullName = TempData["Checkout_FullName"]?.ToString() ?? string.Empty;
-        model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? string.Empty;
-        model.Address = TempData["Checkout_Address"]?.ToString() ?? string.Empty;
-        model.Note = TempData["Checkout_Note"]?.ToString();
+        model.FullName = fullName;
+        model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_PhoneNumber") 
+            ?? user.SoDienThoai 
+            ?? string.Empty;
+        model.Address = TempData["Checkout_Address"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_Address") 
+            ?? user.DiaChi 
+            ?? string.Empty;
+        model.Note = TempData["Checkout_Note"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_Note");
 
-        model.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() ?? "COD";
-        model.CouponCode = TempData["Checkout_CouponCode"]?.ToString();
+        model.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_PaymentMethod") 
+            ?? "COD";
+        model.CouponCode = TempData["Checkout_CouponCode"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_CouponCode");
 
         var coupon = await FindValidCouponAsync(model.CouponCode, model.Subtotal);
         if (coupon != null)
@@ -154,6 +187,10 @@ public class CheckoutController : Controller
         ViewBag.PaymentMethod = model.PaymentMethod;
         ViewBag.CouponCode = model.CouponCode;
 
+        TempData["Checkout_FullName"] = model.FullName;
+        TempData["Checkout_PhoneNumber"] = model.PhoneNumber;
+        TempData["Checkout_Address"] = model.Address;
+        TempData["Checkout_Note"] = model.Note;
         TempData.Keep();
         return View(model);
     }
@@ -170,10 +207,20 @@ public class CheckoutController : Controller
             if (user != null)
             {
                 var model = await BuildCheckoutAsync(user);
-                model.FullName = TempData["Checkout_FullName"]?.ToString() ?? string.Empty;
-                model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? string.Empty;
-                model.Address = TempData["Checkout_Address"]?.ToString() ?? string.Empty;
-                model.Note = TempData["Checkout_Note"]?.ToString();
+                model.FullName = TempData["Checkout_FullName"]?.ToString() 
+                    ?? HttpContext.Session.GetString("Checkout_FullName") 
+                    ?? user.TenNguoiDung 
+                    ?? string.Empty;
+                model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() 
+                    ?? HttpContext.Session.GetString("Checkout_PhoneNumber") 
+                    ?? user.SoDienThoai 
+                    ?? string.Empty;
+                model.Address = TempData["Checkout_Address"]?.ToString() 
+                    ?? HttpContext.Session.GetString("Checkout_Address") 
+                    ?? user.DiaChi 
+                    ?? string.Empty;
+                model.Note = TempData["Checkout_Note"]?.ToString() 
+                    ?? HttpContext.Session.GetString("Checkout_Note");
 
                 TempData.Keep();
                 return View(model);
@@ -196,8 +243,20 @@ public class CheckoutController : Controller
             return View(checkout);
         }
         couponCode = appliedCoupon?.MaCode;
+
+        // Lưu cả TempData và Session
         TempData["Checkout_PaymentMethod"] = paymentMethod;
         TempData["Checkout_CouponCode"] = couponCode?.Trim();
+        HttpContext.Session.SetString("Checkout_PaymentMethod", paymentMethod);
+        if (!string.IsNullOrWhiteSpace(couponCode))
+        {
+            HttpContext.Session.SetString("Checkout_CouponCode", couponCode.Trim());
+        }
+        else
+        {
+            HttpContext.Session.Remove("Checkout_CouponCode");
+        }
+
         TempData.Keep();
 
         return RedirectToAction(nameof(Review));
@@ -210,9 +269,6 @@ public class CheckoutController : Controller
     [HttpGet]
     public async Task<IActionResult> Review()
     {
-        if (TempData["Checkout_FullName"] == null)
-            return RedirectToAction(nameof(Index));
-
         var user = await GetCurrentUserAsync();
         if (user == null) return RedirectToAction("Login", "Auth");
 
@@ -225,20 +281,53 @@ public class CheckoutController : Controller
         var model = await BuildCheckoutAsync(user);
         if (!model.Items.Any()) return RedirectToAction("Index", "Cart");
 
-        model.FullName = TempData["Checkout_FullName"]?.ToString() ?? string.Empty;
-        model.PhoneNumber = TempData["Checkout_PhoneNumber"]?.ToString() ?? string.Empty;
-        model.Address = TempData["Checkout_Address"]?.ToString() ?? string.Empty;
-        model.Note = TempData["Checkout_Note"]?.ToString();
+        // Lấy thông tin giao hàng: ưu tiên TempData, sau đó đến Session, cuối cùng là thông tin tài khoản
+        var fullName = TempData["Checkout_FullName"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_FullName") 
+            ?? user.TenNguoiDung 
+            ?? string.Empty;
 
-        var couponCode = TempData["Checkout_CouponCode"]?.ToString();
-        var coupon = await FindValidCouponAsync(couponCode, model.Subtotal);
-        if (coupon != null)
+        var phone = TempData["Checkout_PhoneNumber"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_PhoneNumber") 
+            ?? user.SoDienThoai 
+            ?? string.Empty;
+
+        var address = TempData["Checkout_Address"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_Address") 
+            ?? user.DiaChi 
+            ?? string.Empty;
+
+        var note = TempData["Checkout_Note"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_Note");
+
+        // Nếu cả 3 nguồn thông tin đều không có địa chỉ/họ tên, chuyển hướng về Index để người dùng nhập
+        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(address))
         {
-            model.CouponCode = coupon.MaCode;
-            model.Discount = CalculateDiscount(coupon, model.Subtotal);
+            return RedirectToAction(nameof(Index));
         }
 
-        ViewBag.PaymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() ?? "COD";
+        model.FullName = fullName;
+        model.PhoneNumber = phone;
+        model.Address = address;
+        model.Note = note;
+
+        // Đồng bộ dữ liệu để các thao tác tiếp theo luôn sẵn sàng
+        TempData["Checkout_FullName"] = fullName;
+        TempData["Checkout_PhoneNumber"] = phone;
+        TempData["Checkout_Address"] = address;
+        TempData["Checkout_Note"] = note;
+
+        var paymentMethod = TempData["Checkout_PaymentMethod"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_PaymentMethod") 
+            ?? "COD";
+        TempData["Checkout_PaymentMethod"] = paymentMethod;
+        ViewBag.PaymentMethod = paymentMethod;
+
+        var couponCode = TempData["Checkout_CouponCode"]?.ToString() 
+            ?? HttpContext.Session.GetString("Checkout_CouponCode");
+        TempData["Checkout_CouponCode"] = couponCode;
+
+        // Lưu ý: BuildCheckoutAsync(user) ở trên đã áp dụng Coupon và tính Discount, không gọi lại DB!
         if (TempData.Peek("Checkout_RequestKey") == null) TempData["Checkout_RequestKey"] = Guid.NewGuid().ToString("N");
         ViewBag.CheckoutRequestKey = TempData.Peek("Checkout_RequestKey");
         TempData["Checkout_ReviewTotal"] = model.Total.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -259,13 +348,23 @@ public class CheckoutController : Controller
         var user = await GetCurrentUserAsync();
         if (user == null) return Unauthorized(new { success = false, message = "Phiên đăng nhập không hợp lệ hoặc tài khoản đã khóa." });
         if (!Guid.TryParseExact(checkoutToken, "N", out _)) return BadRequest(new { success = false, message = "Vui lòng tải lại trang xác nhận đặt hàng." });
-        var fullName = TempData.Peek("Checkout_FullName")?.ToString()?.Trim();
-        var phone = TempData.Peek("Checkout_PhoneNumber")?.ToString()?.Trim();
-        var address = TempData.Peek("Checkout_Address")?.ToString()?.Trim();
-        var note = TempData.Peek("Checkout_Note")?.ToString()?.Trim();
-        var method = TempData.Peek("Checkout_PaymentMethod")?.ToString();
-        var couponCode = TempData.Peek("Checkout_CouponCode")?.ToString();
-        var shippingMethod = TempData.Peek("Checkout_ShippingMethod")?.ToString();
+        var fullName = TempData.Peek("Checkout_FullName")?.ToString()?.Trim()
+            ?? HttpContext.Session.GetString("Checkout_FullName")
+            ?? user.TenNguoiDung?.Trim();
+        var phone = TempData.Peek("Checkout_PhoneNumber")?.ToString()?.Trim()
+            ?? HttpContext.Session.GetString("Checkout_PhoneNumber")
+            ?? user.SoDienThoai?.Trim();
+        var address = TempData.Peek("Checkout_Address")?.ToString()?.Trim()
+            ?? HttpContext.Session.GetString("Checkout_Address")
+            ?? user.DiaChi?.Trim();
+        var note = TempData.Peek("Checkout_Note")?.ToString()?.Trim()
+            ?? HttpContext.Session.GetString("Checkout_Note");
+        var method = TempData.Peek("Checkout_PaymentMethod")?.ToString()
+            ?? HttpContext.Session.GetString("Checkout_PaymentMethod");
+        var couponCode = TempData.Peek("Checkout_CouponCode")?.ToString()
+            ?? HttpContext.Session.GetString("Checkout_CouponCode");
+        var shippingMethod = TempData.Peek("Checkout_ShippingMethod")?.ToString()
+            ?? HttpContext.Session.GetString("Checkout_ShippingMethod");
         var expectedKey = TempData.Peek("Checkout_RequestKey")?.ToString();
         var reviewTotalText = TempData.Peek("Checkout_ReviewTotal")?.ToString();
         var reviewItems = TempData.Peek("Checkout_ReviewItems")?.ToString();
@@ -273,6 +372,10 @@ public class CheckoutController : Controller
         var lostBuyNow = IsExpectedBuyNowLost(user.MaNguoiDung);
         try
         {
+            // Khai báo biến ngoài transaction để trích xuất dữ liệu gửi Telegram an toàn
+            string telegramItemsSummary = "";
+            decimal telegramTotalAmount = 0m;
+
             var orderId = await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
                 _db.ChangeTracker.Clear();
@@ -287,7 +390,7 @@ public class CheckoutController : Controller
                     throw new ArgumentException("Thông tin nhận hàng không hợp lệ. Kiểm tra họ tên, địa chỉ, số điện thoại và ghi chú tối đa 255 ký tự.");
                 if (method == null || !AllowedPaymentMethods.Contains(method) || shippingMethod is not ("STANDARD" or "EXPRESS"))
                     throw new ArgumentException("Vui lòng chọn lại phương thức giao hàng và thanh toán.");
-                if (!await _db.NguoiDungs.AnyAsync(x => x.MaNguoiDung == user.MaNguoiDung && x.TrangThai)) throw new ArgumentException("Tài khoản đã bị khóa.");
+                if (!user.TrangThai) throw new ArgumentException("Tài khoản đã bị khóa.");
                 var cart = await GetCheckoutItemsAsync(user.MaNguoiDung);
                 if (cart.Count == 0 || cart.Any(x => x.SoLuong <= 0 || x.SoLuong > 100000 || x.MaBienTheNavigation.Gia <= 0))
                     throw new ArgumentException("Giỏ hàng không có sản phẩm hợp lệ.");
@@ -334,9 +437,44 @@ public class CheckoutController : Controller
                     MaGiaoDich = $"EMUA{order.MaDonHang:D6}", NgayTao = OrderRules.VietnamNow() });
                 _db.LichSuVanChuyens.Add(new LichSuVanChuyen { MaDonHang = order.MaDonHang, TrangThai = order.TrangThaiDonHang,
                     MoTa = "Đã chốt đơn, lưu phí giao và điều kiện giảm giá; giữ tồn kho.", ThoiGian = OrderRules.VietnamNow() });
-                if (!isBuyNow) _db.ChiTietGioHangs.RemoveRange(cart);
-                await _db.SaveChangesAsync(); await tx.CommitAsync(); return order.MaDonHang;
+                await _db.SaveChangesAsync();
+
+                if (!isBuyNow)
+                {
+                    var orderedVariantIds = lines.Select(l => l.Id).ToList();
+                    await _db.ChiTietGioHangs
+                        .Where(c => c.MaNguoiDung == user.MaNguoiDung && orderedVariantIds.Contains(c.MaBienThe))
+                        .ExecuteDeleteAsync();
+                }
+
+                await tx.CommitAsync();
+
+                var cartItemNames = cart.GroupBy(x => x.MaBienThe)
+                    .ToDictionary(g => g.Key, g => g.First().MaBienTheNavigation?.MaSanPhamNavigation?.TenSanPham ?? $"Sản phẩm #{g.Key}");
+
+                telegramItemsSummary = string.Join("\n", lines.Select(l =>
+                {
+                    var pName = cartItemNames.TryGetValue(l.Id, out var n) ? n : $"Sản phẩm #{l.Id}";
+                    return $"- {pName} (x{l.Qty})";
+                }));
+                telegramTotalAmount = totals.Total;
+                return order.MaDonHang;
             });
+
+            // Trích xuất sẵn dữ liệu nguyên thủy trước khi chạy bất đồng bộ để tránh ObjectDisposedException
+            var paymentDisplay = method == "COD" ? "Thanh toán khi nhận hàng (COD)"
+                : method == "WEB3" ? "Ví Web3 (Crypto)"
+                : "Chuyển khoản ngân hàng (QR)";
+
+            _ = Task.Run(() => _telegramService.NotifyNewOrderAsync(
+                orderId,
+                fullName ?? "Khách hàng",
+                phone ?? string.Empty,
+                address ?? string.Empty,
+                paymentDisplay,
+                telegramItemsSummary,
+                telegramTotalAmount));
+
             foreach (var key in new[] { "Checkout_FullName", "Checkout_PhoneNumber", "Checkout_Address", "Checkout_Note", "Checkout_PaymentMethod", "Checkout_CouponCode", "Checkout_ShippingMethod", "Checkout_RequestKey", "Checkout_ReviewTotal", "Checkout_ReviewItems", BuyNowExpectedKey }) TempData.Remove(key);
             if (isBuyNow) ClearBuyNowSession(); else HttpContext.Session.Remove("Cart_CouponCode");
             return Json(new { success = true, orderId, redirectUrl = Url.Action("Success", "Checkout", new { id = orderId }) });
@@ -467,6 +605,7 @@ public class CheckoutController : Controller
             Address = user.DiaChi ?? string.Empty,
             Items = cartItems.Select(x => new CheckoutItemViewModel
             {
+                CartItemId = x.MaChiTietGioHang,
                 VariantId = x.MaBienThe,
                 ProductName = x.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham ?? "Sản phẩm",
                 VariantName = string.Join(" · ", new[] { x.MaBienTheNavigation.MauSac, x.MaBienTheNavigation.PhienBan }.Where(s => !string.IsNullOrWhiteSpace(s))),
@@ -557,13 +696,51 @@ public class CheckoutController : Controller
     }
 
     private Task<List<ChiTietGioHang>> GetCartItemsAsync(int userId) => _db.ChiTietGioHangs
-        .Include(x => x.MaBienTheNavigation).ThenInclude(x => x.MaSanPhamNavigation)
-        .Where(x => x.MaNguoiDung == userId).ToListAsync();
+        .AsNoTracking()
+        .Where(x => x.MaNguoiDung == userId)
+        .Select(x => new ChiTietGioHang
+        {
+            MaChiTietGioHang = x.MaChiTietGioHang,
+            MaNguoiDung = x.MaNguoiDung,
+            MaBienThe = x.MaBienThe,
+            SoLuong = x.SoLuong,
+            MaBienTheNavigation = new BienTheSanPham
+            {
+                MaBienThe = x.MaBienTheNavigation.MaBienThe,
+                MaSanPham = x.MaBienTheNavigation.MaSanPham,
+                Gia = x.MaBienTheNavigation.Gia,
+                SoLuong = x.MaBienTheNavigation.SoLuong,
+                HinhAnh = x.MaBienTheNavigation.HinhAnh,
+                MauSac = x.MaBienTheNavigation.MauSac,
+                PhienBan = x.MaBienTheNavigation.PhienBan,
+                TrangThai = x.MaBienTheNavigation.TrangThai,
+                MaSanPhamNavigation = new SanPham
+                {
+                    MaSanPham = x.MaBienTheNavigation.MaSanPhamNavigation.MaSanPham,
+                    TenSanPham = x.MaBienTheNavigation.MaSanPhamNavigation.TenSanPham,
+                    GiaGoc = x.MaBienTheNavigation.MaSanPhamNavigation.GiaGoc,
+                    TrangThaiSanPham = x.MaBienTheNavigation.MaSanPhamNavigation.TrangThaiSanPham
+                }
+            }
+        })
+        .ToListAsync();
 
     private async Task<NguoiDung?> GetCurrentUserAsync()
     {
+        if (HttpContext.Items.TryGetValue("EMUA_CurrentUser", out var cached) && cached is NguoiDung cachedUser)
+        {
+            return cachedUser;
+        }
+
         var idText = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(idText, out var id) ? await _db.NguoiDungs.FirstOrDefaultAsync(x => x.MaNguoiDung == id && x.TrangThai) : null;
+        if (!int.TryParse(idText, out var id)) return null;
+
+        var user = await _db.NguoiDungs.AsNoTracking().FirstOrDefaultAsync(x => x.MaNguoiDung == id && x.TrangThai);
+        if (user != null)
+        {
+            HttpContext.Items["EMUA_CurrentUser"] = user;
+        }
+        return user;
     }
 
     private async Task<KhuyenMai?> FindValidCouponAsync(string? code, decimal subtotal)

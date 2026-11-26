@@ -331,7 +331,7 @@ button:active,
 /* ── 11. FLOATING CART ────────────────────────────────────────── */
 .emua-floating-cart {
     position: fixed;
-    right: 28px;
+    right: 31px;
     bottom: 110px;
     z-index: 9992;
     width: 56px;

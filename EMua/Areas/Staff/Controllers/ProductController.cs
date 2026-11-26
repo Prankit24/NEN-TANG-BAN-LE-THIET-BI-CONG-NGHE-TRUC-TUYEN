@@ -22,19 +22,22 @@ public class ProductController : StaffControllerBase
     private readonly IMemoryCache _cache;
     private readonly IUndoDeletionManager _undoManager;
     private readonly IProductImageStorageService _storageService;
+    private readonly TelegramNotificationService _telegramService;
 
     public ProductController(
         EMuaDbContext db,
         IWebHostEnvironment environment,
         IMemoryCache cache,
         IUndoDeletionManager undoManager,
-        IProductImageStorageService storageService)
+        IProductImageStorageService storageService,
+        TelegramNotificationService telegramService)
     {
         _db = db;
         _environment = environment;
         _cache = cache;
         _undoManager = undoManager;
         _storageService = storageService;
+        _telegramService = telegramService;
     }
 
     private void InvalidateProductCache()
@@ -257,6 +260,23 @@ public class ProductController : StaffControllerBase
         await _db.SaveChangesAsync();
 
         InvalidateProductCache();
+
+        // Gửi thông báo sản phẩm mới qua Telegram (bất đồng bộ, không làm chậm thao tác lưu)
+        var categoryName = model.MaDanhMuc.HasValue
+            ? (await _db.DanhMucSanPhams.AsNoTracking().Where(c => c.MaDanhMuc == model.MaDanhMuc.Value).Select(c => c.TenDanhMuc).FirstOrDefaultAsync()) ?? "Chưa phân loại"
+            : "Chưa phân loại";
+        var brandName = (await _db.ThuongHieus.AsNoTracking().Where(b => b.MaThuongHieu == product.MaThuongHieu).Select(b => b.TenThuongHieu).FirstOrDefaultAsync()) ?? "EMUA";
+        var displayPrice = product.BienTheSanPhams.FirstOrDefault()?.Gia ?? product.GiaGoc ?? 0m;
+        var creatorName = User.Identity?.Name ?? "Nhân viên";
+
+        _ = Task.Run(() => _telegramService.NotifyNewProductAsync(
+            product.MaSanPham,
+            product.TenSanPham,
+            categoryName,
+            brandName,
+            displayPrice,
+            mainImagePath,
+            creatorName));
 
         TempData["Success"] = "Đã tạo sản phẩm thành công.";
         return RedirectToAction(nameof(Index));
