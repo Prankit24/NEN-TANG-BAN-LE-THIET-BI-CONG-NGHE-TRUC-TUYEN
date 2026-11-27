@@ -3,7 +3,7 @@
 @using EMua.Helpers
 @model OrderDetailsViewModel
 @{
-    ViewData["Title"] = $"Đơn hàng #{Model.OrderId:D5}";
+    ViewData["Title"] = $"Đơn hàng #{Model.OrderId}";
 
     string FixImageUrl(string? url)
     {
@@ -52,7 +52,7 @@
             <i class="bi bi-arrow-left"></i>
         </a>
         <div class="order-header-info">
-            <span class="order-code-eyebrow">ĐƠN HÀNG #DH-@Model.OrderId.ToString("D5")</span>
+            <span class="order-code-eyebrow">ĐƠN HÀNG #DH-@Model.OrderId</span>
             <h1>Chi tiết đơn hàng</h1>
             <p class="order-sub-meta">
                 <i class="bi bi-clock me-1"></i>@Model.OrderedAt?.ToString("dd/MM/yyyy HH:mm")

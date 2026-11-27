@@ -231,7 +231,7 @@
                             <tr>
                                 <td>
                                     <a asp-controller="Order" asp-action="Details" asp-route-id="@ord.MaDonHang" class="fw-bold font-monospace text-decoration-none">
-                                        #DH-@ord.MaDonHang.ToString("D5")
+                                        #DH-@ord.MaDonHang
                                     </a>
                                 </td>
                                 <td class="text-muted small">@(ord.NgayDat?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
@@ -289,11 +289,11 @@
                         {
                             <tr>
                                 <td>
-                                    <span class="badge bg-light text-primary border font-monospace">#HD-@inv.MaHoaDon.ToString("D5")</span>
+                                    <span class="badge bg-light text-primary border font-monospace">#HD-@inv.MaHoaDon</span>
                                 </td>
                                 <td>
                                     <a asp-controller="Order" asp-action="Details" asp-route-id="@inv.MaDonHang" class="text-decoration-none fw-semibold">
-                                        #DH-@inv.MaDonHang.ToString("D5")
+                                        #DH-@inv.MaDonHang
                                     </a>
                                 </td>
                                 <td class="small text-muted">

@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hóa đơn #HD-@Model.MaHoaDon.ToString("D5") - EMUA Store</title>
+    <title>Hóa đơn #HD-@Model.MaHoaDon - EMUA Store</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
@@ -144,8 +144,8 @@
                 <p class="muted">Website: emua.vn | Hotline: 1900 6868</p>
             </div>
             <div class="invoice-info">
-                <div class="invoice-code">#HD-@Model.MaHoaDon.ToString("D5")</div>
-                <p class="muted">Mã đơn: #DH-@order.MaDonHang.ToString("D5")</p>
+                <div class="invoice-code">#HD-@Model.MaHoaDon</div>
+                <p class="muted">Mã đơn: #DH-@order.MaDonHang</p>
                 <p class="muted">Ngày lập: @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? DateTime.Now.ToString("dd/MM/yyyy HH:mm"))</p>
             </div>
         </div>

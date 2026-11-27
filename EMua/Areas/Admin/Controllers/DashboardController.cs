@@ -145,7 +145,7 @@ namespace EMua.Areas.Admin.Controllers
                                         orderby order.NgayDat descending
                                         select new
                                         {
-                                            OrderCode = $"#DH-{order.MaDonHang:D5}",
+                                            OrderCode = $"#DH-{order.MaDonHang}",
                                             CustomerName = order.HoTenNhanHang ?? user.TenNguoiDung ?? "Khách hàng",
                                             Total = order.TongTien ?? 0,
                                             Status = order.TrangThaiDonHang ?? "Chờ xử lý",

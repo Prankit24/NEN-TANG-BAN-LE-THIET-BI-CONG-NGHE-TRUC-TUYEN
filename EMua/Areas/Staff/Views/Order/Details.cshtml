@@ -1,7 +1,7 @@
 @using EMua.Services
 @model DonHang
 @{
-    ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang:D5}";
+    ViewData["Title"] = $"Chi tiết đơn #DH-{Model.MaDonHang}";
 
     var allStatuses = (ViewBag.Statuses as string[]) ?? Array.Empty<string>();
     var currentStatus = OrderRules.Normalize(Model.TrangThaiDonHang);
@@ -57,7 +57,7 @@
     @if (Model.HoaDon != null && (Model.HoaDon.MaNguoiLap.HasValue || Model.HoaDon.ChiTietHoaDons.Any()))
     {
         <a asp-area="Staff" asp-controller="Invoice" asp-action="Details" asp-route-id="@Model.HoaDon.MaHoaDon" class="btn btn-outline-primary">
-            <i class="bi bi-file-earmark-text me-1"></i> Xem hóa đơn #HD-@Model.HoaDon.MaHoaDon.ToString("D5")
+            <i class="bi bi-file-earmark-text me-1"></i> Xem hóa đơn #HD-@Model.HoaDon.MaHoaDon
         </a>
         <a asp-area="Staff" asp-controller="Invoice" asp-action="Print" asp-route-id="@Model.HoaDon.MaHoaDon" target="_blank" class="btn btn-outline-secondary">
             <i class="bi bi-printer me-1"></i> In hóa đơn

@@ -426,7 +426,7 @@
     <!-- 2. Thanh tìm kiếm -->
     <form method="get" asp-action="Index" class="order-filter-bar">
         <div class="order-filter-search">
-            <input type="search" name="q" value="@search" class="form-control" placeholder="Tìm theo mã đơn (#DH-00001), khách hàng, SĐT..." aria-label="Tìm kiếm đơn hàng" />
+            <input type="search" name="q" value="@search" class="form-control" placeholder="Tìm theo mã đơn (#DH-81), khách hàng, SĐT..." aria-label="Tìm kiếm đơn hàng" />
         </div>
         <div class="order-filter-status">
             <select name="status" class="form-select" aria-label="Trạng thái đơn hàng">
@@ -519,7 +519,7 @@
 
                     <tr>
                         <td>
-                            <a asp-action="Details" asp-route-id="@order.MaDonHang" class="order-code">#DH-@order.MaDonHang.ToString("D5")</a>
+                            <a asp-action="Details" asp-route-id="@order.MaDonHang" class="order-code">#DH-@order.MaDonHang</a>
                         </td>
                         <td>
                             <div class="customer-name">@(order.HoTenNhanHang ?? order.MaNguoiDungNavigation?.TenNguoiDung ?? "Khách hàng")</div>

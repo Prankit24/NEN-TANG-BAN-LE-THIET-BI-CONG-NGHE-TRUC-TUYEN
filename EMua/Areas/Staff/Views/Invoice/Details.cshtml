@@ -6,13 +6,13 @@
         <div role="alert" style="padding:24px;font-family:Arial,sans-serif">
             <h3>Hóa đơn chưa đủ dữ liệu để hiển thị hoặc in</h3>
             <p>Chi tiết hàng, phí giao, giảm giá hoặc tổng tiền đã lưu chưa đầy đủ hay không khớp. Vui lòng nhờ nhân viên đối chiếu và hoàn thiện chứng từ.</p>
-            <p>Mã hóa đơn: #HD-@Model.MaHoaDon.ToString("D5")</p>
+            <p>Mã hóa đơn: #HD-@Model.MaHoaDon</p>
         </div>
         return;
     }
 }
 @{
-    ViewData["Title"] = $"Chi tiết hóa đơn #HD-{Model.MaHoaDon:D5}";
+    ViewData["Title"] = $"Chi tiết hóa đơn #HD-{Model.MaHoaDon}";
     var order = Model.MaDonHangNavigation;
     var hasSnapshot = Model.ChiTietHoaDons != null && Model.ChiTietHoaDons.Any();
     var legacyDetails = ViewBag.LegacyDetails as List<EMua.Models.Database.ChiTietDonHang>;
@@ -86,7 +86,7 @@
     <!-- ACTION TOOLBAR -->
     <div class="invoice-page-actions justify-content-between">
         <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-primary px-2 py-1">HÓA ĐƠN #HD-@Model.MaHoaDon.ToString("D5")</span>
+            <span class="badge bg-primary px-2 py-1">HÓA ĐƠN #HD-@Model.MaHoaDon</span>
             <span class="text-muted small">Ngày lập: <strong>@(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</strong></span>
             @if (Model.TrangThaiHoaDon == "Đã thanh toán")
             {
@@ -158,7 +158,7 @@
                         <td class="text-muted" style="width: 160px;">Đơn hàng gốc:</td>
                         <td class="fw-bold">
                             <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.MaDonHang" class="text-decoration-none">
-                                #DH-@Model.MaDonHang.ToString("D5")
+                                #DH-@Model.MaDonHang
                             </a>
                         </td>
                     </tr>

@@ -52,7 +52,7 @@ namespace EMua.Services.AI
             if (userId <= 0)
             {
                 return new("Để tra cứu tình trạng đơn hàng, bạn vui lòng đăng nhập tài khoản EMUA rồi hỏi lại giúp mình nhé. " +
-                           "Sau khi đăng nhập, bạn chỉ cần gõ \"đơn hàng của tôi đến đâu rồi\" hoặc kèm mã đơn, ví dụ #DH-00012.", null);
+                           "Sau khi đăng nhập, bạn chỉ cần gõ \"đơn hàng của tôi đến đâu rồi\" hoặc kèm mã đơn, ví dụ #DH-12.", null);
             }
 
             var requestedId = ExtractOrderId(message);
@@ -65,7 +65,7 @@ namespace EMua.Services.AI
             if (order == null)
             {
                 return requestedId.HasValue
-                    ? new($"Mình không tìm thấy đơn #DH-{requestedId.Value:D5} trong tài khoản của bạn. Bạn kiểm tra lại mã đơn trong mục Đơn hàng của tôi giúp mình nhé.", null)
+                    ? new($"Mình không tìm thấy đơn #DH-{requestedId.Value} trong tài khoản của bạn. Bạn kiểm tra lại mã đơn trong mục Đơn hàng của tôi giúp mình nhé.", null)
                     : new("Tài khoản của bạn hiện chưa có đơn hàng nào. Bạn có thể chọn sản phẩm và đặt hàng, sau đó hỏi mình để theo dõi đơn nhé!", null);
             }
 
@@ -74,7 +74,7 @@ namespace EMua.Services.AI
             var isCod = OrderRules.IsCod(payment?.PhuongThuc);
             var isPaid = OrderRules.IsPaid(payment?.TrangThai);
             var total = order.TongTien ?? 0m;
-            var code = $"#DH-{order.MaDonHang:D5}";
+            var code = $"#DH-{order.MaDonHang}";
             var eta = order.NgayDuKienGiao?.AddHours(7); // DB lưu UTC, hiển thị giờ Việt Nam
 
             var sb = new StringBuilder();

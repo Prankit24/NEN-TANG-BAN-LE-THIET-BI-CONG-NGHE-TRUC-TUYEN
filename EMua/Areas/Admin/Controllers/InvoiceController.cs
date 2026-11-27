@@ -316,7 +316,7 @@ public class InvoiceController : Controller
             var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
             var staff = (inv.TenNguoiLap ?? inv.MaNguoiLapNavigation?.TenNguoiDung ?? "").Replace("\"", "\"\"");
 
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{customer}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon},#DH-{inv.MaDonHang},{dateStr},\"{customer}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
         var preamble = Encoding.UTF8.GetPreamble();
@@ -456,8 +456,8 @@ public class InvoiceController : Controller
 
             rows.Add(new object?[]
             {
-                $"#HD-{inv.MaHoaDon:D5}",
-                $"#DH-{inv.MaDonHang:D5}",
+                $"#HD-{inv.MaHoaDon}",
+                $"#DH-{inv.MaDonHang}",
                 inv.NgayLapHoaDon,
                 inv.HoTenKhachHang ?? "",
                 inv.SoDienThoai ?? "",
@@ -512,7 +512,7 @@ public class InvoiceController : Controller
 
         if (invoice == null)
         {
-            TempData["Error"] = $"Không tìm thấy hóa đơn #HD-{id:D5}.";
+            TempData["Error"] = $"Không tìm thấy hóa đơn #HD-{id}.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -548,7 +548,7 @@ public class InvoiceController : Controller
 
         if (invoice == null)
         {
-            return NotFound($"Không tìm thấy hóa đơn #HD-{id:D5}");
+            return NotFound($"Không tìm thấy hóa đơn #HD-{id}");
         }
 
         if (!invoice.ChiTietHoaDons.Any() && invoice.MaDonHangNavigation != null)
@@ -713,7 +713,7 @@ public class InvoiceController : Controller
             var disc = (inv.TienGiamGia ?? 0m).ToString("0.##", invCulture);
             var gross = (inv.TongTien ?? 0m).ToString("0.##", invCulture);
             var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{cust}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon},#DH-{inv.MaDonHang},{dateStr},\"{cust}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
         var preamble = Encoding.UTF8.GetPreamble();
@@ -776,8 +776,8 @@ public class InvoiceController : Controller
 
             rows.Add(new object?[]
             {
-                $"#HD-{inv.MaHoaDon:D5}",
-                $"#DH-{inv.MaDonHang:D5}",
+                $"#HD-{inv.MaHoaDon}",
+                $"#DH-{inv.MaDonHang}",
                 inv.NgayLapHoaDon,
                 inv.HoTenKhachHang ?? "",
                 inv.SoDienThoai ?? "",
