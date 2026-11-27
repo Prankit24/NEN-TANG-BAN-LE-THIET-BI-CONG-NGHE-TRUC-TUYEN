@@ -125,7 +125,7 @@
 
                     <div class="po-info-item border-top pt-2">
                         <span class="text-muted small d-block">Tổng tiền dự kiến:</span>
-                        <span class="fw-bold text-primary fs-5">@Model.TongTienDuKien.ToString("N2") ₫</span>
+                        <span class="fw-bold text-primary fs-5">@CurrencyHelper.FormatVnd(Model.TongTienDuKien)</span>
                     </div>
 
                     @if (Model.MaNguoiDuyetNavigation != null)
@@ -226,7 +226,7 @@
                                         <div class="fw-bold text-dark">@(prod?.TenSanPham ?? "Sản phẩm")</div>
                                         <small class="text-muted">Phân loại: @(variant?.MauSac ?? "—") - @(variant?.PhienBan ?? "—")</small>
                                         @if (item.ChietKhau > 0)
-                                        { <div class="small text-success">Chiết khấu / SP: @item.ChietKhau.ToString("N2") ₫</div> }
+                                        { <div class="small text-success">Chiết khấu / SP: @CurrencyHelper.FormatVnd(item.ChietKhau)</div> }
                                         @if (!string.IsNullOrWhiteSpace(item.GhiChu))
                                         {
                                             <div class="small text-muted">@item.GhiChu</div>
@@ -238,19 +238,19 @@
                                         </span>
                                     </td>
                                     <td class="text-center fw-bold text-primary">@item.SoLuongNhap</td>
-                                    <td class="text-end">@item.DonGiaNhapDuKien.ToString("N2") ₫</td>
-                                    <td class="text-end fw-bold text-dark">@((Math.Max(0m, item.DonGiaNhapDuKien - item.ChietKhau) * item.SoLuongNhap).ToString("N2")) ₫</td>
+                                    <td class="text-end">@CurrencyHelper.FormatVnd(item.DonGiaNhapDuKien)</td>
+                                    <td class="text-end fw-bold text-dark">@CurrencyHelper.FormatVnd(Math.Max(0m, item.DonGiaNhapDuKien - item.ChietKhau) * item.SoLuongNhap)</td>
                                 </tr>
                             }
                         </tbody>
                         <tfoot class="table-light">
-                            <tr><td colspan="4" class="text-end">Tiền hàng sau VAT, trước chiết khấu:</td><td class="text-end">@Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.DonGiaNhapDuKien).ToString("N2") ₫</td></tr>
-                            <tr><td colspan="4" class="text-end">Chiết khấu từng dòng:</td><td class="text-end">-@Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.ChietKhau).ToString("N2") ₫</td></tr>
-                            <tr><td colspan="4" class="text-end">Vận chuyển và chi phí khác:</td><td class="text-end">@((Model.ChiPhiVanChuyen + Model.ChiPhiKhac).ToString("N2")) ₫</td></tr>
-                            <tr><td colspan="4" class="text-end">Chiết khấu toàn phiếu:</td><td class="text-end">-@Model.ChietKhau.ToString("N2") ₫</td></tr>
+                            <tr><td colspan="4" class="text-end">Tiền hàng sau VAT, trước chiết khấu:</td><td class="text-end">@CurrencyHelper.FormatVnd(Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.DonGiaNhapDuKien))</td></tr>
+                            <tr><td colspan="4" class="text-end">Chiết khấu từng dòng:</td><td class="text-end">-@CurrencyHelper.FormatVnd(Model.ChiTietPhieuNhapHangs.Sum(x => x.SoLuongNhap * x.ChietKhau))</td></tr>
+                            <tr><td colspan="4" class="text-end">Vận chuyển và chi phí khác:</td><td class="text-end">@CurrencyHelper.FormatVnd(Model.ChiPhiVanChuyen + Model.ChiPhiKhac)</td></tr>
+                            <tr><td colspan="4" class="text-end">Chiết khấu toàn phiếu:</td><td class="text-end">-@CurrencyHelper.FormatVnd(Model.ChietKhau)</td></tr>
                             <tr>
                                 <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
-                                <td class="text-end fw-bold text-primary">@Model.TongTienDuKien.ToString("N2") ₫</td>
+                                <td class="text-end fw-bold text-primary">@CurrencyHelper.FormatVnd(Model.TongTienDuKien)</td>
                             </tr>
                         </tfoot>
                     </table>
