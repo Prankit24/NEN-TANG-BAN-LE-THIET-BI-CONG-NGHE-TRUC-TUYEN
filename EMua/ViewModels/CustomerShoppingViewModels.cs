@@ -179,7 +179,7 @@ public class ReviewCreateViewModel
     public int Rating { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập nhận xét.")]
-    [StringLength(255)]
+    [StringLength(255, ErrorMessage = "Nhận xét không được vượt quá 255 ký tự.")]
     public string Comment { get; set; } = string.Empty;
 }
 

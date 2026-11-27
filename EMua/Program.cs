@@ -216,7 +216,22 @@ builder.Services.AddScoped<TelegramNotificationService>();
 // Cho phép các dịch vụ khác sử dụng IHttpClientFactory.
 // ============================================================
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Việt hóa toàn bộ thông báo lỗi Model Binding mặc định của ASP.NET Core
+    var provider = options.ModelBindingMessageProvider;
+    provider.SetValueMustNotBeNullAccessor(value => "Vui lòng nhập trường này.");
+    provider.SetValueIsInvalidAccessor(value => $"Giá trị '{value}' không hợp lệ.");
+    provider.SetValueMustBeANumberAccessor(fieldName => $"Trường '{fieldName}' phải là chữ số.");
+    provider.SetMissingKeyOrValueAccessor(() => "Cần cung cấp đầy đủ giá trị.");
+    provider.SetAttemptedValueIsInvalidAccessor((value, fieldName) => $"Giá trị '{value}' không hợp lệ cho trường '{fieldName}'.");
+    provider.SetMissingBindRequiredValueAccessor(fieldName => $"Vui lòng nhập trường '{fieldName}'.");
+    provider.SetMissingRequestBodyRequiredValueAccessor(() => "Nội dung yêu cầu không được để trống.");
+    provider.SetNonPropertyAttemptedValueIsInvalidAccessor(value => $"Giá trị '{value}' không hợp lệ.");
+    provider.SetNonPropertyUnknownValueIsInvalidAccessor(() => "Giá trị cung cấp không hợp lệ.");
+    provider.SetNonPropertyValueMustBeANumberAccessor(() => "Giá trị phải là chữ số.");
+    provider.SetUnknownValueIsInvalidAccessor(fieldName => $"Giá trị cho trường '{fieldName}' không hợp lệ.");
+});
 
 builder.Services.AddHttpClient();
 

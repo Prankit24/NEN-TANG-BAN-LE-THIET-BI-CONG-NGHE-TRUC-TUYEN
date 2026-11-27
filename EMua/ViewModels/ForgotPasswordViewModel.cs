@@ -4,8 +4,8 @@ namespace EMua.ViewModels
 {
     public class ForgotPasswordViewModel
     {
-        [Required(ErrorMessage = "Vui lòng nhập email")]
-        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [Required(ErrorMessage = "Vui lòng nhập địa chỉ email.")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
         public string Email { get; set; } = "";
     }
 }
