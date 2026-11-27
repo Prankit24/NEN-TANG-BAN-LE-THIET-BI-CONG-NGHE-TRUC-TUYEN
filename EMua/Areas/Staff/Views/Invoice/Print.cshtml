@@ -7,7 +7,7 @@
         <div role="alert" style="padding:24px;font-family:Arial,sans-serif">
             <h3>Hóa đơn chưa đủ dữ liệu để hiển thị hoặc in</h3>
             <p>Chi tiết hàng, phí giao, giảm giá hoặc tổng tiền đã lưu chưa đầy đủ hay không khớp. Vui lòng nhờ nhân viên đối chiếu và hoàn thiện chứng từ.</p>
-            <p>Mã hóa đơn: #HD-@Model.MaHoaDon.ToString("D5")</p>
+            <p>Mã hóa đơn: #HD-@Model.MaHoaDon</p>
         </div>
         return;
     }
@@ -40,7 +40,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hóa đơn bán hàng #HD-@Model.MaHoaDon.ToString("D5") - EMUA STORE</title>
+    <title>Hóa đơn bán hàng #HD-@Model.MaHoaDon - EMUA STORE</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
@@ -206,8 +206,8 @@
             </div>
             <div class="text-end">
                 <span class="badge bg-primary text-uppercase mb-2">HÓA ĐƠN BÁN HÀNG NỘI BỘ</span>
-                <h4 class="fw-bold mb-1 text-dark">#HD-@Model.MaHoaDon.ToString("D5")</h4>
-                <p class="text-muted small mb-1">Đơn hàng gốc: <strong>#DH-@Model.MaDonHang.ToString("D5")</strong></p>
+                <h4 class="fw-bold mb-1 text-dark">#HD-@Model.MaHoaDon</h4>
+                <p class="text-muted small mb-1">Đơn hàng gốc: <strong>#DH-@Model.MaDonHang</strong></p>
                 <p class="text-muted small mb-0">Ngày lập: @(Model.NgayLapHoaDon?.ToString("dd/MM/yyyy HH:mm") ?? "—")</p>
             </div>
         </div>

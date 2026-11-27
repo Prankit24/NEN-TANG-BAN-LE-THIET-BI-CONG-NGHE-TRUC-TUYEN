@@ -60,7 +60,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <span class="text-muted d-block small">Mã đơn hàng</span>
-                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId</span>
                         </div>
                         <div class="col-6 text-end">
                             <span class="text-muted d-block small">Tổng tiền</span>
@@ -76,7 +76,7 @@
                             <i class="bi bi-file-earmark-text text-primary fs-5"></i>
                             <div>
                                 <span class="text-muted small d-block">Mã hóa đơn</span>
-                                <strong class="text-dark">#HD-@(((int)ViewBag.InvoiceId).ToString("D5"))</strong>
+                                <strong class="text-dark">#HD-@ViewBag.InvoiceId</strong>
                             </div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <span class="text-muted d-block small">Mã đơn hàng</span>
-                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId.ToString("D5")</span>
+                            <span class="fw-bold text-dark fs-5">#DH-@Model.OrderId</span>
                         </div>
                         <div class="col-6 text-end">
                             <span class="text-muted d-block small">Tổng tiền</span>
@@ -174,7 +174,7 @@
                             <i class="bi bi-file-earmark-text text-primary fs-5"></i>
                             <div>
                                 <span class="text-muted small d-block">Mã hóa đơn</span>
-                                <strong class="text-dark">#HD-@(((int)ViewBag.InvoiceId).ToString("D5"))</strong>
+                                <strong class="text-dark">#HD-@ViewBag.InvoiceId</strong>
                             </div>
                         </div>
                     </div>

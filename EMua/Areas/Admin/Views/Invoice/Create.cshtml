@@ -1,6 +1,6 @@
 @model EMua.Areas.Staff.Models.InvoiceCreateViewModel
 @{
-    ViewData["Title"] = $"Lập hóa đơn bán hàng - Đơn #DH-{Model.MaDonHang:D5}";
+    ViewData["Title"] = $"Lập hóa đơn bán hàng - Đơn #DH-{Model.MaDonHang}";
 }
 
 <style>
@@ -138,7 +138,7 @@
                     <table class="table table-borderless table-sm small mb-3">
                         <tr>
                             <td class="text-muted" style="width: 150px;">Mã đơn hàng:</td>
-                            <td class="fw-bold">#DH-@Model.MaDonHang.ToString("D5")</td>
+                            <td class="fw-bold">#DH-@Model.MaDonHang</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Ngày đặt hàng:</td>

@@ -597,7 +597,7 @@
                     @foreach (var order in Model.RecentOrders)
                     {
                         <tr>
-                            <td><strong>#DH-@order.OrderId.ToString("D5")</strong></td>
+                            <td><strong>#DH-@order.OrderId</strong></td>
                             <td>
                                 <div><strong>@order.CustomerName</strong></div>
                                 <small class="text-muted">@(order.CustomerEmail ?? "—")</small>

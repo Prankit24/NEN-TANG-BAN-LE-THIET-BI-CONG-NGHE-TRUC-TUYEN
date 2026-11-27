@@ -224,7 +224,7 @@ namespace EMua.Services
                 }
 
                 var baseUrl = (_configuration["App:BaseUrl"] ?? "https://emua.id.vn").Trim().TrimEnd('/');
-                var orderCode = $"#DH-{orderId:D5}";
+                var orderCode = $"#DH-{orderId}";
                 var timeStr = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
                 var totalStr = $"{totalAmount:N0} đ";
 

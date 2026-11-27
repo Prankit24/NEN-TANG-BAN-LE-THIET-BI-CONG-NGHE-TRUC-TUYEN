@@ -309,7 +309,7 @@ public class InvoiceController : StaffControllerBase
             var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
             var staff = (inv.TenNguoiLap ?? inv.MaNguoiLapNavigation?.TenNguoiDung ?? "").Replace("\"", "\"\"");
 
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{customer}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon},#DH-{inv.MaDonHang},{dateStr},\"{customer}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
         var preamble = Encoding.UTF8.GetPreamble();
@@ -427,8 +427,8 @@ public class InvoiceController : StaffControllerBase
 
             rows.Add(new object?[]
             {
-                $"#HD-{inv.MaHoaDon:D5}",
-                $"#DH-{inv.MaDonHang:D5}",
+                $"#HD-{inv.MaHoaDon}",
+                $"#DH-{inv.MaDonHang}",
                 inv.NgayLapHoaDon,
                 inv.HoTenKhachHang ?? "",
                 inv.SoDienThoai ?? "",
@@ -485,7 +485,7 @@ public class InvoiceController : StaffControllerBase
 
         if (order == null)
         {
-            TempData["Error"] = $"Không tìm thấy đơn hàng #DH-{orderId:D5}.";
+            TempData["Error"] = $"Không tìm thấy đơn hàng #DH-{orderId}.";
             return RedirectToAction("Index", "Order");
         }
 
@@ -493,14 +493,14 @@ public class InvoiceController : StaffControllerBase
         var existingInvoice = await _db.HoaDons.AsNoTracking().Include(x => x.ChiTietHoaDons).FirstOrDefaultAsync(x => x.MaDonHang == orderId);
         if (existingInvoice != null && (existingInvoice.MaNguoiLap.HasValue || existingInvoice.ChiTietHoaDons.Any()))
         {
-            TempData["Warning"] = $"Đơn hàng #DH-{orderId:D5} đã có hóa đơn #HD-{existingInvoice.MaHoaDon:D5}. Không thể lập hóa đơn trùng.";
+            TempData["Warning"] = $"Đơn hàng #DH-{orderId} đã có hóa đơn #HD-{existingInvoice.MaHoaDon}. Không thể lập hóa đơn trùng.";
             return RedirectToAction(nameof(Details), new { id = existingInvoice.MaHoaDon });
         }
 
         // Kiểm tra điều kiện đơn hàng không bị hủy
         if (order.TrangThaiDonHang != null && order.TrangThaiDonHang.Contains("hủy", StringComparison.OrdinalIgnoreCase))
         {
-            TempData["Error"] = $"Đơn hàng #DH-{orderId:D5} đã bị hủy, không thể lập hóa đơn bán hàng.";
+            TempData["Error"] = $"Đơn hàng #DH-{orderId} đã bị hủy, không thể lập hóa đơn bán hàng.";
             return RedirectToAction("Details", "Order", new { id = orderId });
         }
 
@@ -724,7 +724,7 @@ public class InvoiceController : StaffControllerBase
 
         if (invoice == null)
         {
-            TempData["Error"] = $"Không tìm thấy hóa đơn #HD-{id:D5}.";
+            TempData["Error"] = $"Không tìm thấy hóa đơn #HD-{id}.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -762,7 +762,7 @@ public class InvoiceController : StaffControllerBase
 
         if (invoice == null)
         {
-            return NotFound($"Không tìm thấy hóa đơn #HD-{id:D5}");
+            return NotFound($"Không tìm thấy hóa đơn #HD-{id}");
         }
 
         if (!invoice.ChiTietHoaDons.Any() && invoice.MaDonHangNavigation != null)
@@ -934,7 +934,7 @@ public class InvoiceController : StaffControllerBase
             var disc = (inv.TienGiamGia ?? 0m).ToString("0.##", invCulture);
             var gross = (inv.TongTien ?? 0m).ToString("0.##", invCulture);
             var st = (inv.TrangThaiHoaDon ?? "Đã lập").Replace("\"", "\"\"");
-            sb.AppendLine($"#HD-{inv.MaHoaDon:D5},#DH-{inv.MaDonHang:D5},{dateStr},\"{cust}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
+            sb.AppendLine($"#HD-{inv.MaHoaDon},#DH-{inv.MaDonHang},{dateStr},\"{cust}\",\"{phone}\",{net},{vat},{ship},{disc},{gross},\"{st}\",\"{staff}\"");
         }
 
         var preamble = Encoding.UTF8.GetPreamble();
@@ -997,8 +997,8 @@ public class InvoiceController : StaffControllerBase
 
             rows.Add(new object?[]
             {
-                $"#HD-{inv.MaHoaDon:D5}",
-                $"#DH-{inv.MaDonHang:D5}",
+                $"#HD-{inv.MaHoaDon}",
+                $"#DH-{inv.MaDonHang}",
                 inv.NgayLapHoaDon,
                 inv.HoTenKhachHang ?? "",
                 inv.SoDienThoai ?? "",
