@@ -90,6 +90,21 @@
             padding: .6rem 1rem;
         }
 
+        /* Ẩn spinner lên xuống ở các ô nhập số */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Độ rộng tối thiểu các cột nhập tiền và số lượng */
+        .col-sl { min-width: 70px !important; }
+        .col-price { min-width: 135px !important; }
+        .col-total { min-width: 140px !important; white-space: nowrap !important; }
+
     @@media (max-width: 991.98px) {
         .io-page .io-table-wrap {
             max-height: none;
@@ -142,10 +157,10 @@
         <div class="table-responsive border io-table-wrap">
             <table class="table table-sm align-middle mb-0" id="importItemsTable">
                 <thead class="table-light"><tr>
-                    <th style="min-width:240px">Sản phẩm / biến thể</th><th>Tồn</th><th style="min-width:80px">SL</th>
-                    <th style="min-width:120px">Giá trước VAT</th><th style="min-width:80px">VAT</th>
-                    <th style="min-width:120px">Giá sau VAT</th><th style="min-width:115px">CK / SP</th>
-                    <th style="min-width:110px">Giá bán hiện tại</th><th style="min-width:85px">LN gộp ước tính</th><th style="min-width:130px">Thành tiền</th><th>Thao tác</th>
+                    <th style="min-width:240px">Sản phẩm / biến thể</th><th>Tồn</th><th class="col-sl" style="min-width:70px">SL</th>
+                    <th class="col-price" style="min-width:135px">Giá trước VAT</th><th style="min-width:80px">VAT</th>
+                    <th class="col-price" style="min-width:135px">Giá sau VAT</th><th class="col-price" style="min-width:135px">CK / SP</th>
+                    <th class="col-price" style="min-width:135px">Giá bán hiện tại</th><th style="min-width:85px">LN gộp ước tính</th><th class="col-total" style="min-width:140px">Thành tiền</th><th>Thao tác</th>
                 </tr></thead>
                 <tbody id="importItemsBody"></tbody>
             </table>
