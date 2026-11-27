@@ -12,12 +12,12 @@ public class LichSuKiemDuyetDanhGia
 
     public int MaDanhGia { get; set; }
 
-    [Required]
-    [StringLength(50)]
+    [Required(ErrorMessage = "Vui lòng chọn hành động kiểm duyệt.")]
+    [StringLength(50, ErrorMessage = "Hành động không được vượt quá 50 ký tự.")]
     public string HanhDong { get; set; } = "Ẩn"; // "Ẩn" hoặc "Khôi phục"
 
-    [Required]
-    [StringLength(255)]
+    [Required(ErrorMessage = "Vui lòng nhập lý do vi phạm.")]
+    [StringLength(255, ErrorMessage = "Lý do vi phạm không được vượt quá 255 ký tự.")]
     public string LyDoViPham { get; set; } = string.Empty;
 
     [StringLength(500)]

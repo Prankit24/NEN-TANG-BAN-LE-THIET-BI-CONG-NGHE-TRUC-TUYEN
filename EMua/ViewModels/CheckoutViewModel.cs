@@ -29,7 +29,7 @@ public class CheckoutViewModel
     }
 
     [Required(ErrorMessage = "Vui lòng nhập địa chỉ nhận hàng.")]
-    [StringLength(255, ErrorMessage = "Địa chỉ nhận hàng quá dài.")]
+    [StringLength(255, ErrorMessage = "Địa chỉ nhận hàng không được vượt quá 255 ký tự.")]
     public string Address { get; set; } = string.Empty;
 
     public string ShippingAddress
