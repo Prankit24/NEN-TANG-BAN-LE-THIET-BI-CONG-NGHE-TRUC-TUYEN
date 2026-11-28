@@ -125,12 +125,28 @@
         }
 
     .status-badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 6px;
         font-size: 12px;
         font-weight: 600;
+        white-space: nowrap;
     }
+
+        .status-badge.active {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-badge.hidden {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
 
         .status-badge.active {
             background: #e0f2fe;
@@ -339,17 +355,17 @@
                                         </span>
                                     }
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center text-nowrap">
                                     @if (product.TrangThaiSanPham == "Ẩn")
                                     {
                                         <span class="status-badge hidden">
-                                            <i class="bi bi-eye-slash me-1"></i> Đang ẩn
+                                            <i class="bi bi-eye-slash"></i> Đang ẩn
                                         </span>
                                     }
                                     else
                                     {
                                         <span class="status-badge active">
-                                            <i class="bi bi-check-circle me-1"></i> @(product.TrangThaiSanPham ?? "Còn hàng")
+                                            <i class="bi bi-check-circle"></i> @(product.TrangThaiSanPham ?? "Còn hàng")
                                         </span>
                                     }
                                 </td>

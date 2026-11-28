@@ -293,10 +293,11 @@ namespace EMua.Controllers
 
             var promptWithContext = string.IsNullOrWhiteSpace(productContext)
                 ? request.Message
-                : AIPrompts.StoreContextHeader + "\n" +
-                  productContext +
-                  "\n\nCÂU HỎI KHÁCH HÀNG:\n" +
-                  request.Message;
+                : $@"{AIPrompts.StoreContextHeader}
+{productContext}
+
+[CÂU HỎI CỦA KHÁCH HÀNG]
+{request.Message}";
 
             // 3. Gọi AI với cơ chế fallback thông minh: Gemini → Groq → Supabase
             _logger.LogInformation(
