@@ -256,58 +256,134 @@ public class RecommendationService
 
         var budget = ExtractBudget(rawQuery);
         var source = _db.SanPhams.AsNoTracking();
+
+        // Danh sách từ khóa phân loại nhóm
+        string[] laptopKeywords = new[]
+        {
+            "laptop", "máy tính", "macbook", "máy học ai", "học ai", "trí tuệ nhân tạo", "lập trình", "đồ họa",
+            "xps", "thinkpad", "ideapad", "vivobook", "zenbook", "legion", "tuf", "rog", "victus", "katana", "nitro",
+            "asus", "dell", "hp", "lenovo", "acer", "msi"
+        };
+
+        string[] phoneKeywords = new[]
+        {
+            "điện thoại", "dien thoai", "smartphone", "iphone", "samsung", "galaxy",
+            "xiaomi", "oppo", "vivo", "realme", "redmi"
+        };
+
+        string[] tabletKeywords = new[]
+        {
+            "ipad", "tablet", "máy tính bảng", "tab"
+        };
+
+        string[] accessoryKeywords = new[]
+        {
+            "túi chống sốc", "tui chong soc", "giá đỡ", "gia do", "chuột", "chuot", "bàn phím", "ban phim",
+            "tai nghe", "cáp", "cap", "sạc", "sac", "ốp lưng", "op lung", "cường lực", "cuong luc", "loa", "phụ kiện", "phu kien"
+        };
+
+        bool isAccessoryQuery = accessoryKeywords.Any(k => keyword.Contains(k));
+        bool isLaptopQuery = !isAccessoryQuery && laptopKeywords.Any(k => keyword.Contains(k));
+        bool isPhoneQuery = !isAccessoryQuery && !isLaptopQuery && phoneKeywords.Any(k => keyword.Contains(k));
+        bool isTabletQuery = !isAccessoryQuery && !isLaptopQuery && !isPhoneQuery && tabletKeywords.Any(k => keyword.Contains(k));
+        bool isMainDeviceQuery = isLaptopQuery || isPhoneQuery || isTabletQuery;
+
         bool categoryFiltered = false;
 
-        // 1. Lọc theo danh mục / loại thiết bị
-        if (keyword.Contains("laptop") || keyword.Contains("máy tính") || keyword.Contains("macbook") ||
-            keyword.Contains("máy học ai") || keyword.Contains("học ai") || keyword.Contains("trí tuệ nhân tạo") ||
-            keyword.Contains("lập trình") || keyword.Contains("đồ họa") ||
-            keyword.Contains("xps") || keyword.Contains("thinkpad") || keyword.Contains("ideapad") ||
-            keyword.Contains("vivobook") || keyword.Contains("zenbook") || keyword.Contains("legion") ||
-            keyword.Contains("tuf") || keyword.Contains("rog"))
+        // 1. Lọc theo nhóm Thiết bị chính hoặc Nhóm Phụ kiện
+        if (isLaptopQuery)
         {
             categoryFiltered = true;
+            // Nhóm Laptop: Bắt buộc lọc danh mục Laptop và LOẠI BỎ 100% Phụ kiện
             source = source.Where(p =>
+                p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                !p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") &&
                 p.TenSanPham != null &&
+                !p.TenSanPham.ToLower().Contains("túi chống sốc") &&
+                !p.TenSanPham.ToLower().Contains("giá đỡ") &&
+                !p.TenSanPham.ToLower().Contains("chuột") &&
+                !p.TenSanPham.ToLower().Contains("bàn phím") &&
+                !p.TenSanPham.ToLower().Contains("cáp") &&
+                !p.TenSanPham.ToLower().Contains("sạc") &&
+                !p.TenSanPham.ToLower().Contains("ốp") &&
+                !p.TenSanPham.ToLower().Contains("tai nghe") &&
                 (
+                    p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("laptop") ||
                     p.TenSanPham.ToLower().Contains("laptop") ||
                     p.TenSanPham.ToLower().Contains("macbook") ||
                     p.TenSanPham.ToLower().Contains("xps") ||
                     p.TenSanPham.ToLower().Contains("thinkpad") ||
                     p.TenSanPham.ToLower().Contains("inspiron") ||
                     p.TenSanPham.ToLower().Contains("vivobook") ||
-                    p.TenSanPham.ToLower().Contains("ideapad") ||
+                    p.TenSanPham.ToLower().Contains("zenbook") ||
                     p.TenSanPham.ToLower().Contains("legion") ||
                     p.TenSanPham.ToLower().Contains("tuf") ||
                     p.TenSanPham.ToLower().Contains("rog") ||
-                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
-                     p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("laptop"))
+                    p.TenSanPham.ToLower().Contains("victus") ||
+                    p.TenSanPham.ToLower().Contains("katana") ||
+                    p.TenSanPham.ToLower().Contains("nitro") ||
+                    (p.MaThuongHieuNavigation != null && p.MaThuongHieuNavigation.TenThuongHieu != null &&
+                     (p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("asus") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("dell") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("hp") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("lenovo") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("acer") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("msi") ||
+                      p.MaThuongHieuNavigation.TenThuongHieu.ToLower().Contains("apple")))
                 ));
         }
-        else if (keyword.Contains("điện thoại") || keyword.Contains("dien thoai") || keyword.Contains("smartphone") ||
-                 keyword.Contains("iphone") || keyword.Contains("galaxy") || keyword.Contains("samsung") ||
-                 keyword.Contains("xiaomi") || keyword.Contains("oppo") || keyword.Contains("redmi"))
+        else if (isPhoneQuery)
         {
             categoryFiltered = true;
+            // Nhóm Điện thoại: Bắt buộc lọc danh mục Điện thoại và LOẠI BỎ 100% Phụ kiện (ốp lưng, cáp sạc, tai nghe...)
             source = source.Where(p =>
+                p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                !p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") &&
                 p.TenSanPham != null &&
+                !p.TenSanPham.ToLower().Contains("ốp lưng") &&
+                !p.TenSanPham.ToLower().Contains("ốp") &&
+                !p.TenSanPham.ToLower().Contains("cường lực") &&
+                !p.TenSanPham.ToLower().Contains("cáp") &&
+                !p.TenSanPham.ToLower().Contains("sạc") &&
+                !p.TenSanPham.ToLower().Contains("tai nghe") &&
                 (
+                    p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("điện thoại") ||
                     p.TenSanPham.ToLower().Contains("điện thoại") ||
                     p.TenSanPham.ToLower().Contains("iphone") ||
                     p.TenSanPham.ToLower().Contains("galaxy") ||
-                    p.TenSanPham.ToLower().Contains("smartphone") ||
-                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
-                     p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("điện thoại"))
+                    p.TenSanPham.ToLower().Contains("smartphone")
                 ));
         }
-        else if (keyword.Contains("tai nghe") || keyword.Contains("chuột") || keyword.Contains("bàn phím") ||
-                 keyword.Contains("màn hình") || keyword.Contains("loa") || keyword.Contains("cáp") ||
-                 keyword.Contains("sạc") || keyword.Contains("phụ kiện"))
+        else if (isTabletQuery)
+        {
+            categoryFiltered = true;
+            // Nhóm Tablet: Bắt buộc lọc danh mục Tablet và LOẠI BỎ 100% Phụ kiện
+            source = source.Where(p =>
+                p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                !p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") &&
+                p.TenSanPham != null &&
+                !p.TenSanPham.ToLower().Contains("bao da") &&
+                !p.TenSanPham.ToLower().Contains("ốp") &&
+                !p.TenSanPham.ToLower().Contains("cường lực") &&
+                !p.TenSanPham.ToLower().Contains("bút") &&
+                (
+                    p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tablet") ||
+                    p.TenSanPham.ToLower().Contains("ipad") ||
+                    p.TenSanPham.ToLower().Contains("tablet") ||
+                    p.TenSanPham.ToLower().Contains("tab")
+                ));
+        }
+        else if (isAccessoryQuery)
         {
             categoryFiltered = true;
             source = source.Where(p =>
                 p.TenSanPham != null &&
                 (
+                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
+                     (p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tai nghe") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("chuột") ||
+                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("bàn phím"))) ||
                     (keyword.Contains("tai nghe") && p.TenSanPham.ToLower().Contains("tai nghe")) ||
                     (keyword.Contains("chuột") && p.TenSanPham.ToLower().Contains("chuột")) ||
                     (keyword.Contains("bàn phím") && p.TenSanPham.ToLower().Contains("bàn phím")) ||
@@ -315,36 +391,23 @@ public class RecommendationService
                     (keyword.Contains("loa") && p.TenSanPham.ToLower().Contains("loa")) ||
                     (keyword.Contains("cáp") && p.TenSanPham.ToLower().Contains("cáp")) ||
                     (keyword.Contains("sạc") && p.TenSanPham.ToLower().Contains("sạc")) ||
-                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
-                     (p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("phụ kiện") ||
-                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tai nghe") ||
-                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("chuột") ||
-                      p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("bàn phím")))
+                    (keyword.Contains("túi") && p.TenSanPham.ToLower().Contains("túi")) ||
+                    (keyword.Contains("giá đỡ") && p.TenSanPham.ToLower().Contains("giá đỡ")) ||
+                    (keyword.Contains("ốp") && p.TenSanPham.ToLower().Contains("ốp"))
                 ));
         }
-        else if (keyword.Contains("ipad") || keyword.Contains("tablet") || keyword.Contains("máy tính bảng"))
-        {
-            categoryFiltered = true;
-            source = source.Where(p =>
-                p.TenSanPham != null &&
-                (
-                    p.TenSanPham.ToLower().Contains("ipad") ||
-                    p.TenSanPham.ToLower().Contains("tablet") ||
-                    p.TenSanPham.ToLower().Contains("tab") ||
-                    (p.MaDanhMucNavigation != null && p.MaDanhMucNavigation.TenDanhMuc != null &&
-                     p.MaDanhMucNavigation.TenDanhMuc.ToLower().Contains("tablet"))
-                ));
-        }
+
+        // Tách từ khóa tìm kiếm để tính độ khớp tên model
+        var stopWords = new HashSet<string> { "mua", "cần", "muốn", "tìm", "tư", "vấn", "giá", "tầm", "khoảng", "dưới", "trên", "triệu", "hàng", "còn", "không", "sản", "phẩm", "loại", "nào", "mẫu", "cho", "em", "mình" };
+        var searchTerms = rawQuery.Split(new[] { ' ', ',', '.', '?', '!', ':', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => w.Length >= 2 && !stopWords.Contains(w.ToLowerInvariant()))
+            .Select(w => w.ToLowerInvariant())
+            .Distinct()
+            .ToList();
 
         // Nếu không thuộc danh mục nhận diện được:
         if (!categoryFiltered)
         {
-            var stopWords = new HashSet<string> { "mua", "cần", "muốn", "tìm", "tư", "vấn", "giá", "tầm", "khoảng", "dưới", "trên", "triệu", "hàng", "còn", "không", "sản", "phẩm", "loại", "nào", "mẫu", "cho", "em", "mình" };
-            var searchTerms = rawQuery.Split(new[] { ' ', ',', '.', '?', '!', ':', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                .Where(w => w.Length >= 2 && !stopWords.Contains(w.ToLowerInvariant()))
-                .Select(w => w.ToLowerInvariant())
-                .ToList();
-
             if (searchTerms.Any())
             {
                 source = source.Where(p => p.TenSanPham != null &&
@@ -352,7 +415,7 @@ public class RecommendationService
             }
             else
             {
-                // Không nhận diện được danh mục hoặc sản phẩm -> Tuyệt đối không lấy 3 sản phẩm mặc định
+                // Không nhận diện được danh mục hoặc sản phẩm -> Bỏ qua gợi ý
                 _logger.LogInformation("EMUA AI: Không nhận diện được danh mục hoặc sản phẩm cụ thể. Bỏ qua gợi ý.");
                 return ("", new List<ProductRecommendationDto>(), null);
             }
@@ -366,6 +429,9 @@ public class RecommendationService
         {
             p.MaSanPham,
             p.TenSanPham,
+            CategoryName = p.MaDanhMucNavigation != null ? p.MaDanhMucNavigation.TenDanhMuc : "Sản phẩm",
+            p.TrangThaiSanPham,
+            GiaGoc = p.GiaGoc,
             Description = p.MoTa == null
                 ? ""
                 : p.MoTa.Length > 600
@@ -401,11 +467,33 @@ public class RecommendationService
             }
         }
 
-        // Ưu tiên sản phẩm có giá phù hợp, sắp xếp theo giá tăng dần
-        var rawProducts = await queryable
+        // Lấy danh sách sản phẩm tiềm năng (tối đa 20) để xếp hạng khớp từ khóa tên model chính xác
+        var candidateProducts = await queryable
             .OrderBy(p => p.MinPrice)
-            .Take(3)
+            .Take(20)
             .ToListAsync(cancellationToken);
+
+        // Ưu tiên sắp xếp sản phẩm khớp chính xác nhiều từ khóa trong tên model lên đầu tiên
+        var rawProducts = candidateProducts
+            .OrderByDescending(p =>
+            {
+                if (string.IsNullOrWhiteSpace(p.TenSanPham)) return 0;
+                var pName = p.TenSanPham.ToLowerInvariant();
+                int score = 0;
+                // Khớp trọn vẹn cụm tìm kiếm (ví dụ "vivobook 15", "rog strix")
+                if (!string.IsNullOrWhiteSpace(rawQuery) && pName.Contains(rawQuery.ToLowerInvariant()))
+                    score += 10;
+                // Khớp từng từ khóa model
+                foreach (var term in searchTerms)
+                {
+                    if (pName.Contains(term))
+                        score += 2;
+                }
+                return score;
+            })
+            .ThenBy(p => p.MinPrice)
+            .Take(3)
+            .ToList();
 
         timer.Stop();
 
@@ -467,27 +555,17 @@ public class RecommendationService
 
         // 6. Xây dựng ngữ cảnh sản phẩm khi tìm thấy đúng ngân sách
         var context = new StringBuilder();
-        context.AppendLine("[DỮ LIỆU SẢN PHẨM TỪ CỬA HÀNG EMUA - ĐÃ XÁC THỰC THEO NGÂN SÁCH VÀ CÒN HÀNG]:");
-        context.AppendLine("- Dưới đây là các sản phẩm ĐÃ ĐƯỢC HỆ THỐNG XÁC THỰC phù hợp với ngân sách và còn hàng thực tế trong kho.");
-        if (budget != null)
-        {
-            context.AppendLine($"- Yêu cầu ngân sách của khách: {budget.RawDescription}.");
-        }
-        context.AppendLine("- Bạn hãy giới thiệu các sản phẩm này một cách tự nhiên, nêu bật ưu điểm và lý do phù hợp với tầm giá của khách.");
-        context.AppendLine("- TUYỆT ĐỐI KHÔNG tự ý giới thiệu thêm sản phẩm nào ngoài danh sách dưới đây.\n");
-
-        var culture = CultureInfo.GetCultureInfo("vi-VN");
         foreach (var p in rawProducts)
         {
-            var price = p.MinPrice.HasValue && p.MinPrice.Value > 0
-                ? p.MinPrice.Value.ToString("N0", culture) + " VNĐ"
-                : "Liên hệ cửa hàng";
+            var tenDanhMuc = !string.IsNullOrWhiteSpace(p.CategoryName) ? p.CategoryName : "Sản phẩm";
+            var tenSanPham = p.TenSanPham ?? "Sản phẩm EMUA";
+            var giaHienThi = (p.MinPrice ?? p.GiaGoc ?? 0m);
+            var trangThai = !string.IsNullOrWhiteSpace(p.TrangThaiSanPham) 
+                ? p.TrangThaiSanPham 
+                : (p.InStock ? "Còn hàng" : "Hết hàng");
+            var thongSo = !string.IsNullOrWhiteSpace(p.Specs) ? p.Specs : ShortDescription(p.Description);
 
-            var stock = p.InStock ? "Còn hàng" : "Hết hàng";
-            var description = ShortDescription(p.Description);
-
-            context.AppendLine(
-                $"• Mã: {p.MaSanPham} | Tên: {p.TenSanPham} | Giá từ: {price} | Tình trạng: {stock} | Đặc điểm: {description}");
+            context.AppendLine($"- [{tenDanhMuc}] {tenSanPham} | Giá: {giaHienThi:N0}đ | Kho: {trangThai} | Cấu hình: {thongSo}");
         }
 
         _logger.LogInformation(
